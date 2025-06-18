@@ -2,18 +2,15 @@ import os
 import openai
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
+# Настройка ключей
+TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
+openai.api_key = os.getenv("OPENAI_API_KEY")
 app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
 
 app.run_polling()
-
-
-
-# Настройка ключей
-TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
-openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Команда /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
