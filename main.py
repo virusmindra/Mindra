@@ -34,6 +34,7 @@ async def chat(update, context: ContextTypes.DEFAULT_TYPE):
 # Запуск
 if __name__ == "__main__":
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
+    _Updater__polling_cleanup_cb
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
     print("🤖 Mindra запущен!")
