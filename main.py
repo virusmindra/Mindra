@@ -1,5 +1,5 @@
 import os
-import openai
+from openai import OpenAI
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
 # Переменные окружения
