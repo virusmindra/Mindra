@@ -3,8 +3,8 @@ import openai
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
 # Переменные окружения
-TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
-openai.api_key = os.getenv("OPENAI_API_KEY")
+TELEGRAM_BOT_TOKEN = 7281555453:AAH4p_gW8RTfPZBT6T8pzsZ23Dck8pDN5V8
+openai.api_key = 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
 
 # Команда /start
 async def start(update, context: ContextTypes.DEFAULT_TYPE):
