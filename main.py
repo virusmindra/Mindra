@@ -20,10 +20,15 @@ async def chat(update, context: ContextTypes.DEFAULT_TYPE):
     ]
 
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4o",
-            messages=messages
-        )
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[
+        {"role": "system", "content": "..."},
+        {"role": "user", "content": "..."}
+    ]
+)
         reply = response.choices[0].message.content
         await update.message.reply_text(reply)
 
