@@ -1,6 +1,6 @@
 import os
 import openai
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
 # Переменные окружения
 TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
