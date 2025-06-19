@@ -22,7 +22,7 @@ async def chat(update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4.1",
+            model="gpt-4o",
             messages=messages
         )
         reply = response.choices[0].message.content
