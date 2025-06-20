@@ -2,6 +2,39 @@ import os
 import json
 from openai import OpenAI
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram import Voice
+import aiohttp
+from pydub import AudioSegment
+import asyncio
+
+# Асинхронно скачиваем и обрабатываем голос
+async def handle_voice(update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.message.from_user.id)
+
+    # Скачивание голосового файла
+    voice: Voice = update.message.voice
+    file = await context.bot.get_file(voice.file_id)
+
+    ogg_path = f"voice_{user_id}.ogg"
+    mp3_path = f"voice_{user_id}.mp3"
+
+    await file.download_to_drive(ogg_path)
+
+    # Конвертация OGG в MP3
+    audio = AudioSegment.from_ogg(ogg_path)
+    audio.export(mp3_path, format="mp3")
+
+    # Отправка на распознавание (Whisper)
+    with open(mp3_path, "rb") as f:
+        transcription = client.audio.transcriptions.create(
+            model="whisper-1",
+            file=f,
+            response_format="text"
+        )
+
+    # Отправка текста как обычного сообщения
+    update.message.text = transcription
+    await chat(update, context)
 
 # Переменные окружения
 TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -81,5 +114,6 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
     app.add_handler(CommandHandler("reset", reset))
+    app.add_handler(MessageHandler(filters.VOICE, handle_voice))
     print("🤖 Mindra запущен!")
     app.run_polling()
