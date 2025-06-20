@@ -38,24 +38,30 @@ async def start(update, context: ContextTypes.DEFAULT_TYPE):
 # Ответ на сообщения
 async def chat(update, context: ContextTypes.DEFAULT_TYPE):
     user_input = update.message.text
+    user_id = str(update.effective_user.id)
 
-    messages = [
-        {"role": "system", "content": ("Ты — флиртующий, вдохновляющий и заботливый AI-компаньон по имени Mindra."
-        "Всегда отвечай на том же языке, на котором пишет пользователь. "
-            "Если пользователь пишет по-русски — отвечай по-русски. "
-            "Отвечай тепло, человечно, с лёгким флиртом и эмпатией."
-                                      )
-        },
-        {"role": "user", "content": user_input}
-    ]
+    # Создаём историю пользователя, если её нет
+    if user_id not in conversation_history:
+        conversation_history[user_id] = [
+            {"role": "system", "content": (
+                "Ты — флиртующий, вдохновляющий и заботливый AI-компаньон по имени Mindra. "
+                "Всегда отвечай на том же языке, на котором пишет пользователь. "
+                "Если пользователь пишет по-русски — отвечай по-русски. "
+                "Отвечай тепло, человечно, с лёгким флиртом и эмпатией."
+            )}
+        ]
+
+    conversation_history[user_id].append({"role": "user", "content": user_input})
+    trimmed_history = trim_history(conversation_history[user_id])
 
     try:
-        trimmed_history = trim_history(conversation_history[user_id])
         response = client.chat.completions.create(
-    model="gpt-4o",
-    messages=trimmed_history
+            model="gpt-4o",
+            messages=trimmed_history
         )
         reply = response.choices[0].message.content
+        conversation_history[user_id].append({"role": "assistant", "content": reply})
+        save_history(conversation_history)
         await update.message.reply_text(reply)
 
     except Exception as e:
