@@ -1,4 +1,5 @@
 import os
+import json
 from openai import OpenAI
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
