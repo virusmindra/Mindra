@@ -1,6 +1,4 @@
 python-telegram-bot==20.0
-openai>=1.0.0
-ffmpeg-python
-whisper-openai
+openai==1.0.0
+aiohttp==3.8.6
 pydub
-aiohttp
