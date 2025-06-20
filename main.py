@@ -28,8 +28,8 @@ async def chat(update, context: ContextTypes.DEFAULT_TYPE):
         response = client.chat.completions.create(
     model="gpt-4o",
     messages=[
-        {"role": "system", "content": "..."},
-        {"role": "user", "content": "..."}
+        {"role": "system", "content": user_input},
+        {"role": "user", "content": user_input}
     ]
 )
         reply = response.choices[0].message.content
