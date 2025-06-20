@@ -24,6 +24,12 @@ def save_history(data):
 # Загружаем историю
 conversation_history = load_history()
 
+# Ограничение длины истории (оставим последние 10 сообщений + system)
+def trim_history(history, max_messages=10):
+    system_prompt = history[0]  # system всегда остаётся
+    trimmed = history[-max_messages:] if len(history) > max_messages else history[1:]
+    return [system_prompt] + trimmed
+
 # Команда /start
 async def start(update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Привет, я Mindra 💜 Поддержка, мотивация и немного психолог. Готов поговорить!")
@@ -43,13 +49,15 @@ async def chat(update, context: ContextTypes.DEFAULT_TYPE):
     ]
 
     try:
+        trimmed_history = trim_history(conversation_history[user_id])
         response = client.chat.completions.create(
     model="gpt-4o",
+    messages=trimmed_history,
     messages=[
         {"role": "system", "content": user_input},
         {"role": "user", "content": user_input}
     ]
-)
+        )
         reply = response.choices[0].message.content
         await update.message.reply_text(reply)
 
