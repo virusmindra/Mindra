@@ -20,7 +20,7 @@ async def chat(update, context: ContextTypes.DEFAULT_TYPE):
     ]
 
     try:
-        client = OpenAI(api_key="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")
+        client = OpenAI(api_key="OPENAI_API_KEY")
         response = client.chat.completions.create(
     model="gpt-4o",
     messages=[
