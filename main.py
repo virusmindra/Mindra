@@ -4,7 +4,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 
 # Переменные окружения
 TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
-OpenAI.api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Команда /start
 async def start(update, context: ContextTypes.DEFAULT_TYPE):
@@ -20,7 +20,6 @@ async def chat(update, context: ContextTypes.DEFAULT_TYPE):
     ]
 
     try:
-        client = OpenAI(api_key="OPENAI_API_KEY")
         response = client.chat.completions.create(
     model="gpt-4o",
     messages=[
