@@ -31,6 +31,13 @@ def trim_history(history, max_messages=10):
     trimmed = history[-max_messages:] if len(history) > max_messages else history[1:]
     return [system_prompt] + trimmed
 
+# Команда /reset
+async def reset(update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    conversation_history[user_id] = []  # Очищаем историю пользователя
+    save_history(conversation_history)  # Сохраняем пустую историю
+    await update.message.reply_text("История очищена 💫 Начнём с чистого листа!")
+
 # Команда /start
 async def start(update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Привет, я Mindra 💜 Поддержка, мотивация и немного психолог. Готов поговорить!")
@@ -73,5 +80,6 @@ if __name__ == "__main__":
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
+    app.add_handler(CommandHandler("reset", reset))
     print("🤖 Mindra запущен!")
     app.run_polling()
