@@ -52,11 +52,7 @@ async def chat(update, context: ContextTypes.DEFAULT_TYPE):
         trimmed_history = trim_history(conversation_history[user_id])
         response = client.chat.completions.create(
     model="gpt-4o",
-    messages=trimmed_history,
-    messages=[
-        {"role": "system", "content": user_input},
-        {"role": "user", "content": user_input}
-    ]
+    messages=trimmed_history
         )
         reply = response.choices[0].message.content
         await update.message.reply_text(reply)
