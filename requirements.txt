@@ -2,3 +2,4 @@ python-telegram-bot==20.0
 openai>=1.0.0
 ffmpeg-python
 aiohttp==3.9.5
+speechrecognition==3.10.0
