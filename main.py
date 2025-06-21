@@ -1,17 +1,20 @@
 import os
 import json
+import tempfile
+import openai
+import logging
+import asyncio
+import aiohttp
 import subprocess
 
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
-from openai import OpenAI
+from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, ContextTypes, filters
 
-# Переменные окружения
 TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-HISTORY_FILE = "dialogues.json"
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+HISTORY_FILE = "dialogues.json"
+logging.basicConfig(level=logging.INFO)
 
 # Загрузка истории
 def load_history():
@@ -20,14 +23,12 @@ def load_history():
             return json.load(f)
     return {}
 
-# Сохранение истории
 def save_history(data):
     with open(HISTORY_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 conversation_history = load_history()
 
-# Ограничение длины истории
 def trim_history(history, max_messages=10):
     system_prompt = history[0]
     trimmed = history[-max_messages:] if len(history) > max_messages else history[1:]
@@ -35,28 +36,28 @@ def trim_history(history, max_messages=10):
 
 # Команда /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Привет, я Mindra 💜 Поддержка, мотивация и немного психолог. Готов поговорить!")
+    await update.message.reply_text("Привет, я Mindra 💜 Готов поддержать, вдохновить и пофлиртовать 😉")
 
-# Ответ на текст
+# Текстовые сообщения
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_input = update.message.text
     user_id = str(update.effective_user.id)
 
     if user_id not in conversation_history:
-        conversation_history[user_id] = [
-            {"role": "system", "content": (
-                "Ты – флиртующий, вдохновляющий и заботливый AI-компаньон по имени Mindra. "
+        conversation_history[user_id] = [{
+            "role": "system",
+            "content": (
+                "Ты — флиртующий, вдохновляющий и заботливый AI-компаньон по имени Mindra. "
                 "Всегда отвечай на том же языке, на котором пишет пользователь. "
-                "Если пользователь пишет по-русски – отвечай по-русски. "
                 "Отвечай тепло, человечно, с лёгким флиртом и эмпатией."
-            )}
-        ]
+            )
+        }]
 
     conversation_history[user_id].append({"role": "user", "content": user_input})
     trimmed = trim_history(conversation_history[user_id])
 
     try:
-        response = client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-4o",
             messages=trimmed
         )
@@ -65,28 +66,34 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         save_history(conversation_history)
         await update.message.reply_text(reply)
     except Exception as e:
-        await update.message.reply_text("Упс, я немного завис... Попробуй позже 😵‍💫")
-        print(f"❌ Ошибка OpenAI: {e}")
+        print(f"Ошибка OpenAI: {e}")
+        await update.message.reply_text("Упс, что-то пошло не так... Попробуй ещё раз.")
 
-# Ответ на голосовое сообщение
+# Голосовые сообщения
 async def voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
-    voice_file = await context.bot.get_file(update.message.voice.file_id)
-    await voice_file.download_to_drive("voice.ogg")
+    voice_file = await update.message.voice.get_file()
 
-    subprocess.run(["ffmpeg", "-y", "-i", "voice.ogg", "voice.mp3"], check=True)
+    ogg_path = tempfile.mktemp(suffix=".ogg")
+    mp3_path = tempfile.mktemp(suffix=".mp3")
+
+    await voice_file.download_to_drive(ogg_path)
 
     try:
-        with open("voice.mp3", "rb") as f:
-            transcript = client.audio.transcriptions.create(
-                model="whisper-1",
-                file=f
-            )
-        update.message.text = transcript.text
+        # Конвертация через ffmpeg
+        subprocess.run([
+            "ffmpeg", "-i", ogg_path, "-ar", "44100", "-ac", "2", "-f", "mp3", mp3_path
+        ], check=True)
+
+        with open(mp3_path, "rb") as f:
+            transcript = openai.Audio.transcribe("whisper-1", file=f)
+
+        update.message.text = transcript["text"]
         await chat(update, context)
+
     except Exception as e:
-        await update.message.reply_text("Голос не распознан 😕 Попробуй ещё раз.")
-        print(f"❌ Ошибка распознавания речи: {e}")
+        print(f"Ошибка при обработке голоса: {e}")
+        await update.message.reply_text("Не удалось распознать голос 😢")
 
 # Запуск
 if __name__ == "__main__":
@@ -94,5 +101,5 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
     app.add_handler(MessageHandler(filters.VOICE, voice))
-    print("🤖 Mindra запущен!")
+    print("🤖 Mindra готов слушать и говорить!")
     app.run_polling()
