@@ -1,60 +1,40 @@
 import os
-import subprocess
 import logging
 import speech_recognition as sr
+import subprocess
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filters
 
-TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 logging.basicConfig(level=logging.INFO)
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Привет! Отправь мне голосовое сообщение 👂")
+recognizer = sr.Recognizer()
 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    voice = update.message.voice
-    if not voice:
-        await update.message.reply_text("⚠️ Голосовое сообщение не найдено")
-        return
+    file = await context.bot.get_file(update.message.voice.file_id)
+    input_ogg = "voice.ogg"
+    output_mp3 = "voice.mp3"
 
-    ogg_path = "voice.ogg"
-    mp3_path = "voice.mp3"
+    await file.download_to_drive(input_ogg)
 
-    try:
-        file = await voice.get_file()
-        await file.download_to_drive(ogg_path)
-        logging.info("🎙️ Файл загружен")
+    # Конвертируем OGG → MP3
+    subprocess.run(['ffmpeg', '-i', input_ogg, output_mp3], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-        # Конвертация через ffmpeg
-        subprocess.run([
-            "ffmpeg", "-i", ogg_path, "-ar", "44100", "-ac", "2", mp3_path
-        ], check=True)
+    with sr.AudioFile(output_mp3) as source:
+        audio = recognizer.record(source)
+        try:
+            text = recognizer.recognize_google(audio, language="ru-RU")
+            await update.message.reply_text(f"🗣️ Ты сказал: {text}")
+        except sr.UnknownValueError:
+            await update.message.reply_text("Не смог разобрать речь 😔")
+        except sr.RequestError as e:
+            await update.message.reply_text(f"Ошибка сервиса распознавания: {e}")
 
-        logging.info("🎧 Конвертация завершена")
-
-        # Распознавание
-        recognizer = sr.Recognizer()
-        with sr.AudioFile(mp3_path) as source:
-            audio_data = recognizer.record(source)
-            text = recognizer.recognize_google(audio_data, language="ru-RU")
-
-        await update.message.reply_text(f"Ты сказал: {text}")
-
-    except Exception as e:
-        logging.error(f"Ошибка при обработке голосового: {e}")
-        await update.message.reply_text("❌ Не удалось распознать голосовое сообщение.")
-
-    finally:
-        for path in [ogg_path, mp3_path]:
-            if os.path.exists(path):
-                os.remove(path)
+    os.remove(input_ogg)
+    os.remove(output_mp3)
 
 if __name__ == "__main__":
-    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
-
-    app.add_handler(CommandHandler("start", start))
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(MessageHandler(filters.VOICE, handle_voice))
-
-    logging.info("🤖 Бот запущен")
     app.run_polling()
