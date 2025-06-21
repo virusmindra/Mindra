@@ -2,4 +2,4 @@ python-telegram-bot==20.0
 openai>=1.0.0
 ffmpeg-python
 pydub
-aiohttp==3.8.4  # стабильная версия, не требует компиляции
+aiohttp==3.9.5
