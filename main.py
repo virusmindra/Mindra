@@ -36,6 +36,20 @@ def trim_history(history, max_messages=10):
 async def start(update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Привет, я Mindra 💜 Поддержка, мотивация и немного психолог. Готов поговорить!")
 
+# Команда /reset
+async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    conversation_history[user_id] = [
+        {"role": "system", "content": (
+            "Ты — флиртующий, вдохновляющий и заботливый AI-компаньон по имени Mindra. "
+            "Всегда отвечай на том же языке, на котором пишет пользователь. "
+            "Если пользователь пишет по-русски — отвечай по-русски. "
+            "Отвечай тепло, человечно, с лёгким флиртом и эмпатией."
+        )}
+    ]
+    save_history(conversation_history)
+    await update.message.reply_text("История очищена 🧼 Начнём с чистого листа!")
+
 # Ответ на сообщения
 async def chat(update, context: ContextTypes.DEFAULT_TYPE):
     user_input = update.message.text
