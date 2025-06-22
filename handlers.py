@@ -58,7 +58,7 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "Вот что я умею:\n\n"
+        "Вот что я умею:\n\n" 
         "💬 Просто напиши мне сообщение — я отвечу.\n"
         "🧠 Я запоминаю твои предыдущие реплики (историю можно сбросить).\n"
         "📎 Команды:\n"
@@ -93,6 +93,7 @@ handlers = [
     CommandHandler("reset", reset),
     CommandHandler("help", help_command),
     CommandHandler("about", about),
+    CommandHandler("mode", mode),
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
     MessageHandler(filters.COMMAND, unknown_command),
