@@ -70,6 +70,21 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Обработка неизвестных команд
 async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("❓ Я не знаю такой команды. Напиши /help, чтобы увидеть, что я умею.")
+    
+async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = (
+        "💜 *Привет! Я — Mindra.*\n\n"
+        "Я здесь, чтобы быть рядом, когда тебе нужно выговориться, найти мотивацию или просто почувствовать поддержку.\n"
+        "Можем пообщаться тепло, по-доброму, с заботой — без осуждения и давления 🦋\n\n"
+        "🔮 *Что я умею:*\n"
+        "• Поддержать, когда тяжело\n"
+        "• Напомнить, что ты — не один(а)\n"
+        "• Помочь найти фокус и вдохновение\n"
+        "• И иногда просто поговорить по душам 😊\n\n"
+        "_Я не ставлю диагнозы и не заменяю психолога, но стараюсь быть рядом в нужный момент._\n\n"
+        "✨ *Mindra — это пространство для тебя.*"
+    )
+    await update.message.reply_markdown(text)
 
 
 # Регистрируем все обработчики
@@ -77,6 +92,7 @@ handlers = [
     CommandHandler("start", start),
     CommandHandler("reset", reset),
     CommandHandler("help", help_command),
+    CommandHandler("about", about),
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
     MessageHandler(filters.COMMAND, unknown_command),
