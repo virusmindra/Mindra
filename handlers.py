@@ -5,7 +5,9 @@ from telegram.ext import CommandHandler, MessageHandler, ContextTypes, filters
 from config import TELEGRAM_BOT_TOKEN, client
 from history import load_history, save_history, trim_history
 from telegram.ext import CommandHandler
-from telegram import ReplyKeyboardMarkup
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton
+from telegram.ext import CallbackQueryHandler
+
 
 # Список режимов
 MODES = {
@@ -15,10 +17,15 @@ MODES = {
     "🎭 Разговор по душам": "Ты — как близкий друг, с которым можно поговорить по душам. Общение лёгкое, но глубокое и искреннее."
 }
 
-# Команда /mode — выбор режима
+# Команда /mode — показать кнопки выбора режима
 async def mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [[mode] for mode in MODES.keys()]
-    reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
+    keyboard = [
+        [InlineKeyboardButton("🎧 Поддержка", callback_data="mode_support")],
+        [InlineKeyboardButton("🌸 Мотивация", callback_data="mode_motivation")],
+        [InlineKeyboardButton("🧘 Психолог", callback_data="mode_psychology")],
+        [InlineKeyboardButton("🎭 По душам", callback_data="mode_friend")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text("Выбери стиль общения Mindra ✨", reply_markup=reply_markup)
 
 # Обработка выбора режима
