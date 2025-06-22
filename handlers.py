@@ -78,7 +78,7 @@ handlers = [
     CommandHandler("reset", reset),
     CommandHandler("help", help_command),
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
-    MessageHandler(filters.VOICE, handle_voice)
+    MessageHandler(filters.VOICE, handle_voice),
     MessageHandler(filters.COMMAND, unknown_command),
 ]
 
