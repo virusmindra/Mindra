@@ -4,6 +4,7 @@ from telegram import Update
 from telegram.ext import CommandHandler, MessageHandler, ContextTypes, filters
 from config import TELEGRAM_BOT_TOKEN, client
 from history import load_history, save_history, trim_history
+from telegram.ext import CommandHandler
 
 # Загрузка истории
 conversation_history = load_history()
@@ -55,11 +56,29 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Пока не умею расшифровывать голос. Напиши текстом 💬")
 
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Вот что я умею:\n\n"
+        "💬 Просто напиши мне сообщение — я отвечу.\n"
+        "🧠 Я запоминаю твои предыдущие реплики (историю можно сбросить).\n"
+        "📎 Команды:\n"
+        "/start — приветствие\n"
+        "/reset — сброс истории\n"
+        "/help — показать это сообщение\n\n"
+        "Скоро научусь и другим фишкам 😉"
+    )
+    # Обработка неизвестных команд
+async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("❓ Я не знаю такой команды. Напиши /help, чтобы увидеть, что я умею.")
+
+
 # Регистрируем все обработчики
 handlers = [
     CommandHandler("start", start),
     CommandHandler("reset", reset),
+    CommandHandler("help", help_command),
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice)
+    MessageHandler(filters.COMMAND, unknown_command),
 ]
 
