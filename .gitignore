@@ -196,3 +196,5 @@ __pycache__/
 *.pyc
 build.sh
 ffmpeg-*
+# История пользователей
+dialogues.json
