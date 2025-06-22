@@ -1,16 +1,19 @@
 # main.py
+
+import os
 from telegram.ext import ApplicationBuilder
-from handlers.commands import start, reset
-from handlers.messages import chat, handle_voice
-from config import TELEGRAM_BOT_TOKEN
+from handlers import handlers
 
-app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
+# Получаем токен бота из переменных окружения
+TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-# Хендлеры
-app.add_handler(start)
-app.add_handler(reset)
-app.add_handler(chat)
-app.add_handler(handle_voice)
+# Запуск бота
+if __name__ == "__main__":
+    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
-print("🤖 Mindra запущен!")
-app.run_polling()
+    # Регистрируем все обработчики
+    for handler in handlers:
+        app.add_handler(handler)
+
+    print("🤖 Mindra запущен!")
+    app.run_polling()
