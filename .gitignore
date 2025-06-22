@@ -1,3 +1,6 @@
+git add .gitignore
+git commit -m "Обновлён .gitignore: игнорируем кэш, токены и историю"
+git push origin main
 # Python
 __pycache__/
 *.py[cod]
