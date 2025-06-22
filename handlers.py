@@ -5,6 +5,40 @@ from telegram.ext import CommandHandler, MessageHandler, ContextTypes, filters
 from config import TELEGRAM_BOT_TOKEN, client
 from history import load_history, save_history, trim_history
 from telegram.ext import CommandHandler
+from telegram import ReplyKeyboardMarkup
+
+# Список режимов
+MODES = {
+    "🎧 Поддержка": "Ты — добрый и поддерживающий AI-компаньон, который помогает справиться с трудными моментами. Ты очень чуткий, тёплый и спокойный.",
+    "🌸 Мотивация": "Ты — вдохновляющий и заряжающий AI-компаньон. Помогаешь поверить в себя, мотивируешь и поддерживаешь уверенность.",
+    "🧘 Психолог": "Ты — внимательный, рассудительный и очень деликатный AI, похожий на хорошего психолога. Ты задаёшь вопросы и помогаешь разобраться в себе.",
+    "🎭 Разговор по душам": "Ты — как близкий друг, с которым можно поговорить по душам. Общение лёгкое, но глубокое и искреннее."
+}
+
+# Команда /mode — выбор режима
+async def mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [[mode] for mode in MODES.keys()]
+    reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
+    await update.message.reply_text("Выбери стиль общения Mindra ✨", reply_markup=reply_markup)
+
+# Обработка выбора режима
+async def handle_mode_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    mode_text = update.message.text.strip()
+
+    if mode_text in MODES:
+        system_prompt = MODES[mode_text]
+
+        # Сохраняем новый system prompt и очищаем историю
+        conversation_history[user_id] = [
+            {"role": "system", "content": system_prompt}
+        ]
+        save_history(conversation_history)
+
+        await update.message.reply_text(f"✅ Режим *{mode_text}* выбран!", parse_mode="Markdown")
+    else:
+        await chat(update, context)  # если не режим — отправляем как обычное сообщение
+
 
 # Загрузка истории
 conversation_history = load_history()
@@ -118,7 +152,7 @@ handlers = [
     CommandHandler("help", help_command),
     CommandHandler("about", about),
     CommandHandler("mode", mode),
-    MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
+    MessageHandler(filters.TEXT & ~filters.COMMAND, handle_mode_choice),  # заменили на обработку и выбора режима и чата
     MessageHandler(filters.VOICE, handle_voice),
     MessageHandler(filters.COMMAND, unknown_command),
 ]
