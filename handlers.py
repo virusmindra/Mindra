@@ -1,56 +1,15 @@
 # handlers.py
 
-from telegram import Update
-from telegram.ext import CommandHandler, MessageHandler, ContextTypes, filters
+from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram.ext import CommandHandler, MessageHandler, ContextTypes, CallbackQueryHandler, filters
 from config import TELEGRAM_BOT_TOKEN, client
 from history import load_history, save_history, trim_history
-from telegram.ext import CommandHandler
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import CallbackQueryHandler
 
-
-# Список режимов
-MODES = {
-    "🎧 Поддержка": "Ты — добрый и поддерживающий AI-компаньон, который помогает справиться с трудными моментами. Ты очень чуткий, тёплый и спокойный.",
-    "🌸 Мотивация": "Ты — вдохновляющий и заряжающий AI-компаньон. Помогаешь поверить в себя, мотивируешь и поддерживаешь уверенность.",
-    "🧘 Психолог": "Ты — внимательный, рассудительный и очень деликатный AI, похожий на хорошего психолога. Ты задаёшь вопросы и помогаешь разобраться в себе.",
-    "🎭 Разговор по душам": "Ты — как близкий друг, с которым можно поговорить по душам. Общение лёгкое, но глубокое и искреннее."
-}
-
-# Команда /mode — показать кнопки выбора режима
-async def mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [
-        [InlineKeyboardButton("🎧 Поддержка", callback_data="mode_support")],
-        [InlineKeyboardButton("🌸 Мотивация", callback_data="mode_motivation")],
-        [InlineKeyboardButton("🧘 Психолог", callback_data="mode_psychology")],
-        [InlineKeyboardButton("🎭 По душам", callback_data="mode_friend")]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Выбери стиль общения Mindra ✨", reply_markup=reply_markup)
-
-# Обработка выбора режима
-async def handle_mode_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
-    mode_text = update.message.text.strip()
-
-    if mode_text in MODES:
-        system_prompt = MODES[mode_text]
-
-        # Сохраняем новый system prompt и очищаем историю
-        conversation_history[user_id] = [
-            {"role": "system", "content": system_prompt}
-        ]
-        save_history(conversation_history)
-
-        await update.message.reply_text(f"✅ Режим *{mode_text}* выбран!", parse_mode="Markdown")
-    else:
-        await chat(update, context)  # если не режим — отправляем как обычное сообщение
-
-
-# Загрузка истории
+# Загрузка истории и режимов
 conversation_history = load_history()
+user_modes = {}
 
-# Настройки режимов
+# Список режимов (тексты system prompt)
 MODES = {
     "default": "Ты — тёплый, понимающий и заботливый AI-компаньон по имени Mindra.",
     "support": "Ты — чуткий и добрый AI-друг, который всегда выслушает и поддержит. Помогай пользователю почувствовать себя лучше.",
@@ -59,9 +18,7 @@ MODES = {
     "humor": "Ты — весёлый и добрый AI-друг с лёгким чувством юмора. Поддержи пользователя, добавив немного позитива."
 }
 
-user_modes = {}
-
-# Обработчик команды /start
+# Команда /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     mode = user_modes.get(user_id, "default")
@@ -69,7 +26,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Привет, я Mindra 💜 Поддержка, мотивация и немного психолог. Готов поговорить!")
     await update.message.reply_text(f"🌈 Сейчас включён режим общения: *{mode}*\n_({prompt})_", parse_mode="Markdown")
 
-# Обработчик команды /reset
+# Команда /reset
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     if user_id in conversation_history:
@@ -77,18 +34,35 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
         save_history(conversation_history)
     await update.message.reply_text("История очищена. Начнём сначала ✨")
 
-# Обработчик команды /mode
+# Команда /mode — показать кнопки выбора режима
 async def mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
-    if context.args:
-        selected = context.args[0].lower()
-        if selected in MODES:
-            user_modes[user_id] = selected
-            await update.message.reply_text(f"✅ Режим общения изменён на *{selected}*", parse_mode="Markdown")
-            return
-    await update.message.reply_text("❗ Укажи режим: /mode [default|support|motivation|philosophy|humor]")
+    keyboard = [
+        [InlineKeyboardButton("🎧 Поддержка", callback_data="mode_support")],
+        [InlineKeyboardButton("🌸 Мотивация", callback_data="mode_motivation")],
+        [InlineKeyboardButton("🧘 Психолог", callback_data="mode_philosophy")],
+        [InlineKeyboardButton("🎭 Юмор", callback_data="mode_humor")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text("Выбери стиль общения Mindra ✨", reply_markup=reply_markup)
 
-# Обработчик текстовых сообщений
+# Обработка выбора режима через кнопки
+async def mode_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    user_id = str(query.from_user.id)
+    selected_mode = query.data.replace("mode_", "")
+
+    if selected_mode in MODES:
+        user_modes[user_id] = selected_mode
+        conversation_history[user_id] = [
+            {"role": "system", "content": MODES[selected_mode] + " Всегда отвечай на том же языке, на котором пишет пользователь. Отвечай тепло, человечно, с эмпатией."}
+        ]
+        save_history(conversation_history)
+        await query.edit_message_text(f"✅ Режим общения изменён на *{selected_mode}*!", parse_mode="Markdown")
+    else:
+        await query.edit_message_text("❗ Неизвестный режим.")
+
+# Обработка текстовых сообщений
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_input = update.message.text
     user_id = str(update.effective_user.id)
@@ -115,10 +89,11 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Упс, я немного завис... Попробуй позже 🥺")
         print(f"❌ Ошибка OpenAI: {e}")
 
-# Обработчик голосовых сообщений
+# Обработка голосовых сообщений
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Пока не умею расшифровывать голос. Напиши текстом 💬")
 
+# Команда /help
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Вот что я умею:\n\n" 
@@ -133,10 +108,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Скоро научусь и другим фишкам 😉"
     )
 
-# Обработка неизвестных команд
-async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("❓ Я не знаю такой команды. Напиши /help, чтобы увидеть, что я умею.")
-
+# Команда /about
 async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
         "💜 *Привет! Я — Mindra.*\n\n"
@@ -152,6 +124,10 @@ async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_markdown(text)
 
+# Обработка неизвестных команд
+async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("❓ Я не знаю такой команды. Напиши /help, чтобы увидеть, что я умею.")
+
 # Регистрируем все обработчики
 handlers = [
     CommandHandler("start", start),
@@ -159,7 +135,8 @@ handlers = [
     CommandHandler("help", help_command),
     CommandHandler("about", about),
     CommandHandler("mode", mode),
-    MessageHandler(filters.TEXT & ~filters.COMMAND, handle_mode_choice),  # заменили на обработку и выбора режима и чата
+    CallbackQueryHandler(mode_callback),
+    MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
     MessageHandler(filters.COMMAND, unknown_command),
 ]
