@@ -2,12 +2,10 @@
 
 from telegram import Update
 from telegram.ext import CommandHandler, MessageHandler, ContextTypes, filters
-from openai import OpenAI
+from config import TELEGRAM_BOT_TOKEN, client
 from history import load_history, save_history, trim_history
-import os
 
-# Инициализация OpenAI клиента и переменных окружения
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Загрузка истории
 conversation_history = load_history()
 
 # Обработчик команды /start
