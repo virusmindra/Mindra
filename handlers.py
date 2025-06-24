@@ -7,6 +7,7 @@ from history import load_history, save_history, trim_history
 import random
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from goals import add_goal
+from goals import get_goals
 
 PREMIUM_USERS = {"7775321566"}  # замени на свой Telegram ID
 
@@ -44,6 +45,22 @@ async def goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
     goal_text = " ".join(context.args)
     add_goal(user_id, goal_text)
     await update.message.reply_text(f"🎯 Цель добавлена: *{goal_text}*", parse_mode="Markdown")
+    
+# /goals — показать список целей
+async def show_goals(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    goals = get_goals(user_id)
+
+    if not goals:
+        await update.message.reply_text("🎯 У тебя пока нет целей. Добавь первую с помощью /goal")
+        return
+
+    reply = "📋 *Твои цели:*\n\n"
+    for idx, goal in enumerate(goals, 1):
+        status = "✅" if goal["done"] else "🔸"
+        reply += f"{idx}. {status} {goal['text']}\n"
+
+    await update.message.reply_markdown(reply)
 
 # Загрузка истории и режимов
 conversation_history = load_history()
@@ -189,6 +206,7 @@ handlers = [
     CommandHandler("task", task),
     CommandHandler("premium_task", premium_task),
     CommandHandler("goal", goal),
+    CommandHandler("goals", show_goals),
     CallbackQueryHandler(handle_mode_choice),
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
