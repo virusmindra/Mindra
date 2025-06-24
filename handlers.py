@@ -1,5 +1,3 @@
-# handlers.py
-
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 from config import TELEGRAM_BOT_TOKEN, client
@@ -8,7 +6,7 @@ from modes import load_user_modes, save_user_modes
 
 # Загрузка истории и режимов
 conversation_history = load_history()
-user_modes = {}
+user_modes = load_user_modes()
 
 # Режимы общения
 MODES = {
@@ -25,7 +23,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     mode = user_modes.get(user_id, "default")
     prompt = MODES.get(mode, MODES["default"])
 
-    # Создаём историю, если нет
     if user_id not in conversation_history:
         conversation_history[user_id] = [{"role": "system", "content": prompt}]
         save_history(conversation_history)
@@ -63,6 +60,7 @@ async def handle_mode_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     if mode_key in MODES:
         user_modes[user_id] = mode_key
+        save_user_modes(user_modes)
         conversation_history[user_id] = [{"role": "system", "content": MODES[mode_key]}]
         save_history(conversation_history)
         await query.answer()
@@ -105,7 +103,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Вот что я умею:\n\n" 
         "💬 Просто напиши мне сообщение — я отвечу.\n"
         "🧠 Я запоминаю твои предыдущие реплики (историю можно сбросить).\n"
-        "📎 Команды:\n"
+        "📌 Команды:\n"
         "/start — приветствие\n"
         "/reset — сброс истории\n"
         "/help — показать это сообщение\n"
@@ -119,7 +117,7 @@ async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
         "💜 *Привет! Я — Mindra.*\n\n"
         "Я здесь, чтобы быть рядом, когда тебе нужно выговориться, найти мотивацию или просто почувствовать поддержку.\n"
-        "Можем пообщаться тепло, по-доброму, с заботой — без осуждения и давления 🦋\n\n"
+        "Можем пообщаться тепло, по-доброму, с заботой — без осуждения и давления 🧳\n\n"
         "🔮 *Что я умею:*\n"
         "• Поддержать, когда тяжело\n"
         "• Напомнить, что ты — не один(а)\n"
