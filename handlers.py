@@ -30,10 +30,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         save_history(conversation_history)
 
     await update.message.reply_text("Привет, я Mindra 💜 Поддержка, мотивация и немного психолог. Готов поговорить!")
-    await update.message.reply_text(
-        f"🌈 Сейчас включён режим общения: *{mode}*\n_({prompt})_",
-        parse_mode="Markdown"
-    )
 
 # Команда /reset
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
