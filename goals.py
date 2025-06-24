@@ -28,3 +28,20 @@ def add_goal(user_id, goal_text):
 def get_goals(user_id):
     goals = load_goals()
     return goals.get(user_id, [])
+
+def delete_goal(user_id, index):
+    goals = load_goals()
+    if user_id not in goals or index >= len(goals[user_id]):
+        return False
+    del goals[user_id][index]
+    save_goals(goals)
+    return True
+
+def mark_goal_done(user_id, index):
+    goals = load_goals()
+    if user_id not in goals or index >= len(goals[user_id]):
+        return False
+    goals[user_id][index]["done"] = True
+    save_goals(goals)
+    return True
+
