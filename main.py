@@ -18,6 +18,8 @@ async def error_handler(update, context):
     if update and update.effective_message:
         await update.effective_message.reply_text("😵 Ой, что-то пошло не так. Я уже разбираюсь с этим.")
 
+handlers.append(CallbackQueryHandler(goal_buttons_handler, pattern="^(create_goal|show_goals)$"))
+
 # Запуск бота
 if __name__ == "__main__":
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
