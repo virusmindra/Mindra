@@ -5,6 +5,7 @@ import logging
 from telegram.ext import ApplicationBuilder
 from telegram.error import TelegramError
 from handlers import handlers
+from telegram.ext import CallbackQueryHandler
 
 # Получаем токен бота из переменных окружения
 TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
