@@ -10,6 +10,8 @@ from goals import add_goal
 from goals import get_goals
 from goals import mark_goal_done
 from goals import delete_goal
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton
+from telegram.ext import CallbackQueryHandler
 
 PREMIUM_USERS = {"7775321566"}  # замени на свой Telegram ID
 
@@ -94,6 +96,22 @@ async def show_goals(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_markdown(reply)
 
+async def goal_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    user_id = str(query.from_user.id)
+    await query.answer()
+
+    if query.data == "create_goal":
+        await query.edit_message_text("✍️ Напиши свою цель в формате: `/goal Прочитать 10 страниц`", parse_mode="Markdown")
+    elif query.data == "show_goals":
+        from goals import load_goals  # Убедись, что импорт верный
+        goals = load_goals().get(user_id, [])
+        if not goals:
+            await query.edit_message_text("У тебя пока нет целей. Добавь первую через /goal ✨")
+        else:
+            goals_list = "\n".join([f"• {g['text']} {'✅' if g.get('done') else '❌'}" for g in goals])
+            await query.edit_message_text(f"📋 Твои цели:\n{goals_list}")
+            
 # Загрузка истории и режимов
 conversation_history = load_history()
 user_modes = {}
@@ -187,8 +205,13 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Пока не умею расшифровывать голос. Напиши текстом 💬")
 
-# /help
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
+        [InlineKeyboardButton("🎯 Поставить цель", callback_data="create_goal")],
+        [InlineKeyboardButton("📋 Мои цели", callback_data="show_goals")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
     await update.message.reply_text(
         "Вот что я умею:\n\n"
         "💬 Просто напиши мне сообщение — я отвечу.\n"
@@ -199,11 +222,11 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/help — показать это сообщение\n"
         "/about — немного обо мне\n"
         "/mode — изменить стиль общения\n"
-        "/goal — поставить личную цель 🎯\n"
+        "/goal — поставить личную цель\n"
         "/goals — список твоих целей\n"
-        "Скоро научусь и другим фишкам 😉"
+        "Скоро научусь и другим фишкам 😉",
+        reply_markup=reply_markup
     )
-
 
 # /about
 async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
