@@ -12,6 +12,7 @@ from goals import mark_goal_done
 from goals import delete_goal
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackQueryHandler
+from handlers import handlers
 
 PREMIUM_USERS = {"7775321566"}  # замени на свой Telegram ID
 
