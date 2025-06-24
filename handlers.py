@@ -4,6 +4,7 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 from config import TELEGRAM_BOT_TOKEN, client
 from history import load_history, save_history, trim_history
+from modes import load_user_modes, save_user_modes
 
 # Загрузка истории и режимов
 conversation_history = load_history()
