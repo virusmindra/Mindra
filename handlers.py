@@ -2,7 +2,9 @@
 import os
 import json
 import random
+import re
 
+from datetime import datetime
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 
@@ -71,12 +73,37 @@ async def goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
 
     if not context.args:
-        await update.message.reply_text("✏️ Чтобы поставить цель, напиши так:\n/goal Прочитать 10 страниц книги")
+        await update.message.reply_text(
+            "✏️ Чтобы поставить цель, напиши так:\n"
+            "`/goal Прочитать 10 страниц до 2025-06-28 напомни`",
+            parse_mode="Markdown"
+        )
         return
 
-    goal_text = " ".join(context.args)
-    add_goal(user_id, goal_text)
-    await update.message.reply_text(f"🎯 Цель добавлена: *{goal_text}*", parse_mode="Markdown")
+    text = " ".join(context.args)
+    deadline_match = re.search(r'до\s+(\d{4}-\d{2}-\d{2})', text)
+    remind = "напомни" in text.lower()
+
+    deadline = None
+    if deadline_match:
+        try:
+            deadline = deadline_match.group(1)
+            datetime.strptime(deadline, "%Y-%m-%d")
+        except ValueError:
+            await update.message.reply_text("❗ Неверный формат даты. Используй ГГГГ-ММ-ДД")
+            return
+
+    goal_text = re.sub(r'до\s+\d{4}-\d{2}-\d{2}', '', text, flags=re.IGNORECASE).replace("напомни", "").strip()
+
+    add_goal(user_id, goal_text, deadline=deadline, remind=remind)
+    
+    reply = f"🎯 Цель добавлена: *{goal_text}*"
+    if deadline:
+        reply += f"\n🗓 Дедлайн: `{deadline}`"
+    if remind:
+        reply += "\n🔔 Напоминание включено"
+    
+    await update.message.reply_markdown(reply)
     
 # /goals — показать список целей
 async def show_goals(update: Update, context: ContextTypes.DEFAULT_TYPE):
