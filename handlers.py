@@ -5,6 +5,32 @@ from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, C
 from config import TELEGRAM_BOT_TOKEN, client
 from history import load_history, save_history, trim_history
 import random
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton
+
+PREMIUM_USERS = {"7775321566"}  # замени на свой Telegram ID
+
+premium_tasks = [
+    "🧘 Проведи 10 минут в тишине. Просто сядь, закрой глаза и подыши. Отметь, какие мысли приходят.",
+    "📓 Запиши 3 вещи, которые ты ценишь в себе. Не торопись, будь честен(на).",
+    "💬 Позвони другу или родному человеку и просто скажи, что ты о нём думаешь.",
+    "🧠 Напиши небольшой текст о себе из будущего — кем ты хочешь быть через 3 года?",
+]
+
+async def premium_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    
+    if user_id in PREMIUM_USERS:
+        task = random.choice(premium_tasks)
+        await update.message.reply_text(f"✨ *Твоё премиум-задание на сегодня:*\n\n{task}", parse_mode="Markdown")
+    else:
+        keyboard = [
+            [InlineKeyboardButton("💎 Узнать о подписке", url="https://t.me/твойботилилендинг")]
+        ]
+        await update.message.reply_text(
+            "🔒 Эта функция доступна только подписчикам Mindra+.\n"
+            "Подписка открывает доступ к уникальным заданиям и функциям ✨",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
 
 # Загрузка истории и режимов
 conversation_history = load_history()
