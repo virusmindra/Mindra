@@ -1,13 +1,8 @@
-# main.py
-
 import os
 import logging
-from telegram.ext import ApplicationBuilder
+from telegram.ext import ApplicationBuilder, CallbackQueryHandler
 from telegram.error import TelegramError
-from telegram.ext import CallbackQueryHandler
-from handlers import handlers as all_handlers
-for h in all_handlers:
-    application.add_handler(h)
+from handlers import handlers as all_handlers, goal_buttons_handler
 
 # Получаем токен бота из переменных окружения
 TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -21,17 +16,18 @@ async def error_handler(update, context):
     if update and update.effective_message:
         await update.effective_message.reply_text("😵 Ой, что-то пошло не так. Я уже разбираюсь с этим.")
 
-handlers.append(CallbackQueryHandler(goal_buttons_handler, pattern="^(create_goal|show_goals)$"))
-
 # Запуск бота
 if __name__ == "__main__":
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
-    # Регистрируем все обработчики
-    for handler in handlers:
+    # Регистрируем все обработчики из handlers.py
+    for handler in all_handlers:
         app.add_handler(handler)
 
-    # Регистрируем глобальный обработчик ошибок
+    # Добавляем отдельно кнопку целей
+    app.add_handler(CallbackQueryHandler(goal_buttons_handler, pattern="^(create_goal|show_goals)$"))
+
+    # Обработчик ошибок
     app.add_error_handler(error_handler)
 
     print("🤖 Mindra запущен!")
