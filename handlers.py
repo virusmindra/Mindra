@@ -1,12 +1,14 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
+from telegram.ext import (
+    CommandHandler, MessageHandler, CallbackQueryHandler,
+    ContextTypes, filters
+)
 from config import TELEGRAM_BOT_TOKEN, client
 from history import load_history, save_history, trim_history
-from modes import load_user_modes, save_user_modes
 
 # Загрузка истории и режимов
 conversation_history = load_history()
-user_modes = load_user_modes()
+user_modes = {}
 
 # Режимы общения
 MODES = {
@@ -41,32 +43,39 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
         save_history(conversation_history)
     await update.message.reply_text("История очищена. Начнём сначала ✨")
 
-# Команда /mode с кнопками
+# Команда /mode
 async def mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("🎧 Поддержка", callback_data="mode_support")],
         [InlineKeyboardButton("🌸 Мотивация", callback_data="mode_motivation")],
         [InlineKeyboardButton("🧘 Психолог", callback_data="mode_philosophy")],
-        [InlineKeyboardButton("🎭 Юмор", callback_data="mode_humor")]
+        [InlineKeyboardButton("🎭 Юмор", callback_data="mode_humor")],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text("Выбери стиль общения Mindra ✨", reply_markup=reply_markup)
 
-# Обработка выбора режима по кнопке
+# Обработка кнопок
 async def handle_mode_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
+    await query.answer()
+
     user_id = str(query.from_user.id)
     mode_key = query.data.replace("mode_", "")
 
     if mode_key in MODES:
         user_modes[user_id] = mode_key
-        save_user_modes(user_modes)
-        conversation_history[user_id] = [{"role": "system", "content": MODES[mode_key]}]
+        conversation_history[user_id] = [
+            {"role": "system", "content": MODES[mode_key]}
+        ]
         save_history(conversation_history)
-        await query.answer()
-        await query.edit_message_text(f"✅ Режим общения изменён на *{mode_key}*!", parse_mode="Markdown")
+        await query.edit_message_text(
+            text=f"✅ Режим общения изменён на *{mode_key}*!",
+            parse_mode="Markdown"
+        )
+    else:
+        await query.edit_message_text("🩺 Ой, что-то пошло не так. Я уже разбираюсь с этим.")
 
-# Обработчик текстовых сообщений
+# Обработка текста
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_input = update.message.text
     user_id = str(update.effective_user.id)
@@ -93,14 +102,14 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Упс, я немного завис... Попробуй позже 🥺")
         print(f"❌ Ошибка OpenAI: {e}")
 
-# Обработчик голосовых сообщений
+# Обработка голосовых
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Пока не умею расшифровывать голос. Напиши текстом 💬")
 
-# /help
+# Команда /help
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "Вот что я умею:\n\n" 
+        "Вот что я умею:\n\n"
         "💬 Просто напиши мне сообщение — я отвечу.\n"
         "🧠 Я запоминаю твои предыдущие реплики (историю можно сбросить).\n"
         "📌 Команды:\n"
@@ -112,7 +121,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Скоро научусь и другим фишкам 😉"
     )
 
-# /about
+# Команда /about
 async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
         "💜 *Привет! Я — Mindra.*\n\n"
@@ -132,7 +141,7 @@ async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("❓ Я не знаю такой команды. Напиши /help, чтобы увидеть, что я умею.")
 
-# Обработчики
+# Регистрируем обработчики
 handlers = [
     CommandHandler("start", start),
     CommandHandler("reset", reset),
