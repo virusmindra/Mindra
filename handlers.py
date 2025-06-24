@@ -1,10 +1,10 @@
+# handlers.py
+
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import (
-    CommandHandler, MessageHandler, CallbackQueryHandler,
-    ContextTypes, filters
-)
+from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 from config import TELEGRAM_BOT_TOKEN, client
 from history import load_history, save_history, trim_history
+import random
 
 # Загрузка истории и режимов
 conversation_history = load_history()
@@ -19,19 +19,24 @@ MODES = {
     "humor": "Ты — весёлый и добрый AI-друг с лёгким чувством юмора. Поддержи пользователя, добавив немного позитива."
 }
 
-# Команда /start
+# Пул заданий дня (для бесплатных пользователей)
+DAILY_TASKS = [
+    "✨ Запиши 3 вещи, за которые ты благодарен(на) сегодня.",
+    "🚶‍♂️ Прогуляйся 10 минут без телефона. Просто дыши и наблюдай.",
+    "📝 Напиши короткий список целей на завтра.",
+    "🌿 Попробуй провести 30 минут без соцсетей. Как ощущения?",
+    "💧 Выпей стакан воды и улыбнись себе в зеркало. Ты справляешься!"
+]
+
+# Обработчик команды /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
-    mode = user_modes.get(user_id, "default")
-    prompt = MODES.get(mode, MODES["default"])
-
     if user_id not in conversation_history:
-        conversation_history[user_id] = [{"role": "system", "content": prompt}]
+        conversation_history[user_id] = [{"role": "system", "content": MODES["default"]}]
         save_history(conversation_history)
-
     await update.message.reply_text("Привет, я Mindra 💜 Поддержка, мотивация и немного психолог. Готов поговорить!")
 
-# Команда /reset
+# Обработчик команды /reset
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     if user_id in conversation_history:
@@ -39,39 +44,31 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
         save_history(conversation_history)
     await update.message.reply_text("История очищена. Начнём сначала ✨")
 
-# Команда /mode
+# Обработчик команды /mode (с кнопками)
 async def mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("🎧 Поддержка", callback_data="mode_support")],
         [InlineKeyboardButton("🌸 Мотивация", callback_data="mode_motivation")],
         [InlineKeyboardButton("🧘 Психолог", callback_data="mode_philosophy")],
-        [InlineKeyboardButton("🎭 Юмор", callback_data="mode_humor")],
+        [InlineKeyboardButton("🎭 Юмор", callback_data="mode_humor")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text("Выбери стиль общения Mindra ✨", reply_markup=reply_markup)
 
-# Обработка кнопок
+# Обработка выбора режима по кнопке
 async def handle_mode_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    await query.answer()
-
     user_id = str(query.from_user.id)
     mode_key = query.data.replace("mode_", "")
 
     if mode_key in MODES:
         user_modes[user_id] = mode_key
-        conversation_history[user_id] = [
-            {"role": "system", "content": MODES[mode_key]}
-        ]
+        conversation_history[user_id] = [{"role": "system", "content": MODES[mode_key]}]
         save_history(conversation_history)
-        await query.edit_message_text(
-            text=f"✅ Режим общения изменён на *{mode_key}*!",
-            parse_mode="Markdown"
-        )
-    else:
-        await query.edit_message_text("🩺 Ой, что-то пошло не так. Я уже разбираюсь с этим.")
+        await query.answer()
+        await query.edit_message_text(f"✅ Режим общения изменён на *{mode_key}*!", parse_mode="Markdown")
 
-# Обработка текста
+# Обработчик текстовых сообщений
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_input = update.message.text
     user_id = str(update.effective_user.id)
@@ -98,31 +95,32 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Упс, я немного завис... Попробуй позже 🥺")
         print(f"❌ Ошибка OpenAI: {e}")
 
-# Обработка голосовых
+# Обработчик голосовых сообщений
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Пока не умею расшифровывать голос. Напиши текстом 💬")
 
-# Команда /help
+# /help
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "Вот что я умею:\n\n"
+        "Вот что я умею:\n\n" 
         "💬 Просто напиши мне сообщение — я отвечу.\n"
         "🧠 Я запоминаю твои предыдущие реплики (историю можно сбросить).\n"
-        "📌 Команды:\n"
+        "📎 Команды:\n"
         "/start — приветствие\n"
         "/reset — сброс истории\n"
         "/help — показать это сообщение\n"
         "/about — немного обо мне\n"
         "/mode — изменить стиль общения\n"
+        "/task — задание на день\n"
         "Скоро научусь и другим фишкам 😉"
     )
 
-# Команда /about
+# /about
 async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
         "💜 *Привет! Я — Mindra.*\n\n"
         "Я здесь, чтобы быть рядом, когда тебе нужно выговориться, найти мотивацию или просто почувствовать поддержку.\n"
-        "Можем пообщаться тепло, по-доброму, с заботой — без осуждения и давления 🧳\n\n"
+        "Можем пообщаться тепло, по-доброму, с заботой — без осуждения и давления 🦋\n\n"
         "🔮 *Что я умею:*\n"
         "• Поддержать, когда тяжело\n"
         "• Напомнить, что ты — не один(а)\n"
@@ -133,17 +131,23 @@ async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_markdown(text)
 
+# /task — задание на день
+async def task(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    task = random.choice(DAILY_TASKS)
+    await update.message.reply_text(f"🎯 Задание на день:\n{task}")
+
 # Неизвестные команды
 async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("❓ Я не знаю такой команды. Напиши /help, чтобы увидеть, что я умею.")
 
-# Регистрируем обработчики
+# Обработчики
 handlers = [
     CommandHandler("start", start),
     CommandHandler("reset", reset),
     CommandHandler("help", help_command),
     CommandHandler("about", about),
     CommandHandler("mode", mode),
+    CommandHandler("task", task),
     CallbackQueryHandler(handle_mode_choice),
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
