@@ -1,17 +1,15 @@
 # handlers.py
+import os
+import json
+import random
 
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
+
 from config import TELEGRAM_BOT_TOKEN, client
 from history import load_history, save_history, trim_history
-import random
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton
-from goals import add_goal
-from goals import get_goals
-from goals import mark_goal_done
-from goals import delete_goal
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import CallbackQueryHandler
+from goals import add_goal, get_goals, mark_goal_done, delete_goal
+
 
 PREMIUM_USERS = {"7775321566"}  # замени на свой Telegram ID
 
