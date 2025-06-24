@@ -174,6 +174,7 @@ handlers = [
     CommandHandler("about", about),
     CommandHandler("mode", mode),
     CommandHandler("task", task),
+    CommandHandler("premium_task", premium_task),
     CallbackQueryHandler(handle_mode_choice),
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
