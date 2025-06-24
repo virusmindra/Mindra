@@ -8,6 +8,8 @@ import random
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from goals import add_goal
 from goals import get_goals
+from goals import mark_goal_done
+from goals import delete_goal
 
 PREMIUM_USERS = {"7775321566"}  # замени на свой Telegram ID
 
@@ -33,7 +35,37 @@ async def premium_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Подписка открывает доступ к уникальным заданиям и функциям ✨",
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
-        
+
+# /done — отметить цель как выполненную
+async def mark_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    if not context.args or not context.args[0].isdigit():
+        await update.message.reply_text("✅ Чтобы отметить цель выполненной, напиши так:\n`/done 1`", parse_mode="Markdown")
+        return
+
+    index = int(context.args[0]) - 1
+    success = mark_goal_done(user_id, index)
+
+    if success:
+        await update.message.reply_text("🥳 Готово! Цель отмечена как выполненная.")
+    else:
+        await update.message.reply_text("❌ Не могу найти такую цель.")
+
+# /delete — удалить цель
+async def delete_goal_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    if not context.args or not context.args[0].isdigit():
+        await update.message.reply_text("❌ Чтобы удалить цель, напиши так:\n`/delete 1`", parse_mode="Markdown")
+        return
+
+    index = int(context.args[0]) - 1
+    success = delete_goal(user_id, index)
+
+    if success:
+        await update.message.reply_text("🗑️ Цель удалена.")
+    else:
+        await update.message.reply_text("⚠️ Не могу найти такую цель.")
+
 # Обработчик команды /goal
 async def goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
@@ -207,6 +239,8 @@ handlers = [
     CommandHandler("premium_task", premium_task),
     CommandHandler("goal", goal),
     CommandHandler("goals", show_goals),
+    CommandHandler("done", mark_done),
+    CommandHandler("delete", delete_goal_command),
     CallbackQueryHandler(handle_mode_choice),
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
