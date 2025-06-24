@@ -6,6 +6,7 @@ from config import TELEGRAM_BOT_TOKEN, client
 from history import load_history, save_history, trim_history
 import random
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
+from goals import add_goal
 
 PREMIUM_USERS = {"7775321566"}  # замени на свой Telegram ID
 
@@ -31,6 +32,18 @@ async def premium_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Подписка открывает доступ к уникальным заданиям и функциям ✨",
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
+        
+# Обработчик команды /goal
+async def goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+
+    if not context.args:
+        await update.message.reply_text("✏️ Чтобы поставить цель, напиши так:\n/goal Прочитать 10 страниц книги")
+        return
+
+    goal_text = " ".join(context.args)
+    add_goal(user_id, goal_text)
+    await update.message.reply_text(f"🎯 Цель добавлена: *{goal_text}*", parse_mode="Markdown")
 
 # Загрузка истории и режимов
 conversation_history = load_history()
@@ -175,6 +188,7 @@ handlers = [
     CommandHandler("mode", mode),
     CommandHandler("task", task),
     CommandHandler("premium_task", premium_task),
+    CommandHandler("goal", goal),
     CallbackQueryHandler(handle_mode_choice),
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
