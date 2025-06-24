@@ -24,3 +24,7 @@ def add_goal(user_id, goal_text):
         goals[user_id] = []
     goals[user_id].append({"text": goal_text, "done": False})
     save_goals(goals)
+
+def get_goals(user_id):
+    goals = load_goals()
+    return goals.get(user_id, [])
