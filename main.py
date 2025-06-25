@@ -3,6 +3,7 @@ import logging
 from telegram.ext import ApplicationBuilder, CallbackQueryHandler
 from telegram.error import TelegramError
 from handlers import handlers as all_handlers, goal_buttons_handler
+from handlers import habit, habits_list, handle_habit_button
 
 # Получаем токен бота из переменных окружения
 TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
