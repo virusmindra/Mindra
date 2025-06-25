@@ -4,6 +4,28 @@ from telegram.ext import ApplicationBuilder, CallbackQueryHandler
 from telegram.error import TelegramError
 from handlers import handlers as all_handlers, goal_buttons_handler
 from handlers import habit, habits_list, handle_habit_button
+from telegram.ext import ApplicationBuilder, CallbackQueryHandler
+from apscheduler.schedulers.background import BackgroundScheduler
+from goals import get_goals
+from datetime import datetime, timedelta
+import asyncio
+
+# Функция напоминания
+async def send_reminders(app):
+    for user_id in app.bot_data.get("user_ids", []):
+        goals = get_goals(user_id)
+        for goal in goals:
+            if goal.get("remind") and not goal["done"] and goal.get("deadline"):
+                try:
+                    deadline = datetime.strptime(goal["deadline"], "%Y-%m-%d")
+                    if datetime.now().date() >= deadline.date():
+                        await app.bot.send_message(
+                            chat_id=int(user_id),
+                            text=f"🔔 Напоминание: не забудь про цель:\n\n*{goal['text']}*",
+                            parse_mode="Markdown"
+                        )
+                except Exception as e:
+                    print(f"Ошибка с напоминанием: {e}")
 
 # Получаем токен бота из переменных окружения
 TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -30,6 +52,18 @@ if __name__ == "__main__":
 
     # Обработчик ошибок
     app.add_error_handler(error_handler)
+
+    # Сохраняем ID пользователей
+def track_users(update, context):
+    user_id = str(update.effective_user.id)
+    app.bot_data.setdefault("user_ids", set()).add(user_id)
+
+app.add_handler(MessageHandler(filters.ALL, track_users))
+
+# Запускаем планировщик напоминаний
+scheduler = BackgroundScheduler()
+scheduler.add_job(lambda: asyncio.run(send_reminders(app)), 'interval', hours=24)
+scheduler.start()
 
     print("🤖 Mindra запущен!")
     app.run_polling()
