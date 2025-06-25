@@ -97,11 +97,11 @@ async def mark_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
     index = int(context.args[0]) - 1
     success = mark_goal_done(user_id, index)
 
-    if success:
-      reaction = random.choice(REACTIONS_GOAL_DONE)
-await update.message.reply_text(reaction)
-    else:
-        await update.message.reply_text("❌ Не могу найти такую цель.")
+  if success:
+    reaction = random.choice(REACTIONS_GOAL_DONE)
+    await update.message.reply_text(reaction)
+else:
+    await update.message.reply_text("❌ Не могу найти такую цель.")
 
 REACTIONS_GOAL_DONE = [
     "🌟 Горжусь тобой! Ещё один шаг вперёд.",
