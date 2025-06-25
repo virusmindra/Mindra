@@ -70,22 +70,6 @@ async def handle_habit_button(update: Update, context: ContextTypes.DEFAULT_TYPE
             await query.edit_message_text("🗑️ Привычка удалена.")
         else:
             await query.edit_message_text("Не удалось удалить привычку.")
-            
-async def premium_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
-    
-    if user_id in PREMIUM_USERS:
-        task = random.choice(premium_tasks)
-        await update.message.reply_text(f"✨ *Твоё премиум-задание на сегодня:*\n\n{task}", parse_mode="Markdown")
-    else:
-        keyboard = [
-            [InlineKeyboardButton("💎 Узнать о подписке", url="https://t.me/твойботилилендинг")]
-        ]
-        await update.message.reply_text(
-            "🔒 Эта функция доступна только подписчикам Mindra+.\n"
-            "Подписка открывает доступ к уникальным заданиям и функциям ✨",
-            reply_markup=InlineKeyboardMarkup(keyboard)
-        )
 
 # /done — отметить цель как выполненную
 async def mark_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -97,11 +81,11 @@ async def mark_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
     index = int(context.args[0]) - 1
     success = mark_goal_done(user_id, index)
 
-  if success:
-    reaction = random.choice(REACTIONS_GOAL_DONE)
-    await update.message.reply_text(reaction)
-else:
-    await update.message.reply_text("❌ Не могу найти такую цель.")
+    if success:
+        reaction = random.choice(REACTIONS_GOAL_DONE)
+        await update.message.reply_text(reaction)
+    else:
+        await update.message.reply_text("❌ Не могу найти такую цель.")
 
 REACTIONS_GOAL_DONE = [
     "🌟 Горжусь тобой! Ещё один шаг вперёд.",
