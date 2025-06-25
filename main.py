@@ -39,21 +39,7 @@ async def error_handler(update, context):
     if update and update.effective_message:
         await update.effective_message.reply_text("😵 Ой, что-то пошло не так. Я уже разбираюсь с этим.")
 
-# Запуск бота
-if __name__ == "__main__":
-    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
-
-    # Регистрируем все обработчики из handlers.py
-    for handler in all_handlers:
-        app.add_handler(handler)
-
-    # Добавляем отдельно кнопку целей
-    app.add_handler(CallbackQueryHandler(goal_buttons_handler, pattern="^(create_goal|show_goals)$"))
-
-    # Обработчик ошибок
-    app.add_error_handler(error_handler)
-
-    # Сохраняем ID пользователей
+ # Сохраняем ID пользователей
 def track_users(update, context):
     user_id = str(update.effective_user.id)
     app.bot_data.setdefault("user_ids", set()).add(user_id)
@@ -64,6 +50,20 @@ app.add_handler(MessageHandler(filters.ALL, track_users))
 scheduler = BackgroundScheduler()
 scheduler.add_job(lambda: asyncio.run(send_reminders(app)), 'interval', hours=24)
 scheduler.start()
+
+ # Добавляем отдельно кнопку целей
+    app.add_handler(CallbackQueryHandler(goal_buttons_handler, pattern="^(create_goal|show_goals)$"))
+
+# Запуск бота
+if __name__ == "__main__":
+    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
+
+    # Регистрируем все обработчики из handlers.py
+    for handler in all_handlers:
+        app.add_handler(handler)
+
+    # Обработчик ошибок
+    app.add_error_handler(error_handler)
 
     print("🤖 Mindra запущен!")
     app.run_polling()
