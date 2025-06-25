@@ -1,14 +1,42 @@
 import os
 import logging
-from telegram.ext import ApplicationBuilder, CallbackQueryHandler
+import asyncio
+from datetime import datetime
+from apscheduler.schedulers.background import BackgroundScheduler
+
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    MessageHandler,
+    CallbackQueryHandler,
+    ContextTypes,
+    filters
+)
+
 from telegram.error import TelegramError
 from handlers import handlers as all_handlers, goal_buttons_handler
-from handlers import habit, habits_list, handle_habit_button
-from telegram.ext import ApplicationBuilder, CallbackQueryHandler
-from apscheduler.schedulers.background import BackgroundScheduler
 from goals import get_goals
-from datetime import datetime, timedelta
-import asyncio
+
+
+# Получаем токен бота из переменных окружения
+TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
+
+
+# Глобальный обработчик ошибок
+async def error_handler(update, context):
+    logging.error(msg="Exception while handling an update:", exc_info=context.error)
+    if update and update.effective_message:
+        await update.effective_message.reply_text("😵 Ой, что-то пошло не так. Я уже разбираюсь с этим.")
+
+
+# Отслеживаем пользователей
+def track_users(update, context):
+    user_id = str(update.effective_user.id)
+    context.application.bot_data.setdefault("user_ids", set()).add(user_id)
+
 
 # Функция напоминания
 async def send_reminders(app):
@@ -25,36 +53,10 @@ async def send_reminders(app):
                             parse_mode="Markdown"
                         )
                 except Exception as e:
-                    print(f"Ошибка с напоминанием: {e}")
+                    print(f"❌ Ошибка с напоминанием: {e}")
 
-# Получаем токен бота из переменных окружения
-TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-# Настройка логирования
-logging.basicConfig(level=logging.INFO)
-
-# Глобальный обработчик ошибок
-async def error_handler(update, context):
-    logging.error(msg="Exception while handling an update:", exc_info=context.error)
-    if update and update.effective_message:
-        await update.effective_message.reply_text("😵 Ой, что-то пошло не так. Я уже разбираюсь с этим.")
-
- # Сохраняем ID пользователей
-def track_users(update, context):
-    user_id = str(update.effective_user.id)
-    app.bot_data.setdefault("user_ids", set()).add(user_id)
-
-app.add_handler(MessageHandler(filters.ALL, track_users))
-
-# Запускаем планировщик напоминаний
-scheduler = BackgroundScheduler()
-scheduler.add_job(lambda: asyncio.run(send_reminders(app)), 'interval', hours=24)
-scheduler.start()
-
- # Добавляем отдельно кнопку целей
-    app.add_handler(CallbackQueryHandler(goal_buttons_handler, pattern="^(create_goal|show_goals)$"))
-
-# Запуск бота
+# Точка входа
 if __name__ == "__main__":
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
@@ -62,8 +64,19 @@ if __name__ == "__main__":
     for handler in all_handlers:
         app.add_handler(handler)
 
-    # Обработчик ошибок
+    # Обработчик кнопок целей и привычек
+    app.add_handler(CallbackQueryHandler(goal_buttons_handler, pattern="^(create_goal|show_goals|create_habit|show_habits)$"))
+
+    # Отслеживаем пользователей
+    app.add_handler(MessageHandler(filters.ALL, track_users))
+
+    # Глобальный обработчик ошибок
     app.add_error_handler(error_handler)
+
+    # Запускаем планировщик напоминаний
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(lambda: asyncio.run(send_reminders(app)), 'interval', hours=24)
+    scheduler.start()
 
     print("🤖 Mindra запущен!")
     app.run_polling()
