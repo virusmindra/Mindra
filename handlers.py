@@ -332,6 +332,23 @@ async def task(update: Update, context: ContextTypes.DEFAULT_TYPE):
     task = random.choice(DAILY_TASKS)
     await update.message.reply_text(f"🎯 Задание на день:\n{task}")
 
+# /premium_task — премиум-задание на день
+async def premium_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+
+    if user_id in PREMIUM_USERS:
+        task = random.choice(premium_tasks)
+        await update.message.reply_text(f"✨ *Твоё премиум-задание на сегодня:*\n\n{task}", parse_mode="Markdown")
+    else:
+        keyboard = [
+            [InlineKeyboardButton("💎 Узнать о подписке", url="https://t.me/talktomindra_bot")]
+        ]
+        await update.message.reply_text(
+            "🔒 Эта функция доступна только подписчикам Mindra+.\n"
+            "Подписка открывает доступ к уникальным заданиям и функциям ✨",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+
 # Неизвестные команды
 async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("❓ Я не знаю такой команды. Напиши /help, чтобы увидеть, что я умею.")
