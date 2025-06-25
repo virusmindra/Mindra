@@ -288,7 +288,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("🎯 Поставить цель", callback_data="create_goal")],
         [InlineKeyboardButton("📋 Мои цели", callback_data="show_goals")],
         [InlineKeyboardButton("🌱 Добавить привычку", callback_data="create_habit")],
-        [InlineKeyboardButton("📊 Мои привычки", callback_data="show_habits")]
+        [InlineKeyboardButton("📊 Мои привычки", callback_data="show_habits")],
+        [InlineKeyboardButton("💎 Подписка Mindra+", url="https://t.me/talktomindra_bot")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
