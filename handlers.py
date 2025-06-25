@@ -176,15 +176,27 @@ async def goal_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     await query.answer()
 
     if query.data == "create_goal":
-        await query.edit_message_text("✍️ Напиши свою цель в формате: `/goal Прочитать 10 страниц`", parse_mode="Markdown")
+        await query.edit_message_text("✍️ Напиши свою цель:\n`/goal Прочитать 10 страниц`", parse_mode="Markdown")
+
     elif query.data == "show_goals":
-        from goals import load_goals  # Убедись, что импорт верный
-        goals = load_goals().get(user_id, [])
+        goals = get_goals(user_id)
         if not goals:
-            await query.edit_message_text("У тебя пока нет целей. Добавь первую через /goal ✨")
+            await query.edit_message_text("❌ У тебя пока нет целей. Добавь первую с помощью /goal")
         else:
             goals_list = "\n".join([f"• {g['text']} {'✅' if g.get('done') else '❌'}" for g in goals])
             await query.edit_message_text(f"📋 Твои цели:\n{goals_list}")
+
+    elif query.data == "create_habit":
+        await query.edit_message_text("🌱 Напиши свою привычку:\n`/habit Делать зарядку утром`", parse_mode="Markdown")
+
+    elif query.data == "show_habits":
+        habits = get_habits(user_id)
+        if not habits:
+            await query.edit_message_text("❌ У тебя пока нет привычек. Добавь первую через /habit")
+        else:
+            habits_list = "\n".join([f"• {h['text']} {'✅' if h.get('done') else '❌'}" for h in habits])
+            await query.edit_message_text(f"📊 Твои привычки:\n{habits_list}")
+
             
 # Загрузка истории и режимов
 conversation_history = load_history()
@@ -282,7 +294,9 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("🎯 Поставить цель", callback_data="create_goal")],
-        [InlineKeyboardButton("📋 Мои цели", callback_data="show_goals")]
+        [InlineKeyboardButton("📋 Мои цели", callback_data="show_goals")],
+        [InlineKeyboardButton("🌱 Добавить привычку", callback_data="create_habit")],
+        [InlineKeyboardButton("📊 Мои привычки", callback_data="show_habits")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -298,9 +312,12 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/mode — изменить стиль общения\n"
         "/goal — поставить личную цель\n"
         "/goals — список твоих целей\n"
+        "/habit — добавить привычку\n"
+        "/habits — список твоих привычек\n"
         "Скоро научусь и другим фишкам 😉",
         reply_markup=reply_markup
     )
+
 
 # /about
 async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -342,7 +359,7 @@ handlers = [
     CommandHandler("delete", delete_goal_command),
     CommandHandler("habit", habit),
     CommandHandler("habits", habits_list),
-    CallbackQueryHandler(handle_habit_button, pattern="^(done_habit_|delete_habit_).*"),
+    CallbackQueryHandler(goal_buttons_handler, pattern="^(create_goal|show_goals|create_habit|show_habits)$"),
     CallbackQueryHandler(handle_mode_choice),
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
