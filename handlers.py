@@ -7,11 +7,11 @@ import re
 from datetime import datetime
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
+from habits import add_habit, get_habits, mark_habit_done, delete_habit
 
 from config import TELEGRAM_BOT_TOKEN, client
 from history import load_history, save_history, trim_history
 from goals import add_goal, get_goals, mark_goal_done, delete_goal
-
 
 PREMIUM_USERS = {"7775321566"}  # замени на свой Telegram ID
 
@@ -22,6 +22,55 @@ premium_tasks = [
     "🧠 Напиши небольшой текст о себе из будущего — кем ты хочешь быть через 3 года?",
 ]
 
+# /habit
+async def habit(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    if not context.args:
+        await update.message.reply_text("Чтобы добавить привычку, напиши:\n/habit Делать зарядку")
+        return
+    habit_text = " ".join(context.args)
+    add_habit(user_id, habit_text)
+    await update.message.reply_text(f"🎯 Привычка добавлена: *{habit_text}*", parse_mode="Markdown")
+
+# /habits
+async def habits_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    habits = get_habits(user_id)
+    if not habits:
+        await update.message.reply_text("У тебя пока нет привычек. Добавь первую с помощью /habit")
+        return
+
+    keyboard = []
+    for i, habit in enumerate(habits):
+        status = "✅" if habit["done"] else "🔸"
+        keyboard.append([
+            InlineKeyboardButton(f"{status} {habit['text']}", callback_data=f"noop"),
+            InlineKeyboardButton("✅", callback_data=f"done_habit_{i}"),
+            InlineKeyboardButton("🗑️", callback_data=f"delete_habit_{i}")
+        ])
+
+    await update.message.reply_text("📋 Твои привычки:", reply_markup=InlineKeyboardMarkup(keyboard))
+
+# Обработка кнопок
+async def handle_habit_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    user_id = str(query.from_user.id)
+    await query.answer()
+
+    if query.data.startswith("done_habit_"):
+        index = int(query.data.split("_")[-1])
+        if mark_habit_done(user_id, index):
+            await query.edit_message_text("🎉 Привычка отмечена как выполненная!")
+        else:
+            await query.edit_message_text("Не удалось найти привычку.")
+
+    elif query.data.startswith("delete_habit_"):
+        index = int(query.data.split("_")[-1])
+        if delete_habit(user_id, index):
+            await query.edit_message_text("🗑️ Привычка удалена.")
+        else:
+            await query.edit_message_text("Не удалось удалить привычку.")
+            
 async def premium_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     
