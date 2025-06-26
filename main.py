@@ -17,33 +17,24 @@ from telegram.error import TelegramError
 from handlers import handlers as all_handlers, goal_buttons_handler, premium_task
 from goals import get_goals
 
-
 # Получаем токен бота из переменных окружения
 TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 
-def track_users(update, context):
-    user_id = str(update.effective_user.id)
-    context.application.bot_data.setdefault("user_ids", set()).add(user_id)
-
-app.add_handler(MessageHandler(filters.ALL, track_users))
-
-# Глобальный обработчик ошибок
+# Обработчик ошибок
 async def error_handler(update, context):
     logging.error(msg="Exception while handling an update:", exc_info=context.error)
     if update and update.effective_message:
         await update.effective_message.reply_text("😵 Ой, что-то пошло не так. Я уже разбираюсь с этим.")
 
-
-# Отслеживаем пользователей
-def track_users(update, context):
+# Отслеживание пользователей
+async def track_users(update, context):
     user_id = str(update.effective_user.id)
     context.application.bot_data.setdefault("user_ids", set()).add(user_id)
 
-
-# Функция напоминания
+# Напоминание о целях
 async def send_reminders(app):
     for user_id in app.bot_data.get("user_ids", []):
         goals = get_goals(user_id)
@@ -59,34 +50,32 @@ async def send_reminders(app):
                         )
                 except Exception as e:
                     print(f"❌ Ошибка с напоминанием: {e}")
-# Планировщик
-scheduler = BackgroundScheduler()
 
+# Старт планировщика (например, для утреннего вопроса)
 def start_scheduler(app):
-    scheduler.add_job(lambda: asyncio.run(send_daily_checkin(app)), 'cron', hour=10, minute=0)
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(lambda: asyncio.run(send_reminders(app)), 'interval', hours=24)
     scheduler.start()
 
 # Точка входа
 if __name__ == "__main__":
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
-    # Регистрируем все обработчики из handlers.py
+    # Регистрируем все команды из handlers.py
     for handler in all_handlers:
         app.add_handler(handler)
 
     # Обработчик кнопок целей и привычек
     app.add_handler(CallbackQueryHandler(goal_buttons_handler, pattern="^(create_goal|show_goals|create_habit|show_habits)$"))
 
-    # Отслеживаем пользователей
+    # Трек пользователей
     app.add_handler(MessageHandler(filters.ALL, track_users))
 
     # Глобальный обработчик ошибок
     app.add_error_handler(error_handler)
 
-    # Запускаем планировщик напоминаний
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(lambda: asyncio.run(send_reminders(app)), 'interval', hours=24)
-    scheduler.start()
+    # Планировщик
     start_scheduler(app)
+
     print("🤖 Mindra запущен!")
     app.run_polling()
