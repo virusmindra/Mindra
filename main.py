@@ -82,6 +82,6 @@ if __name__ == "__main__":
     scheduler = BackgroundScheduler()
     scheduler.add_job(lambda: asyncio.run(send_reminders(app)), 'interval', hours=24)
     scheduler.start()
-
+    start_scheduler(app)
     print("🤖 Mindra запущен!")
     app.run_polling()
