@@ -3,6 +3,9 @@ import os
 import json
 import random
 import re
+import openai
+import tempfile
+import aiohttp
 
 from datetime import datetime
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
@@ -13,6 +16,37 @@ from stats import track_user, get_stats
 from config import TELEGRAM_BOT_TOKEN, client
 from history import load_history, save_history, trim_history
 from goals import add_goal, get_goals, mark_goal_done, delete_goal
+
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    voice = update.message.voice
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".ogg") as f:
+        file_path = f.name
+        await voice.get_file().download_to_drive(file_path)
+
+    # Конвертируем OGG в MP3 с ffmpeg
+    mp3_path = file_path.replace(".ogg", ".mp3")
+    os.system(f"ffmpeg -i {file_path} {mp3_path}")
+
+    # Распознаём с Whisper
+    with open(mp3_path, "rb") as audio_file:
+        try:
+            transcript = openai.Audio.transcribe("whisper-1", audio_file)
+            text = transcript["text"]
+            await update.message.reply_text(f"🗣️ Ты сказал(а): _{text}_", parse_mode="Markdown")
+
+            # Переадресуем как обычное сообщение (чтобы Mindra ответила)
+            update.message.text = text
+            await chat(update, context)
+
+        except Exception as e:
+            await update.message.reply_text("❌ Не удалось распознать голос. Попробуй снова.")
+            print("Ошибка расшифровки:", e)
+
+    os.remove(file_path)
+    os.remove(mp3_path)
 
 PREMIUM_USERS = {"7775321566"}  # замени на свой Telegram ID
 
@@ -405,5 +439,6 @@ handlers = [
     CallbackQueryHandler(handle_mode_choice),
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
-    MessageHandler(filters.COMMAND, unknown_command)
+    MessageHandler(filters.COMMAND, unknown_command),
+    MessageHandler(filters.VOICE, handle_voice),
 ]
