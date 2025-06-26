@@ -24,6 +24,11 @@ TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 
+def track_users(update, context):
+    user_id = str(update.effective_user.id)
+    context.application.bot_data.setdefault("user_ids", set()).add(user_id)
+
+app.add_handler(MessageHandler(filters.ALL, track_users))
 
 # Глобальный обработчик ошибок
 async def error_handler(update, context):
