@@ -23,6 +23,26 @@ premium_tasks = [
     "🧠 Напиши небольшой текст о себе из будущего — кем ты хочешь быть через 3 года?",
 ]
 
+async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    track_user(user_id)  # 👈 логируем пользователя
+    ...
+
+YOUR_ID = "7775321566"  # 👈 замени на свой Telegram ID
+
+async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    if user_id != YOUR_ID:
+        return
+
+    stats = get_stats()
+    text = (
+        f"📊 Статистика Mindra:\n\n"
+        f"👥 Всего пользователей: {stats['total_users']}\n"
+        f"💎 Подписчиков: {stats['premium_users']}\n"
+    )
+    await update.message.reply_text(text)
+
 # /habit
 async def habit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
@@ -380,6 +400,7 @@ handlers = [
     CommandHandler("delete", delete_goal_command),
     CommandHandler("habit", habit),
     CommandHandler("habits", habits_list),
+    CommandHandler("stats", stats_command),
     CallbackQueryHandler(goal_buttons_handler, pattern="^(create_goal|show_goals|create_habit|show_habits)$"),
     CallbackQueryHandler(handle_mode_choice),
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
