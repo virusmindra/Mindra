@@ -8,6 +8,7 @@ from datetime import datetime
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 from habits import add_habit, get_habits, mark_habit_done, delete_habit
+from stats import track_user, get_stats
 
 from config import TELEGRAM_BOT_TOKEN, client
 from history import load_history, save_history, trim_history
