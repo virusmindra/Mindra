@@ -59,7 +59,12 @@ async def send_reminders(app):
                         )
                 except Exception as e:
                     print(f"❌ Ошибка с напоминанием: {e}")
+# Планировщик
+scheduler = BackgroundScheduler()
 
+def start_scheduler(app):
+    scheduler.add_job(lambda: asyncio.run(send_daily_checkin(app)), 'cron', hour=10, minute=0)
+    scheduler.start()
 
 # Точка входа
 if __name__ == "__main__":
