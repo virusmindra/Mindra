@@ -1,4 +1,5 @@
 python-telegram-bot>=20.0
 openai>=1.11.0
 apscheduler
+aiohttp
 ffmpeg-python
