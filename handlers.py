@@ -21,25 +21,43 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     voice = update.message.voice
+    user_id = str(update.effective_user.id)
 
+     # Скачиваем файл
+    file = await context.bot.get_file(voice.file_id)
+    ogg_path = tempfile.NamedTemporaryFile(delete=False, suffix=".ogg").name
+    mp3_path = ogg_path.replace(".ogg", ".mp3")
+    await file.download_to_drive(ogg_path)
     with tempfile.NamedTemporaryFile(delete=False, suffix=".ogg") as f:
         file_path = f.name
         await voice.get_file().download_to_drive(file_path)
 
-    # Конвертируем OGG в MP3 с ffmpeg
-    mp3_path = file_path.replace(".ogg", ".mp3")
-    os.system(f"ffmpeg -i {file_path} {mp3_path}")
+   # Конвертируем ogg → mp3
+    try:
+        ffmpeg.input(ogg_path).output(mp3_path).run(overwrite_output=True, quiet=True)
+    except Exception as e:
+        await update.message.reply_text("⚠️ Не удалось обработать голосовое.")
+        print("FFmpeg error:", e)
+        return
+    finally:
+        os.remove(ogg_path)
 
-    # Распознаём с Whisper
-    with open(mp3_path, "rb") as audio_file:
-        try:
+   # Whisper API
+    try:
+        with open(mp3_path, "rb") as audio_file:
             transcript = openai.Audio.transcribe("whisper-1", audio_file)
-            text = transcript["text"]
-            await update.message.reply_text(f"🗣️ Ты сказал(а): _{text}_", parse_mode="Markdown")
+        os.remove(mp3_path)
+    except Exception as e:
+        await update.message.reply_text("😓 Ошибка при расшифровке.")
+        print("Whisper error:", e)
+        return
 
-            # Переадресуем как обычное сообщение (чтобы Mindra ответила)
-            update.message.text = text
-            await chat(update, context)
+    text = transcript["text"]
+    await update.message.reply_text(f"🗣️ Ты сказал(а): _{text}_", parse_mode="Markdown")
+    
+             # Переадресуем в chat()
+    update.message.text = text
+    await chat(update, context)
 
         except Exception as e:
             await update.message.reply_text("❌ Не удалось распознать голос. Попробуй снова.")
