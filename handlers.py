@@ -44,14 +44,18 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         os.remove(ogg_path)
 
    # Whisper API
-    try:
-        with open(mp3_path, "rb") as audio_file:
-            transcript = openai.Audio.transcribe("whisper-1", audio_file)
-        os.remove(mp3_path)
-    except Exception as e:
-        await update.message.reply_text("😓 Ошибка при расшифровке.")
-        print("Whisper error:", e)
-        return
+try:
+    with open(mp3_path, "rb") as audio_file:
+        transcript = openai.Audio.transcribe("whisper-1", audio_file)
+        text = transcript["text"]
+        await update.message.reply_text(f"🗣️ Ты сказал(а): _{text}_", parse_mode="Markdown")
+
+        update.message.text = text
+        await chat(update, context)
+
+except Exception as e:
+    await update.message.reply_text("❌ Не удалось распознать голос. Попробуй снова.")
+    print("Ошибка расшифровки:", e)
 
     text = transcript["text"]
     await update.message.reply_text(f"🗣️ Ты сказал(а): _{text}_", parse_mode="Markdown")
