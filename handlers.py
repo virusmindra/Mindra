@@ -43,27 +43,27 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     os.remove(ogg_path)  # удаляем ogg после конвертации
 
-
     # Распознавание через Whisper API
-try:
-    if os.path.getsize(mp3_path) == 0:
-        await update.message.reply_text("❌ Файл пустой. Конвертация не удалась.")
-        return
+    try:
+        if os.path.getsize(mp3_path) == 0:
+            await update.message.reply_text("❌ Файл пустой. Конвертация не удалась.")
+            return
 
-    with open(mp3_path, "rb") as audio_file:
-        transcript = openai.Audio.transcribe("whisper-1", audio_file)
-        text = transcript["text"]
+        with open(mp3_path, "rb") as audio_file:
+            transcript = openai.Audio.transcribe("whisper-1", audio_file)
+            text = transcript["text"]
 
-    await update.message.reply_text(f"🗣️ Ты сказал(а): _{text}_", parse_mode="Markdown")
-    update.message.text = text
-    await chat(update, context)
+        await update.message.reply_text(f"🗣️ Ты сказал(а): _{text}_", parse_mode="Markdown")
+
+        # Переадресуем как обычное сообщение
+        update.message.text = text
+        await chat(update, context)
 
     except Exception as e:
         await update.message.reply_text("❌ Не удалось распознать голос. Попробуй снова.")
         print("Whisper error:", e)
     finally:
         os.remove(mp3_path)
-
 
 PREMIUM_USERS = {"7775321566"}  # замени на свой Telegram ID
 
