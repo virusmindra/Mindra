@@ -6,7 +6,7 @@ import re
 import openai
 import tempfile
 import aiohttp
-import ffmpeg
+import imageio_ffmpeg as ffmpeg
 
 from datetime import datetime
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
