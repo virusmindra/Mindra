@@ -6,8 +6,8 @@ import re
 import openai
 import tempfile
 import aiohttp
-import imageio_ffmpeg as ffmpeg
 import subprocess
+import imageio_ffmpeg as ffmpeg
 
 from datetime import datetime
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
@@ -33,13 +33,13 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Конвертация ogg → mp3
     try:
-        ffmpeg_path = ffmpeg.get_ffmpeg_exe()
-subprocess.run([ffmpeg_path, "-i", ogg_path, mp3_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except Exception as e:
-        await update.message.reply_text("⚠️ Не удалось обработать голосовое.")
-        print("FFmpeg error:", e)
-        os.remove(ogg_path)
-        return
+    ffmpeg_path = ffmpeg.get_ffmpeg_exe()
+    subprocess.run([ffmpeg_path, "-i", ogg_path, mp3_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+except Exception as e:
+    await update.message.reply_text("⚠️ Не удалось обработать голосовое сообщение.")
+    print("FFmpeg error:", e)
+    os.remove(ogg_path)
+    return
     os.remove(ogg_path)  # удаляем ogg после конвертации
 
     # Распознавание через Whisper API
