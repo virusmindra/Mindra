@@ -24,51 +24,41 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     voice = update.message.voice
     user_id = str(update.effective_user.id)
 
-     # Скачиваем файл
+    # Скачиваем файл
     file = await context.bot.get_file(voice.file_id)
     ogg_path = tempfile.NamedTemporaryFile(delete=False, suffix=".ogg").name
     mp3_path = ogg_path.replace(".ogg", ".mp3")
     await file.download_to_drive(ogg_path)
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".ogg") as f:
-        file_path = f.name
-        await voice.get_file().download_to_drive(file_path)
 
-   # Конвертируем ogg → mp3
+    # Конвертируем ogg → mp3
     try:
         ffmpeg.input(ogg_path).output(mp3_path).run(overwrite_output=True, quiet=True)
     except Exception as e:
         await update.message.reply_text("⚠️ Не удалось обработать голосовое.")
         print("FFmpeg error:", e)
-        return
-    finally:
         os.remove(ogg_path)
+        return
 
-   # Whisper API
-try:
-    with open(mp3_path, "rb") as audio_file:
-        transcript = openai.Audio.transcribe("whisper-1", audio_file)
-        text = transcript["text"]
+    # Удаляем ogg после конвертации
+    os.remove(ogg_path)
+
+    # Распознаём через Whisper
+    try:
+        with open(mp3_path, "rb") as audio_file:
+            transcript = openai.Audio.transcribe("whisper-1", audio_file)
+            text = transcript["text"]
+
         await update.message.reply_text(f"🗣️ Ты сказал(а): _{text}_", parse_mode="Markdown")
 
+        # Переадресуем как обычное сообщение
         update.message.text = text
         await chat(update, context)
 
-except Exception as e:
-    await update.message.reply_text("❌ Не удалось распознать голос. Попробуй снова.")
-    print("Ошибка расшифровки:", e)
+    except Exception as e:
+        await update.message.reply_text("❌ Не удалось распознать голос. Попробуй снова.")
+        print("Ошибка расшифровки:", e)
 
-    text = transcript["text"]
-    await update.message.reply_text(f"🗣️ Ты сказал(а): _{text}_", parse_mode="Markdown")
-    
-             # Переадресуем в chat()
-    update.message.text = text
-    await chat(update, context)
-
-        except Exception as e:
-            await update.message.reply_text("❌ Не удалось распознать голос. Попробуй снова.")
-            print("Ошибка расшифровки:", e)
-
-    os.remove(file_path)
+    # Удаляем mp3-файл
     os.remove(mp3_path)
 
 PREMIUM_USERS = {"7775321566"}  # замени на свой Telegram ID
