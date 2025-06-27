@@ -453,5 +453,4 @@ handlers = [
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
     MessageHandler(filters.COMMAND, unknown_command),
-    MessageHandler(filters.VOICE, handle_voice),
 ]
