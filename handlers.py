@@ -45,14 +45,13 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
     # Распознавание через Whisper API
-    try:
+try:
     if os.path.getsize(mp3_path) == 0:
         await update.message.reply_text("❌ Файл пустой. Конвертация не удалась.")
         return
 
     with open(mp3_path, "rb") as audio_file:
         transcript = openai.Audio.transcribe("whisper-1", audio_file)
-        print("Transcript:", transcript)  # Для дебага
         text = transcript["text"]
 
     await update.message.reply_text(f"🗣️ Ты сказал(а): _{text}_", parse_mode="Markdown")
