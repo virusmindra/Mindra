@@ -24,13 +24,13 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     voice = update.message.voice
     user_id = str(update.effective_user.id)
 
-    # Скачиваем файл
+    # Скачиваем ogg-файл
     file = await context.bot.get_file(voice.file_id)
     ogg_path = tempfile.NamedTemporaryFile(delete=False, suffix=".ogg").name
     mp3_path = ogg_path.replace(".ogg", ".mp3")
     await file.download_to_drive(ogg_path)
 
-    # Конвертируем ogg → mp3
+    # Конвертация ogg → mp3
     try:
         ffmpeg.input(ogg_path).output(mp3_path).run(overwrite_output=True, quiet=True)
     except Exception as e:
@@ -38,11 +38,9 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print("FFmpeg error:", e)
         os.remove(ogg_path)
         return
+    os.remove(ogg_path)  # удаляем ogg после конвертации
 
-    # Удаляем ogg после конвертации
-    os.remove(ogg_path)
-
-    # Распознаём через Whisper
+    # Распознавание через Whisper API
     try:
         with open(mp3_path, "rb") as audio_file:
             transcript = openai.Audio.transcribe("whisper-1", audio_file)
@@ -56,10 +54,10 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     except Exception as e:
         await update.message.reply_text("❌ Не удалось распознать голос. Попробуй снова.")
-        print("Ошибка расшифровки:", e)
+        print("Whisper error:", e)
+    finally:
+        os.remove(mp3_path)
 
-    # Удаляем mp3-файл
-    os.remove(mp3_path)
 
 PREMIUM_USERS = {"7775321566"}  # замени на свой Telegram ID
 
@@ -356,10 +354,6 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text("Упс, я немного завис... Попробуй позже 🥺")
         print(f"❌ Ошибка OpenAI: {e}")
-
-# Обработчик голосовых сообщений
-async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Пока не умею расшифровывать голос. Напиши текстом 💬")
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
