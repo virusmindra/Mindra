@@ -58,7 +58,7 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     os.remove(ogg_path)  # удаляем ogg после конвертации
 
     # Распознавание через Whisper API
-        try:
+    try:
         if os.path.getsize(mp3_path) == 0:
             print("⚠️ Файл mp3 пустой")
             await update.message.reply_text("❌ Файл пустой. Конвертация не удалась.")
@@ -72,13 +72,6 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text = transcript.get("text", "[пусто]")
 
         await update.message.reply_text(f"🗣️ Ты сказал(а): _{text}_", parse_mode="Markdown")
-        update.message.text = text
-        await chat(update, context)
-
-    except Exception as e:
-        await update.message.reply_text("❌ Не удалось распознать голос. Попробуй снова.")
-        print("Whisper error:", e)
-        print(traceback.format_exc())
 
         # Переадресуем как обычное сообщение
         update.message.text = text
@@ -87,6 +80,8 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text("❌ Не удалось распознать голос. Попробуй снова.")
         print("Whisper error:", e)
+        print(traceback.format_exc())
+
     finally:
         os.remove(mp3_path)
 
