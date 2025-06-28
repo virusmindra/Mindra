@@ -34,7 +34,14 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Конвертация ogg → mp3
     try:
         ffmpeg_path = ffmpeg.get_ffmpeg_exe()
-        subprocess.run([ffmpeg_path, "-i", ogg_path, mp3_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        result = subprocess.run(
+    [ffmpeg_path, "-i", ogg_path, mp3_path],
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE
+)
+print("🛠️ FFmpeg stdout:", result.stdout.decode())
+print("🛠️ FFmpeg stderr:", result.stderr.decode())
+
     except Exception as e:
         await update.message.reply_text("⚠️ Не удалось обработать голосовое сообщение.")
         print("FFmpeg error:", e)
@@ -48,10 +55,13 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if os.path.getsize(mp3_path) == 0:
             await update.message.reply_text("❌ Файл пустой. Конвертация не удалась.")
             return
-
+            
+            print("📦 MP3 size:", os.path.getsize(mp3_path))
         with open(mp3_path, "rb") as audio_file:
             transcript = openai.Audio.transcribe("whisper-1", audio_file)
-            text = transcript["text"]
+            print("📝 Whisper response:", transcript)
+            text = transcript.get("text", "[пусто]")
+
 
         await update.message.reply_text(f"🗣️ Ты сказал(а): _{text}_", parse_mode="Markdown")
 
