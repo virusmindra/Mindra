@@ -8,6 +8,7 @@ import tempfile
 import aiohttp
 import subprocess
 import imageio_ffmpeg as ffmpeg
+import traceback
 
 from datetime import datetime
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
@@ -39,30 +40,45 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
-        print("🛠️ FFmpeg stdout:", result.stdout.decode())
-        print("🛠️ FFmpeg stderr:", result.stderr.decode())
+        print("🛠️ FFmpeg stdout:\n", result.stdout.decode())
+        print("🛠️ FFmpeg stderr:\n", result.stderr.decode())
+
+        if result.returncode != 0:
+            print("❌ FFmpeg вернул ошибку.")
+            await update.message.reply_text("❌ Ошибка при конвертации. FFmpeg вернул код ошибки.")
+            return
+
     except Exception as e:
         await update.message.reply_text("⚠️ Не удалось обработать голосовое сообщение.")
         print("FFmpeg error:", e)
+        print(traceback.format_exc())
         os.remove(ogg_path)
         return
 
     os.remove(ogg_path)  # удаляем ogg после конвертации
 
     # Распознавание через Whisper API
-    try:
+        try:
         if os.path.getsize(mp3_path) == 0:
+            print("⚠️ Файл mp3 пустой")
             await update.message.reply_text("❌ Файл пустой. Конвертация не удалась.")
             return
 
-        print("📦 MP3 size:", os.path.getsize(mp3_path))
+        print("📦 MP3 размер (байт):", os.path.getsize(mp3_path))
 
         with open(mp3_path, "rb") as audio_file:
             transcript = openai.Audio.transcribe("whisper-1", audio_file)
-            print("📝 Whisper response:", transcript)
+            print("📝 Whisper API ответ:", transcript)
             text = transcript.get("text", "[пусто]")
 
         await update.message.reply_text(f"🗣️ Ты сказал(а): _{text}_", parse_mode="Markdown")
+        update.message.text = text
+        await chat(update, context)
+
+    except Exception as e:
+        await update.message.reply_text("❌ Не удалось распознать голос. Попробуй снова.")
+        print("Whisper error:", e)
+        print(traceback.format_exc())
 
         # Переадресуем как обычное сообщение
         update.message.text = text
