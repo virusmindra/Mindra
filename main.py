@@ -71,6 +71,8 @@ if __name__ == "__main__":
     # Трек пользователей
     app.add_handler(MessageHandler(filters.ALL, track_users))
 
+    app.add_handler(MessageHandler(filters.VOICE, handle_voice))
+
     # Глобальный обработчик ошибок
     app.add_error_handler(error_handler)
 
