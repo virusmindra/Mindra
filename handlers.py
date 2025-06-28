@@ -22,7 +22,9 @@ from goals import add_goal, get_goals, mark_goal_done, delete_goal
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+    
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print("🔔 handle_voice запущен")
     voice = update.message.voice
     user_id = str(update.effective_user.id)
 
