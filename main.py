@@ -73,4 +73,3 @@ if __name__ == "__main__":
     logging.info("🤖 Бот запущен в режиме polling!")
     print("🧪 Зарегистрирован handler VOICE:", handle_voice)
     app.run_polling()
-
