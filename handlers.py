@@ -23,37 +23,37 @@ from goals import add_goal, get_goals, mark_goal_done, delete_goal
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
-try:
-    # 1. Распознаём голос
-    result = client.audio.transcriptions.create(
+    try:
+        # 1. Распознаём голос
+        result = client.audio.transcriptions.create(
         model="whisper-1",
         file=open(audio_path, "rb"),
         response_format="text"
-    )
+        )
 
-    user_input = result.strip()
-    await update.message.reply_text(f"📝 Ты сказал(а): {user_input}")
+        user_input = result.strip()
+        await update.message.reply_text(f"📝 Ты сказал(а): {user_input}")
 
-    # 2. История чата (можно сделать глобальной или временной)
-    history = [{"role": "user", "content": user_input}]
-    history = trim_history(history)  # если у тебя есть ограничение на длину
+        # 2. История чата (можно сделать глобальной или временной)
+        history = [{"role": "user", "content": user_input}]
+        history = trim_history(history)  # если у тебя есть ограничение на длину
 
-    # 3. Генерируем ответ от GPT-4o
-    completion = openai.chat.completions.create(
+        # 3. Генерируем ответ от GPT-4o
+        completion = openai.chat.completions.create(
         model="gpt-4o",
         messages=history
-    )
-    reply = completion.choices[0].message.content
-    await update.message.reply_text(reply)
+        )
+        reply = completion.choices[0].message.content
+        await update.message.reply_text(reply)
 
-except Exception as e:
-    print(f"❌ Ошибка при обработке голосового: {e}")
-    await update.message.reply_text("❌ Ошибка при распознавании голоса, попробуй позже.")
+    except Exception as e:
+        print(f"❌ Ошибка при обработке голосового: {e}")
+        await update.message.reply_text("❌ Ошибка при распознавании голоса, попробуй позже.")
 
-async def track_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
-    context.application.bot_data.setdefault("user_ids", set()).add(user_id)
-PREMIUM_USERS = {"7775321566"}  # замени на свой Telegram ID
+    async def track_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        user_id = str(update.effective_user.id)
+        context.application.bot_data.setdefault("user_ids", set()).add(user_id)
+        PREMIUM_USERS = {"7775321566"}  # замени на свой Telegram ID
 
 premium_tasks = [
     "🧘 Проведи 10 минут в тишине. Просто сядь, закрой глаза и подыши. Отметь, какие мысли приходят.",
