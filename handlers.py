@@ -16,7 +16,7 @@ from telegram.ext import ContextTypes, CommandHandler, MessageHandler, CallbackQ
 from habits import add_habit, get_habits, mark_habit_done, delete_habit
 from stats import track_user, get_stats
 
-from config import TELEGRAM_BOT_TOKEN, client
+from config import TELEGRAM_BOT_TOKEN
 from history import load_history, save_history, trim_history
 from goals import add_goal, get_goals, mark_goal_done, delete_goal
 
