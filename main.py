@@ -1,6 +1,7 @@
 import os
 import logging
 import asyncio
+from handlers import handle_voice
 from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 
