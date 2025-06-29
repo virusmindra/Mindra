@@ -19,7 +19,6 @@ from telegram.error import TelegramError
 from handlers import (
     handlers as all_handlers,
     track_users,
-    error_handler,
     goal_buttons_handler,
     premium_task,
     handle_voice
