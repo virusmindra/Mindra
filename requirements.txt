@@ -3,6 +3,3 @@ openai>=1.11.0
 apscheduler
 aiohttp
 ffmpeg-python
-imageio
-imageio-ffmpeg
-
