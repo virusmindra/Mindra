@@ -24,24 +24,36 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        # 1. Распознаём голос
-        result = client.audio.transcriptions.create(
-        model="whisper-1",
-        file=open(audio_path, "rb"),
-        response_format="text"
-        )
+        voice = update.message.voice
+        file = await context.bot.get_file(voice.file_id)
 
+        # Загружаем голосовое сообщение
+        async with aiohttp.ClientSession() as session:
+            async with session.get(file.file_path) as resp:
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".oga") as f:
+                    f.write(await resp.read())
+                    input_path = f.name
+
+        # Конвертируем в mp3 для Whisper
+        output_path = input_path.replace(".oga", ".mp3")
+        subprocess.run(['ffmpeg', '-i', input_path, output_path], check=True)
+
+        # Распознавание текста через Whisper
+        result = openai.audio.transcriptions.create(
+            model="whisper-1",
+            file=open(output_path, "rb"),
+            response_format="text"
+        )
         user_input = result.strip()
         await update.message.reply_text(f"📝 Ты сказал(а): {user_input}")
 
-        # 2. История чата (можно сделать глобальной или временной)
+        # Подготовка истории и GPT-4o ответ
         history = [{"role": "user", "content": user_input}]
-        history = trim_history(history)  # если у тебя есть ограничение на длину
+        history = trim_history(history)
 
-        # 3. Генерируем ответ от GPT-4o
         completion = openai.chat.completions.create(
-        model="gpt-4o",
-        messages=history
+            model="gpt-4o",
+            messages=history
         )
         reply = completion.choices[0].message.content
         await update.message.reply_text(reply)
@@ -50,9 +62,6 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print(f"❌ Ошибка при обработке голосового: {e}")
         await update.message.reply_text("❌ Ошибка при распознавании голоса, попробуй позже.")
 
-    async def track_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        user_id = str(update.effective_user.id)
-        context.application.bot_data.setdefault("user_ids", set()).add(user_id)
         PREMIUM_USERS = {"7775321566"}  # замени на свой Telegram ID
 
 premium_tasks = [
