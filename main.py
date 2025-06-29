@@ -1,3 +1,4 @@
+logging.getLogger().setLevel(logging.DEBUG)
 import os
 import logging
 import asyncio
