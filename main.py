@@ -69,9 +69,9 @@ if __name__ == "__main__":
     app.add_handler(CallbackQueryHandler(goal_buttons_handler, pattern="^(create_goal|show_goals|create_habit|show_habits)$"))
 
     # Трек пользователей
-    app.add_handler(MessageHandler(filters.ALL, track_users))
-
+    
     app.add_handler(MessageHandler(filters.VOICE, handle_voice))
+    app.add_handler(MessageHandler(filters.ALL, track_users))
 
     # Глобальный обработчик ошибок
     app.add_error_handler(error_handler)
