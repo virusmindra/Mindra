@@ -22,7 +22,6 @@ from goals import add_goal, get_goals, mark_goal_done, delete_goal
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-    
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print("🔔 handle_voice запущен")
     voice = update.message.voice
@@ -68,17 +67,14 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         print("📦 MP3 размер (байт):", os.path.getsize(mp3_path))
 
-with open(mp3_path, "rb") as audio_file:
-    transcript = openai.Audio.transcribe("whisper-1", audio_file)
-    print("📝 Whisper API ответ:", transcript)
-    text = transcript.get("text", "").strip()
+        with open(mp3_path, "rb") as audio_file:
+            transcript = openai.Audio.transcribe("whisper-1", audio_file)
+            print("📝 Whisper API ответ:", transcript)
+            text = transcript.get("text", "").strip()
 
-if not text:
-    await update.message.reply_text("🤐 Не удалось распознать речь. Возможно, сообщение было слишком тихим или пустым.")
-    return
-
-await update.message.reply_text(f"🗣️ Ты сказал(а): _{text}_", parse_mode="Markdown")
-
+        if not text:
+            await update.message.reply_text("🤐 Не удалось распознать речь. Возможно, сообщение было слишком тихим или пустым.")
+            return
 
         await update.message.reply_text(f"🗣️ Ты сказал(а): _{text}_", parse_mode="Markdown")
 
@@ -93,6 +89,7 @@ await update.message.reply_text(f"🗣️ Ты сказал(а): _{text}_", pars
 
     finally:
         os.remove(mp3_path)
+
 
 PREMIUM_USERS = {"7775321566"}  # замени на свой Telegram ID
 
