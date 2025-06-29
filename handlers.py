@@ -7,7 +7,7 @@ import openai
 import tempfile
 import aiohttp
 import subprocess
-import imageio_ffmpeg as ffmpeg
+import ffmpeg
 import traceback
 
 from datetime import datetime
@@ -23,70 +23,63 @@ from goals import add_goal, get_goals, mark_goal_done, delete_goal
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    print("🔔 handle_voice запущен")
+    print("🔔 handle_voice вызван")
     voice = update.message.voice
     user_id = str(update.effective_user.id)
 
-    # Скачиваем ogg-файл
-    file = await context.bot.get_file(voice.file_id)
-    ogg_path = tempfile.NamedTemporaryFile(delete=False, suffix=".ogg").name
-    mp3_path = ogg_path.replace(".ogg", ".mp3")
-    await file.download_to_drive(ogg_path)
-
-    # Конвертация ogg → mp3
     try:
-        ffmpeg_path = ffmpeg.get_ffmpeg_exe()
+        # Шаг 1: Скачиваем .ogg файл
+        file = await context.bot.get_file(voice.file_id)
+        ogg_path = tempfile.NamedTemporaryFile(delete=False, suffix=".ogg").name
+        mp3_path = ogg_path.replace(".ogg", ".mp3")
+        await file.download_to_drive(ogg_path)
+        print(f"📥 OGG файл скачан: {ogg_path}")
+
+        # Шаг 2: Конвертация OGG → MP3
+        ffmpeg_path = "/usr/bin/ffmpeg"  # явно указанный путь
         result = subprocess.run(
             [ffmpeg_path, "-i", ogg_path, mp3_path],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
-        print("🛠️ FFmpeg stdout:\n", result.stdout.decode())
-        print("🛠️ FFmpeg stderr:\n", result.stderr.decode())
+        print("🛠️ FFmpeg stderr:", result.stderr.decode())
 
         if result.returncode != 0:
-            print("❌ FFmpeg вернул ошибку.")
-            await update.message.reply_text("❌ Ошибка при конвертации. FFmpeg вернул код ошибки.")
+            await update.message.reply_text("❌ Ошибка при конвертации. FFmpeg вернул ошибку.")
+            os.remove(ogg_path)
             return
-    except Exception as e:
-        print("FFmpeg error:", e)
-        print(traceback.format_exc())
-        await update.message.reply_text("⚠️ Не удалось обработать голосовое сообщение.")
-        return
-    finally:
+
         os.remove(ogg_path)
 
-    # Распознавание через Whisper API
-    try:
+        # Шаг 3: Проверка, что mp3 не пустой
         if os.path.getsize(mp3_path) == 0:
-            print("⚠️ Файл mp3 пустой")
+            print("⚠️ Конвертированный mp3 пустой")
             await update.message.reply_text("❌ Файл пустой. Конвертация не удалась.")
             return
 
-        print("📦 MP3 размер (байт):", os.path.getsize(mp3_path))
+        print("📦 MP3 размер:", os.path.getsize(mp3_path))
+
+        # Шаг 4: Распознавание через Whisper
         with open(mp3_path, "rb") as audio_file:
             transcript = openai.Audio.transcribe("whisper-1", audio_file)
-            print("📝 Whisper API ответ:", transcript)
+            print("📝 Whisper ответ:", transcript)
             text = transcript.get("text", "").strip()
 
+        os.remove(mp3_path)
+
         if not text:
-            await update.message.reply_text("🤐 Не удалось распознать речь. Возможно, сообщение было слишком тихим или пустым.")
+            await update.message.reply_text("🤐 Не удалось распознать речь. Возможно, сообщение было слишком тихим.")
             return
 
+        # Отправляем результат и переадресуем
         await update.message.reply_text(f"🗣️ Ты сказал(а): _{text}_", parse_mode="Markdown")
-
-        # Переадресуем в основной чат
         update.message.text = text
         await chat(update, context)
 
     except Exception as e:
-        print("Whisper error:", e)
+        print("❌ Ошибка в handle_voice:", e)
         print(traceback.format_exc())
-        await update.message.reply_text("❌ Не удалось распознать голос. Попробуй снова.")
-    finally:
-        if os.path.exists(mp3_path):
-            os.remove(mp3_path)
-
+        await update.message.reply_text("❌ Что-то пошло не так при обработке голосового.")
 
 
 PREMIUM_USERS = {"7775321566"}  # замени на свой Telegram ID
