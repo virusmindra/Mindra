@@ -23,52 +23,32 @@ from goals import add_goal, get_goals, mark_goal_done, delete_goal
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        voice = update.message.voice
-        file = await context.bot.get_file(voice.file_id)
+try:
+    # 1. Распознаём голос
+    result = client.audio.transcriptions.create(
+        model="whisper-1",
+        file=open(audio_path, "rb"),
+        response_format="text"
+    )
 
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".oga") as temp_oga:
-            await file.download_to_drive(temp_oga.name)
+    user_input = result.strip()
+    await update.message.reply_text(f"📝 Ты сказал(а): {user_input}")
 
-        # Конвертация в mp3
-        temp_mp3 = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
-        subprocess.run([
-            "ffmpeg", "-i", temp_oga.name, temp_mp3.name, "-y"
-        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # 2. История чата (можно сделать глобальной или временной)
+    history = [{"role": "user", "content": user_input}]
+    history = trim_history(history)  # если у тебя есть ограничение на длину
 
-        # Распознавание через OpenAI Whisper
-        with open(temp_mp3.name, "rb") as audio_file:
-            result = openai.audio.transcriptions.create(
-                model="whisper-1",
-                file=audio_file,
-                response_format="text"
-            )
+    # 3. Генерируем ответ от GPT-4o
+    completion = openai.chat.completions.create(
+        model="gpt-4o",
+        messages=history
+    )
+    reply = completion.choices[0].message.content
+    await update.message.reply_text(reply)
 
-        user_input = result.strip()
-        await update.message.reply_text(f"📝 Ты сказал(а): {user_input}")
-
-        # GPT-ответ на этот текст
-        user_id = str(update.effective_user.id)
-        history = load_history(user_id)
-        history.append({"role": "user", "content": user_input})
-
-        # Обрезаем историю, если слишком длинная
-        history = trim_history(history)
-
-        completion = openai.chat.completions.create(
-            model="gpt-4o",
-            messages=history
-        )
-        reply = completion.choices[0].message.content
-        await update.message.reply_text(reply)
-
-        # Сохраняем обновлённую историю
-        history.append({"role": "assistant", "content": reply})
-        save_history(user_id, history)
-
-    except Exception as e:
-        print(f"❌ Ошибка при обработке голосового: {e}")
-        await update.message.reply_text("❌ Ошибка при распознавании голоса, попробуй позже.")
+except Exception as e:
+    print(f"❌ Ошибка при обработке голосового: {e}")
+    await update.message.reply_text("❌ Ошибка при распознавании голоса, попробуй позже.")
 
 async def track_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
