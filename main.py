@@ -1,8 +1,6 @@
-logging.getLogger().setLevel(logging.DEBUG)
 import os
 import logging
 import asyncio
-from handlers import handle_voice
 from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -16,27 +14,35 @@ from telegram.ext import (
 )
 
 from telegram.error import TelegramError
-from handlers import handlers as all_handlers, track_users, error_handler, goal_buttons_handler, premium_task
+
+# 👇 Импорты из твоих модулей
+from handlers import (
+    handlers as all_handlers,
+    track_users,
+    error_handler,
+    goal_buttons_handler,
+    premium_task,
+    handle_voice
+)
 from goals import get_goals
+from config import TELEGRAM_BOT_TOKEN
 
-# Получаем токен бота из переменных окружения
-TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
-
-# Настройка логирования
+# 📋 Настройка логов
 logging.basicConfig(level=logging.INFO)
+logging.getLogger().setLevel(logging.DEBUG)
 
-# Обработчик ошибок
+# ⛑ Глобальный обработчик ошибок
 async def error_handler(update, context):
     logging.error(msg="Exception while handling an update:", exc_info=context.error)
     if update and update.effective_message:
         await update.effective_message.reply_text("😵 Ой, что-то пошло не так. Я уже разбираюсь с этим.")
 
-# Отслеживание пользователей
+# 👥 Трекинг пользователей
 async def track_users(update, context):
     user_id = str(update.effective_user.id)
     context.application.bot_data.setdefault("user_ids", set()).add(user_id)
 
-# Напоминание о целях
+# 🔔 Планировщик напоминаний
 async def send_reminders(app):
     for user_id in app.bot_data.get("user_ids", []):
         goals = get_goals(user_id)
@@ -53,23 +59,31 @@ async def send_reminders(app):
                 except Exception as e:
                     print(f"❌ Ошибка с напоминанием: {e}")
 
-# Старт планировщика (например, для утреннего вопроса)
 def start_scheduler(app):
     scheduler = BackgroundScheduler()
     scheduler.add_job(lambda: asyncio.run(send_reminders(app)), 'interval', hours=24)
     scheduler.start()
 
+# 🚀 Точка входа
 if __name__ == "__main__":
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
-    # Добавляем все обработчики из списка
+
+    # 👂 Обработчик голосовых
+    print("🧪 Зарегистрирован handler VOICE:", handle_voice)
+    app.add_handler(MessageHandler(filters.VOICE, handle_voice))
+
+    # ✅ Обработчики из списка
     for handler in all_handlers:
         app.add_handler(handler)
-    # Отслеживание пользователей (фильтр ВСЕ)
+
+    # 👥 Отслеживание пользователей
     app.add_handler(MessageHandler(filters.ALL, track_users))
-    # Глобальный обработчик ошибок
+
+    # ⛑ Обработка ошибок
     app.add_error_handler(error_handler)
 
-    # ... запуск планировщика (если нужен) ...
+    # ⏰ Планировщик
+    start_scheduler(app)
+
     logging.info("🤖 Бот запущен в режиме polling!")
-    print("🧪 Зарегистрирован handler VOICE:", handle_voice)
     app.run_polling()
