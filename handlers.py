@@ -499,3 +499,12 @@ handlers = [
     MessageHandler(filters.VOICE, handle_voice),
     MessageHandler(filters.COMMAND, unknown_command),
 ]
+
+__all__ = [
+    "handlers",
+    "goal_buttons_handler",
+    "premium_task",
+    "track_users",
+    "error_handler",
+    "handle_voice"
+]
