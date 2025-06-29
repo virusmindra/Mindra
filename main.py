@@ -59,6 +59,7 @@ def start_scheduler(app):
 
 if __name__ == "__main__":
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
+    app.add_handler(MessageHandler(filters.VOICE, handle_voice))
     # Добавляем все обработчики из списка
     for handler in all_handlers:
         app.add_handler(handler)
