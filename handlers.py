@@ -64,7 +64,10 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print("❌ Ошибка в handle_voice:", e)
         traceback.print_exc()
         await update.message.reply_text("❌ Ошибка при распознавании голоса, попробуй позже.")
-        
+
+async def track_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    context.application.bot_data.setdefault("user_ids", set()).add(user_id)
 PREMIUM_USERS = {"7775321566"}  # замени на свой Telegram ID
 
 premium_tasks = [
