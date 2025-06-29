@@ -14,7 +14,7 @@ from telegram.ext import (
 )
 
 from telegram.error import TelegramError
-from handlers import handlers as all_handlers, goal_buttons_handler, premium_task, handle_voice
+from handlers import handlers as  handle_voice, all_handlers, goal_buttons_handler, premium_task
 from goals import get_goals
 
 # Получаем токен бота из переменных окружения
