@@ -23,64 +23,66 @@ from goals import add_goal, get_goals, mark_goal_done, delete_goal
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    print("🔔 handle_voice вызван")
+    print("🎤 handle_voice вызван")
+
     voice = update.message.voice
     user_id = str(update.effective_user.id)
 
     try:
-        # Шаг 1: Скачиваем .ogg файл
+        # Скачиваем .ogg
         file = await context.bot.get_file(voice.file_id)
         ogg_path = tempfile.NamedTemporaryFile(delete=False, suffix=".ogg").name
         mp3_path = ogg_path.replace(".ogg", ".mp3")
+
         await file.download_to_drive(ogg_path)
         print(f"📥 OGG файл скачан: {ogg_path}")
 
-        # Шаг 2: Конвертация OGG → MP3
-        ffmpeg_path = "/usr/bin/ffmpeg"  # явно указанный путь
+        # Конвертация .ogg → .mp3
         result = subprocess.run(
-            [ffmpeg_path, "-i", ogg_path, mp3_path],
+            ["ffmpeg", "-y", "-i", ogg_path, mp3_path],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
-        print("🛠️ FFmpeg stderr:", result.stderr.decode())
+
+        print("🛠️ FFmpeg stderr:\n", result.stderr.decode())
 
         if result.returncode != 0:
-            await update.message.reply_text("❌ Ошибка при конвертации. FFmpeg вернул ошибку.")
-            os.remove(ogg_path)
+            await update.message.reply_text("❌ Ошибка при конвертации файла.")
             return
 
-        os.remove(ogg_path)
-
-        # Шаг 3: Проверка, что mp3 не пустой
+        # Проверка на пустой файл
         if os.path.getsize(mp3_path) == 0:
-            print("⚠️ Конвертированный mp3 пустой")
-            await update.message.reply_text("❌ Файл пустой. Конвертация не удалась.")
+            await update.message.reply_text("❌ Получен пустой mp3-файл.")
             return
 
-        print("📦 MP3 размер:", os.path.getsize(mp3_path))
+        print("✅ Конвертация прошла успешно, начинаем распознавание...")
 
-        # Шаг 4: Распознавание через Whisper
+        # Whisper API
         with open(mp3_path, "rb") as audio_file:
             transcript = openai.Audio.transcribe("whisper-1", audio_file)
-            print("📝 Whisper ответ:", transcript)
+            print("📝 Whisper результат:", transcript)
             text = transcript.get("text", "").strip()
 
-        os.remove(mp3_path)
-
         if not text:
-            await update.message.reply_text("🤐 Не удалось распознать речь. Возможно, сообщение было слишком тихим.")
+            await update.message.reply_text("🤐 Не удалось распознать речь. Попробуй снова.")
             return
 
-        # Отправляем результат и переадресуем
         await update.message.reply_text(f"🗣️ Ты сказал(а): _{text}_", parse_mode="Markdown")
+
+        # Переадресуем как текстовое сообщение
         update.message.text = text
-        await chat(update, context)
+        await context.application.dispatcher.process_update(update)
 
     except Exception as e:
         print("❌ Ошибка в handle_voice:", e)
         print(traceback.format_exc())
-        await update.message.reply_text("❌ Что-то пошло не так при обработке голосового.")
+        await update.message.reply_text("⚠️ Произошла ошибка при обработке голосового сообщения.")
 
+    finally:
+        if os.path.exists(ogg_path):
+            os.remove(ogg_path)
+        if os.path.exists(mp3_path):
+            os.remove(mp3_path)
 
 PREMIUM_USERS = {"7775321566"}  # замени на свой Telegram ID
 
