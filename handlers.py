@@ -48,15 +48,13 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
             print("❌ FFmpeg вернул ошибку.")
             await update.message.reply_text("❌ Ошибка при конвертации. FFmpeg вернул код ошибки.")
             return
-
     except Exception as e:
-        await update.message.reply_text("⚠️ Не удалось обработать голосовое сообщение.")
         print("FFmpeg error:", e)
         print(traceback.format_exc())
-        os.remove(ogg_path)
+        await update.message.reply_text("⚠️ Не удалось обработать голосовое сообщение.")
         return
-
-    os.remove(ogg_path)  # удаляем ogg после конвертации
+    finally:
+        os.remove(ogg_path)
 
     # Распознавание через Whisper API
     try:
@@ -66,7 +64,6 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         print("📦 MP3 размер (байт):", os.path.getsize(mp3_path))
-
         with open(mp3_path, "rb") as audio_file:
             transcript = openai.Audio.transcribe("whisper-1", audio_file)
             print("📝 Whisper API ответ:", transcript)
@@ -78,17 +75,18 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await update.message.reply_text(f"🗣️ Ты сказал(а): _{text}_", parse_mode="Markdown")
 
-        # Переадресуем как обычное сообщение
+        # Переадресуем в основной чат
         update.message.text = text
         await chat(update, context)
 
     except Exception as e:
-        await update.message.reply_text("❌ Не удалось распознать голос. Попробуй снова.")
         print("Whisper error:", e)
         print(traceback.format_exc())
-
+        await update.message.reply_text("❌ Не удалось распознать голос. Попробуй снова.")
     finally:
-        os.remove(mp3_path)
+        if os.path.exists(mp3_path):
+            os.remove(mp3_path)
+
 
 
 PREMIUM_USERS = {"7775321566"}  # замени на свой Telegram ID
