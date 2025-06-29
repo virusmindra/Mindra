@@ -14,7 +14,7 @@ from telegram.ext import (
 )
 
 from telegram.error import TelegramError
-from handlers import handlers as  handle_voice, all_handlers, goal_buttons_handler, premium_task
+from handlers import handlers as all_handlers, track_users, error_handler, goal_buttons_handler, premium_task
 from goals import get_goals
 
 # Получаем токен бота из переменных окружения
@@ -57,27 +57,17 @@ def start_scheduler(app):
     scheduler.add_job(lambda: asyncio.run(send_reminders(app)), 'interval', hours=24)
     scheduler.start()
 
-# Точка входа
 if __name__ == "__main__":
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
-
-    # Регистрируем все команды из handlers.py
+    # Добавляем все обработчики из списка
     for handler in all_handlers:
         app.add_handler(handler)
-
-    # Обработчик кнопок целей и привычек
-    app.add_handler(CallbackQueryHandler(goal_buttons_handler, pattern="^(create_goal|show_goals|create_habit|show_habits)$"))
-
-    # Трек пользователей
-    
-    app.add_handler(MessageHandler(filters.VOICE, handle_voice))
+    # Отслеживание пользователей (фильтр ВСЕ)
     app.add_handler(MessageHandler(filters.ALL, track_users))
-
     # Глобальный обработчик ошибок
     app.add_error_handler(error_handler)
 
-    # Планировщик
-    start_scheduler(app)
-
-    print("🤖 Mindra запущен!")
+    # ... запуск планировщика (если нужен) ...
+    logging.info("🤖 Бот запущен в режиме polling!")
     app.run_polling()
+
