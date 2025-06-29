@@ -12,7 +12,7 @@ import traceback
 
 from datetime import datetime
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
+from telegram.ext import ContextTypes, CommandHandler, MessageHandler, CallbackQueryHandler, filters
 from habits import add_habit, get_habits, mark_habit_done, delete_habit
 from stats import track_user, get_stats
 
@@ -22,67 +22,93 @@ from goals import add_goal, get_goals, mark_goal_done, delete_goal
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+# Обработчик голосового сообщения
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    print("🎤 handle_voice вызван")
-
+    print("🔔 handle_voice запущен")  # отладочный вывод
     voice = update.message.voice
     user_id = str(update.effective_user.id)
 
+    # Скачиваем голосовое сообщение (.ogg файл)
+    file = await context.bot.get_file(voice.file_id)
+    ogg_file = tempfile.NamedTemporaryFile(delete=False, suffix=".ogg")
+    ogg_path = ogg_file.name
+    mp3_path = ogg_path.replace(".ogg", ".mp3")
+    await file.download_to_drive(ogg_path)
+    print(f"📥 Voice message сохранён как {ogg_path}")
+
+    # Конвертируем OGG -> MP3 через ffmpeg
     try:
-        # Скачиваем .ogg
-        file = await context.bot.get_file(voice.file_id)
-        ogg_path = tempfile.NamedTemporaryFile(delete=False, suffix=".ogg").name
-        mp3_path = ogg_path.replace(".ogg", ".mp3")
-
-        await file.download_to_drive(ogg_path)
-        print(f"📥 OGG файл скачан: {ogg_path}")
-
-        # Конвертация .ogg → .mp3
-        result = subprocess.run(
-            ["ffmpeg", "-y", "-i", ogg_path, mp3_path],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-
-        print("🛠️ FFmpeg stderr:\n", result.stderr.decode())
-
+        # Если ffmpeg в PATH:
+        ffmpeg_cmd = ["ffmpeg", "-i", ogg_path, "-c:a", "libmp3lame", "-q:a", "2", mp3_path]
+        # Выполняем конвертацию
+        result = subprocess.run(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        print("🛠️ FFmpeg stderr:\n" + result.stderr.decode())
         if result.returncode != 0:
-            await update.message.reply_text("❌ Ошибка при конвертации файла.")
+            await update.message.reply_text("❌ Ошибка при конвертации аудио (ffmpeg).")
             return
-
-        # Проверка на пустой файл
-        if os.path.getsize(mp3_path) == 0:
-            await update.message.reply_text("❌ Получен пустой mp3-файл.")
-            return
-
-        print("✅ Конвертация прошла успешно, начинаем распознавание...")
-
-        # Whisper API
-        with open(mp3_path, "rb") as audio_file:
-            transcript = openai.Audio.transcribe("whisper-1", audio_file)
-            print("📝 Whisper результат:", transcript)
-            text = transcript.get("text", "").strip()
-
-        if not text:
-            await update.message.reply_text("🤐 Не удалось распознать речь. Попробуй снова.")
-            return
-
-        await update.message.reply_text(f"🗣️ Ты сказал(а): _{text}_", parse_mode="Markdown")
-
-        # Переадресуем как текстовое сообщение
-        update.message.text = text
-        await context.application.dispatcher.process_update(update)
-
     except Exception as e:
-        print("❌ Ошибка в handle_voice:", e)
+        print("❌ Исключение при вызове ffmpeg:", e)
         print(traceback.format_exc())
-        await update.message.reply_text("⚠️ Произошла ошибка при обработке голосового сообщения.")
-
+        await update.message.reply_text("⚠️ Не удалось обработать голосовое сообщение.")
+        return
     finally:
-        if os.path.exists(ogg_path):
+        # Удаляем исходный .ogg файл
+        try:
             os.remove(ogg_path)
-        if os.path.exists(mp3_path):
+        except OSError:
+            pass
+
+    # Проверяем размер MP3
+    try:
+        if os.path.getsize(mp3_path) == 0:
+            print("⚠️ Конвертированный mp3-файл пустой!")
+            await update.message.reply_text("❌ Не удалось получить звук из сообщения.")
             os.remove(mp3_path)
+            return
+        print(f"📦 MP3 файл создан, размер {os.path.getsize(mp3_path)} байт")
+    except OSError as e:
+        print("Ошибка доступа к mp3 файлу:", e)
+        await update.message.reply_text("❌ Не найден сконвертированный файл.")
+        return
+
+    # Распознавание речи через Whisper API
+    try:
+        with open(mp3_path, "rb") as audio_file:
+            transcript = openai.Audio.transcribe("whisper-1", audio_file, language="ru")
+        # transcript ожидается как словарь с ключом "text"
+        text = transcript.get("text", "").strip() if isinstance(transcript, dict) else ""
+        print("📝 Whisper API ответ:", transcript)
+        if not text:
+            await update.message.reply_text("🤐 Не удалось распознать речь – возможно, сообщение пустое или неразборчивое.")
+            return
+        # Отправляем расшифровку пользователю
+        await update.message.reply_text(f"🗣️ Ты сказал(а): _{text}_", parse_mode="Markdown")
+        # И обрабатываем как обычное текстовое сообщение (можно вызвать функцию обработки чата)
+        update.message.text = text
+        await chat(update, context)
+    except Exception as e:
+        print("Whisper API вызвал исключение:", e)
+        print(traceback.format_exc())
+        await update.message.reply_text("❌ Ошибка при распознавании голоса, попробуй позже.")
+    finally:
+        # Удаляем mp3 файл
+        try:
+            os.remove(mp3_path)
+        except OSError:
+            pass
+# Обработчик отслеживания всех сообщений (для track_users)
+async def track_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    context.application.bot_data.setdefault("user_ids", set()).add(user_id)
+    return  # Просто регистрируем, не перехватываем сообщение
+
+# Глобальный обработчик ошибок
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
+    logging.error("Exception while handling an update:", exc_info=context.error)
+    try:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="😵 Ой, что-то пошло не так.")
+    except:
+        pass
 
 PREMIUM_USERS = {"7775321566"}  # замени на свой Telegram ID
 
@@ -451,24 +477,24 @@ async def premium_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("❓ Я не знаю такой команды. Напиши /help, чтобы увидеть, что я умею.")
 
-# Обработчики
+# Список всех команд/обработчиков для экспорта
 handlers = [
     CommandHandler("start", start),
-    CommandHandler("reset", reset),
     CommandHandler("help", help_command),
     CommandHandler("about", about),
     CommandHandler("mode", mode),
-    CommandHandler("task", task),
-    CommandHandler("premium_task", premium_task),
+    CommandHandler("reset", reset),
     CommandHandler("goal", goal),
     CommandHandler("goals", show_goals),
-    CommandHandler("done", mark_done),
-    CommandHandler("delete", delete_goal_command),
     CommandHandler("habit", habit),
     CommandHandler("habits", habits_list),
+    CommandHandler("done", mark_done),
+    CommandHandler("delete", delete_goal_command),
+    CommandHandler("task", task),
+    CommandHandler("premium_task", premium_task),
     CommandHandler("stats", stats_command),
     CallbackQueryHandler(goal_buttons_handler, pattern="^(create_goal|show_goals|create_habit|show_habits)$"),
-    CallbackQueryHandler(handle_mode_choice),
+    CallbackQueryHandler(handle_mode_choice, pattern="^mode_"),  # pattern для /mode кнопок
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
     MessageHandler(filters.COMMAND, unknown_command),
