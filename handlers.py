@@ -24,39 +24,53 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        voice = update.message.voice
-        file = await context.bot.get_file(voice.file_id)
+        user_id = update.effective_user.id
+        message = update.message
 
-        # Загружаем голосовое сообщение
-        async with aiohttp.ClientSession() as session:
-            async with session.get(file.file_path) as resp:
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".oga") as f:
-                    f.write(await resp.read())
-                    input_path = f.name
+        # 1. Получаем файл
+        file = await context.bot.get_file(message.voice.file_id)
+        file_path = f"/tmp/{file.file_unique_id}.oga"
+        mp3_path = f"/tmp/{file.file_unique_id}.mp3"
+        await file.download_to_drive(file_path)
 
-        # Конвертируем в mp3 для Whisper
-        output_path = input_path.replace(".oga", ".mp3")
-        subprocess.run(['ffmpeg', '-i', input_path, output_path], check=True)
+        # 2. Конвертируем в mp3 (если нужно)
+        subprocess.run([
+            "ffmpeg", "-i", file_path, "-ar", "44100", "-ac", "2", "-b:a", "192k", mp3_path
+        ], check=True)
 
-        # Распознавание текста через Whisper
-        result = openai.audio.transcriptions.create(
-            model="whisper-1",
-            file=open(output_path, "rb"),
-            response_format="text"
-        )
+        # 3. Распознаём голос
+        with open(mp3_path, "rb") as f:
+            result = client.audio.transcriptions.create(
+                model="whisper-1",
+                file=f,
+                response_format="text"
+            )
+
         user_input = result.strip()
-        await update.message.reply_text(f"📝 Ты сказал(а): {user_input}")
+        await message.reply_text(f"📝 Ты сказал(а): {user_input}")
 
-        # Подготовка истории и GPT-4o ответ
-        history = [{"role": "user", "content": user_input}]
+        # 4. Готовим историю с system-промптом
+        system_prompt = {
+            "role": "system",
+            "content": (
+                "Ты — эмпатичный AI-собеседник, как подруга или психолог. "
+                "Ответь на голосовое сообщение пользователя с поддержкой, теплом и пониманием. "
+                "Если человек говорит о 'ней' или 'нём', учитывай это при ответе. "
+                "Если он говорит 'я' — поддержи лично. Избегай сухих и односложных фраз."
+            )
+        }
+
+        history = [system_prompt, {"role": "user", "content": user_input}]
         history = trim_history(history)
 
+        # 5. Генерируем ответ
         completion = openai.chat.completions.create(
             model="gpt-4o",
             messages=history
         )
-        reply = completion.choices[0].message.content
-        await update.message.reply_text(reply)
+        reply = completion.choices[0].message.content.strip()
+
+        await message.reply_text(reply)
 
     except Exception as e:
         print(f"❌ Ошибка при обработке голосового: {e}")
