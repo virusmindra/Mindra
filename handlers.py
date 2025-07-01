@@ -9,6 +9,7 @@ import aiohttp
 import subprocess
 import ffmpeg
 import traceback
+import asyncio
 
 from datetime import datetime
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
@@ -51,7 +52,9 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # 4. Показываем "печатает..."
         await update.message.chat.send_action(action="typing")
-
+        await asyncio.sleep(1)  # добавить паузу
+        await update.message.reply_text(reply)
+        
         # 5. Готовим историю с system-промптом
         system_prompt = {
             "role": "system",
