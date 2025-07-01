@@ -63,6 +63,11 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         }
 
+        
+        # 👇 Показываем, что Mindra печатает
+        await update.message.chat.send_action(action="typing")
+        await asyncio.sleep(min(len(user_input) / 20, 3))  # до 3 секунд
+    
         history = [system_prompt, {"role": "user", "content": user_input}]
         history = trim_history(history)
 
