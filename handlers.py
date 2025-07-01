@@ -16,7 +16,7 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, CommandHandler, MessageHandler, CallbackQueryHandler, filters
 from habits import add_habit, get_habits, mark_habit_done, delete_habit
 from stats import track_user, get_stats
-
+from telegram.constants import ChatAction
 from config import client, TELEGRAM_BOT_TOKEN
 from history import load_history, save_history, trim_history
 from goals import add_goal, get_goals, mark_goal_done, delete_goal
@@ -359,10 +359,24 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
             {"role": "system", "content": MODES[mode] + " Всегда отвечай на том же языке, на котором пишет пользователь. Отвечай тепло, человечно, с эмпатией."}
         ]
 
+    # 🔮 Эмпатичный стиль с эмоджи
+    conversation_history[user_id].insert(1, {
+        "role": "system",
+        "content": (
+            "Ты — доброжелательный и поддерживающий собеседник. "
+            "Отвечай с теплотой и эмпатией. Добавляй эмоджи, если они подходят: 🤗, 💜, 😊, 😢, ✨, 🙌, ❤️. "
+            "Если человек делится радостью — порадуйся вместе с ним. "
+            "Если грустью — поддержи, как друг. Будь чуткой и живой."
+        )
+    })
+
     conversation_history[user_id].append({"role": "user", "content": user_input})
     trimmed_history = trim_history(conversation_history[user_id])
 
     try:
+        # 💬 Показываем "печатает..."
+        await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
+
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=trimmed_history
@@ -371,8 +385,9 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         conversation_history[user_id].append({"role": "assistant", "content": reply})
         save_history(conversation_history)
         await update.message.reply_text(reply)
+
     except Exception as e:
-        await update.message.reply_text("Упс, я немного завис... Попробуй позже 🥺")
+        await update.message.reply_text("🥺 Упс, я немного завис... Попробуй позже, хорошо?")
         print(f"❌ Ошибка OpenAI: {e}")
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
