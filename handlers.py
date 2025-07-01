@@ -50,11 +50,6 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_input = result.strip()
         await message.reply_text(f"📝 Ты сказал(а): {user_input}")
 
-        # 4. Показываем "печатает..."
-        await update.message.chat.send_action(action="typing")
-        await asyncio.sleep(1)  # добавить паузу
-        await update.message.reply_text(reply)
-        
         # 5. Готовим историю с system-промптом
         system_prompt = {
             "role": "system",
