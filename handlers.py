@@ -49,7 +49,10 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_input = result.strip()
         await message.reply_text(f"📝 Ты сказал(а): {user_input}")
 
-        # 4. Готовим историю с system-промптом
+        # 4. Показываем "печатает..."
+        await update.message.chat.send_action(action="typing")
+
+        # 5. Готовим историю с system-промптом
         system_prompt = {
             "role": "system",
             "content": (
@@ -65,7 +68,7 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         history = [system_prompt, {"role": "user", "content": user_input}]
         history = trim_history(history)
 
-        # 5. Генерируем ответ
+        # 6. Генерируем ответ
         completion = openai.chat.completions.create(
             model="gpt-4o",
             messages=history
