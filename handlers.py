@@ -74,8 +74,8 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
             messages=history
         )
         reply = completion.choices[0].message.content.strip()
-
-        await message.reply_text(reply, reply_markup=generate_post_response_buttons(goal_text=reply))
+        full_reply = f"{reaction}{detect_topic_and_react(user_input)}{reply}"
+        await message.reply_text(full_reply, reply_markup=generate_post_response_buttons(goal_text=reply))
 
     except Exception as e:
         print(f"❌ Ошибка при обработке голосового: {e}")
@@ -445,7 +445,8 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply = response.choices[0].message.content
         conversation_history[user_id].append({"role": "assistant", "content": reply})
         save_history(conversation_history)
-        await update.message.reply_text(reply, reply_markup=generate_post_response_buttons(goal_text=reply))
+        full_reply = f"{reaction}{detect_topic_and_react(user_input)}{reply}"
+        await message.reply_text(full_reply, reply_markup=generate_post_response_buttons(goal_text=reply))
 
     except Exception as e:
         await update.message.reply_text("🥺 Упс, я немного завис... Попробуй позже, хорошо?")
