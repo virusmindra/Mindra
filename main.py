@@ -58,14 +58,18 @@ async def send_reminders(app):
                         )
                 except Exception as e:
                     print(f"❌ Ошибка с напоминанием: {e}")
-scheduler.add_job(
-    send_daily_reminder,
-    'cron',
-    hour=7,  # 7:00 UTC = 10:00 по Киеву
-    minute=0,
-    timezone=pytz.UTC,
-    args=[application.job_queue]  # для передачи context
-)
+
+# 🚀 Планировщик запускается здесь
+def start_scheduler(app):
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(
+        lambda: asyncio.run(send_reminders(app)),
+        trigger='cron',
+        hour=7,  # 7:00 UTC = 10:00 по Киеву
+        minute=0,
+        timezone=pytz.UTC
+    )
+    scheduler.start()
 
 def start_scheduler(app):
     scheduler = BackgroundScheduler()
