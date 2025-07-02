@@ -74,7 +74,10 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
             messages=history
         )
         reply = completion.choices[0].message.content.strip()
-        reaction = detect_emotion_reaction(user_input) + detect_topic_and_react(user_input)
+        reaction = detect_topic_and_react(user_input)
+        if not reaction:
+            reaction = detect_emotion_reaction(user_input)
+
         reply = reaction + reply
         await update.message.reply_text(reply)
 
