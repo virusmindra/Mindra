@@ -3,4 +3,5 @@ openai>=1.11.0
 ffmpeg-python
 apscheduler
 aiohttp
+pytz
 
