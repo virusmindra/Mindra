@@ -50,6 +50,8 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_input = result.strip()
         await message.reply_text(f"📝 Ты сказал(а): {user_input}")
 
+        reaction = detect_emotion_reaction(user_input)
+
         # 5. Готовим историю с system-промптом
         system_prompt = {
             "role": "system",
@@ -94,6 +96,16 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ...
 
 YOUR_ID = "7775321566"  # 👈 замени на свой Telegram ID
+
+def detect_emotion_reaction(user_input: str) -> str:
+    text = user_input.lower()
+    if any(word in text for word in ["ура", "сделал", "сделала", "получилось", "рад", "рада", "наконец", "круто", "кайф", "горжусь"]):
+        return "🥳 Вау, это звучит потрясающе! Я так рада за тебя! 💜\n\n"
+    elif any(word in text for word in ["плохо", "тяжело", "устал", "устала", "раздражает", "не знаю", "выгорание", "одиноко", "грустно", "сложно"]):
+        return "😔 Понимаю тебя… Я рядом, правда. Ты не один(а). 💜\n\n"
+    elif any(word in text for word in ["стресс", "нервы", "не спал", "не спала", "перегруз", "паника"]):
+        return "🫂 Дыши глубже. Всё пройдёт. Давай разберёмся вместе. 🤍\n\n"
+    return ""
 
 async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
