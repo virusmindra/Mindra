@@ -99,6 +99,13 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 YOUR_ID = "7775321566"  # 👈 замени на свой Telegram ID
 
+async def send_daily_reminder(context):
+    try:
+        for user_id in PREMIUM_USERS:
+            await context.bot.send_message(chat_id=user_id, text="👋 Привет! Как ты сегодня? Я скучала. Расскажи, как дела?")
+    except Exception as e:
+        print(f"❌ Ошибка с напоминанием: {e}")
+
 def detect_emotion_reaction(user_input: str) -> str:
     text = user_input.lower()
     if any(word in text for word in ["ура", "сделал", "сделала", "получилось", "рад", "рада", "наконец", "круто", "кайф", "горжусь"]):
@@ -555,5 +562,6 @@ __all__ = [
     "premium_task",
     "track_users",
     "error_handler",
-    "handle_voice"
+    "handle_voice",
+    "send_daily_reminder"
 ]
