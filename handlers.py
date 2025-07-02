@@ -75,7 +75,7 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         reply = completion.choices[0].message.content.strip()
 
-        await message.reply_text(reply)
+        await message.reply_text(reply, reply_markup=generate_post_response_buttons(goal_text=reply))
 
     except Exception as e:
         print(f"❌ Ошибка при обработке голосового: {e}")
@@ -294,6 +294,21 @@ async def show_goals(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_markdown(reply)
 
+def generate_post_response_buttons(goal_text=None):
+    buttons = []
+
+    if goal_text:
+        buttons.append([
+            InlineKeyboardButton("🎯 Добавить как цель", callback_data=f"add_goal|{goal_text}")
+        ])
+
+    buttons.append([
+        InlineKeyboardButton("📋 Привычки", callback_data="show_habits"),
+        InlineKeyboardButton("🎯 Цели", callback_data="show_goals")
+    ])
+
+    return InlineKeyboardMarkup(buttons)
+    
 async def goal_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = str(query.from_user.id)
@@ -430,7 +445,7 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply = response.choices[0].message.content
         conversation_history[user_id].append({"role": "assistant", "content": reply})
         save_history(conversation_history)
-        await update.message.reply_text(reply)
+        await update.message.reply_text(reply, reply_markup=generate_post_response_buttons(goal_text=reply))
 
     except Exception as e:
         await update.message.reply_text("🥺 Упс, я немного завис... Попробуй позже, хорошо?")
