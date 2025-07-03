@@ -48,6 +48,10 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
 
         user_input = result.strip()
+        topic = detect_topic(user_input)
+        if topic:
+            context.user_data["last_topic"] = topic
+
         await message.reply_text(f"📝 Ты сказал(а): {user_input}")
 
         reaction = detect_emotion_reaction(user_input)
@@ -79,6 +83,9 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reaction = detect_emotion_reaction(user_input)
 
         reply = reaction + reply
+        reference = get_topic_reference(context)
+        if reference:
+            reply = f"{reply}\n\n{reference}"
         await update.message.reply_text(reply)
 
 
