@@ -93,7 +93,7 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if reference:
             reply += f"\n\n{reference}"
 
-        await update.message.reply_text(reply)
+        await update.message.reply_text(reply, reply_markup=generate_post_response_buttons())
 
 
     except Exception as e:
@@ -498,13 +498,13 @@ async def handle_mode_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await query.edit_message_text(f"✅ Режим общения изменён на *{mode_key}*!", parse_mode="Markdown")
 
 def generate_reaction_buttons():
-    buttons = [
+    keyboard = [
         [InlineKeyboardButton("❤️ Спасибо", callback_data="reaction_thanks")],
         [InlineKeyboardButton("🤔 Хочу рассказать подробнее", callback_data="reaction_more")],
         [InlineKeyboardButton("🔄 Продолжим", callback_data="reaction_continue")],
         [InlineKeyboardButton("🔥 Ты классная", callback_data="reaction_flirty")]
     ]
-    return InlineKeyboardMarkup(buttons)
+    return InlineKeyboardMarkup(keyboard)
 
 async def handle_reaction_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -558,7 +558,7 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         save_history(conversation_history)
         reaction = detect_emotion_reaction(user_input) + detect_topic_and_react(user_input)
         reply = reaction + reply
-        await update.message.reply_text(reply)
+        await update.message.reply_text(reply, reply_markup=generate_post_response_buttons())
 
     except Exception as e:
         await update.message.reply_text("🥺 Упс, я немного завис... Попробуй позже, хорошо?")
