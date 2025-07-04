@@ -494,11 +494,11 @@ def generate_post_response_buttons(goal_text=None, include_reactions=True):
         buttons.append([
             InlineKeyboardButton("📌 Добавить как цель", callback_data=f"add_goal|{goal_text}")
         ])
-
-    buttons.append([
-        InlineKeyboardButton("📋 Привычки", callback_data="show_habits"),
-        InlineKeyboardButton("🎯 Цели", callback_data="show_goals")
-    ])
+    if goal_text:
+        buttons.append([
+            InlineKeyboardButton("📋 Привычки", callback_data="show_habits"),
+            InlineKeyboardButton("🎯 Цели", callback_data="show_goals")
+        ])
 
     return InlineKeyboardMarkup(buttons)
 
