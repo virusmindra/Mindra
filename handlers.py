@@ -497,6 +497,20 @@ async def handle_mode_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await query.answer()
         await query.edit_message_text(f"✅ Режим общения изменён на *{mode_key}*!", parse_mode="Markdown")
 
+async def handle_reaction_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    reactions = {
+        "reaction_thanks": "Мне приятно это слышать! 💜",
+        "reaction_more": "Конечно, расскажи подробнее — я внимательно слушаю 🤗",
+        "reaction_continue": "Продолжаем! Я здесь 🌀",
+        "reaction_flirty": "Ты тоже 🔥 Мне нравится быть рядом с тобой!"
+    }
+
+    text = reactions.get(query.data, "Спасибо за отклик!")
+    await query.message.reply_text(text)
+
 # Обработчик текстовых сообщений
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_input = update.message.text
@@ -630,6 +644,7 @@ handlers = [
     CommandHandler("stats", stats_command),
     CallbackQueryHandler(goal_buttons_handler, pattern="^(create_goal|show_goals|create_habit|show_habits)$"),
     CallbackQueryHandler(handle_mode_choice, pattern="^mode_"),  # pattern для /mode кнопок
+    CallbackQueryHandler(handle_reaction_button, pattern="^reaction_")
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
     MessageHandler(filters.COMMAND, unknown_command),
