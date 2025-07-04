@@ -649,12 +649,6 @@ async def premium_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("❓ Я не знаю такой команды. Напиши /help, чтобы увидеть, что я умею.")
 
-# Копируем последний загруженный handlers.py в рабочую директорию для дальнейшей модификации
-src_path = "/mnt/data/handlers (6).py"
-dst_path = "/mnt/data/handlers_active.py"
-
-dst_path
-
 # Загружаем содержимое скопированного файла
 handlers_path = Path("/mnt/data/handlers_active.py")
 handlers_code = handlers_path.read_text(encoding="utf-8")
