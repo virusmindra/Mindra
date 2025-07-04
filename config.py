@@ -9,3 +9,5 @@ openai.api_key = OPENAI_API_KEY  # Инициализируем ключ для 
 
 # Создаём клиента (для новых версий OpenAI, 1.x+)
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
+
+PREMIUM_USERS = {"7775321566"}
