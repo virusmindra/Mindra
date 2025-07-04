@@ -649,10 +649,6 @@ async def premium_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("❓ Я не знаю такой команды. Напиши /help, чтобы увидеть, что я умею.")
 
-# Загружаем содержимое скопированного файла
-handlers_path = Path("/mnt/data/handlers_active.py")
-handlers_code = handlers_path.read_text(encoding="utf-8")
-
 # Список всех команд/обработчиков для экспорта
 handlers = [
     CommandHandler("start", start),
