@@ -679,7 +679,7 @@ handlers = [
     CommandHandler("stats", stats_command),
     CallbackQueryHandler(goal_buttons_handler, pattern="^(create_goal|show_goals|create_habit|show_habits)$"),
     CallbackQueryHandler(handle_mode_choice, pattern="^mode_"),  # pattern для /mode кнопок
-    CallbackQueryHandler(handle_reaction_button, pattern="^reaction_"),
+    CallbackQueryHandler(handle_reaction_button, pattern="^react_"),
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
     MessageHandler(filters.COMMAND, unknown_command),
