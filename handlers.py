@@ -424,7 +424,6 @@ async def goal_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         else:
             habits_list = "\n".join([f"• {h['text']} {'✅' if h.get('done') else '❌'}" for h in habits])
             await query.edit_message_text(f"📊 Твои привычки:\n{habits_list}")
-
             
 # Загрузка истории и режимов
 conversation_history = load_history()
