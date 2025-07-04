@@ -4,7 +4,6 @@ import asyncio
 import pytz
 from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
-from handlers import send_daily_reminder
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
@@ -23,7 +22,8 @@ from handlers import (
     track_user,
     goal_buttons_handler,
     premium_task,
-    handle_voice
+    handle_voice,
+    send_daily_reminder
 )
 from goals import get_goals
 from config import TELEGRAM_BOT_TOKEN
