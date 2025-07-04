@@ -382,21 +382,6 @@ async def show_goals(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply += f"{idx}. {status} {goal['text']}\n"
 
     await update.message.reply_markdown(reply)
-
-def generate_post_response_buttons(goal_text=None):
-    buttons = []
-
-    if goal_text:
-        buttons.append([
-            InlineKeyboardButton("🎯 Добавить как цель", callback_data=f"add_goal|{goal_text}")
-        ])
-
-    buttons.append([
-        InlineKeyboardButton("📋 Привычки", callback_data="show_habits"),
-        InlineKeyboardButton("🎯 Цели", callback_data="show_goals")
-    ])
-
-    return InlineKeyboardMarkup(buttons)
     
 async def goal_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
