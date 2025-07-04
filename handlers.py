@@ -21,6 +21,7 @@ from telegram.constants import ChatAction
 from config import client, TELEGRAM_BOT_TOKEN
 from history import load_history, save_history, trim_history
 from goals import add_goal, get_goals, mark_goal_done, delete_goal
+from pathlib import Path
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -497,14 +498,28 @@ async def handle_mode_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await query.answer()
         await query.edit_message_text(f"✅ Режим общения изменён на *{mode_key}*!", parse_mode="Markdown")
 
-def generate_reaction_buttons():
-    keyboard = [
-        [InlineKeyboardButton("❤️ Спасибо", callback_data="reaction_thanks")],
-        [InlineKeyboardButton("🤔 Хочу рассказать подробнее", callback_data="reaction_more")],
-        [InlineKeyboardButton("🔄 Продолжим", callback_data="reaction_continue")],
-        [InlineKeyboardButton("🔥 Ты классная", callback_data="reaction_flirty")]
-    ]
-    return InlineKeyboardMarkup(keyboard)
+def generate_post_response_buttons(goal_text=None, include_reactions=True):
+    buttons = []
+
+    if include_reactions:
+        buttons.append([
+            InlineKeyboardButton("❤️ Спасибо", callback_data="react_thanks"),
+            InlineKeyboardButton("🤔 Хочу рассказать подробнее", callback_data="react_more"),
+            InlineKeyboardButton("🔄 Продолжим", callback_data="react_continue"),
+            InlineKeyboardButton("🔥 Ты классная", callback_data="react_flirty"),
+        ])
+
+    if goal_text:
+        buttons.append([
+            InlineKeyboardButton("📌 Добавить как цель", callback_data=f"add_goal|{goal_text}")
+        ])
+
+    buttons.append([
+        InlineKeyboardButton("📋 Привычки", callback_data="show_habits"),
+        InlineKeyboardButton("🎯 Цели", callback_data="show_goals")
+    ])
+
+    return InlineKeyboardMarkup(buttons)
 
 async def handle_reaction_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -641,6 +656,10 @@ dst_path = "/mnt/data/handlers_active.py"
 shutil.copy(src_path, dst_path)
 
 dst_path
+
+# Загружаем содержимое скопированного файла
+handlers_path = Path("/mnt/data/handlers_active.py")
+handlers_code = handlers_path.read_text(encoding="utf-8")
 
 # Список всех команд/обработчиков для экспорта
 handlers = [
