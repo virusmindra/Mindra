@@ -51,7 +51,7 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_input = result.strip()
         topic = detect_topic(user_input)
         if topic:
-            context.user_data["last_topic"] = topic
+            save_user_context(context, topic=topic)
 
         await message.reply_text(f"📝 Ты сказал(а): {user_input}")
 
@@ -79,6 +79,11 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
             messages=history
         )
         reply = completion.choices[0].message.content.strip()
+
+        reference = get_topic_reference(context)
+        if reference:
+            reply = f"{reply}\n\n{reference}"
+
         reaction = detect_topic_and_react(user_input)
         if not reaction:
             reaction = detect_emotion_reaction(user_input)
@@ -86,7 +91,8 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply = reaction + reply
         reference = get_topic_reference(context)
         if reference:
-            reply = f"{reply}\n\n{reference}"
+            reply += f"\n\n{reference}"
+
         await update.message.reply_text(reply)
 
 
@@ -189,28 +195,39 @@ def get_topic_reference(context) -> str:
 
 def save_user_context(context, topic: str = None, emotion: str = None):
     if topic:
-        context.user_data["last_topic"] = topic
+        topics = context.user_data.get("topics", [])
+        if topic not in topics:
+            topics.append(topic)
+            context.user_data["topics"] = topics
+
     if emotion:
         context.user_data["last_emotion"] = emotion
 
+
 def get_topic_reference(context) -> str:
-    topic = context.user_data.get("last_topic", "")
-    if not topic:
+    topics = context.user_data.get("topics", [])
+    if not topics:
         return ""
-    
+
     references = {
-        "отношения": "Ты ведь недавно упоминал(а) про важные чувства… Если хочешь, можем обсудить глубже 💜",
-        "одиночество": "Помню, ты говорил(а), что чувствуешь себя одиноко… Я здесь и готова тебя слушать 🤗",
-        "работа": "Раньше ты делился(ась), что на работе было трудно. Что изменилось сейчас?",
-        "спорт": "Кажется, ты начал(а) тренироваться. Продолжаешь? 🏋️‍♂️",
-        "семья": "Ты упоминал(а) про семью… Всё хорошо у вас?",
-        "мотивация": "Ты говорил(а) про путь и развитие — хочу узнать, как у тебя с этим дела 💫"
+        "отношения": "Ты ведь раньше делился(ась) про чувства… Хочешь поговорить об этом подробнее? 💜",
+        "одиночество": "Помню, ты чувствовал(а) себя одиноко… Я всё ещё здесь 🤗",
+        "работа": "Ты рассказывал(а) про давление на работе. Как у тебя с этим сейчас?",
+        "спорт": "Ты ведь начинал(а) тренироваться — продолжаешь? 🏋️",
+        "семья": "Ты упоминал(а) про семью… Всё ли хорошо?",
+        "мотивация": "Ты говорил(а), что хочешь развиваться. Что уже получилось? ✨"
     }
 
-    for key in references:
-        if key in topic.lower():
-            return references[key]
+    matched_refs = []
+    for topic in topics:
+        for key in references:
+            if key in topic.lower() and references[key] not in matched_refs:
+                matched_refs.append(references[key])
+
+    if matched_refs:
+        return "\n\n".join(matched_refs[:2])  # максимум 2 отсылки
     return ""
+
 
 async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
