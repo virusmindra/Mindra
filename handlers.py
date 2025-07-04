@@ -503,9 +503,6 @@ def generate_post_response_buttons(goal_text=None, include_reactions=True):
     if include_reactions:
         buttons.append([
             InlineKeyboardButton("❤️ Спасибо", callback_data="react_thanks"),
-            InlineKeyboardButton("🤔 Хочу рассказать подробнее", callback_data="react_more"),
-            InlineKeyboardButton("🔄 Продолжим", callback_data="react_continue"),
-            InlineKeyboardButton("🔥 Ты классная", callback_data="react_flirty"),
         ])
 
     if goal_text:
@@ -524,15 +521,8 @@ async def handle_reaction_button(update: Update, context: ContextTypes.DEFAULT_T
     query = update.callback_query
     await query.answer()
 
-    reactions = {
-        "reaction_thanks": "Мне приятно это слышать! 💜",
-        "reaction_more": "Конечно, расскажи подробнее — я внимательно слушаю 🤗",
-        "reaction_continue": "Продолжаем! Я здесь 🌀",
-        "reaction_flirty": "Ты тоже 🔥 Мне нравится быть рядом с тобой!"
-    }
-
-    text = reactions.get(query.data, "Спасибо за отклик!")
-    await query.message.reply_text(text)
+    if query.data == "react_thanks":
+        await query.message.reply_text("Всегда пожалуйста! 😊 Я рядом, если что-то захочешь обсудить 💜")
 
 # Обработчик текстовых сообщений
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
