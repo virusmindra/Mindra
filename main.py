@@ -62,17 +62,15 @@ async def send_reminders(app):
 # 🚀 Планировщик запускается здесь
 def start_scheduler(app):
     scheduler = BackgroundScheduler()
-    scheduler.add_job(
-        lambda: asyncio.run(send_reminders(app)),
-        trigger='cron',
-        hour=7,  # 7:00 UTC = 10:00 по Киеву
-        minute=0,
-        timezone=pytz.UTC
-    )
-    scheduler.start()
 
-def start_scheduler(app):
-    scheduler = BackgroundScheduler()
+    scheduler.add_job(
+        lambda: asyncio.run(send_daily_reminder(app)),
+        'cron',
+        hour=10,
+        minute=0,
+        timezone=pytz.timezone('Europe/Kiev')
+    )
+
     scheduler.start()
 
 # 🚀 Точка входа
