@@ -11,6 +11,7 @@ import ffmpeg
 import traceback
 import asyncio
 
+from config import PREMIUM_USERS
 from datetime import datetime
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, CommandHandler, MessageHandler, CallbackQueryHandler, filters
