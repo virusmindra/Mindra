@@ -497,6 +497,15 @@ async def handle_mode_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await query.answer()
         await query.edit_message_text(f"✅ Режим общения изменён на *{mode_key}*!", parse_mode="Markdown")
 
+def generate_reaction_buttons():
+    buttons = [
+        [InlineKeyboardButton("❤️ Спасибо", callback_data="reaction_thanks")],
+        [InlineKeyboardButton("🤔 Хочу рассказать подробнее", callback_data="reaction_more")],
+        [InlineKeyboardButton("🔄 Продолжим", callback_data="reaction_continue")],
+        [InlineKeyboardButton("🔥 Ты классная", callback_data="reaction_flirty")]
+    ]
+    return InlineKeyboardMarkup(buttons)
+
 async def handle_reaction_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
