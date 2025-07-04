@@ -652,7 +652,6 @@ async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Копируем последний загруженный handlers.py в рабочую директорию для дальнейшей модификации
 src_path = "/mnt/data/handlers (6).py"
 dst_path = "/mnt/data/handlers_active.py"
-shutil.copy(src_path, dst_path)
 
 dst_path
 
