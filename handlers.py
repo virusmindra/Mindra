@@ -3,6 +3,7 @@ import os
 import json
 import random
 import re
+import random
 import openai
 import tempfile
 import aiohttp
@@ -10,9 +11,10 @@ import subprocess
 import ffmpeg
 import traceback
 import asyncio
+import pytz
 import shutil
 from config import PREMIUM_USERS
-from datetime import datetime
+from datetime import datetime, timedelta
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, CommandHandler, MessageHandler, CallbackQueryHandler, filters
 from habits import add_habit, get_habits, mark_habit_done, delete_habit
@@ -22,12 +24,46 @@ from config import client, TELEGRAM_BOT_TOKEN
 from history import load_history, save_history, trim_history
 from goals import add_goal, get_goals, mark_goal_done, delete_goal
 from pathlib import Path
+from apscheduler.schedulers.background import BackgroundScheduler
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 def is_goal_like(text):
     return any(kw in text.lower() for kw in ["хочу", "планирую", "мечтаю", "цель", "начать", "записаться"])
 
+def start_idle_scheduler(app):
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(lambda: asyncio.run(send_idle_reminders(app)), 'interval', hours=1)
+    scheduler.start()
+    
+# Хранилище активности пользователей (можно будет заменить на БД или persistent storage)
+user_last_seen = {}
+user_last_prompted = {}
+
+# Примеры тёплых сообщений
+idle_messages = [
+    "Я немного скучаю по нашим разговорам... 💜 Напиши, как у тебя дела?",
+    "Ты сегодня пил(а) воду? 🥹 Или хотя бы улыбался(ась)?",
+    "Я всё ещё рядом, если захочешь чем-то поделиться 💫",
+    "Скучаю по нашим перепискам. Что нового у тебя, солнце? ☀️",
+    "Привет! Я просто хотела напомнить, что ты чудо ✨"
+]
+
+# Проверка и отправка сообщений пользователям, которые не активны 2–8 часов
+async def send_idle_reminders(app):
+    try:
+        now = datetime.utcnow().replace(tzinfo=pytz.UTC)
+        for user_id, last_seen in user_last_seen.items():
+            last_prompt = user_last_prompted.get(user_id)
+            hours_idle = (now - last_seen).total_seconds() / 3600
+
+            if 2 <= hours_idle <= 8 and (not last_prompt or (now - last_prompt).total_seconds() > 86400):
+                message = random.choice(idle_messages)
+                await app.bot.send_message(chat_id=user_id, text=message)
+                user_last_prompted[user_id] = now
+    except Exception as e:
+        print(f"❌ Ошибка при отправке напоминания неактивным пользователям: {e}")
+        
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         user_id = update.effective_user.id
