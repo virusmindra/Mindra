@@ -57,9 +57,7 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await message.reply_text(f"📝 Ты сказал(а): {user_input}")
 
         # 4. Эмпатичная реакция
-        reaction = detect_topic_and_react(user_input)
-        if not reaction:
-            reaction = detect_emotion_reaction(user_input)
+       reaction = detect_emotion_reaction(user_input)
 
         # 5. История для ChatGPT
         system_prompt = {
