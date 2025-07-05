@@ -148,6 +148,7 @@ premium_tasks = [
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     track_user(user_id)  # 👈 логируем пользователя
+    user_last_seen[user_id] = datetime.utcnow().replace(tzinfo=pytz.UTC)
     ...
 
 YOUR_ID = "7775321566"  # 👈 замени на свой Telegram ID
