@@ -25,6 +25,9 @@ from pathlib import Path
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+def is_goal_like(text):
+    return any(kw in text.lower() for kw in ["хочу", "планирую", "мечтаю", "цель", "начать", "записаться"])
+
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         user_id = update.effective_user.id
@@ -90,8 +93,6 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply = reaction + reply
 
         # 9. Генерируем кнопки по смыслу текста
-    def is_goal_like(text):
-        return any(kw in text.lower() for kw in ["хочу", "планирую", "мечтаю", "цель", "начать", "записаться"])
         goal_text = user_input if is_goal_like(user_input) else None
         buttons = generate_post_response_buttons(goal_text=goal_text)
 
