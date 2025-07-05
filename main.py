@@ -23,7 +23,8 @@ from handlers import (
     goal_buttons_handler,
     premium_task,
     handle_voice,
-    send_daily_reminder
+    send_daily_reminder,
+    start_idle_scheduler
 )
 from goals import get_goals
 from config import TELEGRAM_BOT_TOKEN
@@ -94,6 +95,8 @@ if __name__ == "__main__":
 
     # ⏰ Планировщик
     start_scheduler(app)
+
+    start_idle_scheduler(app)
 
     logging.info("🤖 Бот запущен в режиме polling!")
     app.run_polling()
