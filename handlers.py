@@ -36,7 +36,7 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         mp3_path = f"/tmp/{file.file_unique_id}.mp3"
         await file.download_to_drive(file_path)
 
-        # 2. Конвертируем в mp3 (если нужно)
+        # 2. Конвертируем в mp3
         subprocess.run([
             "ffmpeg", "-i", file_path, "-ar", "44100", "-ac", "2", "-b:a", "192k", mp3_path
         ], check=True)
@@ -56,46 +56,46 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await message.reply_text(f"📝 Ты сказал(а): {user_input}")
 
-        reaction = detect_emotion_reaction(user_input)
+        # 4. Эмпатичная реакция
+        reaction = detect_topic_and_react(user_input)
+        if not reaction:
+            reaction = detect_emotion_reaction(user_input)
 
-        # 5. Готовим историю с system-промптом
+        # 5. История для ChatGPT
         system_prompt = {
             "role": "system",
             "content": (
                 "Ты — эмпатичный AI-собеседник, как подруга или психолог. "
                 "Ответь на голосовое сообщение пользователя с поддержкой, теплом и пониманием. "
                 "Если человек говорит о 'ней' или 'нём', учитывай это при ответе. "
-                "Если он говорит 'я' — поддержи лично. Избегай сухих и односложных фраз."
-                "Ты — эмпатичный собеседник. Отвечай тепло, дружелюбно и добавляй подходящие эмоджи к ответу, "
-                "например: 😊, 💜, 🙌, ❤️, 🤗, 😢 — чтобы усилить эмоции. Не перегружай ими, но пусть они будут частью стиля."
+                "Если он говорит 'я' — поддержи лично. Избегай сухих и односложных фраз. "
+                "Добавляй эмоджи, если уместно — 😊, 💜, 🤗, ✨ и т.п."
             )
         }
-    
+
         history = [system_prompt, {"role": "user", "content": user_input}]
         history = trim_history(history)
 
-        # 6. Генерируем ответ
+        # 6. Ответ от ChatGPT
         completion = openai.chat.completions.create(
             model="gpt-4o",
             messages=history
         )
         reply = completion.choices[0].message.content.strip()
 
+        # 7. Добавляем отсылку к теме, если есть
         reference = get_topic_reference(context)
         if reference:
             reply = f"{reply}\n\n{reference}"
 
-        reaction = detect_topic_and_react(user_input)
-        if not reaction:
-            reaction = detect_emotion_reaction(user_input)
-
+        # 8. Объединяем эмоции и ответ
         reply = reaction + reply
-        reference = get_topic_reference(context)
-        if reference:
-            reply += f"\n\n{reference}"
 
-        await update.message.reply_text(reply, reply_markup=generate_post_response_buttons())
+        # 9. Генерируем кнопки по смыслу текста
+        goal_text = user_input if is_goal_like(user_input) else None
+        buttons = generate_post_response_buttons(goal_text=goal_text)
 
+        await update.message.reply_text(reply, reply_markup=buttons)
 
     except Exception as e:
         print(f"❌ Ошибка при обработке голосового: {e}")
