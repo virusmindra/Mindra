@@ -63,25 +63,21 @@ def is_goal_like(text):
     ]
     return any(kw in text.lower() for kw in keywords)
 
-# 🧠 Обработка нажатия на кнопку "добавить как цель"
 async def handle_add_goal_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
+
+    user_id = update.effective_user.id
 
     if "|" in query.data:
         _, goal_text = query.data.split("|", 1)
     else:
         goal_text = context.chat_data.get("goal_candidate", "Моя цель")
 
-    # Сохраняем цель
-    goals = context.chat_data.setdefault("goals", [])
-    goals.append({
-        "text": goal_text,
-        "created_at": datetime.datetime.now().isoformat()
-    })
+    add_goal_for_user(user_id, goal_text)
 
     await query.message.reply_text(f"✨ Готово! Я записала это как твою цель 💪\n\n👉 {goal_text}")
-    
+
 def start_idle_scheduler(app):
     scheduler = BackgroundScheduler(timezone="UTC")
     scheduler.add_job(lambda: asyncio.run(send_idle_reminders(app)), trigger="interval", minutes=30)
