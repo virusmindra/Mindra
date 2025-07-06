@@ -28,8 +28,33 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+# 🔍 Определение, содержит ли сообщение цель или привычку
 def is_goal_like(text):
-    return any(kw in text.lower() for kw in ["хочу", "планирую", "мечтаю", "цель", "начать", "записаться"])
+    keywords = [
+        "хочу", "планирую", "мечтаю", "цель", "начну", "запишусь", "начать",
+        "буду делать", "постараюсь", "нужно", "пора", "начинаю", "собираюсь",
+        "решил", "решила", "буду", "привычка", "добавить"
+    ]
+    return any(kw in text.lower() for kw in keywords)
+
+# 🧠 Обработка нажатия на кнопку "добавить как цель"
+async def handle_add_goal_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    if "|" in query.data:
+        _, goal_text = query.data.split("|", 1)
+    else:
+        goal_text = context.chat_data.get("goal_candidate", "Моя цель")
+
+    # Сохраняем цель
+    goals = context.chat_data.setdefault("goals", [])
+    goals.append({
+        "text": goal_text,
+        "created_at": datetime.datetime.now().isoformat()
+    })
+
+    await query.message.reply_text(f"✨ Готово! Я записала это как твою цель 💪\n\n👉 {goal_text}")
     
 def start_idle_scheduler(app):
     scheduler = BackgroundScheduler(timezone="UTC")
