@@ -387,21 +387,21 @@ async def handle_habit_button(update: Update, context: ContextTypes.DEFAULT_TYPE
         else:
             await query.edit_message_text("Не удалось удалить привычку.")
 
-# /done — отметить цель как выполненную
 async def mark_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
-    if not context.args or not context.args[0].isdigit():
-        await update.message.reply_text("✅ Чтобы отметить цель выполненной, напиши так:\n`/done 1`", parse_mode="Markdown")
+    user_id = update.effective_user.id
+    goals = get_goals_for_user(user_id)
+
+    if not goals:
+        await update.message.reply_text("У тебя пока нет целей, которые можно отметить выполненными 😔")
         return
 
-    index = int(context.args[0]) - 1
-    success = mark_goal_done(user_id, index)
+    buttons = [
+        [InlineKeyboardButton(goal, callback_data=f"done_goal|{goal}")]
+        for goal in goals
+    ]
 
-    if success:
-        reaction = random.choice(REACTIONS_GOAL_DONE)
-        await update.message.reply_text(reaction)
-    else:
-        await update.message.reply_text("❌ Не могу найти такую цель.")
+    reply_markup = InlineKeyboardMarkup(buttons)
+    await update.message.reply_text("Выбери цель, которую ты выполнил(а):", reply_markup=reply_markup)
 
 REACTIONS_GOAL_DONE = [
     "🌟 Горжусь тобой! Ещё один шаг вперёд.",
