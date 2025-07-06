@@ -751,4 +751,5 @@ __all__ = [
     "send_daily_reminder",
     "handle_add_goal_callback",
     "check_and_send_warm_messages",
+    "user_last_seen",
 ]
