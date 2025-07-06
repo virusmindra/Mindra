@@ -32,6 +32,9 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 GOALS_FILE = Path("user_goals.json")
 
+def track_user_activity(user_id):
+    user_last_seen[user_id] = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+    
 def load_goals():
     if GOALS_FILE.exists():
         with open(GOALS_FILE, "r", encoding="utf-8") as f:
@@ -118,6 +121,8 @@ async def check_and_send_warm_messages(context: ContextTypes.DEFAULT_TYPE):
                 print(f"Не удалось отправить сообщение {user_id}: {e}")
                 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    track_user_activity(user_id)
     try:
         user_id = update.effective_user.id
         message = update.message
@@ -201,6 +206,8 @@ premium_tasks = [
 ]
 
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    track_user_activity(user_id)
     user_id = str(update.effective_user.id)
     track_user(user_id)  # 👈 логируем пользователя
     user_last_seen[user_id] = datetime.utcnow().replace(tzinfo=pytz.UTC)
@@ -752,4 +759,5 @@ __all__ = [
     "handle_add_goal_callback",
     "check_and_send_warm_messages",
     "user_last_seen",
+    "track_user_activity",
 ]
