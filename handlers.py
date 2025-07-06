@@ -25,7 +25,7 @@ from history import load_history, save_history, trim_history
 from goals import add_goal, get_goals, mark_goal_done, delete_goal
 from pathlib import Path
 from apscheduler.schedulers.background import BackgroundScheduler
-from storage import add_goal_for_user
+from storage import add_goal_for_user, get_goals_for_user, mark_goal_done
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
