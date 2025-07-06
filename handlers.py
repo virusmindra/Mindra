@@ -25,24 +25,16 @@ from history import load_history, save_history, trim_history
 from goals import add_goal, get_goals, mark_goal_done, delete_goal
 from pathlib import Path
 from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 def is_goal_like(text):
     return any(kw in text.lower() for kw in ["хочу", "планирую", "мечтаю", "цель", "начать", "записаться"])
-
+    
 def start_idle_scheduler(app):
-    scheduler = AsyncIOScheduler(timezone="UTC")
-
-    scheduler.add_job(
-        lambda: asyncio.create_task(send_idle_reminders(app)),
-        trigger="interval",
-        minutes=30
-    )
-
+    scheduler = BackgroundScheduler(timezone="UTC")
+    scheduler.add_job(lambda: asyncio.run(send_idle_reminders(app)), trigger="interval", minutes=30)
     scheduler.start()
-
     
 # Хранилище активности пользователей (можно будет заменить на БД или persistent storage)
 user_last_seen = {}
