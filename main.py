@@ -76,11 +76,12 @@ def start_scheduler(app):
 
     scheduler.start()
 
-application.job_queue.run_repeating(check_and_send_warm_messages, interval=3600, first=600)
-
-# 🚀 Точка входа
 if __name__ == "__main__":
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
+
+    # 🔁 Автоматические тёплые сообщения
+    from handlers import check_and_send_warm_messages
+    app.job_queue.run_repeating(check_and_send_warm_messages, interval=3600, first=600)
 
     # 👂 Обработчик голосовых
     print("🧪 Зарегистрирован handler VOICE:", handle_voice)
@@ -96,9 +97,8 @@ if __name__ == "__main__":
     # ⛑ Обработка ошибок
     app.add_error_handler(error_handler)
 
-    # ⏰ Планировщик
+    # ⏰ Планировщики
     start_scheduler(app)
-
     start_idle_scheduler(app)
 
     logging.info("🤖 Бот запущен в режиме polling!")
