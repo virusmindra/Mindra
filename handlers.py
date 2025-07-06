@@ -462,10 +462,9 @@ async def goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     await update.message.reply_markdown(reply)
     
-# /goals — показать список целей
 async def show_goals(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
-    goals = get_goals(user_id)
+    user_id = update.effective_user.id
+    goals = get_goals_for_user(user_id)  # Новая функция хранения
 
     if not goals:
         await update.message.reply_text("🎯 У тебя пока нет целей. Добавь первую с помощью /goal")
@@ -473,8 +472,8 @@ async def show_goals(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     reply = "📋 *Твои цели:*\n\n"
     for idx, goal in enumerate(goals, 1):
-        status = "✅" if goal["done"] else "🔸"
-        reply += f"{idx}. {status} {goal['text']}\n"
+        status = "✅" if goal.get("done") else "🔸"
+        reply += f"{idx}. {status} {goal.get('text', '')}\n"
 
     await update.message.reply_markdown(reply)
     
