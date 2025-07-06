@@ -47,7 +47,6 @@ def start_idle_scheduler(app):
 # Хранилище активности пользователей (можно будет заменить на БД или persistent storage)
 user_last_seen = {}
 user_last_prompted = {}
-user_last_seen[user_id] = datetime.utcnow().replace(tzinfo=pytz.UTC)
 
 # Примеры тёплых сообщений
 idle_messages = [
@@ -106,7 +105,9 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # 4. Эмпатичная реакция
         reaction = detect_emotion_reaction(user_input)
-
+        
+        user_last_seen[user_id] = datetime.utcnow().replace(tzinfo=pytz.UTC)
+        
         # 5. История для ChatGPT
         system_prompt = {
             "role": "system",
