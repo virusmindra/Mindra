@@ -715,6 +715,7 @@ handlers = [
     CallbackQueryHandler(goal_buttons_handler, pattern="^(create_goal|show_goals|create_habit|show_habits)$"),
     CallbackQueryHandler(handle_mode_choice, pattern="^mode_"),  # pattern для /mode кнопок
     CallbackQueryHandler(handle_reaction_button, pattern="^react_"),
+    CallbackQueryHandler(handle_add_goal_callback, pattern="^add_goal\\|"),
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
     MessageHandler(filters.COMMAND, unknown_command),
@@ -727,5 +728,6 @@ __all__ = [
     "track_users",
     "error_handler",
     "handle_voice",
-    "send_daily_reminder"
+    "send_daily_reminder",
+    "handle_add_goal_callback"
 ]
