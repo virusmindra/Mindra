@@ -76,7 +76,7 @@ def start_scheduler(app):
 
     scheduler.start()
 
-job_queue.run_repeating(check_and_send_warm_messages, interval=3600, first=600)
+application.job_queue.run_repeating(check_and_send_warm_messages, interval=3600, first=600)
 
 # 🚀 Точка входа
 if __name__ == "__main__":
