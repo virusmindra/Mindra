@@ -123,8 +123,8 @@ async def check_and_send_warm_messages(context: ContextTypes.DEFAULT_TYPE):
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     track_user_activity(user_id)
+
     try:
-        user_id = update.effective_user.id
         message = update.message
 
         # 1. Получаем файл
@@ -155,9 +155,7 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # 4. Эмпатичная реакция
         reaction = detect_emotion_reaction(user_input)
-        
-        user_last_seen[user_id] = datetime.utcnow().replace(tzinfo=pytz.UTC)
-        
+
         # 5. История для ChatGPT
         system_prompt = {
             "role": "system",
@@ -208,10 +206,7 @@ premium_tasks = [
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     track_user_activity(user_id)
-    user_id = str(update.effective_user.id)
-    track_user(user_id)  # 👈 логируем пользователя
-    user_last_seen[user_id] = datetime.utcnow().replace(tzinfo=pytz.UTC)
-    ...
+    track_user(str(user_id))
 
 YOUR_ID = "7775321566"  # 👈 замени на свой Telegram ID
 
