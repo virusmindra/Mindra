@@ -65,10 +65,8 @@ async def send_reminders(app):
 
 # 🚀 Планировщик запускается здесь
 def start_scheduler(app):
-    scheduler = BackgroundScheduler()
-
-    scheduler.add_job(send_idle_reminders_compatible, trigger="interval", minutes=30, args=[application])
-
+    scheduler = BackgroundScheduler(timezone="UTC")
+    scheduler.add_job(send_idle_reminders_compatible, trigger="interval", minutes=30, args=[app])
     scheduler.start()
 
 if __name__ == "__main__":
