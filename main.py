@@ -73,7 +73,7 @@ if __name__ == "__main__":
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
     # ⏰ Планировщики
-    start_scheduler(application)
+    start_scheduler(app)
     
     # 👂 Обработчик голосовых
     print("🧪 Зарегистрирован handler VOICE:", handle_voice)
