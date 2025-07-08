@@ -93,7 +93,7 @@ user_last_seen = {}
 user_last_prompted = {}
 
 # Примеры тёплых сообщений
-WARM_MESSAGES = [
+IDLE_MESSAGES = [
     "💜 Я немного соскучилась. Хочешь поделиться, как проходит день?",
     "✨ У меня есть предчувствие, что ты заслуживаешь сегодня что-то хорошее. Проверим?",
     "🤫 Иногда даже просто 'привет' — это начало чего-то важного. Не молчи 💌",
@@ -108,17 +108,20 @@ WARM_MESSAGES = [
     "😌 Может, немного тишины — это хорошо. Но если захочешь — я тут."
 ]
 
-async def check_and_send_warm_messages(context: ContextTypes.DEFAULT_TYPE):
-    now = datetime.utcnow()
-    for user_id, last_time in user_last_seen.items():
-        delta = (now - last_time).total_seconds() / 3600
-        if 2 <= delta <= 8:
-            message = choice(WARM_MESSAGES)
+async def send_idle_reminders_compatible(context: ContextTypes.DEFAULT_TYPE):
+    now = datetime.utcnow().replace(tzinfo=pytz.UTC)
+
+    for user_id, last_seen in user_last_seen.items():
+        last_prompt = user_last_prompted.get(user_id)
+        hours_idle = (now - last_seen).total_seconds() / 3600
+
+        if 2 <= hours_idle <= 8 and (not last_prompt or (now - last_prompt).total_seconds() > 86400):
+            message = random.choice(IDLE_MESSAGES)
             try:
-                await context.bot.send_message(chat_id=user_id, text=message, parse_mode=ParseMode.HTML)
-                user_last_seen[user_id] = now  # чтобы не спамить
+                await context.bot.send_message(chat_id=user_id, text=message)
+                user_last_prompted[user_id] = now
             except Exception as e:
-                print(f"Не удалось отправить сообщение {user_id}: {e}")
+                print(f"❌ Ошибка отправки сообщения {user_id}: {e}")
                 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
