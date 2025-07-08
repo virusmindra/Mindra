@@ -24,7 +24,6 @@ from handlers import (
     premium_task,
     handle_voice,
     send_daily_reminder,
-    start_idle_scheduler,
     user_last_seen,
     check_and_send_warm_messages,
     user_last_prompted,
