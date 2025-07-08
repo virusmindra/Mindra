@@ -101,7 +101,7 @@ if __name__ == "__main__":
 
     # ⏰ Планировщики
     start_scheduler(app)
-    start_idle_scheduler(app)
-
+    start_idle_scheduler(application)
+    
     logging.info("🤖 Бот запущен в режиме polling!")
     app.run_polling()
