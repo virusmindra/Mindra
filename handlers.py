@@ -83,11 +83,6 @@ async def handle_add_goal_callback(update: Update, context: ContextTypes.DEFAULT
 
     await query.message.reply_text(f"✨ Готово! Я записала это как твою цель 💪\n\n👉 {goal_text}")
 
-def start_idle_scheduler(app):
-    scheduler = BackgroundScheduler(timezone="UTC")
-    scheduler.add_job(lambda: asyncio.run(send_idle_reminders(app)), trigger="interval", minutes=30)
-    scheduler.start()
-    
 # Хранилище активности пользователей (можно будет заменить на БД или persistent storage)
 user_last_seen = {}
 user_last_prompted = {}
