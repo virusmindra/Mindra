@@ -25,7 +25,6 @@ from handlers import (
     handle_voice,
     send_daily_reminder,
     user_last_seen,
-    check_and_send_warm_messages,
     user_last_prompted,
 )
 from goals import get_goals
