@@ -68,13 +68,7 @@ async def send_reminders(app):
 def start_scheduler(app):
     scheduler = BackgroundScheduler()
 
-    scheduler.add_job(
-        lambda: asyncio.run(send_daily_reminder(app)),
-        'cron',
-        hour=10,
-        minute=0,
-        timezone=pytz.timezone('Europe/Kiev')
-    )
+    scheduler.add_job(send_idle_reminders_compatible, trigger="interval", minutes=30, args=[application])
 
     scheduler.start()
 
