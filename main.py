@@ -87,8 +87,7 @@ if __name__ == "__main__":
     app.add_error_handler(error_handler)
 
     # ⏰ Планировщики
-    start_scheduler(app)
-    start_idle_scheduler(application)
+    start_scheduler(application)
     
     logging.info("🤖 Бот запущен в режиме polling!")
     app.run_polling()
