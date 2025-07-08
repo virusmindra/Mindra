@@ -72,6 +72,9 @@ def start_scheduler(app):
 if __name__ == "__main__":
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
+    # ⏰ Планировщики
+    start_scheduler(application)
+    
     # 👂 Обработчик голосовых
     print("🧪 Зарегистрирован handler VOICE:", handle_voice)
     app.add_handler(MessageHandler(filters.VOICE, handle_voice))
@@ -85,9 +88,6 @@ if __name__ == "__main__":
 
     # ⛑ Обработка ошибок
     app.add_error_handler(error_handler)
-
-    # ⏰ Планировщики
-    start_scheduler(application)
     
     logging.info("🤖 Бот запущен в режиме polling!")
     app.run_polling()
