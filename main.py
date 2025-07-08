@@ -73,10 +73,6 @@ def start_scheduler(app):
 if __name__ == "__main__":
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
-    # 🔁 Автоматические тёплые сообщения
-    from handlers import check_and_send_warm_messages
-    app.job_queue.run_repeating(check_and_send_warm_messages, interval=3600, first=600)
-
     # 👂 Обработчик голосовых
     print("🧪 Зарегистрирован handler VOICE:", handle_voice)
     app.add_handler(MessageHandler(filters.VOICE, handle_voice))
