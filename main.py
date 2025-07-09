@@ -67,7 +67,7 @@ async def send_reminders(app):
 # 🔁 Планировщик неактивных пользователей
 def start_scheduler(app):
     scheduler = BackgroundScheduler(timezone="UTC")
-    scheduler.add_job(send_idle_reminders_compatible, trigger="interval", minutes=30, args=[app])
+    scheduler.add_job(send_idle_reminders_compatible, trigger="interval", minutes=2, args=[app])
     scheduler.start()
 
 if __name__ == "__main__":
