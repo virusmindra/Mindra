@@ -103,13 +103,14 @@ async def send_idle_reminders_compatible(context: ContextTypes.DEFAULT_TYPE):
         last_prompt = user_last_prompted.get(user_id)
         hours_idle = (now - last_seen).total_seconds() / 3600
 
-        if 2 <= hours_idle <= 8 and (not last_prompt or (now - last_prompt).total_seconds() > 86400):
+        if 2 <= hours_idle <= 8 and (not last_prompt or True):  # <= принудительно отправить
             try:
                 message = random.choice(IDLE_MESSAGES)
                 await context.bot.send_message(chat_id=user_id, text=message)
                 user_last_prompted[user_id] = now
             except Exception as e:
                 print(f"❌ Ошибка при отправке idle-сообщения: {e}")
+                print(f"Проверяю user {user_id} — idle {hours_idle}ч, prompted {last_prompt}")
                 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
