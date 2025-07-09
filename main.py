@@ -2,7 +2,6 @@ import os
 import logging
 import asyncio
 import pytz
-from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 from telegram.ext import (
     ApplicationBuilder,
@@ -14,7 +13,8 @@ from telegram.ext import (
 )
 
 from telegram.error import TelegramError
-from pytz import timezone
+from datetime import timezone
+from datetime import datetime, timezone, timedelta
 
 # 👇 Импорты из твоих модулей
 from handlers import (
@@ -31,6 +31,7 @@ from handlers import (
 from goals import get_goals
 from config import TELEGRAM_BOT_TOKEN
 
+user_last_seen[7775321566] = datetime.now(timezone.utc) - timedelta(hours=3)
 # 📋 Настройка логов
 logging.basicConfig(level=logging.INFO)
 logging.getLogger().setLevel(logging.DEBUG)
