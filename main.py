@@ -63,18 +63,17 @@ async def send_reminders(app):
                 except Exception as e:
                     print(f"❌ Ошибка с напоминанием: {e}")
 
-# 🚀 Планировщик запускается здесь
-def start_scheduler(app):
-    scheduler = BackgroundScheduler(timezone="UTC")
-    scheduler.add_job(send_idle_reminders_compatible, trigger="interval", minutes=30, args=[app])
-    scheduler.start()
-
 if __name__ == "__main__":
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
+    # 🧪 Тестовая подстановка времени последней активности
+    from datetime import datetime, timedelta
+    import pytz
+    user_last_seen[7775321566] = datetime.utcnow().replace(tzinfo=pytz.UTC) - timedelta(hours=3)
+
     # ⏰ Планировщики
     start_scheduler(app)
-    
+
     # 👂 Обработчик голосовых
     print("🧪 Зарегистрирован handler VOICE:", handle_voice)
     app.add_handler(MessageHandler(filters.VOICE, handle_voice))
@@ -88,6 +87,6 @@ if __name__ == "__main__":
 
     # ⛑ Обработка ошибок
     app.add_error_handler(error_handler)
-    
+
     logging.info("🤖 Бот запущен в режиме polling!")
     app.run_polling()
