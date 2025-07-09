@@ -184,6 +184,8 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # 8. Объединяем эмоции и ответ
         reply = reaction + reply
 
+        reply = insert_followup_question(reply, user_input)
+
         # 9. Генерируем кнопки по смыслу текста
         goal_text = user_input if is_goal_like(user_input) else None
         buttons = generate_post_response_buttons(goal_text=goal_text)
@@ -205,8 +207,27 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     track_user_activity(user_id)
     track_user(str(user_id))
+    reply = insert_followup_question(reply, user_input)
 
 YOUR_ID = "7775321566"  # 👈 замени на свой Telegram ID
+
+def insert_followup_question(reply, user_input):
+    topic = detect_topic(user_input)
+    if not topic:
+        return reply
+
+    questions_by_topic = {
+        "спорт": ["А ты сейчас занимаешься чем-то активным?", "Хочешь, составим тебе лёгкий челлендж?"],
+        "любовь": ["А что ты чувствуешь к этому человеку сейчас?", "Хочешь рассказать, что было дальше?"],
+        "работа": ["А чем тебе нравится (или не нравится) твоя работа?", "Ты хочешь что-то поменять в этом?"],
+        "деньги": ["Как ты сейчас чувствуешь себя в плане финансов?", "Что бы ты хотел улучшить?"],
+        "одиночество": ["А чего тебе сейчас больше всего не хватает?", "Хочешь, я просто побуду рядом?"],
+    }
+
+    questions = questions_by_topic.get(topic.lower())
+    if questions:
+        return reply.strip() + "\n\n" + random.choice(questions)
+    return reply
 
 async def send_daily_reminder(context):
     try:
