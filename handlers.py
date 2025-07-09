@@ -99,19 +99,23 @@ IDLE_MESSAGES = [
 # Функция, вызываемая планировщиком
 async def send_idle_reminders_compatible(context: ContextTypes.DEFAULT_TYPE):
     now = datetime.utcnow().replace(tzinfo=pytz.UTC)
+    print(f"[IDLE CHECK] Время запуска: {now.isoformat()}")
+
     for user_id, last_seen in user_last_seen.items():
         last_prompt = user_last_prompted.get(user_id)
         hours_idle = (now - last_seen).total_seconds() / 3600
 
-        if 2 <= hours_idle <= 8 and (not last_prompt or True):  # <= принудительно отправить
+        print(f"[IDLE CHECK] user_id: {user_id}, idle: {hours_idle:.2f}h, prompted: {last_prompt}")
+
+        if 2 <= hours_idle <= 8 and (not last_prompt or (now - last_prompt).total_seconds() > 86400):
+            message = random.choice(IDLE_MESSAGES)
             try:
-                message = random.choice(IDLE_MESSAGES)
                 await context.bot.send_message(chat_id=user_id, text=message)
                 user_last_prompted[user_id] = now
+                print(f"[IDLE SENT] Напомнил пользователю {user_id}")
             except Exception as e:
-                print(f"❌ Ошибка при отправке idle-сообщения: {e}")
-                print(f"Проверяю user {user_id} — idle {hours_idle}ч, prompted {last_prompt}")
-                
+                print(f"❌ Ошибка отправки idle сообщения {user_id}: {e}")
+
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     track_user_activity(user_id)
