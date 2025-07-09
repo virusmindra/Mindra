@@ -75,8 +75,8 @@ if __name__ == "__main__":
     # 🧪 Тестовая подстановка времени последней активности
     from datetime import datetime, timedelta
     import pytz
-    user_last_seen[7775321566] = datetime.utcnow().replace(tzinfo=pytz.UTC) - timedelta(hours=3)
-
+    user_last_seen[7775321566] = datetime.now(timezone.utc) - timedelta(hours=3)
+    
     # ⏰ Планировщики
     start_scheduler(app)
 
