@@ -84,10 +84,6 @@ async def handle_add_goal_callback(update: Update, context: ContextTypes.DEFAULT
 
     await query.message.reply_text(f"✨ Готово! Я записала это как твою цель 💪\n\n👉 {goal_text}")
 
-# Глобальные переменные
-user_last_seen = {}
-user_last_prompted = {}
-
 IDLE_MESSAGES = [
     "💌 Я немного скучаю. Расскажешь, как дела?",
     "🌙 Надеюсь, у тебя всё хорошо. Я здесь, если что 🫶",
