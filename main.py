@@ -116,7 +116,7 @@ async def main():
 
     # Планировщик: проверка неактивных пользователей каждые 3 часа
     app.job_queue.run_repeating(
-        lambda context: asyncio.create_task(send_idle_reminders(app)),
+        lambda context: asyncio.create_task(send_idle_reminders_compatible(app)),
         interval=10800,  # 3 часа в секундах
         first=10  # запуск через 10 секунд после старта
     )
