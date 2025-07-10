@@ -89,12 +89,19 @@ async def start_idle_reminder_loop(application):
         await send_idle_reminders(application)
         await asyncio.sleep(3 * 60)  # каждые 3 минуты
         
-if __name__ == "__main__":
+async def main():
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
-    # 👂 Обработчик голосовых
     print("🧪 Зарегистрирован handler VOICE:", handle_voice)
     app.add_handler(MessageHandler(filters.VOICE, handle_voice))
+    
+    asyncio.create_task(start_idle_reminder_loop(app))
+
+    print("🤖 Бот запущен!")
+    await app.run_polling()
+
+if __name__ == "__main__":
+    asyncio.run(main())
 
     # ✅ Обработчики из списка
     for handler in all_handlers:
