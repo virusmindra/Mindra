@@ -45,11 +45,13 @@ async def error_handler(update, context):
     if update and update.effective_message:
         await update.effective_message.reply_text("😵 Ой, что-то пошло не так. Я уже разбираюсь с этим.")
 
-# 👥 Трекинг пользователей
-async def track_users(update, context):
-    user_id = str(update.effective_user.id)
-    context.application.bot_data.setdefault("user_ids", set()).add(user_id)
 
+# 📬 Обработчик всех сообщений
+async def track_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    user_last_seen[user_id] = datetime.now(timezone.utc)
+    logging.info(f"👀 Обновлено время активности для {user_id}")
+    
 # 🔔 Планировщик напоминаний
 async def send_reminders(app):
     for user_id in app.bot_data.get("user_ids", []):
@@ -67,13 +69,13 @@ async def send_reminders(app):
                 except Exception as e:
                     print(f"❌ Ошибка с напоминанием: {e}")
 
-# 🔁 Планировщик неактивных пользователей
+# 🚀 Запуск планировщика
 def start_scheduler(app):
     scheduler = BackgroundScheduler(timezone="UTC")
-    scheduler.add_job(send_idle_reminders_compatible, trigger="interval", minutes=2, args=[app])
+    scheduler.add_job(send_idle_reminders_compatible, "interval", minutes=3, args=[app])
     scheduler.start()
-
-if __name__ == "__main__":
+    
+    if __name__ == "__main__":
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
     # 🧪 Тестовая подстановка времени последней активности
