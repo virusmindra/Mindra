@@ -30,9 +30,7 @@ from handlers import (
 from goals import get_goals
 from config import TELEGRAM_BOT_TOKEN
 
-# Глобальные переменные
-user_last_seen = {}
-user_last_prompted = {}
+user_last_seen, user_last_prompted = get_activity_data()
 
 # 📋 Настройка логов
 logging.basicConfig(level=logging.INFO)
