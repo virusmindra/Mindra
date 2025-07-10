@@ -34,7 +34,6 @@ from config import TELEGRAM_BOT_TOKEN
 user_last_seen = {}
 user_last_prompted = {}
 
-user_last_seen[7775321566] = datetime.now(timezone.utc) - timedelta(hours=3)
 # 📋 Настройка логов
 logging.basicConfig(level=logging.INFO)
 logging.getLogger().setLevel(logging.DEBUG)
@@ -78,14 +77,6 @@ def start_scheduler(app):
     if __name__ == "__main__":
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
-    # 🧪 Тестовая подстановка времени последней активности
-    from datetime import datetime, timedelta
-    import pytz
-    user_last_seen[7775321566] = datetime.now(timezone.utc) - timedelta(hours=3)
-    
-    # ⏰ Планировщики
-    start_scheduler(app)
-
     # 👂 Обработчик голосовых
     print("🧪 Зарегистрирован handler VOICE:", handle_voice)
     app.add_handler(MessageHandler(filters.VOICE, handle_voice))
@@ -100,5 +91,8 @@ def start_scheduler(app):
     # ⛑ Обработка ошибок
     app.add_error_handler(error_handler)
 
+    # ⏰ Планировщики
+    start_scheduler(app)
+    
     logging.info("🤖 Бот запущен в режиме polling!")
     app.run_polling()
