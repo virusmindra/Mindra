@@ -11,9 +11,8 @@ from telegram.ext import (
     ContextTypes,
     filters
 )
-
+from telegram import Update
 from telegram.error import TelegramError
-from datetime import timezone
 from datetime import datetime, timezone, timedelta
 
 # 👇 Импорты из твоих модулей
