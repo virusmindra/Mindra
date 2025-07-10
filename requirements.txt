@@ -4,4 +4,4 @@ ffmpeg-python
 apscheduler
 aiohttp
 pytz
-
+nest_asyncio
