@@ -18,7 +18,6 @@ from datetime import datetime, timezone, timedelta
 # 👇 Импорты из твоих модулей
 from handlers import (
     handlers as all_handlers,
-    track_user,
     goal_buttons_handler,
     premium_task,
     handle_voice,
