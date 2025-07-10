@@ -68,6 +68,20 @@ async def send_reminders(app):
                 except Exception as e:
                     print(f"❌ Ошибка с напоминанием: {e}")
 
+# 🕐 Отправка сообщений после неактивности
+async def send_idle_reminders_compatible(app):
+    now = datetime.now(timezone.utc)
+    logging.info("⏰ Проверка неактивных пользователей...")
+
+    for user_id, last_seen in user_last_seen.items():
+        if (now - last_seen) > timedelta(hours=2):
+            try:
+                await app.bot.send_message(chat_id=user_id, text="✨ Привет, давно не болтали! Как ты?")
+                user_last_seen[user_id] = now
+                logging.info(f"📨 Напоминание отправлено пользователю {user_id}")
+            except Exception as e:
+                logging.error(f"❌ Ошибка при отправке сообщения пользователю {user_id}: {e}")
+
 # 🚀 Запуск планировщика
 def start_scheduler(app):
     scheduler = BackgroundScheduler(timezone="UTC")
