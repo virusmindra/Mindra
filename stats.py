@@ -14,12 +14,6 @@ def save_stats(stats):
     with open(STATS_FILE, "w") as f:
         json.dump(stats, f, indent=2)
 
-def track_user(user_id):
-    stats = load_stats()
-    now = datetime.utcnow().isoformat()
-    stats["users"][str(user_id)] = now
-    save_stats(stats)
-
 def add_premium(user_id):
     stats = load_stats()
     stats["premium_users"][str(user_id)] = datetime.utcnow().isoformat()
