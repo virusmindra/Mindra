@@ -28,9 +28,8 @@ from handlers import (
 from goals import get_goals
 from config import TELEGRAM_BOT_TOKEN
 
-# 📋 Настройка логов
 logging.basicConfig(level=logging.INFO)
-logging.getLogger().setLevel(logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 # ⛑ Глобальный обработчик ошибок
 async def error_handler(update, context):
@@ -110,6 +109,17 @@ async def main():
     # 🔁 Запускаем отправку напоминаний через asyncio
     asyncio.create_task(run_idle_reminder_loop(app))
 
+    
+    # Подключаем хендлеры
+    setup_handlers(app)
+
+    # Планировщик: проверка неактивных пользователей каждые 3 часа
+    app.job_queue.run_repeating(
+        lambda context: asyncio.create_task(send_idle_reminders(app)),
+        interval=10800,  # 3 часа в секундах
+        first=10  # запуск через 10 секунд после старта
+    )
+    
     logging.info("🤖 Бот запущен!")
     await app.run_polling()
     
