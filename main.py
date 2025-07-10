@@ -88,7 +88,7 @@ def start_scheduler(app):
     scheduler.add_job(send_idle_reminders_compatible, "interval", minutes=3, args=[app])
     scheduler.start()
     
-    if __name__ == "__main__":
+if __name__ == "__main__":
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
     # 👂 Обработчик голосовых
