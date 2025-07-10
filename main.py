@@ -2,7 +2,6 @@ import os
 import logging
 import asyncio
 import pytz
-from apscheduler.schedulers.background import BackgroundScheduler
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
@@ -85,12 +84,11 @@ async def send_idle_reminders_compatible(app):
             except Exception as e:
                 logging.error(f"❌ Ошибка при отправке сообщения пользователю {user_id}: {e}")
 
-# 🚀 Запуск планировщика
-def start_scheduler(app):
-    scheduler = BackgroundScheduler(timezone="UTC")
-    scheduler.add_job(send_idle_reminders_compatible, "interval", minutes=3, args=[app])
-    scheduler.start()
-
+async def start_idle_reminder_loop(application):
+    while True:
+        await send_idle_reminders(application)
+        await asyncio.sleep(3 * 60)  # каждые 3 минуты
+        
 if __name__ == "__main__":
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
@@ -108,8 +106,7 @@ if __name__ == "__main__":
     # ⛑ Обработка ошибок
     app.add_error_handler(error_handler)
 
-    # ⏰ Планировщики
-    start_scheduler(app)
+    asyncio.create_task(start_idle_reminder_loop(app))
     
     logging.info("🤖 Бот запущен в режиме polling!")
     app.run_polling()
