@@ -23,14 +23,16 @@ from handlers import (
     user_last_prompted,
     send_idle_reminders_compatible,
 )
-# Добавление хендлеров
-for handler in all_handlers:
-    app.add_handler(handler)
+
 from goals import get_goals
 from config import TELEGRAM_BOT_TOKEN
 
 # Инициализация приложения
 app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
+# Добавление хендлеров
+for handler in all_handlers:
+    app.add_handler(handler)
+    
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
