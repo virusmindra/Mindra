@@ -84,36 +84,34 @@ async def send_idle_reminders_compatible(app):
             except Exception as e:
                 logging.error(f"❌ Ошибка при отправке сообщения пользователю {user_id}: {e}")
 
-async def start_idle_reminder_loop(application):
+async def run_idle_reminder_loop(app):
     while True:
-        await send_idle_reminders(application)
-        await asyncio.sleep(3 * 60)  # каждые 3 минуты
-        
+        try:
+            await send_idle_reminders_compatible(app)
+        except Exception as e:
+            print(f"❌ Ошибка в idle reminder loop: {e}")
+        await asyncio.sleep(180)  # каждые 3 минуты
+
 async def main():
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
-    print("🧪 Зарегистрирован handler VOICE:", handle_voice)
+    # 👂 Обработчик голосовых
     app.add_handler(MessageHandler(filters.VOICE, handle_voice))
-    
-    asyncio.create_task(start_idle_reminder_loop(app))
 
-    print("🤖 Бот запущен!")
-    await app.run_polling()
-
-if __name__ == "__main__":
-    asyncio.run(main())
-
-    # ✅ Обработчики из списка
+    # ✅ Все остальные хендлеры
     for handler in all_handlers:
         app.add_handler(handler)
 
-    # 👥 Отслеживание пользователей
+    # 🧠 Отслеживание активности
     app.add_handler(MessageHandler(filters.ALL, track_users))
 
-    # ⛑ Обработка ошибок
     app.add_error_handler(error_handler)
 
-    asyncio.create_task(start_idle_reminder_loop(app))
+    # 🔁 Запускаем отправку напоминаний через asyncio
+    asyncio.create_task(run_idle_reminder_loop(app))
+
+    logging.info("🤖 Бот запущен!")
+    await app.run_polling()
     
-    logging.info("🤖 Бот запущен в режиме polling!")
-    app.run_polling()
+if __name__ == "__main__":
+    asyncio.run(main())
