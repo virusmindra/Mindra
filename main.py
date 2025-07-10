@@ -90,31 +90,8 @@ def start_scheduler(app):
     scheduler = BackgroundScheduler(timezone="UTC")
     scheduler.add_job(send_idle_reminders_compatible, "interval", minutes=3, args=[app])
     scheduler.start()
-    
-async def main():
-    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
-
-    # 👂 Обработчик голосовых
-    app.add_handler(MessageHandler(filters.VOICE, handle_voice))
-
-    # ✅ Обработчики из списка
-    for handler in all_handlers:
-        app.add_handler(handler)
-
-    # 👥 Отслеживание пользователей
-    app.add_handler(MessageHandler(filters.ALL, track_users))
-
-    # ⛑ Обработка ошибок
-    app.add_error_handler(error_handler)
-
-    # 🕒 Запускаем фоновую задачу
-    asyncio.create_task(run_idle_reminder_loop(app))
-
-    logging.info("🤖 Бот запущен в режиме polling!")
-    await app.run_polling()
 
 if __name__ == "__main__":
-    asyncio.run(main())
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
     # 👂 Обработчик голосовых
