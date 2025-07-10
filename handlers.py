@@ -97,7 +97,7 @@ IDLE_MESSAGES = [
     "🍵 Если бы могла, я бы сейчас заварила тебе чай...",
 ]
 
-async def send_idle_reminders(app):
+async def send_idle_reminders_compatible(app):
     print("⏰ Проверка неактивных пользователей...")
     now = datetime.utcnow().replace(tzinfo=pytz.UTC)
     for user_id, last_seen in user_last_seen.items():
