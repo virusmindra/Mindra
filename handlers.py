@@ -27,7 +27,8 @@ from pathlib import Path
 from apscheduler.schedulers.background import BackgroundScheduler
 from storage import add_goal_for_user, get_goals_for_user, mark_goal_done
 from random import randint, choice
-
+for user_id in PREMIUM_USERS: 7775321566
+    
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 GOALS_FILE = Path("user_goals.json")
@@ -202,11 +203,45 @@ premium_tasks = [
 
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
+    user_input = update.message.text
+
     track_user_activity(user_id)
-    track_user(str(user_id))
+    track_user(user_id)  # не надо str(...), уже делается в stats.py
+
+    # Генерация ответа от GPT
+    system_prompt = {
+        "role": "system",
+        "content": (
+            "Ты — эмпатичный AI-собеседник, как подруга или психолог. "
+            "Ответь на сообщение пользователя с теплом, поддержкой, интересом. "
+            "Добавляй эмоджи, если уместно."
+        )
+    }
+
+    history = [system_prompt, {"role": "user", "content": user_input}]
+    history = trim_history(history)
+
+    completion = openai.chat.completions.create(
+        model="gpt-4o",
+        messages=history
+    )
+    reply = completion.choices[0].message.content.strip()
+
+    # Добавление отсылки, реакции, follow-up
+    reaction = detect_emotion_reaction(user_input)
+    reply = reaction + reply
+
+    reference = get_topic_reference(context)
+    if reference:
+        reply += f"\n\n{reference}"
+
     reply = insert_followup_question(reply, user_input)
 
-YOUR_ID = "7775321566"  # 👈 замени на свой Telegram ID
+    # Кнопки
+    goal_text = user_input if is_goal_like(user_input) else None
+    buttons = generate_post_response_buttons(goal_text=goal_text)
+
+    await update.message.reply_text(reply, reply_markup=buttons)
 
 def insert_followup_question(reply, user_input):
     topic = detect_topic(user_input)
