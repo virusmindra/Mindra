@@ -23,6 +23,7 @@ from handlers import (
     premium_task,
     handle_voice,
     send_daily_reminder,
+    user_last_seen,
     user_last_prompted,
     send_idle_reminders_compatible,
 )
