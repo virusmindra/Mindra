@@ -24,6 +24,7 @@ from handlers import (
     user_last_seen,
     user_last_prompted,
     send_idle_reminders_compatible,
+    setup_handlers,
 )
 from goals import get_goals
 from config import TELEGRAM_BOT_TOKEN
