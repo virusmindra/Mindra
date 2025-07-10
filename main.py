@@ -24,11 +24,12 @@ from handlers import (
     user_last_seen,
     user_last_prompted,
     send_idle_reminders_compatible,
-    app.add_handler(handler),
 )
 from goals import get_goals
 from config import TELEGRAM_BOT_TOKEN
-
+for handler in handlers:
+    app.add_handler(handler)
+    
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
