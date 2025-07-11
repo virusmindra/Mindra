@@ -42,6 +42,13 @@ app.job_queue.run_daily(
     name="morning_reminder"
 )
 
+app.job_queue.run_repeating(
+    send_idle_reminders_compatible,
+    interval=timedelta(seconds=30),  # вместо минут
+    first=timedelta(seconds=10),  # запуск через 10 секунд после старта
+    name="idle_reminder"
+)
+
 # ⛑ Глобальный обработчик ошибок
 async def error_handler(update, context):
     logging.error(msg="Exception while handling an update:", exc_info=context.error)
