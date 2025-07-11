@@ -848,5 +848,5 @@ __all__ = [
     "handle_add_goal_callback",
     "check_and_send_warm_messages",
     "user_last_seen",
-    "track_user_activity",
+    "user_last_prompted",
 ]
