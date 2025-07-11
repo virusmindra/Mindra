@@ -36,6 +36,12 @@ for handler in all_handlers:
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+app.job_queue.run_daily(
+    send_daily_reminder,
+    time=time(hour=10, minute=0, tzinfo=pytz.timezone("Europe/Kiev")),
+    name="morning_reminder"
+)
+
 # ⛑ Глобальный обработчик ошибок
 async def error_handler(update, context):
     logging.error(msg="Exception while handling an update:", exc_info=context.error)
