@@ -14,7 +14,6 @@ import traceback
 import asyncio
 import pytz
 import shutil
-from handlers import user_last_seen 
 from config import PREMIUM_USERS
 from datetime import datetime, timedelta, timezone
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
@@ -38,6 +37,8 @@ GOALS_FILE = Path("user_goals.json")
 # Глобальные переменные
 user_last_seen = {}
 user_last_prompted = {}
+# просто используй user_last_seen напрямую
+user_last_seen[update.effective_user.id] = datetime.now(timezone.utc)
     
 def load_goals():
     if GOALS_FILE.exists():
