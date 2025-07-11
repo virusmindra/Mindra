@@ -14,6 +14,7 @@ import traceback
 import asyncio
 import pytz
 import shutil
+from handlers import user_last_seen 
 from config import PREMIUM_USERS
 from datetime import datetime, timedelta, timezone
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
@@ -111,8 +112,8 @@ async def send_idle_reminders_compatible(app):
                 logging.error(f"❌ Ошибка при отправке сообщения пользователю {user_id}: {e}")
 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    track_user_activity(user_id)
+    from handlers import user_last_seen
+    user_last_seen[update.effective_user.id] = datetime.now(timezone.utc)
 
     try:
         message = update.message
