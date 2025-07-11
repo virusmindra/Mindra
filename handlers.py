@@ -37,8 +37,6 @@ GOALS_FILE = Path("user_goals.json")
 # Глобальные переменные
 user_last_seen = {}
 user_last_prompted = {}
-# просто используй user_last_seen напрямую
-user_last_seen[update.effective_user.id] = datetime.now(timezone.utc)
     
 def load_goals():
     if GOALS_FILE.exists():
@@ -115,7 +113,7 @@ async def send_idle_reminders_compatible(app):
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     from handlers import user_last_seen
     user_last_seen[update.effective_user.id] = datetime.now(timezone.utc)
-
+    
     try:
         message = update.message
 
