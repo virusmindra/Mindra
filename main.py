@@ -80,8 +80,7 @@ async def send_idle_reminders_compatible(app):
     logging.info("⏰ Проверка неактивных пользователей...")
 
     for user_id, last_seen in user_last_seen.items():
-        # Если пользователь не был активен более 2 минут
-        if (now - last_seen) > timedelta(minutes=2):
+        if (now - last_seen) > timedelta(seconds=15):  # временно для теста
             try:
                 await app.bot.send_message(chat_id=user_id, text="✨ Привет, давно не болтали! Как ты?")
                 user_last_seen[user_id] = now
