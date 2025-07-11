@@ -104,7 +104,7 @@ async def send_idle_reminders_compatible(app):
         last_prompted = user_last_prompted.get(user_id)
         if (
             now - last_seen >= timedelta(hours=2) and
-            (last_prompted is None or now - last_prompted >= timedelta(hours=6))
+            (last_prompted is None or now - last_prompted >= timedelta(seconds=15))
         ):
             try:
                 await app.bot.send_message(
