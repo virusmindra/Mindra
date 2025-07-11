@@ -199,9 +199,6 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     from handlers import user_last_seen
     user_last_seen[update.effective_user.id] = datetime.now(timezone.utc)
 
-    track_user_activity(user_id)
-    track_user(user_id)  # не надо str(...), уже делается в stats.py
-
     # Генерация ответа от GPT
     system_prompt = {
         "role": "system",
