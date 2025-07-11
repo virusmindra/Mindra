@@ -43,7 +43,6 @@ async def error_handler(update, context):
         await update.effective_message.reply_text("😵 Ой, что-то пошло не так. Я уже разбираюсь с этим.")
 
 
-# 📬 Обработчик всех сообщений
 async def track_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_last_seen[user_id] = datetime.now(timezone.utc)
