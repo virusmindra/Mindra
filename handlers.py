@@ -195,12 +195,9 @@ premium_tasks = [
     "💬 Позвони другу или родному человеку и просто скажи, что ты о нём думаешь.",
     "🧠 Напиши небольшой текст о себе из будущего — кем ты хочешь быть через 3 года?",
 ]
-
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    from handlers import user_last_seen
-    user_last_seen[update.effective_user.id] = datetime.now(timezone.utc)
-
-    # Генерация ответа от GPT
+    user_id = update.effective_user.id
+    user_last_seen[user_id] = datetime.now(timezone.utc)    # Генерация ответа от GPT
     system_prompt = {
         "role": "system",
         "content": (
