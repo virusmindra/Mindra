@@ -4,6 +4,7 @@ import json
 import random
 import re
 import random
+import logging
 import openai
 import tempfile
 import aiohttp
