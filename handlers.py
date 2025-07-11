@@ -115,6 +115,7 @@ async def send_idle_reminders_compatible(app):
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_last_seen[user_id] = datetime.now(timezone.utc)
+    logging.info(f"✅ user_last_seen обновлён для {user_id}")
     try:
         message = update.message
 
@@ -196,7 +197,8 @@ premium_tasks = [
 ]
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    user_last_seen[user_id] = datetime.now(timezone.utc)    # Генерация ответа от GPT
+    user_last_seen[user_id] = datetime.now(timezone.utc)  # Генерация ответа от GPT
+    logging.info(f"✅ user_last_seen обновлён для {user_id}")
     system_prompt = {
         "role": "system",
         "content": (
