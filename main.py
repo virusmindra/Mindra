@@ -12,7 +12,7 @@ from telegram.ext import (
 )
 from telegram import Update
 from telegram.error import TelegramError
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, time
 from handlers import (
     handlers as all_handlers,
     goal_buttons_handler,
