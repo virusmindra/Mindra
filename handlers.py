@@ -95,24 +95,19 @@ IDLE_MESSAGES = [
 ]
 
 async def send_idle_reminders_compatible(app):
-    print("⏰ Проверка неактивных пользователей...")
-    now = datetime.utcnow().replace(tzinfo=pytz.UTC)
+    now = datetime.now(timezone.utc)
+    logging.info("⏰ Проверка неактивных пользователей...")
+
     for user_id, last_seen in user_last_seen.items():
-        last_prompted = user_last_prompted.get(user_id)
-        if (
-            now - last_seen >= timedelta(hours=2) and
-            (last_prompted is None or now - last_prompted >= timedelta(seconds=15))  # временно для теста
-        ):
+        logging.info(f"👀 {user_id=} | {last_seen=} | прошло: {(now - last_seen).total_seconds() / 60:.1f} мин.")
+
+        if (now - last_seen) > timedelta(minutes=1):  # Упростим до 1 минуты для теста
             try:
-                message = random.choice(IDLE_MESSAGES)
-                await app.bot.send_message(
-                    chat_id=user_id,
-                    text=message
-                )
-                user_last_prompted[user_id] = now
-                print(f"📨 Напоминание отправлено пользователю {user_id}")
+                await app.bot.send_message(chat_id=user_id, text="✨ Привет, давно не болтали! Как ты?")
+                user_last_seen[user_id] = now
+                logging.info(f"📨 Напоминание отправлено пользователю {user_id}")
             except Exception as e:
-                print(f"❌ Ошибка при отправке напоминания: {e}")
+                logging.error(f"❌ Ошибка при отправке сообщения пользователю {user_id}: {e}")
 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
