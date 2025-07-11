@@ -96,6 +96,8 @@ IDLE_MESSAGES = [
 ]
 
 async def send_idle_reminders_compatible(app):
+    logging.info(f"👥 user_last_seen: {user_last_seen}")
+    logging.info(f"🧠 user_last_prompted: {user_last_prompted}")
     now = datetime.now(timezone.utc)
     logging.info("⏰ Проверка неактивных пользователей...")
 
