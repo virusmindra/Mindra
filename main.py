@@ -114,12 +114,11 @@ async def main():
     # 🔁 Запускаем отправку напоминаний через asyncio
     asyncio.create_task(run_idle_reminder_loop(app))
 
-    # Планировщик: проверка неактивных пользователей каждые 3 часа
-    app.job_queue.run_repeating(
+    app.job_queue.run_repeating(  
         lambda context: asyncio.create_task(send_idle_reminders_compatible(app)),
-        interval=10800,  # 3 часа в секундах
-        first=10  # запуск через 10 секунд после старта
-    )
+        interval=60,  # 1 минута
+        first=10
+     )
     
     logging.info("🤖 Бот запущен!")
     await app.run_polling()
