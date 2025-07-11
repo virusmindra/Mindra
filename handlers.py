@@ -113,9 +113,8 @@ async def send_idle_reminders_compatible(app):
                 logging.error(f"❌ Ошибка при отправке сообщения пользователю {user_id}: {e}")
 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    from handlers import user_last_seen
-    user_last_seen[update.effective_user.id] = datetime.now(timezone.utc)
-    
+    user_id = update.effective_user.id
+    user_last_seen[user_id] = datetime.now(timezone.utc)
     try:
         message = update.message
 
