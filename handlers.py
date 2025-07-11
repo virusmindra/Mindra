@@ -36,9 +36,6 @@ GOALS_FILE = Path("user_goals.json")
 # Глобальные переменные
 user_last_seen = {}
 user_last_prompted = {}
-
-def track_user_activity(user_id):
-    user_last_seen[user_id] = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
     
 def load_goals():
     if GOALS_FILE.exists():
