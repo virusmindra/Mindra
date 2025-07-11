@@ -104,14 +104,16 @@ async def send_idle_reminders_compatible(app):
         last_prompted = user_last_prompted.get(user_id)
         if (
             now - last_seen >= timedelta(hours=2) and
-            (last_prompted is None or now - last_prompted >= timedelta(seconds=15))
+            (last_prompted is None or now - last_prompted >= timedelta(seconds=15))  # временно для теста
         ):
             try:
+                message = random.choice(IDLE_MESSAGES)
                 await app.bot.send_message(
                     chat_id=user_id,
-                    text="👀 Я тут и думаю о тебе. Хочешь продолжим разговор?"
+                    text=message
                 )
                 user_last_prompted[user_id] = now
+                print(f"📨 Напоминание отправлено пользователю {user_id}")
             except Exception as e:
                 print(f"❌ Ошибка при отправке напоминания: {e}")
 
