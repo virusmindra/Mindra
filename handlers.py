@@ -117,7 +117,7 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global user_last_seen
     user_id = update.effective_user.id
     user_last_seen[user_id] = datetime.now(timezone.utc)
-    logging.info(f"✅ user_last_seen обновлён для {user_id}")
+    logging.info(f"✅ user_last_seen обновлён в voice для {user_id}")
     try:
         message = update.message
 
@@ -197,11 +197,12 @@ premium_tasks = [
     "💬 Позвони другу или родному человеку и просто скажи, что ты о нём думаешь.",
     "🧠 Напиши небольшой текст о себе из будущего — кем ты хочешь быть через 3 года?",
 ]
+
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global user_last_seen
     user_id = update.effective_user.id
-    user_last_seen[user_id] = datetime.now(timezone.utc)  # Генерация ответа от GPT
-    logging.info(f"✅ user_last_seen обновлён для {user_id}")
+    user_last_seen[user_id] = datetime.now(timezone.utc)
+    logging.info(f"✅ user_last_seen обновлён в chat для {user_id}")
     system_prompt = {
         "role": "system",
         "content": (
