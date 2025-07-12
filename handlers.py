@@ -199,6 +199,9 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_last_seen[user_id] = datetime.now(timezone.utc)
     logging.info(f"✅ user_last_seen обновлён в chat для {user_id}")
+
+    user_input = update.message.text or ""
+
     system_prompt = {
         "role": "system",
         "content": (
@@ -217,7 +220,6 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     reply = completion.choices[0].message.content.strip()
 
-    # Добавление отсылки, реакции, follow-up
     reaction = detect_emotion_reaction(user_input)
     reply = reaction + reply
 
@@ -227,7 +229,6 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     reply = insert_followup_question(reply, user_input)
 
-    # Кнопки
     goal_text = user_input if is_goal_like(user_input) else None
     buttons = generate_post_response_buttons(goal_text=goal_text)
 
