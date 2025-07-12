@@ -98,6 +98,8 @@ async def run_idle_reminder_loop(app):
 async def main():
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
+
     # 👂 Обработчик голосовых
     app.add_handler(MessageHandler(filters.VOICE, handle_voice))
 
