@@ -26,6 +26,7 @@ from handlers import (
 
 from goals import get_goals
 from config import TELEGRAM_BOT_TOKEN
+from handlers import chat, handle_voice
 
 # Инициализация приложения
 app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
