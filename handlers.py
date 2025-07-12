@@ -1,9 +1,7 @@
-# handlers.py
 import os
 import json
 import random
 import re
-import random
 import logging
 import openai
 import tempfile
@@ -28,16 +26,14 @@ from pathlib import Path
 from apscheduler.schedulers.background import BackgroundScheduler
 from storage import add_goal_for_user, get_goals_for_user, mark_goal_done
 from random import randint, choice
-for user_id in PREMIUM_USERS: 7775321566
-global user_last_seen
-    
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
-GOALS_FILE = Path("user_goals.json")
 
 # Глобальные переменные
 user_last_seen = {}
 user_last_prompted = {}
+
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+GOALS_FILE = Path("user_goals.json")
     
 def load_goals():
     if GOALS_FILE.exists():
