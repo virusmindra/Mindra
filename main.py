@@ -107,8 +107,6 @@ async def main():
     for handler in all_handlers:
         app.add_handler(handler)
 
-    # 🧠 Отслеживание активности
-    app.add_handler(MessageHandler(filters.ALL, track_users))
 
     app.add_error_handler(error_handler)
 
