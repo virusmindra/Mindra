@@ -114,6 +114,7 @@ async def send_idle_reminders_compatible(app):
                 logging.error(f"❌ Ошибка при отправке сообщения пользователю {user_id}: {e}")
 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global user_last_seen
     user_id = update.effective_user.id
     user_last_seen[user_id] = datetime.now(timezone.utc)
     logging.info(f"✅ user_last_seen обновлён для {user_id}")
@@ -197,6 +198,7 @@ premium_tasks = [
     "🧠 Напиши небольшой текст о себе из будущего — кем ты хочешь быть через 3 года?",
 ]
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global user_last_seen
     user_id = update.effective_user.id
     user_last_seen[user_id] = datetime.now(timezone.utc)  # Генерация ответа от GPT
     logging.info(f"✅ user_last_seen обновлён для {user_id}")
