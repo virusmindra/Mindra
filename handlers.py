@@ -26,6 +26,7 @@ from pathlib import Path
 from apscheduler.schedulers.background import BackgroundScheduler
 from storage import add_goal_for_user, get_goals_for_user, mark_goal_done
 from random import randint, choice
+from stats import get_user_stats
 
 # Глобальные переменные
 user_last_seen = {}
@@ -806,6 +807,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     "/habit — добавить привычку\n"
     "/habits — список твоих привычек\n"
     "/task — получить задание на день 🎯\n"
+    "/mypoints — посмотреть свои очки и прогресс\n"    
     "/quote — случайная мотивационная цитата 🌟\n"
     "/premium_task — премиум‑задание на день ✨ (для Mindra+)\n\n"
     "/feedback - оставить отзыв для улучшении Mindra\n"
@@ -1009,6 +1011,20 @@ async def send_random_poll(context: ContextTypes.DEFAULT_TYPE):
             except Exception as e:
                 logging.error(f"❌ Ошибка при отправке опроса пользователю {user_id}: {e}")
 
+# /mypoints — показать свои очки
+async def mypoints_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    stats = get_user_stats(user_id)
+    points = stats.get("points", 0)
+    completed = stats.get("goals_completed", 0)
+
+    await update.message.reply_text(
+        f"🌟 *Твоя статистика:*\n\n"
+        f"✨ Очки: {points}\n"
+        f"🎯 Выполнено целей: {completed}",
+        parse_mode="Markdown"
+    )
+    
 # Список всех команд/обработчиков для экспорта
 handlers = [
     CommandHandler("start", start),
@@ -1027,6 +1043,7 @@ handlers = [
     CommandHandler("premium_task", premium_task),
     CommandHandler("stats", stats_command),
     CommandHandler("quote", quote),
+    CommandHandler("mypoints", mypoints_command),
     CallbackQueryHandler(goal_buttons_handler, pattern="^(create_goal|show_goals|create_habit|show_habits)$"),
     CallbackQueryHandler(handle_mode_choice, pattern="^mode_"),  # pattern для /mode кнопок
     CallbackQueryHandler(handle_reaction_button, pattern="^react_"),
