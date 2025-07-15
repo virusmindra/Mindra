@@ -854,19 +854,40 @@ async def premium_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("❓ Я не знаю такой команды. Напиши /help, чтобы увидеть, что я умею.")
 
-# --- FEEDBACK ---
+FEEDBACK_CHAT_ID = 7775321566  # <-- твой личный Telegram ID
+
 async def feedback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Сообщение пользователя после /feedback
+    user_id = update.effective_user.id
+    username = update.effective_user.username or "без ника"
+    first_name = update.effective_user.first_name or ""
+    last_name = update.effective_user.last_name or ""
+
     if context.args:
         user_feedback = " ".join(context.args)
-        # Сохрани/отправь себе (например, в личный чат или лог)
-        logging.info(f"💌 Feedback от {update.effective_user.id}: {user_feedback}")
-        await update.message.reply_text("Спасибо за отзыв! 💜 Я обязательно учту это.")
-        # Хочешь — отправляй в свой личный чат (замени <YOUR_TELEGRAM_ID>):
-        # await context.bot.send_message(chat_id=<YOUR_TELEGRAM_ID>, text=f"💌 Feedback: {user_feedback}")
+        # Ответ пользователю
+        await update.message.reply_text("Спасибо за отзыв! 💜 Я уже его записала ✨")
+
+        # Сообщение для канала/тебя
+        feedback_message = (
+            f"📝 *Новый отзыв:*\n\n"
+            f"👤 ID: `{user_id}`\n"
+            f"🙋 Имя: {first_name} {last_name}\n"
+            f"🔗 Username: @{username}\n\n"
+            f"💌 Отзыв: {user_feedback}"
+        )
+
+        # Отправляем в канал или тебе
+        try:
+            await context.bot.send_message(
+                chat_id=FEEDBACK_CHAT_ID,
+                text=feedback_message,
+                parse_mode="Markdown"
+            )
+        except Exception as e:
+            logging.error(f"❌ Не удалось отправить отзыв в канал: {e}")
     else:
         await update.message.reply_text(
-            "Напиши свой отзыв после команды.\nНапример:\n`/feedback Ты классная, но хочу больше заданий!`",
+            "Напиши свой отзыв после команды.\nНапример:\n`/feedback Мне очень нравится бот, спасибо! 💜`",
             parse_mode="Markdown"
         )
 
