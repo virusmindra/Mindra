@@ -980,47 +980,42 @@ SUPPORT_MESSAGES = [
     "🕊️ Пусть сегодня будет хотя бы один момент, который заставит тебя улыбнуться."
 ]
 
+# ✨ Сообщения поддержки
 async def send_random_support(context):
-    # Чтобы не писать ночью
     now_kiev = datetime.now(pytz.timezone("Europe/Kiev"))
-    if now_kiev.hour < 10 or now_kiev.hour >= 22:
-        return  # не отправляем ночью
+    hour = now_kiev.hour
+    # фильтр — не писать ночью
+    if hour < 10 or hour >= 22:
+        return
 
     if user_last_seen:
         for user_id in user_last_seen.keys():
             try:
-                message = random.choice(SUPPORT_MESSAGES)
-                await context.bot.send_message(chat_id=user_id, text=message)
+                msg = random.choice(SUPPORT_MESSAGES)
+                await context.bot.send_message(chat_id=user_id, text=msg)
+                logging.info(f"✅ Сообщение поддержки отправлено пользователю {user_id}")
             except Exception as e:
-                logging.error(f"❌ Ошибка при отправке поддержки: {e}")
-                POLL_QUESTIONS = [
-    {
-        "text": "💛 Как ты себя сегодня чувствуешь?",
-        "options": ["😊 Отлично", "🙂 Нормально", "😐 Так себе", "😢 Плохо"]
-    },
-    {
-        "text": "✅ Ты выполнил своё задание на сегодня?",
-        "options": ["💪 Да!", "🤔 Почти", "❌ Нет"]
-    }
-    # сюда можно добавлять ещё
+                logging.error(f"❌ Ошибка отправки поддержки пользователю {user_id}: {e}")
+
+POLL_MESSAGES = [
+    "📝 Как ты оцениваешь свой день по шкале от 1 до 10?",
+    "💭 Что сегодня тебя порадовало?",
+    "🌿 Был ли сегодня момент, когда ты почувствовал(а) благодарность?",
+    "🤔 Если бы ты мог(ла) изменить одну вещь в этом дне, что бы это было?",
+    "💪 Чем ты сегодня гордишься?"
 ]
 
-async def send_random_poll(context: ContextTypes.DEFAULT_TYPE):
-    if user_last_seen:  # есть ли активные пользователи
-        poll = random.choice(POLL_QUESTIONS)
+# 📝 Опросы раз в 2 дня
+async def send_random_poll(context):
+    if user_last_seen:
         for user_id in user_last_seen.keys():
             try:
-                await context.bot.send_poll(
-                    chat_id=user_id,
-                    question=poll["text"],
-                    options=poll["options"],
-                    is_anonymous=False,
-                    allows_multiple_answers=False
-                )
-                logging.info(f"📊 Опрос отправлен пользователю {user_id}")
+                poll = random.choice(POLL_MESSAGES)
+                await context.bot.send_message(chat_id=user_id, text=poll)
+                logging.info(f"✅ Опрос отправлен пользователю {user_id}")
             except Exception as e:
-                logging.error(f"❌ Ошибка при отправке опроса пользователю {user_id}: {e}")
-
+                logging.error(f"❌ Ошибка отправки опроса пользователю {user_id}: {e}")
+                
 # /mypoints — показать свои очки
 async def mypoints_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
