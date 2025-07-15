@@ -15,7 +15,8 @@ from handlers import (
     send_idle_reminders_compatible,
     chat,
     get_random_daily_task,  # ✨ импортируем функцию выбора задания
-    user_last_seen           # ✨ список активных пользователей
+    user_last_seen,           # ✨ список активных пользователей
+    send_evening_checkin
 )
 from config import TELEGRAM_BOT_TOKEN
 
