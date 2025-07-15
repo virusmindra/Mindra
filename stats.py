@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime
 
 STATS_FILE = "data/stats.json"
@@ -27,3 +28,18 @@ def get_stats():
         "last_users": stats["users"],
         "last_premium": stats["premium_users"]
     }
+
+def add_points(user_id, points):
+    stats = load_stats()
+    user_id = str(user_id)
+    if user_id not in stats:
+        stats[user_id] = {"points": 0, "goals_completed": 0}
+    stats[user_id]["points"] += points
+    stats[user_id]["goals_completed"] += 1
+    save_stats(stats)
+
+def get_user_stats(user_id):
+    stats = load_stats()
+    user_id = str(user_id)
+    return stats.get(user_id, {"points": 0, "goals_completed": 0})
+    
