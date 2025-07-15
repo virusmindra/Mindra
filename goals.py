@@ -1,7 +1,17 @@
 import json
 import os
+from stats import add_points  # добавь в начало goals.py
 
 GOALS_FILE = "goals.json"
+
+def mark_goal_done(user_id, index):
+    goals = load_goals()
+    if user_id in goals and 0 <= index < len(goals[user_id]):
+        goals[user_id][index]["done"] = True
+        save_goals(goals)
+        add_points(user_id, 10)  # начисляем 10 баллов
+        return True
+    return False
 
 # Загружаем цели
 def load_goals():
