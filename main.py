@@ -23,7 +23,7 @@ from handlers import (
     premium_report,
     premium_challenge,
     premium_mode,
-    premium_mode_choice,
+    premium_mode_callback,
     premium_stats
 )
 from config import TELEGRAM_BOT_TOKEN
