@@ -38,11 +38,13 @@ def add_points(user_id, points):
     stats[user_id]["goals_completed"] += 1
     save_stats(stats)
 
-def get_user_stats(user_id):
-    stats = load_stats()
-    user_id = str(user_id)
-    return stats.get(user_id, {"points": 0, "goals_completed": 0})
-    
+def get_user_stats(user_id: str):
+    if os.path.exists("stats.json"):
+        with open("stats.json", "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data.get(user_id, {"points": 0})
+    return {"points": 0}
+
 def get_user_title(points: int) -> str:
     if points < 50:
         return "🌱 Новичок"
@@ -54,3 +56,4 @@ def get_user_title(points: int) -> str:
         return "💎 Наставник"
     else:
         return "🌟 Легенда"
+
