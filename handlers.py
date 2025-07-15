@@ -807,6 +807,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     "/habits — список твоих привычек\n"
     "/task — получить задание на день 🎯\n"
     "/premium_task — премиум‑задание на день ✨ (для Mindra+)\n\n"
+    "/feedback - оставить отзыв для улучшении Mindra\n"
     "Скоро научусь и другим фишкам 😉",
     reply_markup=reply_markup
 )
@@ -853,6 +854,22 @@ async def premium_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("❓ Я не знаю такой команды. Напиши /help, чтобы увидеть, что я умею.")
 
+# --- FEEDBACK ---
+async def feedback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Сообщение пользователя после /feedback
+    if context.args:
+        user_feedback = " ".join(context.args)
+        # Сохрани/отправь себе (например, в личный чат или лог)
+        logging.info(f"💌 Feedback от {update.effective_user.id}: {user_feedback}")
+        await update.message.reply_text("Спасибо за отзыв! 💜 Я обязательно учту это.")
+        # Хочешь — отправляй в свой личный чат (замени <YOUR_TELEGRAM_ID>):
+        # await context.bot.send_message(chat_id=<YOUR_TELEGRAM_ID>, text=f"💌 Feedback: {user_feedback}")
+    else:
+        await update.message.reply_text(
+            "Напиши свой отзыв после команды.\nНапример:\n`/feedback Ты классная, но хочу больше заданий!`",
+            parse_mode="Markdown"
+        )
+
 # Список всех команд/обработчиков для экспорта
 handlers = [
     CommandHandler("start", start),
@@ -864,6 +881,7 @@ handlers = [
     CommandHandler("goals", show_goals),
     CommandHandler("habit", habit),
     CommandHandler("habits", habits_list),
+    CommandHandler("feedback", feedback),
     CommandHandler("done", mark_done),
     CommandHandler("delete", delete_goal_command),
     CommandHandler("task", task),
