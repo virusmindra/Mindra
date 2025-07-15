@@ -2,18 +2,20 @@ import os
 import logging
 import asyncio
 import pytz
+from datetime import datetime, timezone, timedelta, time
 from telegram.ext import (
     ApplicationBuilder,
     MessageHandler,
     ContextTypes,
     filters
 )
-from datetime import datetime, timezone, timedelta, time
 from handlers import (
     handlers as all_handlers,
     handle_voice,
     send_idle_reminders_compatible,
-    chat
+    chat,
+    get_random_daily_task,  # ✨ импортируем функцию выбора задания
+    user_last_seen           # ✨ список активных пользователей
 )
 from config import TELEGRAM_BOT_TOKEN
 
@@ -24,6 +26,21 @@ async def error_handler(update, context):
     logging.error(msg="Exception while handling an update:", exc_info=context.error)
     if update and update.effective_message:
         await update.effective_message.reply_text("😵 Ой, что-то пошло не так. Я уже разбираюсь с этим.")
+
+# ✨ Функция отправки задания утром
+async def send_daily_task(context: ContextTypes.DEFAULT_TYPE):
+    task = get_random_daily_task()
+    # рассылаем всем пользователям, которые известны
+    if user_last_seen:
+        for user_id in user_last_seen.keys():
+            try:
+                await context.bot.send_message(
+                    chat_id=user_id,
+                    text=f"🌞 Доброе утро! Вот твоё задание на сегодня:\n\n{task}"
+                )
+                logging.info(f"✅ Утреннее задание отправлено пользователю {user_id}")
+            except Exception as e:
+                logging.error(f"❌ Ошибка при отправке утреннего задания пользователю {user_id}: {e}")
 
 async def main():
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
@@ -45,6 +62,13 @@ async def main():
         lambda context: asyncio.create_task(send_idle_reminders_compatible(app)),
         interval=60,
         first=10
+    )
+
+    # ⏰ Утренние задания каждый день в 10:00 по Киеву
+    app.job_queue.run_daily(
+        send_daily_task,
+        time=time(hour=10, minute=0, tzinfo=pytz.timezone("Europe/Kiev")),
+        name="daily_task_job"
     )
 
     logging.info("🤖 Бот запущен!")
