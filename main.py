@@ -64,6 +64,12 @@ async def main():
         first=10
     )
 
+    app.job_queue.run_daily(
+        send_evening_checkin,
+        time=time(hour=21, minute=0, tzinfo=pytz.timezone("Europe/Kiev")),
+        name="evening_checkin"
+    )
+
     # ⏰ Утренние задания каждый день в 10:00 по Киеву
     app.job_queue.run_daily(
         send_daily_task,
