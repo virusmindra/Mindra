@@ -26,7 +26,7 @@ from pathlib import Path
 from apscheduler.schedulers.background import BackgroundScheduler
 from storage import add_goal_for_user, get_goals_for_user, mark_goal_done
 from random import randint, choice
-from stats import get_user_stats, get_user_title  
+from stats import get_user_stats, get_user_title, get_stats
 
 # Глобальные переменные
 user_last_seen = {}
@@ -1079,17 +1079,20 @@ EXCLUSIVE_MODES = {
 # 💜 1. Личные отчёты о прогрессе
 async def premium_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
-    if user_id != YOUR_ID:
-        await update.message.reply_text("🔒 Эта функция доступна только Mindra+ ✨")
+    if user_id != "7775321566":  # доступ только тебе
+        await update.message.reply_text("🔒 Эта функция доступна только для Mindra+.")
         return
-    await update.message.reply_text(
-        "📈 *Твой персональный отчёт за неделю:*\n\n"
-        "✅ Завершено целей: 5\n"
-        "💧 Привычек выполнено: 20\n"
-        "🌱 Новых заданий выполнено: 12\n"
-        "Ты молодец! Продолжай в том же духе 💜",
-        parse_mode="Markdown"
+
+    stats = get_stats()
+    report_text = (
+        f"✅ *Твой персональный отчёт за неделю:*\n\n"
+        f"🎯 Завершено целей: {stats['completed_goals']}\n"
+        f"🌱 Привычек выполнено: {stats['completed_habits']}\n"
+        f"📅 Дней активности: {stats['days_active']}\n"
+        f"📝 Записей настроения: {stats['mood_entries']}\n\n"
+        f"Ты молодец! Продолжай в том же духе 💜"
     )
+    await update.message.reply_text(report_text, parse_mode="Markdown")
 
 # 🔥 2. Премиум челленджи
 async def premium_challenge(update: Update, context: ContextTypes.DEFAULT_TYPE):
