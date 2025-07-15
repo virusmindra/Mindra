@@ -17,7 +17,9 @@ from handlers import (
     get_random_daily_task,  # ✨ импортируем функцию выбора задания
     user_last_seen,           # ✨ список активных пользователей
     send_evening_checkin,
-    my_stats_command
+    my_stats_command,
+    send_random_support, 
+    send_random_poll
 )
 from config import TELEGRAM_BOT_TOKEN
 
