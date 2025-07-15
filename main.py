@@ -86,7 +86,13 @@ async def main():
         name="support_messages"
     )
 
+    app.job_queue.run_repeating(
+        send_random_poll,
+        interval=timedelta(days=2),  # каждые 2 дня
+        first=datetime.now(pytz.timezone("Europe/Kiev")).replace(hour=12, minute=0, second=0, microsecond=0).astimezone(pytz.utc)
+    )
 
+    
     logging.info("🤖 Бот запущен!")
     await app.run_polling()
 
