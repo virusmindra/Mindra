@@ -1173,6 +1173,7 @@ handlers = [
     CallbackQueryHandler(handle_reaction_button, pattern="^react_"),
     CallbackQueryHandler(handle_add_goal_callback, pattern="^add_goal\\|"),
     CallbackQueryHandler(premium_mode_choice, pattern="^mode_"),
+    CallbackQueryHandler(premium_mode_callback, pattern="^premium_mode_"),
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
     MessageHandler(filters.COMMAND, unknown_command),
