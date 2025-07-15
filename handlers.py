@@ -35,7 +35,9 @@ user_last_prompted = {}
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 GOALS_FILE = Path("user_goals.json")
-    
+
+YOUR_ID = "7775321566"  # твой ID
+
 def load_goals():
     if GOALS_FILE.exists():
         with open(GOALS_FILE, "r", encoding="utf-8") as f:
