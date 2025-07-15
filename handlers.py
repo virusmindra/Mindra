@@ -682,13 +682,30 @@ DAILY_TASKS = ([
 def get_random_daily_task():
     return random.choice(DAILY_TASKS)
     
-# Обработчик команды /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     if user_id not in conversation_history:
         conversation_history[user_id] = [{"role": "system", "content": MODES["default"]}]
         save_history(conversation_history)
-    await update.message.reply_text("Привет, я Mindra 💜 Поддержка, мотивация и немного психолог. Готов поговорить!")
+
+    first_name = update.effective_user.first_name or "друг"
+
+    welcome_text = (
+        f"👋 Привет, {first_name}! Я — Mindra 💜\n\n"
+        f"✨ Я твоя AI‑подруга, мотиватор и немножко психолог.\n"
+        f"🌱 Могу помочь с целями, привычками и просто поддержать в трудный момент.\n\n"
+        f"Вот что я умею:\n"
+        f"💬 Просто напиши мне что угодно — я отвечу с теплом и интересом.\n"
+        f"🎯 /task — задание на день\n"
+        f"🏆 /goal — поставить цель\n"
+        f"📋 /goals — список целей\n"
+        f"🌸 /habit — добавить привычку\n"
+        f"📎 /habits — список привычек\n"
+        f"💌 /feedback — отправить мне отзыв\n\n"
+        f"Попробуй прямо сейчас написать мне что‑нибудь, а я тебя поддержу! 🤗"
+    )
+
+    await update.message.reply_text(welcome_text)
 
 # Обработчик команды /reset
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
