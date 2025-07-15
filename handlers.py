@@ -1106,36 +1106,39 @@ async def premium_challenge(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # 🌸 3. Эксклюзивный режим общения
 async def premium_mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
-    if user_id != YOUR_ID:
-        await update.message.reply_text("🔒 Эта функция доступна только Mindra+ ✨")
+    # Проверяем доступ — пока только для тебя
+    if user_id != str(YOUR_ID):
+        await update.message.reply_text("🔒 Эта функция доступна только подписчикам Mindra+.")
         return
-    buttons = [
-        [InlineKeyboardButton("💼 Коуч", callback_data="mode_coach"),
-         InlineKeyboardButton("💋 Флирт", callback_data="mode_flirty")]
+
+    keyboard = [
+        [
+            InlineKeyboardButton("🧑‍🏫 Коуч", callback_data="premium_mode_coach"),
+            InlineKeyboardButton("💜 Флирт", callback_data="premium_mode_flirt"),
+        ]
     ]
     await update.message.reply_text(
         "Выбери эксклюзивный режим общения:",
-        reply_markup=InlineKeyboardMarkup(buttons)
+        reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
-# 🔥 Обработчик кнопок выбора премиум-режима
 async def premium_mode_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    await query.answer()  # Закрываем индикатор загрузки "Loading..."
+    await query.answer()
+    user_id = str(query.from_user.id)
 
-    data = query.data
-    user_id = str(update.effective_user.id)
-
-    # Пока что делаем доступ только для твоего ID
-    if user_id != "7775321566":
-        await query.edit_message_text("🔒 Эта функция доступна только в Mindra+.")
+    if user_id != str(YOUR_ID):
+        await query.edit_message_text("🔒 Эта функция доступна только подписчикам Mindra+.")
         return
 
+    data = query.data
     if data == "premium_mode_coach":
-        await query.edit_message_text("✅ Премиум‑режим общения **Коуч** активирован! 💜", parse_mode="Markdown")
+        user_modes[user_id] = "coach"
+        await query.edit_message_text("✅ Режим общения изменён на *Коуч*. Я буду помогать и мотивировать тебя! 💪", parse_mode="Markdown")
     elif data == "premium_mode_flirt":
-        await query.edit_message_text("💋 Премиум‑режим общения **Флирт** активирован! 😉", parse_mode="Markdown")
-        
+        user_modes[user_id] = "flirt"
+        await query.edit_message_text("😉 Режим общения изменён на *Флирт*. Приготовься к приятным неожиданностям 💜", parse_mode="Markdown")
+
 # 📊 4. Расширенная статистика
 async def premium_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
