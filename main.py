@@ -19,7 +19,12 @@ from handlers import (
     send_evening_checkin,
     my_stats_command,
     send_random_support, 
-    send_random_poll
+    send_random_poll,
+    premium_report,
+    premium_challenge,
+    premium_mode,
+    premium_mode_choice,
+    premium_stats
 )
 from config import TELEGRAM_BOT_TOKEN
 
