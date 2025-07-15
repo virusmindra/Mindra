@@ -111,7 +111,7 @@ async def send_idle_reminders_compatible(app):
         minutes_passed = (now - last_seen).total_seconds() / 60
         logging.info(f"👀 user_id={user_id} | last_seen={last_seen} | прошло: {minutes_passed:.1f} мин.")
 
-        if (now - last_seen) > timedelta(minutes=1):  # 1 минута для теста
+        if (now - last_seen) > timedelta(hours=6): 
             try:
                 message = random.choice(IDLE_MESSAGES)  # 👈 выбираем случайную фразу
                 await app.bot.send_message(chat_id=user_id, text=message)
