@@ -78,6 +78,15 @@ async def main():
         name="daily_task_job"
     )
 
+    # ✨ Сообщения поддержки каждые 4 часа (с 9:00 до 21:00 по Киеву)
+    app.job_queue.run_repeating(
+        send_random_support,
+        interval=timedelta(hours=4),
+        first=timedelta(minutes=5),  # начнём через 5 минут после запуска
+        name="support_messages"
+    )
+
+
     logging.info("🤖 Бот запущен!")
     await app.run_polling()
 
