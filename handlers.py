@@ -980,26 +980,20 @@ SUPPORT_MESSAGES = [
     "🕊️ Пусть сегодня будет хотя бы один момент, который заставит тебя улыбнуться."
 ]
 
-async def send_support_message_if_daytime(app):
-    # Текущее время по Киеву
-    kiev_tz = pytz.timezone("Europe/Kiev")
-    now_kiev = datetime.now(kiev_tz)
-    current_hour = now_kiev.hour
+async def send_random_support(context):
+    # Чтобы не писать ночью
+    now_kiev = datetime.now(pytz.timezone("Europe/Kiev"))
+    if now_kiev.hour < 10 or now_kiev.hour >= 22:
+        return  # не отправляем ночью
 
-    # Проверяем, входит ли время в диапазон 10:00 - 22:00
-    if 10 <= current_hour < 22:
-        # Если да, шлём поддержку
+    if user_last_seen:
         for user_id in user_last_seen.keys():
             try:
-                msg = random.choice(SUPPORT_MESSAGES)
-                await app.bot.send_message(chat_id=user_id, text=msg)
-                logging.info(f"💌 Отправлено поддерживающее сообщение пользователю {user_id}")
+                message = random.choice(SUPPORT_MESSAGES)
+                await context.bot.send_message(chat_id=user_id, text=message)
             except Exception as e:
-                logging.error(f"❌ Ошибка при отправке поддерживающего сообщения: {e}")
-    else:
-        logging.info("⏳ Ночное время — поддерживающие сообщения не отправляем.")
-
-POLL_QUESTIONS = [
+                logging.error(f"❌ Ошибка при отправке поддержки: {e}")
+                POLL_QUESTIONS = [
     {
         "text": "💛 Как ты себя сегодня чувствуешь?",
         "options": ["😊 Отлично", "🙂 Нормально", "😐 Так себе", "😢 Плохо"]
