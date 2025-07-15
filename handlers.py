@@ -26,7 +26,7 @@ from pathlib import Path
 from apscheduler.schedulers.background import BackgroundScheduler
 from storage import add_goal_for_user, get_goals_for_user, mark_goal_done
 from random import randint, choice
-from stats import get_user_stats
+from stats import get_user_stats, get_user_title  
 
 # Глобальные переменные
 user_last_seen = {}
@@ -423,6 +423,22 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(text)
 
+# 👤 /mystats — личная статистика
+async def my_stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+
+    user_stats = get_user_stats(user_id)
+    points = user_stats.get("points", 0)
+    title = get_user_title(points)
+
+    text = (
+        f"📌 *Твоя статистика*\n\n"
+        f"🌟 Твой титул: *{title}*\n"
+        f"🏅 Очков: *{points}*\n\n"
+        f"Продолжай выполнять цели и задания, чтобы расти! 💜"
+    )
+    await update.message.reply_text(text, parse_mode="Markdown")
+    
 # /habit
 async def habit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
