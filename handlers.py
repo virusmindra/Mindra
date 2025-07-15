@@ -194,46 +194,6 @@ premium_tasks = [
     "🧠 Напиши небольшой текст о себе из будущего — кем ты хочешь быть через 3 года?",
 ]
 
-async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global user_last_seen
-    user_id = update.effective_user.id
-    user_last_seen[user_id] = datetime.now(timezone.utc)
-    logging.info(f"✅ user_last_seen обновлён в chat для {user_id}")
-
-    user_input = update.message.text or ""
-
-    system_prompt = {
-        "role": "system",
-        "content": (
-            "Ты — эмпатичный AI-собеседник, как подруга или психолог. "
-            "Ответь на сообщение пользователя с теплом, поддержкой, интересом. "
-            "Добавляй эмоджи, если уместно."
-        )
-    }
-
-    history = [system_prompt, {"role": "user", "content": user_input}]
-    history = trim_history(history)
-
-    completion = openai.chat.completions.create(
-        model="gpt-4o",
-        messages=history
-    )
-    reply = completion.choices[0].message.content.strip()
-
-    reaction = detect_emotion_reaction(user_input)
-    reply = reaction + reply
-
-    reference = get_topic_reference(context)
-    if reference:
-        reply += f"\n\n{reference}"
-
-    reply = insert_followup_question(reply, user_input)
-
-    goal_text = user_input if is_goal_like(user_input) else None
-    buttons = generate_post_response_buttons(goal_text=goal_text)
-
-    await update.message.reply_text(reply, reply_markup=buttons)
-
 def insert_followup_question(reply, user_input):
     topic = detect_topic(user_input)
     if not topic:
@@ -693,6 +653,11 @@ async def handle_reaction_button(update: Update, context: ContextTypes.DEFAULT_T
 
 # Обработчик текстовых сообщений
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global user_last_seen
+    user_id_int = update.effective_user.id
+    user_last_seen[user_id_int] = datetime.now(timezone.utc)
+    logging.info(f"✅ user_last_seen обновлён в chat для {user_id_int}")
+
     user_input = update.message.text
     user_id = str(update.effective_user.id)
     mode = user_modes.get(user_id, "default")
