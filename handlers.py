@@ -661,6 +661,10 @@ DAILY_TASKS = ([
     "🙌 Сделай сегодня как минимум один звонок не по делу, а просто чтобы пообщаться."
 ])
 
+# 👉 Функция для выбора случайного задания
+def get_random_daily_task():
+    return random.choice(DAILY_TASKS)
+    
 # Обработчик команды /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
