@@ -269,10 +269,19 @@ def insert_followup_question(reply, user_input):
         return reply.strip() + "\n\n" + follow_up
     return reply
 
+MORNING_MESSAGES = [
+    "🌞 Доброе утро! Как ты сегодня? 💜",
+    "☕ Доброе утро! Пусть твой день будет лёгким и приятным ✨",
+    "💌 Приветик! Утро — самое время начать что-то классное. Расскажешь, как настроение?",
+    "🌸 С добрым утром! Желаю тебе улыбок и тепла сегодня 🫶",
+    "😇 Утро доброе! Я тут и думаю о тебе, как ты там?",
+]
+
 async def send_daily_reminder(context):
     try:
         for user_id in PREMIUM_USERS:
-            await context.bot.send_message(chat_id=user_id, text="👋 Привет! Как ты сегодня? Я скучала. Расскажи, как дела?")
+            morning_text = random.choice(MORNING_MESSAGES)
+            await context.bot.send_message(chat_id=user_id, text=morning_text)
     except Exception as e:
         print(f"❌ Ошибка с напоминанием: {e}")
 
