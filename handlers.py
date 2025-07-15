@@ -1118,19 +1118,24 @@ async def premium_mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=InlineKeyboardMarkup(buttons)
     )
 
-# Обработчик кнопок эксклюзивных режимов
-async def premium_mode_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# 🔥 Обработчик кнопок выбора премиум-режима
+async def premium_mode_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    await query.answer()
-    user_id = str(query.from_user.id)
-    if user_id != YOUR_ID:
-        await query.edit_message_text("🔒 Эта функция доступна только Mindra+ ✨")
-        return
-    mode_key = query.data.replace("mode_", "")
-    if mode_key in EXCLUSIVE_MODES:
-        # Тут можно обновить MODES или conversation_history под новый режим
-        await query.edit_message_text(f"🌸 Режим изменён: {mode_key}\n\nТеперь я общаюсь с тобой как: {EXCLUSIVE_MODES[mode_key]}")
+    await query.answer()  # Закрываем индикатор загрузки "Loading..."
 
+    data = query.data
+    user_id = str(update.effective_user.id)
+
+    # Пока что делаем доступ только для твоего ID
+    if user_id != "7775321566":
+        await query.edit_message_text("🔒 Эта функция доступна только в Mindra+.")
+        return
+
+    if data == "premium_mode_coach":
+        await query.edit_message_text("✅ Премиум‑режим общения **Коуч** активирован! 💜", parse_mode="Markdown")
+    elif data == "premium_mode_flirt":
+        await query.edit_message_text("💋 Премиум‑режим общения **Флирт** активирован! 😉", parse_mode="Markdown")
+        
 # 📊 4. Расширенная статистика
 async def premium_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
