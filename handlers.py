@@ -277,14 +277,30 @@ MORNING_MESSAGES = [
     "😇 Утро доброе! Я тут и думаю о тебе, как ты там?",
 ]
 
-async def send_daily_reminder(context):
+async def send_daily_reminder(context: ContextTypes.DEFAULT_TYPE):
     try:
-        for user_id in PREMIUM_USERS:
-            morning_text = random.choice(MORNING_MESSAGES)
-            await context.bot.send_message(chat_id=user_id, text=morning_text)
-    except Exception as e:
-        print(f"❌ Ошибка с напоминанием: {e}")
+        chat_id = context.job.chat_id if hasattr(context.job, "chat_id") else None
+        # Если ты рассылаешь всем пользователям — пройди по user_last_seen.keys()
+        if not chat_id:
+            for user_id in user_last_seen.keys():
+                # Формируем сообщение
+                greeting = "🌞 Доброе утро! Как ты сегодня? 💜"
+                task = choice(DAILY_TASKS)
+                text = f"{greeting}\n\n🎯 Задание на день:\n{task}"
 
+                await context.bot.send_message(chat_id=user_id, text=text)
+                logging.info(f"✅ Утреннее задание отправлено пользователю {user_id}")
+        else:
+            # Если рассылка конкретному чату
+            greeting = "🌞 Доброе утро! Как ты сегодня? 💜"
+            task = choice(DAILY_TASKS)
+            text = f"{greeting}\n\n🎯 Задание на день:\n{task}"
+
+            await context.bot.send_message(chat_id=chat_id, text=text)
+            logging.info(f"✅ Утреннее задание отправлено в чат {chat_id}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка при отправке утреннего задания: {e}")
+        
 def detect_emotion_reaction(user_input: str) -> str:
     text = user_input.lower()
     if any(word in text for word in ["ура", "сделал", "сделала", "получилось", "рад", "рада", "наконец", "круто", "кайф", "горжусь"]):
