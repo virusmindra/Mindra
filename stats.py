@@ -43,3 +43,14 @@ def get_user_stats(user_id):
     user_id = str(user_id)
     return stats.get(user_id, {"points": 0, "goals_completed": 0})
     
+def get_user_title(points: int) -> str:
+    if points < 50:
+        return "🌱 Новичок"
+    elif points < 100:
+        return "✨ Мотиватор"
+    elif points < 250:
+        return "🔥 Уверенный"
+    elif points < 500:
+        return "💎 Наставник"
+    else:
+        return "🌟 Легенда"
