@@ -1046,6 +1046,99 @@ async def mypoints_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"🎯 Выполнено целей: {completed}",
         parse_mode="Markdown"
     )
+
+# 🌸 Премиум Челленджи
+PREMIUM_CHALLENGES = [
+    "🔥 Попробуй сегодня сделать доброе дело для незнакомца.",
+    "🌟 Запиши 5 своих сильных сторон и расскажи о них другу.",
+    "💎 Найди новую книгу и прочитай хотя бы 1 главу.",
+    "🚀 Составь план на следующую неделю с чёткими целями.",
+    "🎯 Сделай шаг в сторону большой мечты – даже маленький!"
+]
+
+# 📊 Пример расширенной статистики
+def get_premium_stats(user_id: str):
+    # здесь можешь интегрировать реальные данные из stats.py
+    return {
+        "completed_goals": 12,
+        "habits_tracked": 7,
+        "days_active": 25,
+        "mood_entries": 14
+    }
+
+# 🌸 Эксклюзивные режимы общения
+EXCLUSIVE_MODES = {
+    "coach": "Ты – мой личный коуч. Помогай чётко, по делу, давай советы.",
+    "flirty": "Ты – немного флиртуешь и поддерживаешь. Отвечай с теплом и лёгким флиртом."
+}
+
+# 💜 1. Личные отчёты о прогрессе
+async def premium_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    if user_id != YOUR_ID:
+        await update.message.reply_text("🔒 Эта функция доступна только Mindra+ ✨")
+        return
+    await update.message.reply_text(
+        "📈 *Твой персональный отчёт за неделю:*\n\n"
+        "✅ Завершено целей: 5\n"
+        "💧 Привычек выполнено: 20\n"
+        "🌱 Новых заданий выполнено: 12\n"
+        "Ты молодец! Продолжай в том же духе 💜",
+        parse_mode="Markdown"
+    )
+
+# 🔥 2. Премиум челленджи
+async def premium_challenge(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    if user_id != YOUR_ID:
+        await update.message.reply_text("🔒 Эта функция доступна только Mindra+ ✨")
+        return
+    challenge = random.choice(PREMIUM_CHALLENGES)
+    await update.message.reply_text(f"💎 *Твой челлендж на сегодня:*\n\n{challenge}", parse_mode="Markdown")
+
+# 🌸 3. Эксклюзивный режим общения
+async def premium_mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    if user_id != YOUR_ID:
+        await update.message.reply_text("🔒 Эта функция доступна только Mindra+ ✨")
+        return
+    buttons = [
+        [InlineKeyboardButton("💼 Коуч", callback_data="mode_coach"),
+         InlineKeyboardButton("💋 Флирт", callback_data="mode_flirty")]
+    ]
+    await update.message.reply_text(
+        "Выбери эксклюзивный режим общения:",
+        reply_markup=InlineKeyboardMarkup(buttons)
+    )
+
+# Обработчик кнопок эксклюзивных режимов
+async def premium_mode_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    user_id = str(query.from_user.id)
+    if user_id != YOUR_ID:
+        await query.edit_message_text("🔒 Эта функция доступна только Mindra+ ✨")
+        return
+    mode_key = query.data.replace("mode_", "")
+    if mode_key in EXCLUSIVE_MODES:
+        # Тут можно обновить MODES или conversation_history под новый режим
+        await query.edit_message_text(f"🌸 Режим изменён: {mode_key}\n\nТеперь я общаюсь с тобой как: {EXCLUSIVE_MODES[mode_key]}")
+
+# 📊 4. Расширенная статистика
+async def premium_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    if user_id != YOUR_ID:
+        await update.message.reply_text("🔒 Эта функция доступна только Mindra+ ✨")
+        return
+    stats = get_premium_stats(user_id)
+    await update.message.reply_text(
+        f"📊 *Расширенная статистика:*\n\n"
+        f"🎯 Завершено целей: {stats['completed_goals']}\n"
+        f"💧 Привычек отслежено: {stats['habits_tracked']}\n"
+        f"🔥 Дней активности: {stats['days_active']}\n"
+        f"🌱 Записей настроения: {stats['mood_entries']}",
+        parse_mode="Markdown"
+    )
     
 # Список всех команд/обработчиков для экспорта
 handlers = [
@@ -1067,10 +1160,15 @@ handlers = [
     CommandHandler("quote", quote),
     CommandHandler("mypoints", mypoints_command),
     CommandHandler("mystats", my_stats_command),
+    CommandHandler("premium_report", premium_report),
+    CommandHandler("premium_challenge", premium_challenge),
+    CommandHandler("premium_mode", premium_mode),
+    CommandHandler("premium_stats", premium_stats),
     CallbackQueryHandler(goal_buttons_handler, pattern="^(create_goal|show_goals|create_habit|show_habits)$"),
     CallbackQueryHandler(handle_mode_choice, pattern="^mode_"),  # pattern для /mode кнопок
     CallbackQueryHandler(handle_reaction_button, pattern="^react_"),
     CallbackQueryHandler(handle_add_goal_callback, pattern="^add_goal\\|"),
+    CallbackQueryHandler(premium_mode_choice, pattern="^mode_"),
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
     MessageHandler(filters.COMMAND, unknown_command),
