@@ -980,7 +980,35 @@ async def send_support_message_if_daytime(app):
                 logging.error(f"❌ Ошибка при отправке поддерживающего сообщения: {e}")
     else:
         logging.info("⏳ Ночное время — поддерживающие сообщения не отправляем.")
-        
+
+POLL_QUESTIONS = [
+    {
+        "text": "💛 Как ты себя сегодня чувствуешь?",
+        "options": ["😊 Отлично", "🙂 Нормально", "😐 Так себе", "😢 Плохо"]
+    },
+    {
+        "text": "✅ Ты выполнил своё задание на сегодня?",
+        "options": ["💪 Да!", "🤔 Почти", "❌ Нет"]
+    }
+    # сюда можно добавлять ещё
+]
+
+async def send_random_poll(context: ContextTypes.DEFAULT_TYPE):
+    if user_last_seen:  # есть ли активные пользователи
+        poll = random.choice(POLL_QUESTIONS)
+        for user_id in user_last_seen.keys():
+            try:
+                await context.bot.send_poll(
+                    chat_id=user_id,
+                    question=poll["text"],
+                    options=poll["options"],
+                    is_anonymous=False,
+                    allows_multiple_answers=False
+                )
+                logging.info(f"📊 Опрос отправлен пользователю {user_id}")
+            except Exception as e:
+                logging.error(f"❌ Ошибка при отправке опроса пользователю {user_id}: {e}")
+
 # Список всех команд/обработчиков для экспорта
 handlers = [
     CommandHandler("start", start),
