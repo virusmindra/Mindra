@@ -28,7 +28,8 @@ from handlers import (
     send_weekly_report,
     remind_command, 
     handle_goal_done, 
-    test_mood
+    test_mood,
+    check_custom_reminders
 )
 from config import TELEGRAM_BOT_TOKEN
 
