@@ -25,7 +25,10 @@ from handlers import (
     premium_mode,
     premium_mode_callback,
     premium_stats,
-    send_weekly_report
+    send_weekly_report,
+    remind_command, 
+    handle_goal_done, 
+    test_mood
 )
 from config import TELEGRAM_BOT_TOKEN
 
