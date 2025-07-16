@@ -40,6 +40,17 @@ GOALS_FILE = Path("user_goals.json")
 
 YOUR_ID = "7775321566"  # твой ID
 
+async def check_custom_reminders(app):
+    now = datetime.now()
+    for user_id, reminders in list(user_reminders.items()):
+        for r in reminders[:]:
+            if now.hour == r["time"].hour and now.minute == r["time"].minute:
+                try:
+                    await app.bot.send_message(chat_id=user_id, text=f"⏰ Напоминание: {r['text']}")
+                except Exception as e:
+                    print(f"Ошибка отправки напоминания: {e}")
+                reminders.remove(r)
+
 def load_goals():
     if GOALS_FILE.exists():
         with open(GOALS_FILE, "r", encoding="utf-8") as f:
