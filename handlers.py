@@ -31,6 +31,7 @@ from stats import get_user_stats, get_user_title, get_stats
 # Глобальные переменные
 user_last_seen = {}
 user_last_prompted = {}
+user_reminders = {}
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -1203,7 +1204,38 @@ async def send_weekly_report(context: ContextTypes.DEFAULT_TYPE):
             )
         except Exception as e:
             logging.error(f"❌ Ошибка при отправке отчёта пользователю {user_id}: {e}")
-            
+
+
+# Команда /remind
+async def remind_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+
+    # Только для премиума
+    if user_id != str(YOUR_ID):  # потом заменишь на проверку PREMIUM_USERS
+        await update.message.reply_text("🔒 Свои напоминания доступны только для Mindra+ 💜")
+        return
+
+    if len(context.args) < 2:
+        await update.message.reply_text("⏰ Использование: `/remind 19:30 Сделай зарядку!`", parse_mode="Markdown")
+        return
+
+    try:
+        time_part = context.args[0]
+        text_part = " ".join(context.args[1:])
+        hour, minute = map(int, time_part.split(":"))
+        now = datetime.now()
+        reminder_time = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+        if reminder_time < now:
+            reminder_time += timedelta(days=1)
+
+        if user_id not in user_reminders:
+            user_reminders[user_id] = []
+        user_reminders[user_id].append({"time": reminder_time, "text": text_part})
+        await update.message.reply_text(f"✅ Напоминание установлено на {hour:02d}:{minute:02d}: *{text_part}*", parse_mode="Markdown")
+    except Exception as e:
+        await update.message.reply_text("⚠️ Неверный формат. Пример: `/remind 19:30 Сделай зарядку!`", parse_mode="Markdown")
+        print(e)
+        
 # Список всех команд/обработчиков для экспорта
 handlers = [
     CommandHandler("start", start),
