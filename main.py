@@ -34,18 +34,6 @@ from config import TELEGRAM_BOT_TOKEN
 
 logging.basicConfig(level=logging.INFO)
 
-async def check_custom_reminders(app):
-    now = datetime.now()
-    for user_id, reminders in list(user_reminders.items()):
-        for r in reminders[:]:
-            if now.hour == r["time"].hour and now.minute == r["time"].minute:
-                try:
-                    await app.bot.send_message(chat_id=user_id, text=f"⏰ Напоминание: {r['text']}")
-                except Exception as e:
-                    print(f"Ошибка отправки напоминания: {e}")
-                reminders.remove(r)
-
-
 # ⛑ Глобальный обработчик ошибок
 async def error_handler(update, context):
     logging.error(msg="Exception while handling an update:", exc_info=context.error)
