@@ -89,7 +89,7 @@ async def main():
     # ✨ Сообщения поддержки каждые 4 часа (с 9:00 до 21:00 по Киеву)
     app.job_queue.run_repeating(
         send_random_support,
-        interval=timedelta(hours=3),
+        interval=timedelta(hours=4),
         first=timedelta(minutes=5),  # начнём через 5 минут после запуска
         name="support_messages"
     )
