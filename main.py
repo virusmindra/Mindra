@@ -24,7 +24,8 @@ from handlers import (
     premium_challenge,
     premium_mode,
     premium_mode_callback,
-    premium_stats
+    premium_stats,
+    send_weekly_report
 )
 from config import TELEGRAM_BOT_TOKEN
 
@@ -100,7 +101,13 @@ async def main():
         first=datetime.now(pytz.timezone("Europe/Kiev")).replace(hour=12, minute=0, second=0, microsecond=0).astimezone(pytz.utc)
     )
 
-    
+    # ✨ Еженедельный отчёт в воскресенье в 20:00 по Киеву
+    app.job_queue.run_daily(
+        send_weekly_report,
+        time=time(hour=20, minute=0, tzinfo=pytz.timezone("Europe/Kiev")),
+        days=(6,),  # 6 = воскресенье (0 = понедельник)
+        name="weekly_report"
+    )    
     logging.info("🤖 Бот запущен!")
     await app.run_polling()
 
