@@ -781,45 +781,60 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_input = update.message.text
     user_id = str(update.effective_user.id)
+
+    # Получаем текущий режим (по умолчанию default)
     mode = user_modes.get(user_id, "default")
 
+    # Если истории нет — создаём с нужным системным промптом
     if user_id not in conversation_history:
         conversation_history[user_id] = [
-            {"role": "system", "content": MODES[mode] + " Всегда отвечай на том же языке, на котором пишет пользователь. Отвечай тепло, человечно, с эмпатией."}
+            {"role": "system", "content": MODES.get(mode, MODES["default"])}
         ]
+    else:
+        # Обновляем первый системный промпт на актуальный режим
+        conversation_history[user_id][0] = {
+            "role": "system",
+            "content": MODES.get(mode, MODES["default"])
+        }
 
-    # 🔮 Эмпатичный стиль с эмоджи
-    conversation_history[user_id].insert(1, {
-        "role": "system",
-        "content": (
-            "Ты — доброжелательный и поддерживающий собеседник. "
-            "Отвечай с теплотой и эмпатией. Добавляй эмоджи, если они подходят: 🤗, 💜, 😊, 😢, ✨, 🙌, ❤️. "
-            "Если человек делится радостью — порадуйся вместе с ним. "
-            "Если грустью — поддержи, как друг. Будь чуткой и живой."
-        )
-    })
-
+    # Добавляем пользовательское сообщение
     conversation_history[user_id].append({"role": "user", "content": user_input})
+
+    # Обрезаем историю, если нужно
     trimmed_history = trim_history(conversation_history[user_id])
 
     try:
         # 💬 Показываем "печатает..."
-        await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
+        await context.bot.send_chat_action(
+            chat_id=update.effective_chat.id,
+            action=ChatAction.TYPING
+        )
 
+        # Отправляем запрос в OpenAI
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=trimmed_history
         )
         reply = response.choices[0].message.content
+
+        # Сохраняем ответ в историю
         conversation_history[user_id].append({"role": "assistant", "content": reply})
         save_history(conversation_history)
+
+        # Добавляем реакцию
         reaction = detect_emotion_reaction(user_input) + detect_topic_and_react(user_input)
         reply = reaction + reply
-        await update.message.reply_text(reply, reply_markup=generate_post_response_buttons())
+
+        # Отправляем пользователю
+        await update.message.reply_text(
+            reply,
+            reply_markup=generate_post_response_buttons()
+        )
 
     except Exception as e:
         await update.message.reply_text("🥺 Упс, я немного завис... Попробуй позже, хорошо?")
-        print(f"❌ Ошибка OpenAI: {e}")
+        logging.error(f"❌ Ошибка OpenAI: {e}")
+
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
