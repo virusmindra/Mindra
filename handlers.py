@@ -73,6 +73,25 @@ def is_goal_like(text):
     ]
     return any(kw in text.lower() for kw in keywords)
 
+async def handle_goal_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    index = int(context.args[0]) if context.args else None
+    if index is None:
+        await update.message.reply_text("⚠️ Укажи номер цели, которую ты выполнил(а).")
+        return
+
+    if mark_goal_done(user_id, index):
+        # базовая похвала
+        text = "🎉 Отлично! Цель отмечена как выполненная!"
+        # премиум награды
+        if user_id == str(YOUR_ID):  # потом заменишь на PREMIUM_USERS
+            user_points[user_id] = user_points.get(user_id, 0) + 10
+            text += f"\n🏅 Ты получил(а) +10 очков! Всего: {user_points[user_id]}"
+        await update.message.reply_text(text)
+    else:
+        await update.message.reply_text("⚠️ Цель не найдена.")
+
+
 async def handle_add_goal_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
