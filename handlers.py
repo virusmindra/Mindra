@@ -40,6 +40,52 @@ GOALS_FILE = Path("user_goals.json")
 
 YOUR_ID = "7775321566"  # твой ID
 
+async def mytask_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+
+    # Получаем цели и привычки пользователя
+    user_goals = get_goals(user_id)
+    user_habits = get_habits(user_id)
+
+    matched_task = None
+
+    # Проверяем по ключевым словам в целях
+    keywords = {
+        "вода": "💧 Сегодня удели внимание воде — выпей 8 стаканов и отметь это!",
+        "спорт": "🏃‍♂️ Сделай 15-минутную разминку, твое тело скажет спасибо!",
+        "книга": "📖 Найди время прочитать 10 страниц своей книги.",
+        "медитация": "🧘‍♀️ Проведи 5 минут в тишине, фокусируясь на дыхании.",
+        "работа": "🗂️ Сделай один важный шаг в рабочем проекте сегодня.",
+        "учеба": "📚 Потрать 20 минут на обучение или повторение материала."
+    }
+
+    # Проверяем в целях
+    for g in user_goals:
+        text = g.get("text", "").lower()
+        for key, suggestion in keywords.items():
+            if re.search(key, text):
+                matched_task = suggestion
+                break
+        if matched_task:
+            break
+
+    # Если не нашли в целях, проверяем в привычках
+    if not matched_task:
+        for h in user_habits:
+            text = h.get("text", "").lower()
+            for key, suggestion in keywords.items():
+                if re.search(key, text):
+                    matched_task = suggestion
+                    break
+            if matched_task:
+                break
+
+    # Если ничего не нашли — выдаём рандомное
+    if not matched_task:
+        matched_task = f"🎯 {random.choice(DAILY_TASKS)}"
+
+    await update.message.reply_text(f"✨ Твоё персональное задание на сегодня:\n\n{matched_task}")
+    
 async def check_custom_reminders(app):
     now = datetime.now()
     for user_id, reminders in list(user_reminders.items()):
