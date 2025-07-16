@@ -1354,6 +1354,7 @@ handlers = [
     CommandHandler("remind", remind_command),
     CommandHandler("done", handle_goal_done),
     CommandHandler("test_mood", test_mood),
+    CommandHandler("mytask", mytask_command),
     CallbackQueryHandler(goal_buttons_handler, pattern="^(create_goal|show_goals|create_habit|show_habits)$"),
     CallbackQueryHandler(handle_mode_choice, pattern="^mode_"),  # pattern для /mode кнопок
     CallbackQueryHandler(handle_reaction_button, pattern="^react_"),
