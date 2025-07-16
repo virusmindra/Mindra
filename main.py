@@ -129,7 +129,7 @@ async def main():
         interval=60, first=10
     )
 
-logging.info("🤖 Бот запущен!")
+    logging.info("🤖 Бот запущен!")
     await app.run_polling()
 
 if __name__ == "__main__":
