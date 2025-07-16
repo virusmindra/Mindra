@@ -1291,6 +1291,9 @@ handlers = [
     CommandHandler("premium_challenge", premium_challenge),
     CommandHandler("premium_mode", premium_mode),
     CommandHandler("premium_stats", premium_stats),
+    CommandHandler("remind", remind_command),
+    CommandHandler("done", handle_goal_done),
+    CommandHandler("test_mood", test_mood),
     CallbackQueryHandler(goal_buttons_handler, pattern="^(create_goal|show_goals|create_habit|show_habits)$"),
     CallbackQueryHandler(handle_mode_choice, pattern="^mode_"),  # pattern для /mode кнопок
     CallbackQueryHandler(handle_reaction_button, pattern="^react_"),
