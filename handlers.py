@@ -1173,7 +1173,37 @@ async def premium_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"🌱 Записей настроения: {stats['mood_entries']}",
         parse_mode="Markdown"
     )
-    
+
+async def send_weekly_report(context: ContextTypes.DEFAULT_TYPE):
+    # 📅 Проверяем всех премиум‑пользователей
+    for user_id in PREMIUM_USERS:
+        try:
+            # Получаем цели
+            goals = get_goals(user_id)
+            completed_goals = [g for g in goals if g.get("done")]
+
+            # Если есть привычки
+            try:
+                habits = get_habits(user_id)
+                completed_habits = len(habits)  # Можно расширить
+            except Exception:
+                completed_habits = 0
+
+            text = (
+                "📊 *Твой недельный отчёт Mindra+* 💜\n\n"
+                f"✅ Выполнено целей: *{len(completed_goals)}*\n"
+                f"🌱 Отмечено привычек: *{completed_habits}*\n\n"
+                "✨ Так держать! Я горжусь тобой 💪💜"
+            )
+
+            await context.bot.send_message(
+                chat_id=int(user_id),
+                text=text,
+                parse_mode="Markdown"
+            )
+        except Exception as e:
+            logging.error(f"❌ Ошибка при отправке отчёта пользователю {user_id}: {e}")
+            
 # Список всех команд/обработчиков для экспорта
 handlers = [
     CommandHandler("start", start),
