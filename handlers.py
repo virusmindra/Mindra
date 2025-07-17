@@ -140,6 +140,7 @@ async def handle_goal_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if mark_goal_done(user_id, index):
+        add_points(user_id, 5)  # +5 очков за выполнение цели
         # базовая похвала
         text = "🎉 Отлично! Цель отмечена как выполненная!"
         # премиум награды
