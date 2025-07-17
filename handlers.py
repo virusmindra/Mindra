@@ -42,6 +42,27 @@ GOALS_FILE = Path("user_goals.json")
 
 YOUR_ID = "7775321566"  # твой ID
 
+async def habit_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+
+    if not context.args:
+        await update.message.reply_text("✏️ Укажи номер привычки, которую ты выполнил(а):\n/habit_done 0")
+        return
+
+    try:
+        index = int(context.args[0])
+    except ValueError:
+        await update.message.reply_text("⚠️ Укажи номер привычки (например `/habit_done 0`)", parse_mode="Markdown")
+        return
+
+    if mark_habit_done(user_id, index):
+        # ✅ Начисляем очки за выполнение привычки
+        add_points(user_id, 5)
+        await update.message.reply_text(f"✅ Привычка №{index} отмечена как выполненная! Молодец! 💪 +5 очков!")
+    else:
+        await update.message.reply_text("❌ Не удалось найти привычку с таким номером.")
+
+
 async def mytask_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
 
