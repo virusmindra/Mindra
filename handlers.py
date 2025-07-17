@@ -524,17 +524,38 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def my_stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
 
+    # получаем данные
     user_stats = get_user_stats(user_id)
     points = user_stats.get("points", 0)
     title = get_user_title(points)
 
+    # базовый текст
     text = (
         f"📌 *Твоя статистика*\n\n"
         f"🌟 Твой титул: *{title}*\n"
         f"🏅 Очков: *{points}*\n\n"
         f"Продолжай выполнять цели и задания, чтобы расти! 💜"
     )
-    await update.message.reply_text(text, parse_mode="Markdown")
+
+    # проверяем премиум
+    if user_id not in PREMIUM_USERS:
+        text += (
+            "\n\n🔒 В Mindra+ ты получишь:\n"
+            "💎 Расширенную статистику по целям и привычкам\n"
+            "💎 Больше лимитов и эксклюзивные задания\n"
+            "💎 Уникальные челленджи и напоминания ✨"
+        )
+        keyboard = [[InlineKeyboardButton("💎 Узнать о Mindra+", url="https://t.me/talktomindra_bot")]]
+        await update.message.reply_text(text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard))
+    else:
+        # если премиум, можно добавить расширенные данные
+        extra = (
+            f"\n✅ Целей выполнено: {user_stats.get('completed_goals', 0)}"
+            f"\n🌱 Привычек добавлено: {user_stats.get('habits_tracked', 0)}"
+            f"\n🔔 Напоминаний: {user_stats.get('reminders', 0)}"
+            f"\n📅 Дней активности: {user_stats.get('days_active', 0)}"
+        )
+        await update.message.reply_text(text + extra, parse_mode="Markdown")
     
 # /habit
 async def habit(update: Update, context: ContextTypes.DEFAULT_TYPE):
