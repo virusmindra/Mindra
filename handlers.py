@@ -581,6 +581,7 @@ async def habit(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     habit_text = " ".join(context.args)
     add_habit(user_id, habit_text)
+    add_points(user_id, 1)  # +1 очко за новую привычку
     await update.message.reply_text(
         f"🎯 Привычка добавлена: *{habit_text}*",
         parse_mode="Markdown"
