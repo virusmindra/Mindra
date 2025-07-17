@@ -524,12 +524,30 @@ async def my_stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # /habit
 async def habit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
-    if not context.args:
-        await update.message.reply_text("Чтобы добавить привычку, напиши:\n/habit Делать зарядку")
+    is_premium = (user_id == str(YOUR_ID)) or (user_id in PREMIUM_USERS)
+
+    # Проверка лимита для бесплатных
+    current_habits = get_habits(user_id)
+    if not is_premium and len(current_habits) >= 2:
+        await update.message.reply_text(
+            "🌱 В бесплатной версии можно добавить только 2 привычки.\n\n"
+            "✨ Подключи Mindra+, чтобы отслеживать неограниченное количество привычек 💜",
+            parse_mode="Markdown"
+        )
         return
+
+    if not context.args:
+        await update.message.reply_text(
+            "Чтобы добавить привычку, напиши:\n/habit Делать зарядку"
+        )
+        return
+
     habit_text = " ".join(context.args)
     add_habit(user_id, habit_text)
-    await update.message.reply_text(f"🎯 Привычка добавлена: *{habit_text}*", parse_mode="Markdown")
+    await update.message.reply_text(
+        f"🎯 Привычка добавлена: *{habit_text}*",
+        parse_mode="Markdown"
+    )
 
 # /habits
 async def habits_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
