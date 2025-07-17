@@ -853,15 +853,38 @@ async def handle_reaction_button(update: Update, context: ContextTypes.DEFAULT_T
 
 # Обработчик текстовых сообщений
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global user_last_seen
+    global user_last_seen, user_message_count
     user_id_int = update.effective_user.id
+    user_id = str(user_id_int)
+
+    # 🕒 Обновляем активность
     user_last_seen[user_id_int] = datetime.now(timezone.utc)
     logging.info(f"✅ user_last_seen обновлён в chat для {user_id_int}")
 
-    user_input = update.message.text
-    user_id = str(update.effective_user.id)
+    # 🔥 Лимит сообщений для бесплатной версии
+    today = str(date.today())
+    if user_id not in user_message_count:
+        user_message_count[user_id] = {"date": today, "count": 0}
+    else:
+        # Сбросить счётчик если день сменился
+        if user_message_count[user_id]["date"] != today:
+            user_message_count[user_id] = {"date": today, "count": 0}
 
-    # Получаем текущий режим (по умолчанию default)
+    if user_id not in PREMIUM_USERS:
+        if user_message_count[user_id]["count"] >= 10:
+            await update.message.reply_text(
+                "🔒 В бесплатной версии можно отправить только 10 сообщений в день.\n"
+                "Оформи Mindra+ для безлимитного общения 💜"
+            )
+            return
+
+    # Увеличиваем счётчик сообщений
+    user_message_count[user_id]["count"] += 1
+
+    # ✨ Получаем сообщение пользователя
+    user_input = update.message.text
+
+    # 📌 Определяем режим (по умолчанию default)
     mode = user_modes.get(user_id, "default")
 
     # Если истории нет — создаём с нужным системным промптом
@@ -879,7 +902,7 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Добавляем пользовательское сообщение
     conversation_history[user_id].append({"role": "user", "content": user_input})
 
-    # Обрезаем историю, если нужно
+    # ✂️ Обрезаем историю
     trimmed_history = trim_history(conversation_history[user_id])
 
     try:
@@ -889,30 +912,30 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
             action=ChatAction.TYPING
         )
 
-        # Отправляем запрос в OpenAI
+        # 🤖 Получаем ответ от OpenAI
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=trimmed_history
         )
         reply = response.choices[0].message.content
 
-        # Сохраняем ответ в историю
+        # Сохраняем ответ
         conversation_history[user_id].append({"role": "assistant", "content": reply})
         save_history(conversation_history)
 
-        # Добавляем реакцию
+        # 🔥 Добавляем эмоциональную реакцию
         reaction = detect_emotion_reaction(user_input) + detect_topic_and_react(user_input)
         reply = reaction + reply
 
-        # Отправляем пользователю
+        # Отправляем ответ пользователю
         await update.message.reply_text(
             reply,
             reply_markup=generate_post_response_buttons()
         )
 
     except Exception as e:
+        logging.error(f"❌ Ошибка в chat(): {e}")
         await update.message.reply_text("🥺 Упс, я немного завис... Попробуй позже, хорошо?")
-        logging.error(f"❌ Ошибка OpenAI: {e}")
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
