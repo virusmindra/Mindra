@@ -73,6 +73,57 @@ async def set_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("⚠️ Неверный код языка. Используй `/language` чтобы посмотреть список.")
 
+async def language_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
+        [
+            InlineKeyboardButton("Русский 🇷🇺", callback_data="lang_ru"),
+            InlineKeyboardButton("Українська 🇺🇦", callback_data="lang_uk")
+        ],
+        [
+            InlineKeyboardButton("Moldovenească 🇲🇩", callback_data="lang_md"),
+            InlineKeyboardButton("Беларуская 🇧🇾", callback_data="lang_be")
+        ],
+        [
+            InlineKeyboardButton("Қазақша 🇰🇿", callback_data="lang_kk"),
+            InlineKeyboardButton("Кыргызча 🇰🇬", callback_data="lang_kg")
+        ],
+        [
+            InlineKeyboardButton("Հայերեն 🇦🇲", callback_data="lang_hy"),
+            InlineKeyboardButton("ქართული 🇬🇪", callback_data="lang_ka"),
+            InlineKeyboardButton("Нохчийн мотт 🇷🇺", callback_data="lang_ce")
+        ]
+    ]
+
+    await update.message.reply_text(
+        "🌐 *Выбери язык общения:*",
+        parse_mode="Markdown",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
+async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    user_id = str(query.from_user.id)
+
+    lang_code = query.data.replace("lang_", "")
+    # Сохраняем язык в словарь user_language
+    user_language[user_id] = lang_code
+
+    # Ответ пользователю
+    lang_names = {
+        "ru": "Русский 🇷🇺",
+        "uk": "Українська 🇺🇦",
+        "md": "Moldovenească 🇲🇩",
+        "be": "Беларуская 🇧🇾",
+        "kk": "Қазақша 🇰🇿",
+        "kg": "Кыргызча 🇰🇬",
+        "hy": "Հայերեն 🇦🇲",
+        "ka": "ქართული 🇬🇪",
+        "ce": "Нохчийн мотт 🇷🇺"
+    }
+
+    chosen = lang_names.get(lang_code, lang_code)
+    await query.edit_message_text(f"✅ Язык общения изменён на: *{chosen}*", parse_mode="Markdown")
 
 async def habit_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
@@ -1619,6 +1670,7 @@ handlers = [
     CallbackQueryHandler(handle_reaction_button, pattern="^react_"),
     CallbackQueryHandler(handle_add_goal_callback, pattern="^add_goal\\|"),
     CallbackQueryHandler(premium_mode_callback, pattern="^premium_mode_"),
+    CallbackQueryHandler(language_callback, pattern="^lang_"),
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
     MessageHandler(filters.COMMAND, unknown_command),
