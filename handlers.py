@@ -33,6 +33,7 @@ user_last_seen = {}
 user_last_prompted = {}
 user_reminders = {}
 user_points = {}
+user_message_count = {}
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
