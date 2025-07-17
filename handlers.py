@@ -35,6 +35,7 @@ user_reminders = {}
 user_points = {}
 user_message_count = {}
 user_goal_count = {}
+user_languages = {}  # {user_id: 'ru'/'uk'/'md'/'be'/'kk'/'kg'/'hy'/'ka'/'ce'}
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
