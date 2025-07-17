@@ -83,3 +83,40 @@ def get_stats():
         "days_active": 25,  # 👈 сюда можно добавить реальную логику
         "mood_entries": 14  # 👈 сюда тоже, если будешь хранить mood.json
     }
+
+
+# 📊 Получение статистики пользователя
+def get_user_stats(user_id: str):
+    from goals import get_goals  # если нужно
+    from habits import get_habits  # если нужно
+    from handlers import user_points  # или если user_points у тебя в stats.py, то не нужно импортировать
+
+    goals = get_goals(user_id)
+    total_goals = len(goals)
+    completed_goals = len([g for g in goals if g.get("done")])
+
+    habits = get_habits(user_id)
+    total_habits = len(habits)
+
+    points = 0
+    # если user_points хранится в stats.py, то:
+    global user_points
+    points = user_points.get(user_id, 0)
+
+    return {
+        "points": points,
+        "total_goals": total_goals,
+        "completed_goals": completed_goals,
+        "habits": total_habits
+    }
+
+# 🏅 Получение титула по очкам
+def get_user_title(points: int):
+    if points < 10:
+        return "Новичок 💫"
+    elif points < 30:
+        return "Уверенный 🌟"
+    elif points < 60:
+        return "Мастер 💎"
+    else:
+        return "Легенда 🔥"
