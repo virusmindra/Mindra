@@ -17,7 +17,7 @@ from datetime import datetime, timedelta, timezone, date
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, CommandHandler, MessageHandler, CallbackQueryHandler, filters
 from habits import add_habit, get_habits, mark_habit_done, delete_habit
-from stats import get_stats, get_user_stats, get_user_title
+from stats import get_stats, get_user_stats, get_user_title, add_points
 from telegram.constants import ChatAction, ParseMode
 from config import client, TELEGRAM_BOT_TOKEN
 from history import load_history, save_history, trim_history
@@ -714,7 +714,9 @@ async def goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
     goal_text = re.sub(r'до\s+\d{4}-\d{2}-\d{2}', '', text, flags=re.IGNORECASE).replace("напомни", "").strip()
 
     add_goal(user_id, goal_text, deadline=deadline, remind=remind)
-    
+
+    add_points(user_id, 1)  # +1 очко за новую цель
+
     reply = f"🎯 Цель добавлена: *{goal_text}*"
     if deadline:
         reply += f"\n🗓 Дедлайн: `{deadline}`"
