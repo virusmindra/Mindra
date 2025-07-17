@@ -1341,13 +1341,26 @@ async def send_weekly_report(context: ContextTypes.DEFAULT_TYPE):
 async def remind_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
 
-    # Только для премиума
-    if user_id != str(YOUR_ID):  # потом заменишь на проверку PREMIUM_USERS
-        await update.message.reply_text("🔒 Свои напоминания доступны только для Mindra+ 💜")
-        return
+    # Проверка: премиум или нет
+    is_premium = (user_id == str(YOUR_ID)) or (user_id in PREMIUM_USERS)
 
+    # Лимит для бесплатных: только 1 напоминание
+    if not is_premium:
+        current_reminders = user_reminders.get(user_id, [])
+        if len(current_reminders) >= 1:
+            await update.message.reply_text(
+                "🔔 В бесплатной версии можно установить только 1 активное напоминание.\n\n"
+                "✨ Оформи Mindra+, чтобы иметь неограниченные напоминания 💜",
+                parse_mode="Markdown"
+            )
+            return
+
+    # Проверяем корректность аргументов
     if len(context.args) < 2:
-        await update.message.reply_text("⏰ Использование: `/remind 19:30 Сделай зарядку!`", parse_mode="Markdown")
+        await update.message.reply_text(
+            "⏰ Использование: `/remind 19:30 Сделай зарядку!`",
+            parse_mode="Markdown"
+        )
         return
 
     try:
@@ -1362,10 +1375,18 @@ async def remind_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if user_id not in user_reminders:
             user_reminders[user_id] = []
         user_reminders[user_id].append({"time": reminder_time, "text": text_part})
-        await update.message.reply_text(f"✅ Напоминание установлено на {hour:02d}:{minute:02d}: *{text_part}*", parse_mode="Markdown")
+
+        await update.message.reply_text(
+            f"✅ Напоминание установлено на {hour:02d}:{minute:02d}: *{text_part}*",
+            parse_mode="Markdown"
+        )
     except Exception as e:
-        await update.message.reply_text("⚠️ Неверный формат. Пример: `/remind 19:30 Сделай зарядку!`", parse_mode="Markdown")
+        await update.message.reply_text(
+            "⚠️ Неверный формат. Пример: `/remind 19:30 Сделай зарядку!`",
+            parse_mode="Markdown"
+        )
         print(e)
+
 
 async def test_mood(update: Update, context: ContextTypes.DEFAULT_TYPE):
     moods = [
