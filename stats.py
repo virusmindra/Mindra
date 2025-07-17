@@ -6,6 +6,9 @@ STATS_FILE = "data/stats.json"
 GOALS_FILE = "goals.json"
 HABITS_FILE = "habits.json"
 
+# Хранилище очков пользователей
+user_points = {}
+
 def load_stats():
     try:
         with open(STATS_FILE, "r") as f:
@@ -120,3 +123,10 @@ def get_user_title(points: int):
         return "Мастер 💎"
     else:
         return "Легенда 🔥"
+
+def add_points(user_id: str, amount: int):
+    """Начислить пользователю очки."""
+    global user_points
+    current = user_points.get(user_id, 0)
+    user_points[user_id] = current + amount
+    return user_points[user_id]
