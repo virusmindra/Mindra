@@ -610,8 +610,10 @@ async def delete_goal_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 # Обработчик команды /goal
 async def goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global user_goal_count
     user_id = str(update.effective_user.id)
 
+    # ✅ Проверка аргументов
     if not context.args:
         await update.message.reply_text(
             "✏️ Чтобы поставить цель, напиши так:\n"
@@ -620,6 +622,28 @@ async def goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
+    # 📅 Лимит целей для бесплатной версии
+    today = str(date.today())
+    if user_id not in user_goal_count:
+        user_goal_count[user_id] = {"date": today, "count": 0}
+    else:
+        # Сброс счётчика, если день сменился
+        if user_goal_count[user_id]["date"] != today:
+            user_goal_count[user_id] = {"date": today, "count": 0}
+
+    # 🔒 Проверяем лимит, если пользователь не премиум
+    if user_id not in PREMIUM_USERS:
+        if user_goal_count[user_id]["count"] >= 3:
+            await update.message.reply_text(
+                "🔒 В бесплатной версии можно ставить только 3 цели в день.\n"
+                "Хочешь больше? Оформи Mindra+ 💜"
+            )
+            return
+
+    # Увеличиваем счётчик
+    user_goal_count[user_id]["count"] += 1
+
+    # ✨ Основная логика постановки цели
     text = " ".join(context.args)
     deadline_match = re.search(r'до\s+(\d{4}-\d{2}-\d{2})', text)
     remind = "напомни" in text.lower()
@@ -644,7 +668,8 @@ async def goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply += "\n🔔 Напоминание включено"
     
     await update.message.reply_markdown(reply)
-    
+
+
 async def show_goals(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     goals = get_goals_for_user(user_id)  # Новая функция хранения
