@@ -42,6 +42,37 @@ GOALS_FILE = Path("user_goals.json")
 
 YOUR_ID = "7775321566"  # твой ID
 
+async def set_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    available_langs = {
+        "ru": "Русский",
+        "uk": "Українська",
+        "md": "Moldovenească",
+        "be": "Беларуская",
+        "kk": "Қазақша",
+        "kg": "Кыргызча",
+        "hy": "Հայերեն",
+        "ka": "ქართული",
+        "ce": "Нохчийн мотт"
+    }
+
+    if not context.args:
+        langs_text = "\n".join([f"{code} — {name}" for code, name in available_langs.items()])
+        await update.message.reply_text(
+            f"🌐 Доступные языки:\n{langs_text}\n\n"
+            f"Пример: `/language ru`",
+            parse_mode="Markdown"
+        )
+        return
+
+    lang = context.args[0].lower()
+    if lang in available_langs:
+        user_languages[user_id] = lang
+        await update.message.reply_text(f"✅ Язык изменён на: {available_langs[lang]}")
+    else:
+        await update.message.reply_text("⚠️ Неверный код языка. Используй `/language` чтобы посмотреть список.")
+
+
 async def habit_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
 
@@ -1580,6 +1611,7 @@ handlers = [
     CommandHandler("done", handle_goal_done),
     CommandHandler("test_mood", test_mood),
     CommandHandler("mytask", mytask_command),
+    CommandHandler("language", set_language),
     CallbackQueryHandler(goal_buttons_handler, pattern="^(create_goal|show_goals|create_habit|show_habits)$"),
     CallbackQueryHandler(handle_mode_choice, pattern="^mode_"),  # pattern для /mode кнопок
     CallbackQueryHandler(handle_reaction_button, pattern="^react_"),
