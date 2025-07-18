@@ -1144,10 +1144,13 @@ DAILY_TASKS = [
     "💜 Сделай что-то приятное для себя прямо сейчас."
 ]
    
-
-# 👉 Функция для выбора случайного задания
-def get_random_daily_task():
-    return random.choice(DAILY_TASKS)
+def get_random_daily_task(user_id: str) -> str:
+    # Получаем язык пользователя, если нет — по умолчанию русский
+    lang = user_languages.get(user_id, "ru")
+    # Выбираем список для языка или дефолтный
+    tasks = DAILY_TASKS_BY_LANG.get(lang, DAILY_TASKS_BY_LANG["ru"])
+    # Возвращаем случайное задание
+    return random.choice(tasks)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
