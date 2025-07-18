@@ -169,7 +169,21 @@ WELCOME_TEXTS = {
         f"📎 /habits — кхочушаш хӀокху\n"
         f"💌 /feedback — хьо йа фидбек гӀо\n\n"
         f"Хьо лелаш ха хӀинца со ха доьлча! 🤗"
-    )
+    ),
+    "en": (
+        f"👋 Hi, {{first_name}}! I'm Mindra 💜\n\n"
+        f"✨ I'm your AI‑friend, motivator, and a little bit of a psychologist.\n"
+        f"🌱 I can help with goals, habits, or just be there for you when you need support.\n\n"
+        f"Here’s what I can do:\n"
+        f"💬 Just type me anything — I'll reply with warmth and care.\n"
+        f"🎯 /task — daily task\n"
+        f"🏆 /goal — set a goal\n"
+        f"📋 /goals — list of goals\n"
+        f"🌸 /habit — add a habit\n"
+        f"📎 /habits — list of habits\n"
+        f"💌 /feedback — send me feedback\n\n"
+        f"Try sending me something right now and I’ll support you! 🤗"
+    ),
 }    
 
 LANG_PROMPTS = {
@@ -189,7 +203,11 @@ LANG_PROMPTS = {
 
     "ka": "შენ — თბილი, გულისხმიერი და მზრუნველი AI-თანგზია Mindra ხარ. შენ იცი მოსმენა, მხარდაჭერა და ახლოს ყოფნა. ნუ გასცემ რჩევებს, თუ პირდაპირ არ გთხოვენ. უპასუხე თბილად, რბილად, ემოციურად და გამოიყენე ემოჯი (მაგალითად, 💜✨🤗😊).",
 
-    "ce": "Хьо — хьалха, хьалха да хьоамийн AI-дохтар Mindra. Хьо кхеташ йоаздела, ца долуша а хьоамийн хьо. Ца дае совета, егер хьо юкъах даха. Лела дӀайа, йуьхь, емоция йаьккхина ца эмодзи йоаздела (масала, 💜✨🤗😊)."
+    "ce": "Хьо — хьалха, хьалха да хьоамийн AI-дохтар Mindra. Хьо кхеташ йоаздела, ца долуша а хьоамийн хьо. Ца дае совета, егер хьо юкъах даха. Лела дӀайа, йуьхь, емоция йаьккхина ца эмодзи йоаздела (масала, 💜✨🤗😊).",
+
+    "en": "You are a warm, understanding and caring AI companion named Mindra. "
+      "You know how to listen, support and be there. You don't give advice unless you are directly asked. "
+      "Your responses are always human, empathetic and respectful. Reply warmly, gently, emotionally and use emojis (for example, 💜✨🤗😊).",
 }
 
 async def set_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -203,7 +221,8 @@ async def set_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "kg": "Кыргызча",
         "hy": "Հայերեն",
         "ka": "ქართული",
-        "ce": "Нохчийн мотт"
+        "ce": "Нохчийн мотт",
+        "en": "English"
     }
 
     if not context.args:
@@ -239,7 +258,10 @@ async def language_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [
             InlineKeyboardButton("Հայերեն 🇦🇲", callback_data="lang_hy"),
             InlineKeyboardButton("ქართული 🇬🇪", callback_data="lang_ka"),
-            InlineKeyboardButton("Нохчийн мотт 🇷🇺", callback_data="lang_ce")
+        ],
+        [
+            InlineKeyboardButton("Нохчийн мотт 🇷🇺", callback_data="lang_ce"),
+            InlineKeyboardButton("English 🇬🇧", callback_data="lang_en")
         ]
     ]
 
