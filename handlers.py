@@ -1019,8 +1019,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Если язык уже выбран — используем его
     lang_code = user_languages.get(user_id, "ru")
-    help_text = HELP_TEXTS.get(lang_code, HELP_TEXTS["ru"])
     first_name = update.effective_user.first_name or "друг"
+    welcome_text = WELCOME_TEXTS.get(lang_code, WELCOME_TEXTS["ru"]).format(first_name=first_name)
+    await update.message.reply_text(welcome_text, parse_mode="Markdown")
 
     WELCOME_TEXTS = {
     "ru": (
