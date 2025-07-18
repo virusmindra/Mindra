@@ -1103,22 +1103,30 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # ✨ Получаем сообщение пользователя
     user_input = update.message.text
 
+    # 📌 Определяем язык (по умолчанию русский)
+    lang_code = user_languages.get(user_id, "ru")
+    lang_prompt = LANG_PROMPTS.get(lang_code, LANG_PROMPTS["ru"])
+
     # 📌 Определяем режим (по умолчанию default)
     mode = user_modes.get(user_id, "default")
+    mode_prompt = MODES.get(mode, MODES["default"])
 
-    # Если истории нет — создаём с нужным системным промптом
+    # 🔥 Объединяем язык и режим в один системный промпт
+    system_prompt = f"{lang_prompt}\n\n{mode_prompt}"
+
+    # 📌 Если истории нет — создаём с нужным системным промптом
     if user_id not in conversation_history:
         conversation_history[user_id] = [
-            {"role": "system", "content": MODES.get(mode, MODES["default"])}
+            {"role": "system", "content": system_prompt}
         ]
     else:
-        # Обновляем первый системный промпт на актуальный режим
+        # Обновляем первый системный промпт на актуальный язык и режим
         conversation_history[user_id][0] = {
             "role": "system",
-            "content": MODES.get(mode, MODES["default"])
+            "content": system_prompt
         }
 
-    # Добавляем пользовательское сообщение
+    # Добавляем сообщение пользователя
     conversation_history[user_id].append({"role": "user", "content": user_input})
 
     # ✂️ Обрезаем историю
@@ -1155,7 +1163,6 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logging.error(f"❌ Ошибка в chat(): {e}")
         await update.message.reply_text("🥺 Упс, я немного завис... Попробуй позже, хорошо?")
-
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
