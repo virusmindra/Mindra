@@ -126,10 +126,18 @@ async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(query.from_user.id)
 
     lang_code = query.data.replace("lang_", "")
-    # Сохраняем язык в словарь user_language
-    user_languages[user_id] = lang_code
+    user_languages[user_id] = lang_code  # сохраняем язык
 
-    # Ответ пользователю
+    # ✅ Сразу формируем приветственный текст
+    first_name = query.from_user.first_name or "друг"
+    welcome_text = WELCOME_TEXTS.get(lang_code, WELCOME_TEXTS["ru"]).format(first_name=first_name)
+
+    # ✅ Обновляем историю диалога с учётом выбранного языка
+    system_prompt = f"{LANG_PROMPTS.get(lang_code, LANG_PROMPTS['ru'])}\n\n{MODES['default']}"
+    conversation_history[user_id] = [{"role": "system", "content": system_prompt}]
+    save_history(conversation_history)
+
+    # ✨ Сообщаем о выбранном языке
     lang_names = {
         "ru": "Русский 🇷🇺",
         "uk": "Українська 🇺🇦",
@@ -141,9 +149,13 @@ async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "ka": "ქართული 🇬🇪",
         "ce": "Нохчийн мотт 🇷🇺"
     }
-
     chosen = lang_names.get(lang_code, lang_code)
+
+    # ✨ Сначала редактируем старое сообщение
     await query.edit_message_text(f"✅ Язык общения изменён на: *{chosen}*", parse_mode="Markdown")
+
+    # ✨ Отправляем приветственное сообщение уже на новом языке
+    await context.bot.send_message(chat_id=query.message.chat_id, text=welcome_text, parse_mode="Markdown")
 
 async def habit_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
