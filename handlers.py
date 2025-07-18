@@ -985,43 +985,6 @@ DAILY_TASKS = [
 # 👉 Функция для выбора случайного задания
 def get_random_daily_task():
     return random.choice(DAILY_TASKS)
-    
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
-
-    # Если у пользователя ещё не выбран язык — показываем выбор
-    if user_id not in user_languages:
-        keyboard = [
-            [
-                InlineKeyboardButton("Русский 🇷🇺", callback_data="lang_ru"),
-                InlineKeyboardButton("Українська 🇺🇦", callback_data="lang_uk")
-            ],
-            [
-                InlineKeyboardButton("Moldovenească 🇲🇩", callback_data="lang_md"),
-                InlineKeyboardButton("Беларуская 🇧🇾", callback_data="lang_be")
-            ],
-            [
-                InlineKeyboardButton("Қазақша 🇰🇿", callback_data="lang_kk"),
-                InlineKeyboardButton("Кыргызча 🇰🇬", callback_data="lang_kg")
-            ],
-            [
-                InlineKeyboardButton("Հայերեն 🇦🇲", callback_data="lang_hy"),
-                InlineKeyboardButton("ქართული 🇬🇪", callback_data="lang_ka"),
-                InlineKeyboardButton("Нохчийн мотт 🇷🇺", callback_data="lang_ce")
-            ]
-        ]
-
-        await update.message.reply_text(
-            "🌐 Пожалуйста, выбери язык общения:",
-            reply_markup=InlineKeyboardMarkup(keyboard)
-        )
-        return
-
-    # Если язык уже выбран — используем его
-    lang_code = user_languages.get(user_id, "ru")
-    first_name = update.effective_user.first_name or "друг"
-    welcome_text = WELCOME_TEXTS.get(lang_code, WELCOME_TEXTS["ru"]).format(first_name=first_name)
-    await update.message.reply_text(welcome_text, parse_mode="Markdown")
 
     WELCOME_TEXTS = {
     "ru": (
@@ -1150,14 +1113,52 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"💌 /feedback — хьо йа фидбек гӀо\n\n"
         f"Хьо лелаш ха хӀинца со ха доьлча! 🤗"
     )
-}    .get(lang_code, f"👋 Привет, {first_name}! Я — Mindra 💜\n\n{help_text}")
+}    
 
-    # Создаём историю диалога с выбранным языком и дефолтным режимом
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+
+    # если язык ещё не выбран — показываем кнопки выбора
+    if user_id not in user_languages:
+        keyboard = [
+            [
+                InlineKeyboardButton("Русский 🇷🇺", callback_data="lang_ru"),
+                InlineKeyboardButton("Українська 🇺🇦", callback_data="lang_uk")
+            ],
+            [
+                InlineKeyboardButton("Moldovenească 🇲🇩", callback_data="lang_md"),
+                InlineKeyboardButton("Беларуская 🇧🇾", callback_data="lang_be")
+            ],
+            [
+                InlineKeyboardButton("Қазақша 🇰🇿", callback_data="lang_kk"),
+                InlineKeyboardButton("Кыргызча 🇰🇬", callback_data="lang_kg")
+            ],
+            [
+                InlineKeyboardButton("Հայերեն 🇦🇲", callback_data="lang_hy"),
+                InlineKeyboardButton("ქართული 🇬🇪", callback_data="lang_ka"),
+                InlineKeyboardButton("Нохчийн мотт 🇷🇺", callback_data="lang_ce")
+            ]
+        ]
+
+        await update.message.reply_text(
+            "🌐 Пожалуйста, выбери язык общения:",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+        return
+
+    # если язык выбран — выводим приветствие
+    lang_code = user_languages.get(user_id, "ru")
+    first_name = update.effective_user.first_name or "друг"
+
+    welcome_text = WELCOME_TEXTS.get(lang_code, WELCOME_TEXTS["ru"]).format(first_name=first_name)
+
+    # создаём историю диалога с выбранным языком
     system_prompt = f"{LANG_PROMPTS.get(lang_code, LANG_PROMPTS['ru'])}\n\n{MODES['default']}"
     conversation_history[user_id] = [{"role": "system", "content": system_prompt}]
     save_history(conversation_history)
 
     await update.message.reply_text(welcome_text, parse_mode="Markdown")
+
 
 # Обработчик команды /reset
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
