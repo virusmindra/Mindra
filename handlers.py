@@ -43,7 +43,7 @@ GOALS_FILE = Path("user_goals.json")
 
 YOUR_ID = "7775321566"  # твой ID
 
- WELCOME_TEXTS = {
+WELCOME_TEXTS = {
     "ru": (
         f"👋 Привет, {{first_name}}! Я — Mindra 💜\n\n"
         f"✨ Я твоя AI‑подруга, мотиватор и немножко психолог.\n"
