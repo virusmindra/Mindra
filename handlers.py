@@ -127,7 +127,7 @@ async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     lang_code = query.data.replace("lang_", "")
     # Сохраняем язык в словарь user_language
-    user_language[user_id] = lang_code
+    user_languages[user_id] = lang_code
 
     # Ответ пользователю
     lang_names = {
