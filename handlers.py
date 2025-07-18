@@ -988,14 +988,43 @@ def get_random_daily_task():
     
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
-    if user_id not in conversation_history:
-        conversation_history[user_id] = [{"role": "system", "content": MODES["default"]}]
-        save_history(conversation_history)
 
+    # Если у пользователя ещё не выбран язык — показываем выбор
+    if user_id not in user_languages:
+        keyboard = [
+            [
+                InlineKeyboardButton("Русский 🇷🇺", callback_data="lang_ru"),
+                InlineKeyboardButton("Українська 🇺🇦", callback_data="lang_uk")
+            ],
+            [
+                InlineKeyboardButton("Moldovenească 🇲🇩", callback_data="lang_md"),
+                InlineKeyboardButton("Беларуская 🇧🇾", callback_data="lang_be")
+            ],
+            [
+                InlineKeyboardButton("Қазақша 🇰🇿", callback_data="lang_kk"),
+                InlineKeyboardButton("Кыргызча 🇰🇬", callback_data="lang_kg")
+            ],
+            [
+                InlineKeyboardButton("Հայերեն 🇦🇲", callback_data="lang_hy"),
+                InlineKeyboardButton("ქართული 🇬🇪", callback_data="lang_ka"),
+                InlineKeyboardButton("Нохчийн мотт 🇷🇺", callback_data="lang_ce")
+            ]
+        ]
+
+        await update.message.reply_text(
+            "🌐 Пожалуйста, выбери язык общения:",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+        return
+
+    # Если язык уже выбран — используем его
+    lang_code = user_languages.get(user_id, "ru")
+    help_text = HELP_TEXTS.get(lang_code, HELP_TEXTS["ru"])
     first_name = update.effective_user.first_name or "друг"
 
-    welcome_text = (
-        f"👋 Привет, {first_name}! Я — Mindra 💜\n\n"
+    WELCOME_TEXTS = {
+    "ru": (
+        f"👋 Привет, {{first_name}}! Я — Mindra 💜\n\n"
         f"✨ Я твоя AI‑подруга, мотиватор и немножко психолог.\n"
         f"🌱 Могу помочь с целями, привычками и просто поддержать в трудный момент.\n\n"
         f"Вот что я умею:\n"
@@ -1007,9 +1036,127 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"📎 /habits — список привычек\n"
         f"💌 /feedback — отправить мне отзыв\n\n"
         f"Попробуй прямо сейчас написать мне что‑нибудь, а я тебя поддержу! 🤗"
+    ),
+    "uk": (
+        f"👋 Привіт, {{first_name}}! Я — Mindra 💜\n\n"
+        f"✨ Я твій AI‑друг, мотиватор і трохи психолог.\n"
+        f"🌱 Можу допомогти з цілями, звичками та підтримати у складний момент.\n\n"
+        f"Ось що я вмію:\n"
+        f"💬 Просто напиши мені що завгодно — я відповім з теплом і цікавістю.\n"
+        f"🎯 /task — завдання на день\n"
+        f"🏆 /goal — поставити ціль\n"
+        f"📋 /goals — список цілей\n"
+        f"🌸 /habit — додати звичку\n"
+        f"📎 /habits — список звичок\n"
+        f"💌 /feedback — надіслати мені відгук\n\n"
+        f"Спробуй просто зараз написати мені щось, а я тебе підтримаю! 🤗"
+    ),
+    "md": (
+        f"👋 Salut, {{first_name}}! Eu sunt Mindra 💜\n\n"
+        f"✨ Sunt prietena ta AI, motivatoare și puțin psiholog.\n"
+        f"🌱 Te pot ajuta cu obiective, obiceiuri și să te susțin în momentele grele.\n\n"
+        f"Iată ce pot să fac:\n"
+        f"💬 Scrie-mi orice — îți voi răspunde cu căldură și interes.\n"
+        f"🎯 /task — sarcina zilei\n"
+        f"🏆 /goal — stabilește un obiectiv\n"
+        f"📋 /goals — lista obiectivelor\n"
+        f"🌸 /habit — adaugă un obicei\n"
+        f"📎 /habits — lista obiceiurilor\n"
+        f"💌 /feedback — trimite-mi un feedback\n\n"
+        f"Încearcă chiar acum să-mi scrii ceva și eu te voi susține! 🤗"
+    ),
+    "be": (
+        f"👋 Прывітанне, {{first_name}}! Я — Mindra 💜\n\n"
+        f"✨ Я твая AI‑сябра, матыватар і крыху псіхолаг.\n"
+        f"🌱 Магу дапамагчы з мэтамі, звычкамі і проста падтрымаць у цяжкі момант.\n\n"
+        f"Вось што я ўмею:\n"
+        f"💬 Проста напішы мне што заўгодна — я адкажу з цеплынёй і цікавасцю.\n"
+        f"🎯 /task — заданне на дзень\n"
+        f"🏆 /goal — паставіць мэту\n"
+        f"📋 /goals — спіс мэт\n"
+        f"🌸 /habit — дадаць звычку\n"
+        f"📎 /habits — спіс звычак\n"
+        f"💌 /feedback — даслаць мне водгук\n\n"
+        f"Паспрабуй проста зараз напісаць мне нешта, а я цябе падтрымаю! 🤗"
+    ),
+    "kk": (
+        f"👋 Сәлем, {{first_name}}! Мен — Mindra 💜\n\n"
+        f"✨ Мен сенің AI‑досың, мотивация берушің және аздап психологыңмын.\n"
+        f"🌱 Мақсаттарыңа, әдеттеріңе көмектесемін және қиын сәтте қолдау көрсетемін.\n\n"
+        f"Міне, мен не істей аламын:\n"
+        f"💬 Маған кез келген нәрсе жаз — мен саған жылылықпен жауап беремін.\n"
+        f"🎯 /task — күннің тапсырмасы\n"
+        f"🏆 /goal — мақсат қою\n"
+        f"📋 /goals — мақсаттар тізімі\n"
+        f"🌸 /habit — әдет қосу\n"
+        f"📎 /habits — әдеттер тізімі\n"
+        f"💌 /feedback — маған пікір жіберу\n\n"
+        f"Қазір маған бір нәрсе жазып көр, мен сені қолдаймын! 🤗"
+    ),
+    "kg": (
+        f"👋 Салам, {{first_name}}! Мен — Mindra 💜\n\n"
+        f"✨ Мен сенин AI‑досуңмун, шыктандырган жана бир аз психолог.\n"
+        f"🌱 Максаттарыңа, көнүмүштөрүңө жардам берип, кыйын учурда колдойм.\n\n"
+        f"Мына мен эмне кыла алам:\n"
+        f"💬 Мага каалаганыңды жаз — сага жылуулук менен жооп берем.\n"
+        f"🎯 /task — күндүн тапшырмасы\n"
+        f"🏆 /goal — максат коюу\n"
+        f"📋 /goals — максаттар тизмеси\n"
+        f"🌸 /habit — көнүмүш кошуу\n"
+        f"📎 /habits — көнүмүштөр тизмеси\n"
+        f"💌 /feedback — мага пикир жөнөт\n\n"
+        f"Азыр эле мага бир нерсе жазып көр, мен сени колдойм! 🤗"
+    ),
+    "hy": (
+        f"👋 Բարև, {{first_name}}! Ես Mindra եմ 💜\n\n"
+        f"✨ Ես քո AI‑ընկերն եմ, քո մոտիվատորը և մի փոքր հոգեբան։\n"
+        f"🌱 Կարող եմ օգնել նպատակների, սովորությունների մեջ և աջակցել դժվար պահին։\n\n"
+        f"Ահա թե ինչ կարող եմ անել․\n"
+        f"💬 Պարզապես գրիր ինձ ինչ ուզում ես — ես կպատասխանեմ ջերմությամբ և հետաքրքրությամբ։\n"
+        f"🎯 /task — օրվա առաջադրանքը\n"
+        f"🏆 /goal — նպատակ դնել\n"
+        f"📋 /goals — նպատակների ցուցակ\n"
+        f"🌸 /habit — ավելացնել սովորություն\n"
+        f"📎 /habits — սովորությունների ցուցակ\n"
+        f"💌 /feedback — ուղարկել կարծիք\n\n"
+        f"Փորձիր հենց հիմա գրել ինձ ինչ-որ բան, ես քեզ կաջակցեմ! 🤗"
+    ),
+    "ka": (
+        f"👋 გამარჯობა, {{first_name}}! მე Mindra ვარ 💜\n\n"
+        f"✨ მე შენი AI‑მეგობარი, მოტივატორი და ცოტა ფსიქოლოგი ვარ.\n"
+        f"🌱 შემიძლია დაგეხმარო მიზნებში, ჩვევებში და რთულ მომენტში დაგიჭირო მხარი.\n\n"
+        f"აი, რას ვაკეთებ:\n"
+        f"💬 მომწერე რაც გინდა — გიპასუხებ სითბოთი და ინტერესით.\n"
+        f"🎯 /task — დღის დავალება\n"
+        f"🏆 /goal — მიზნის დაყენება\n"
+        f"📋 /goals — მიზნების სია\n"
+        f"🌸 /habit — ჩვევის დამატება\n"
+        f"📎 /habits — ჩვევების სია\n"
+        f"💌 /feedback — გამიზიარე შენი აზრი\n\n"
+        f"სცადე ახლავე მომწერო რამე და მე შენ მხარში დაგიდგები! 🤗"
+    ),
+    "ce": (
+        f"👋 Салам, {{first_name}}! Со — Mindra 💜\n\n"
+        f"✨ Со хьо AI‑доктар, мотивация дийцар, тхо хьа психолог ца цӀе хьалха.\n"
+        f"🌱 Со мотт доьлча, ӀайтагӀе йа чӀагӀе и ца эца дӀа а ца вахан догӀа да.\n\n"
+        f"ХӀинца со доьлча:\n"
+        f"💬 Хьо кхеташ да ха, со ца догӀа йоаздела лелаш.\n"
+        f"🎯 /task — дӀаьлла езар\n"
+        f"🏆 /goal — ӀайтагӀеха цӀе\n"
+        f"📋 /goals — ӀайтагӀе йа цӀе хӀокху\n"
+        f"🌸 /habit — йоаздела кхочуш\n"
+        f"📎 /habits — кхочушаш хӀокху\n"
+        f"💌 /feedback — хьо йа фидбек гӀо\n\n"
+        f"Хьо лелаш ха хӀинца со ха доьлча! 🤗"
     )
+}    .get(lang_code, f"👋 Привет, {first_name}! Я — Mindra 💜\n\n{help_text}")
 
-    await update.message.reply_text(welcome_text)
+    # Создаём историю диалога с выбранным языком и дефолтным режимом
+    system_prompt = f"{LANG_PROMPTS.get(lang_code, LANG_PROMPTS['ru'])}\n\n{MODES['default']}"
+    conversation_history[user_id] = [{"role": "system", "content": system_prompt}]
+    save_history(conversation_history)
+
+    await update.message.reply_text(welcome_text, parse_mode="Markdown")
 
 # Обработчик команды /reset
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
