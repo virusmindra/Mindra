@@ -1408,8 +1408,18 @@ async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # /task — задание на день
 async def task(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    task = random.choice(DAILY_TASKS)
-    await update.message.reply_text(f"🎯 Задание на день:\n{task}")
+    user_id = str(update.effective_user.id)
+
+    # Определяем язык пользователя (по умолчанию русский)
+    lang = user_languages.get(user_id, "ru")
+
+    # Берём список заданий для нужного языка
+    tasks = DAILY_TASKS_BY_LANG.get(lang, DAILY_TASKS_BY_LANG["ru"])
+
+    # Выбираем случайное задание
+    chosen_task = random.choice(tasks)
+
+    await update.message.reply_text(f"🎯 Задание на день:\n{chosen_task}")
 
 # /premium_task — премиум-задание на день
 async def premium_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
