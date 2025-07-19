@@ -2013,7 +2013,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "/premium_stats — статистика\n\n"
             "😉 Хьажа хьоьшу! Подписка йолуш, функцеш къобал болу 💜"
         ),
-        "ro": (
+        "md": (
             "✨ Iată ce pot face:\n\n"
             "💬 Scrie-mi un mesaj — îți voi răspunde.\n"
             "🧠 Îmi amintesc istoricul conversației (poți reseta).\n\n"
