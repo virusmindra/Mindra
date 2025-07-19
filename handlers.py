@@ -2068,7 +2068,35 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "/premium_mode — ექსკლუზიური რეჟიმი\n"
             "/premium_stats — გაფართოებული სტატისტიკა\n\n"
             "😉 სცადე! გამოწერით შესაძლებლობები მეტია 💜"
-        )
+        ),
+        "en": (
+            "✨ Here’s what I can do:\n\n"
+            "💬 Just write me a message — I’ll reply.\n"
+            "🧠 I remember the chat history (you can reset it).\n\n"
+            "📎 Main commands:\n"
+            "/start — greeting\n"
+            "/reset — reset chat history\n"
+            "/help — show this message\n"
+            "/about — about me\n"
+            "/mode — change chat style\n"
+            "/goal — set a goal\n"
+            "/goals — list your goals\n"
+            "/habit — add a habit\n"
+            "/habits — list your habits\n"
+            "/task — daily task\n"
+            "/feedback — send feedback\n"
+            "/remind — remind about a goal\n"
+            "/done — mark a goal as done\n"
+            "/mytask — personalized task\n"
+            "/test_mood — test your mood\n\n"
+            "/language — choose language 🌐\n\n"
+            "💎 Mindra+ features:\n"
+            "/premium_report — personal progress report\n"
+            "/premium_challenge — unique challenge\n"
+            "/premium_mode — exclusive mode\n"
+            "/premium_stats — extended statistics\n\n"
+            "😉 Try it! With a subscription you’ll get even more 💜"
+        ),
     }
 
     # ✅ Кнопки на 10 языков
