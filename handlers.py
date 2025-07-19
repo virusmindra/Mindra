@@ -1649,7 +1649,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
 
         await update.message.reply_text(
-            "🌐 Пожалуйста, выбери язык общения:",
+            "🌐 Please select the language of communication:",
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
         return
