@@ -2160,7 +2160,7 @@ async def task(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "hy": "🎯 Այսօրվա առաջադրանքը:",
         "ce": "🎯 Тахана хьалха дӀаязде:",
         "en": "🎯 Task for today:",
-        "ro": "🎯 Sarcina pentru astăzi:",
+        "md": "🎯 Sarcina pentru astăzi:",
         "ka": "🎯 დღევანდელი დავალება:"
     }
 
