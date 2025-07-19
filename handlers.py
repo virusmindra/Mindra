@@ -1812,44 +1812,292 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("🥺 Упс, я немного завис... Попробуй позже, хорошо?")
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    lang = user_languages.get(user_id, "ru")
+
+    # ✅ Тексты help на 10 языках
+    help_texts = {
+        "ru": (
+            "✨ Вот что я умею:\n\n"
+            "💬 Просто напиши мне сообщение — я отвечу.\n"
+            "🧠 Я запоминаю историю общения (можно сбросить).\n\n"
+            "📎 Основные команды:\n"
+            "/start — приветствие\n"
+            "/reset — сброс истории\n"
+            "/help — показать это сообщение\n"
+            "/about — немного обо мне\n"
+            "/mode — изменить стиль общения\n"
+            "/goal — поставить личную цель\n"
+            "/goals — список твоих целей\n"
+            "/habit — добавить привычку\n"
+            "/habits — список твоих привычек\n"
+            "/task — задание на день\n"
+            "/feedback — отправить отзыв\n"
+            "/remind — напомнить о цели\n"
+            "/done — отметить цель выполненной\n"
+            "/mytask — персонализированное задание\n"
+            "/test_mood — протестировать настрой/эмоции\n\n"
+            "/language — выбрать язык общения 🌐\n\n"
+            "💎 Mindra+ функции:\n"
+            "/premium_report — личный отчёт\n"
+            "/premium_challenge — уникальный челлендж\n"
+            "/premium_mode — эксклюзивный режим\n"
+            "/premium_stats — расширенная статистика\n\n"
+            "😉 Попробуй! А с подпиской возможностей будет ещё больше 💜"
+        ),
+        "uk": (
+            "✨ Ось що я вмію:\n\n"
+            "💬 Просто напиши мені повідомлення — я відповім.\n"
+            "🧠 Я запам’ятовую історію спілкування (можна скинути).\n\n"
+            "📎 Основні команди:\n"
+            "/start — привітання\n"
+            "/reset — скинути історію\n"
+            "/help — показати це повідомлення\n"
+            "/about — трохи про мене\n"
+            "/mode — змінити стиль спілкування\n"
+            "/goal — поставити ціль\n"
+            "/goals — список цілей\n"
+            "/habit — додати звичку\n"
+            "/habits — список звичок\n"
+            "/task — завдання на день\n"
+            "/feedback — надіслати відгук\n"
+            "/remind — нагадати про ціль\n"
+            "/done — позначити ціль виконаною\n"
+            "/mytask — персональне завдання\n"
+            "/test_mood — протестувати настрій\n\n"
+            "/language — вибрати мову 🌐\n\n"
+            "💎 Mindra+ функції:\n"
+            "/premium_report — звіт\n"
+            "/premium_challenge — унікальний челендж\n"
+            "/premium_mode — ексклюзивний режим\n"
+            "/premium_stats — розширена статистика\n\n"
+            "😉 Спробуй! З підпискою можливостей більше 💜"
+        ),
+        "be": (
+            "✨ Вось што я ўмею:\n\n"
+            "💬 Проста напішы мне паведамленне — я адкажу.\n"
+            "🧠 Я запамінаю гісторыю зносін (можна скінуць).\n\n"
+            "📎 Асноўныя каманды:\n"
+            "/start — прывітанне\n"
+            "/reset — скінуць гісторыю\n"
+            "/help — паказаць гэта паведамленне\n"
+            "/about — трохі пра мяне\n"
+            "/mode — змяніць стыль зносін\n"
+            "/goal — паставіць мэту\n"
+            "/goals — спіс мэтаў\n"
+            "/habit — дадаць звычку\n"
+            "/habits — спіс звычак\n"
+            "/task — заданне на дзень\n"
+            "/feedback — даслаць водгук\n"
+            "/remind — нагадаць пра мэту\n"
+            "/done — адзначыць мэту выкананай\n"
+            "/mytask — персаналізаванае заданне\n"
+            "/test_mood — праверыць настрой\n\n"
+            "/language — выбраць мову 🌐\n\n"
+            "💎 Mindra+ функцыі:\n"
+            "/premium_report — асабісты справаздачу\n"
+            "/premium_challenge — унікальны чэлендж\n"
+            "/premium_mode — эксклюзіўны рэжым\n"
+            "/premium_stats — пашыраная статыстыка\n\n"
+            "😉 Паспрабуй! З падпіскай магчымасцей больш 💜"
+        ),
+        "kk": (
+            "✨ Міне не істей аламын:\n\n"
+            "💬 Маған хабарлама жаз — мен жауап беремін.\n"
+            "🧠 Мен сөйлесу тарихын есте сақтаймын (тазалауға болады).\n\n"
+            "📎 Негізгі командалар:\n"
+            "/start — сәлемдесу\n"
+            "/reset — тарихты тазалау\n"
+            "/help — осы хабарламаны көрсету\n"
+            "/about — мен туралы\n"
+            "/mode — сөйлесу стилін өзгерту\n"
+            "/goal — мақсат қою\n"
+            "/goals — мақсаттар тізімі\n"
+            "/habit — әдет қосу\n"
+            "/habits — әдеттер тізімі\n"
+            "/task — күннің тапсырмасы\n"
+            "/feedback — пікір жіберу\n"
+            "/remind — мақсат туралы еске салу\n"
+            "/done — мақсатты орындалған деп белгілеу\n"
+            "/mytask — жеке тапсырма\n"
+            "/test_mood — көңіл-күйді тексеру\n\n"
+            "/language — тілді таңдау 🌐\n\n"
+            "💎 Mindra+ мүмкіндіктері:\n"
+            "/premium_report — жеке есеп\n"
+            "/premium_challenge — ерекше челлендж\n"
+            "/premium_mode — эксклюзивті режим\n"
+            "/premium_stats — кеңейтілген статистика\n\n"
+            "😉 Қолданып көр! Жазылумен мүмкіндіктер көбірек 💜"
+        ),
+        "kg": (
+            "✨ Мына нерселерди кыла алам:\n\n"
+            "💬 Жөн эле мага кабар жаз — жооп берем.\n"
+            "🧠 Мен сүйлөшүүнү эстеп калам (тазалоого болот).\n\n"
+            "📎 Негизги буйруктар:\n"
+            "/start — саламдашуу\n"
+            "/reset — тарыхты тазалоо\n"
+            "/help — ушул билдирүүнү көрсөтүү\n"
+            "/about — мен жөнүндө\n"
+            "/mode — сүйлөшүү стилин өзгөртүү\n"
+            "/goal — максат коюу\n"
+            "/goals — максаттар тизмеси\n"
+            "/habit — көнүмүш кошуу\n"
+            "/habits — көнүмүштөр тизмеси\n"
+            "/task — күндүн тапшырмасы\n"
+            "/feedback — пикир жөнөтүү\n"
+            "/remind — максат жөнүндө эскертүү\n"
+            "/done — максатты аткарылган деп белгилөө\n"
+            "/mytask — жеке тапшырма\n"
+            "/test_mood — маанайды текшерүү\n\n"
+            "/language — тил тандоо 🌐\n\n"
+            "💎 Mindra+ мүмкүнчүлүктөрү:\n"
+            "/premium_report — жеке отчет\n"
+            "/premium_challenge — өзгөчө тапшырма\n"
+            "/premium_mode — эксклюзивдүү режим\n"
+            "/premium_stats — кеңейтилген статистика\n\n"
+            "😉 Байкап көр! Жазылуу менен мүмкүнчүлүктөр көбөйөт 💜"
+        ),
+        "hy": (
+            "✨ Ահա, թե ինչ կարող եմ անել․\n\n"
+            "💬 Просто գրիր ինձ — ես կպատասխանեմ։\n"
+            "🧠 Ես հիշում եմ զրույցի պատմությունը (կարող ես վերականգնել)։\n\n"
+            "📎 Հիմնական հրամաններ․\n"
+            "/start — ողջույն\n"
+            "/reset — զրույցի պատմությունը մաքրել\n"
+            "/help — ցույց տալ այս հաղորդագրությունը\n"
+            "/about — իմ մասին\n"
+            "/mode — փոխել շփման ոճը\n"
+            "/goal — դնել նպատակ\n"
+            "/goals — նպատակների ցուցակ\n"
+            "/habit — ավելացնել սովորություն\n"
+            "/habits — սովորությունների ցուցակ\n"
+            "/task — օրվա առաջադրանք\n"
+            "/feedback — ուղարկել արձագանք\n"
+            "/remind — հիշեցնել նպատակը\n"
+            "/done — նշել նպատակը կատարված\n"
+            "/mytask — անհատական առաջադրանք\n"
+            "/test_mood — ստուգել տրամադրությունը\n\n"
+            "/language — ընտրել լեզուն 🌐\n\n"
+            "💎 Mindra+ հնարավորություններ․\n"
+            "/premium_report — անձնական հաշվետվություն\n"
+            "/premium_challenge — բացառիկ մարտահրավեր\n"
+            "/premium_mode — բացառիկ ռեժիմ\n"
+            "/premium_stats — ընդլայնված վիճակագրություն\n\n"
+            "😉 Փորձիր! Բաժանորդագրությամբ հնարավորությունները ավելի շատ են 💜"
+        ),
+        "ce": (
+            "✨ Цхьа хьоьшу болу:\n\n"
+            "💬 ДӀайазде ма кхоллараллин — са йаьлла.\n"
+            "🧠 Са гӀирса тарих йац (цхьа мацахь йаьлла).\n\n"
+            "📎 Нохчи командеш:\n"
+            "/start — салам алам\n"
+            "/reset — тарих лелош\n"
+            "/help — кхета хийцам\n"
+            "/about — са йац\n"
+            "/mode — стили тӀетохьа\n"
+            "/goal — мацахь кхоллар\n"
+            "/goals — мацахьер список\n"
+            "/habit — йоцу привычка\n"
+            "/habits — привычкаш список\n"
+            "/task — тахана дӀаязде\n"
+            "/feedback — йа дӀайазде отзыв\n"
+            "/remind — мацахьер дӀадела\n"
+            "/done — мацахьер дӀанисса\n"
+            "/mytask — персонал дӀаязде\n"
+            "/test_mood — хьовса теста\n\n"
+            "/language — моттиг дахьа 🌐\n\n"
+            "💎 Mindra+ функцеш:\n"
+            "/premium_report — личный отчет\n"
+            "/premium_challenge — эксклюзивный челлендж\n"
+            "/premium_mode — эксклюзивный режим\n"
+            "/premium_stats — статистика\n\n"
+            "😉 Хьажа хьоьшу! Подписка йолуш, функцеш къобал болу 💜"
+        ),
+        "ro": (
+            "✨ Iată ce pot face:\n\n"
+            "💬 Scrie-mi un mesaj — îți voi răspunde.\n"
+            "🧠 Îmi amintesc istoricul conversației (poți reseta).\n\n"
+            "📎 Comenzi principale:\n"
+            "/start — salut\n"
+            "/reset — resetează istoricul\n"
+            "/help — arată acest mesaj\n"
+            "/about — despre mine\n"
+            "/mode — schimbă stilul de comunicare\n"
+            "/goal — setează un obiectiv\n"
+            "/goals — lista obiectivelor\n"
+            "/habit — adaugă un obicei\n"
+            "/habits — lista obiceiurilor\n"
+            "/task — sarcina zilei\n"
+            "/feedback — trimite feedback\n"
+            "/remind — amintește de un obiectiv\n"
+            "/done — marchează obiectivul îndeplinit\n"
+            "/mytask — sarcină personalizată\n"
+            "/test_mood — testează starea\n\n"
+            "/language — alege limba 🌐\n\n"
+            "💎 Funcții Mindra+:\n"
+            "/premium_report — raport personal\n"
+            "/premium_challenge — provocare unică\n"
+            "/premium_mode — mod exclusiv\n"
+            "/premium_stats — statistici avansate\n\n"
+            "😉 Încearcă! Cu abonament ai mai multe opțiuni 💜"
+        ),
+        "ka": (
+            "✨ აი, რას ვაკეთებ:\n\n"
+            "💬 უბრალოდ მომწერე და გიპასუხებ.\n"
+            "🧠 ვიმახსოვრებ დიალოგის ისტორიას (შეგიძლია გაასუფთავო).\n\n"
+            "📎 ძირითადი ბრძანებები:\n"
+            "/start — მისალმება\n"
+            "/reset — ისტორიის გასუფთავება\n"
+            "/help — ამ შეტყობინების ჩვენება\n"
+            "/about — ჩემს შესახებ\n"
+            "/mode — კომუნიკაციის სტილის შეცვლა\n"
+            "/goal — მიზნის დაყენება\n"
+            "/goals — შენი მიზნების სია\n"
+            "/habit — ჩვევის დამატება\n"
+            "/habits — ჩვევების სია\n"
+            "/task — დღევანდელი დავალება\n"
+            "/feedback — გამოგზავნე გამოხმაურება\n"
+            "/remind — შეგახსენო მიზანი\n"
+            "/done — დააფიქსირე მიზნის შესრულება\n"
+            "/mytask — პერსონალური დავალება\n"
+            "/test_mood — ტესტი განწყობაზე\n\n"
+            "/language — აირჩიე ენა 🌐\n\n"
+            "💎 Mindra+ ფუნქციები:\n"
+            "/premium_report — პირადი ანგარიში\n"
+            "/premium_challenge — უნიკალური გამოწვევა\n"
+            "/premium_mode — ექსკლუზიური რეჟიმი\n"
+            "/premium_stats — გაფართოებული სტატისტიკა\n\n"
+            "😉 სცადე! გამოწერით შესაძლებლობები მეტია 💜"
+        )
+    }
+
+    # ✅ Кнопки на 10 языков
+    buttons_text = {
+        "ru": ["🎯 Поставить цель", "📋 Мои цели", "🌱 Добавить привычку", "📊 Мои привычки", "💎 Подписка Mindra+"],
+        "uk": ["🎯 Поставити ціль", "📋 Мої цілі", "🌱 Додати звичку", "📊 Мої звички", "💎 Підписка Mindra+"],
+        "be": ["🎯 Паставіць мэту", "📋 Мае мэты", "🌱 Дадаць звычку", "📊 Мае звычкі", "💎 Падпіска Mindra+"],
+        "kk": ["🎯 Мақсат қою", "📋 Менің мақсаттарым", "🌱 Әдет қосу", "📊 Менің әдеттерім", "💎 Mindra+ жазылу"],
+        "kg": ["🎯 Максат коюу", "📋 Менин максаттарым", "🌱 Көнүмүш кошуу", "📊 Менин көнүмүштөрүм", "💎 Mindra+ жазылуу"],
+        "hy": ["🎯 Դնել նպատակ", "📋 Իմ նպատակները", "🌱 Ավելացնել սովորություն", "📊 Իմ սովորությունները", "💎 Mindra+ բաժանորդագրություն"],
+        "ce": ["🎯 Мацахь кхоллар", "📋 Са мацахь", "🌱 Привычка дац", "📊 Са привычка", "💎 Mindra+ подписка"],
+        "en": ["🎯 Set a goal", "📋 My goals", "🌱 Add a habit", "📊 My habits", "💎 Mindra+ subscription"],
+        "ro": ["🎯 Setează obiectiv", "📋 Obiectivele mele", "🌱 Adaugă obicei", "📊 Obiceiurile mele", "💎 Abonament Mindra+"],
+        "ka": ["🎯 მიზნის დაყენება", "📋 ჩემი მიზნები", "🌱 ჩვევის დამატება", "📊 ჩემი ჩვევები", "💎 Mindra+ გამოწერა"]
+    }
+
+    # Получаем кнопки для текущего языка
+    b = buttons_text.get(lang, buttons_text["ru"])
     keyboard = [
-        [InlineKeyboardButton("🎯 Поставить цель", callback_data="create_goal")],
-        [InlineKeyboardButton("📋 Мои цели", callback_data="show_goals")],
-        [InlineKeyboardButton("🌱 Добавить привычку", callback_data="create_habit")],
-        [InlineKeyboardButton("📊 Мои привычки", callback_data="show_habits")],
-        [InlineKeyboardButton("💎 Подписка Mindra+", url="https://t.me/talktomindra_bot")]
+        [InlineKeyboardButton(b[0], callback_data="create_goal")],
+        [InlineKeyboardButton(b[1], callback_data="show_goals")],
+        [InlineKeyboardButton(b[2], callback_data="create_habit")],
+        [InlineKeyboardButton(b[3], callback_data="show_habits")],
+        [InlineKeyboardButton(b[4], url="https://t.me/talktomindra_bot")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.message.reply_text(
-        "✨ Вот что я умею:\n\n"
-        "💬 Просто напиши мне сообщение — я отвечу.\n"
-        "🧠 Я запоминаю историю общения (можно сбросить).\n\n"
-        "📎 Основные команды:\n"
-        "/start — приветствие\n"
-        "/reset — сброс истории\n"
-        "/help — показать это сообщение\n"
-        "/about — немного обо мне\n"
-        "/mode — изменить стиль общения\n"
-        "/goal — поставить личную цель\n"
-        "/goals — список твоих целей\n"
-        "/habit — добавить привычку\n"
-        "/habits — список твоих привычек\n"
-        "/task — задание на день\n"
-        "/feedback — отправить отзыв\n"
-        "/remind — напомнить о цели\n"
-        "/done — отметить цель выполненной\n"
-        "/mytask — персонализированное задание\n"
-        "/test_mood — протестировать настрой/эмоции\n\n"
-        "/language — выбрать язык общения 🌐\n\n"
-        "💎 Mindra+ функции (пока только для автора):\n"
-        "/premium_report — личный отчёт о прогрессе\n"
-        "/premium_challenge — уникальный челлендж на сегодня\n"
-        "/premium_mode — эксклюзивный режим общения\n"
-        "/premium_stats — расширенная статистика\n\n"
-        "😉 Попробуй! А с подпиской возможностей будет ещё больше 💜",
-        reply_markup=reply_markup
-    )
+    # Отправляем сообщение
+    await update.message.reply_text(help_texts.get(lang, help_texts["ru"]), reply_markup=reply_markup)
 
 # /about
 async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
