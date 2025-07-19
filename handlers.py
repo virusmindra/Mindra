@@ -56,6 +56,7 @@ WELCOME_TEXTS = {
         f"🌸 /habit — добавить привычку\n"
         f"📎 /habits — список привычек\n"
         f"💌 /feedback — отправить мне отзыв\n\n"
+        f"/help — показать список всех команд\n"
         f"Попробуй прямо сейчас написать мне что‑нибудь, а я тебя поддержу! 🤗"
     ),
     "uk": (
@@ -70,6 +71,7 @@ WELCOME_TEXTS = {
         f"🌸 /habit — додати звичку\n"
         f"📎 /habits — список звичок\n"
         f"💌 /feedback — надіслати мені відгук\n\n"
+        f"/help — показати список усіх команд\n"
         f"Спробуй просто зараз написати мені щось, а я тебе підтримаю! 🤗"
     ),
     "md": (
@@ -84,6 +86,7 @@ WELCOME_TEXTS = {
         f"🌸 /habit — adaugă un obicei\n"
         f"📎 /habits — lista obiceiurilor\n"
         f"💌 /feedback — trimite-mi un feedback\n\n"
+        f"/help — arată lista tuturor comenzilor\n"
         f"Încearcă chiar acum să-mi scrii ceva și eu te voi susține! 🤗"
     ),
     "be": (
@@ -98,6 +101,7 @@ WELCOME_TEXTS = {
         f"🌸 /habit — дадаць звычку\n"
         f"📎 /habits — спіс звычак\n"
         f"💌 /feedback — даслаць мне водгук\n\n"
+        f"/help — паказаць спіс усіх каманд\n"
         f"Паспрабуй проста зараз напісаць мне нешта, а я цябе падтрымаю! 🤗"
     ),
     "kk": (
@@ -112,6 +116,7 @@ WELCOME_TEXTS = {
         f"🌸 /habit — әдет қосу\n"
         f"📎 /habits — әдеттер тізімі\n"
         f"💌 /feedback — маған пікір жіберу\n\n"
+        f"/help — барлық командалардың тізімін көрсету\n"
         f"Қазір маған бір нәрсе жазып көр, мен сені қолдаймын! 🤗"
     ),
     "kg": (
@@ -126,6 +131,7 @@ WELCOME_TEXTS = {
         f"🌸 /habit — көнүмүш кошуу\n"
         f"📎 /habits — көнүмүштөр тизмеси\n"
         f"💌 /feedback — мага пикир жөнөт\n\n"
+        f"/help — бардык буйруктардын тизмесин көрсөтүү\n"
         f"Азыр эле мага бир нерсе жазып көр, мен сени колдойм! 🤗"
     ),
     "hy": (
@@ -140,6 +146,7 @@ WELCOME_TEXTS = {
         f"🌸 /habit — ավելացնել սովորություն\n"
         f"📎 /habits — սովորությունների ցուցակ\n"
         f"💌 /feedback — ուղարկել կարծիք\n\n"
+        f"/help — ցուցադրել բոլոր հրամանները\n"
         f"Փորձիր հենց հիմա գրել ինձ ինչ-որ բան, ես քեզ կաջակցեմ! 🤗"
     ),
     "ka": (
@@ -154,6 +161,7 @@ WELCOME_TEXTS = {
         f"🌸 /habit — ჩვევის დამატება\n"
         f"📎 /habits — ჩვევების სია\n"
         f"💌 /feedback — გამიზიარე შენი აზრი\n\n"
+        f"/help — ყველა ბრძანების სიის ჩვენება\n"
         f"სცადე ახლავე მომწერო რამე და მე შენ მხარში დაგიდგები! 🤗"
     ),
     "ce": (
@@ -168,6 +176,7 @@ WELCOME_TEXTS = {
         f"🌸 /habit — йоаздела кхочуш\n"
         f"📎 /habits — кхочушаш хӀокху\n"
         f"💌 /feedback — хьо йа фидбек гӀо\n\n"
+        f"/help — командаш список кхета хийцам\n"
         f"Хьо лелаш ха хӀинца со ха доьлча! 🤗"
     ),
     "en": (
@@ -182,6 +191,7 @@ WELCOME_TEXTS = {
         f"🌸 /habit — add a habit\n"
         f"📎 /habits — list of habits\n"
         f"💌 /feedback — send me feedback\n\n"
+        f"/help — show the list of all commands\n"
         f"Try sending me something right now and I’ll support you! 🤗"
     ),
 }    
