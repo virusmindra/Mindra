@@ -785,7 +785,7 @@ async def handle_add_goal_callback(update: Update, context: ContextTypes.DEFAULT
 
 import random
 
-IDLE_MESSAGES = {
+IDLE_MESSAGES_BY_LANG = {
     "ru": [
         "💌 Я немного скучаю. Расскажешь, как дела?",
         "🌙 Надеюсь, у тебя всё хорошо. Я здесь, если что 🫶",
@@ -2138,7 +2138,7 @@ def insert_followup_question(reply: str, user_input: str, lang: str = "ru") -> s
         return reply.strip() + "\n\n" + follow_up
     return reply
     
-MORNING_MESSAGES = {
+MORNING_MESSAGES_BY_LANG = {
     "ru": [
         "🌞 Доброе утро! Как ты сегодня? 💜",
         "☕ Доброе утро! Пусть твой день будет лёгким и приятным ✨",
@@ -2263,25 +2263,31 @@ MORNING_MESSAGES = {
 
 async def send_daily_reminder(context: ContextTypes.DEFAULT_TYPE):
     try:
-        chat_id = context.job.chat_id if hasattr(context.job, "chat_id") else None
-        # Если ты рассылаешь всем пользователям — пройди по user_last_seen.keys()
+        # если есть конкретный чат — отправляем ему, иначе всем
+        chat_id = getattr(context.job, "chat_id", None)
+
         if not chat_id:
+            # Рассылка всем, кто есть в user_last_seen
             for user_id in user_last_seen.keys():
-                # Формируем сообщение
-                greeting = "🌞 Доброе утро! Как ты сегодня? 💜"
-                task = choice(DAILY_TASKS)
-                text = f"{greeting}\n\n🎯 Задание на день:\n{task}"
+                lang = user_languages.get(str(user_id), "ru")
 
+                # Выбираем утреннее приветствие и задание по языку
+                greeting = choice(MORNING_MESSAGES_BY_LANG.get(lang, MORNING_MESSAGES_BY_LANG["ru"]))
+                task = choice(DAILY_TASKS_BY_LANG.get(lang, DAILY_TASKS_BY_LANG["ru"]))
+
+                text = f"{greeting}\n\n🎯 {task}"
                 await context.bot.send_message(chat_id=user_id, text=text)
-                logging.info(f"✅ Утреннее задание отправлено пользователю {user_id}")
+                logging.info(f"✅ Утреннее задание отправлено пользователю {user_id} на языке {lang}")
         else:
-            # Если рассылка конкретному чату
-            greeting = "🌞 Доброе утро! Как ты сегодня? 💜"
-            task = choice(DAILY_TASKS)
-            text = f"{greeting}\n\n🎯 Задание на день:\n{task}"
+            # Если конкретный чат
+            lang = user_languages.get(str(chat_id), "ru")
+            greeting = choice(MORNING_MESSAGES_BY_LANG.get(lang, MORNING_MESSAGES_BY_LANG["ru"]))
+            task = choice(DAILY_TASKS_BY_LANG.get(lang, DAILY_TASKS_BY_LANG["ru"]))
 
+            text = f"{greeting}\n\n🎯 {task}"
             await context.bot.send_message(chat_id=chat_id, text=text)
-            logging.info(f"✅ Утреннее задание отправлено в чат {chat_id}")
+            logging.info(f"✅ Утреннее задание отправлено в чат {chat_id} на языке {lang}")
+
     except Exception as e:
         logging.error(f"❌ Ошибка при отправке утреннего задания: {e}")
         
