@@ -1621,7 +1621,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 InlineKeyboardButton("Українська 🇺🇦", callback_data="lang_uk")
             ],
             [
-                InlineKeyboardButton("Moldovenească 🇲🇩", callback_data="lang_ro"),
+                InlineKeyboardButton("Moldovenească 🇲🇩", callback_data="lang_md"),
                 InlineKeyboardButton("Беларуская 🇧🇾", callback_data="lang_be")
             ],
             [
