@@ -300,6 +300,7 @@ async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # 🟣 Выбираем стартовый режим
         mode = "support"  # или другой дефолтный режим
+        lang_prompt = LANG_PROMPTS.get(lang_code, LANG_PROMPTS["ru"])   # <<=== ЭТОТ РЯДОК ДОБАВЬ!
         mode_prompt = MODES[mode].get(lang_code, MODES[mode]['ru'])
         system_prompt = f"{lang_prompt}\n\n{mode_prompt}"
         conversation_history[user_id] = [{"role": "system", "content": system_prompt}]
@@ -334,7 +335,7 @@ async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     }
     chosen = lang_names.get(lang_code, lang_code)
 
-    # ✨ Сначала редактируем старое сообщение
+# ✨ Сначала редактируем старое сообщение
 async def habit_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
