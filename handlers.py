@@ -2989,103 +2989,459 @@ def get_topic_reference(context, lang: str = "ru") -> str:
     return ""
 
 
+STATS_TEXTS = {
+    "ru": (
+        "📊 Статистика Mindra:\n\n"
+        "👥 Всего пользователей: {total}\n"
+        "💎 Подписчиков: {premium}\n"
+    ),
+    "uk": (
+        "📊 Статистика Mindra:\n\n"
+        "👥 Всього користувачів: {total}\n"
+        "💎 Підписників: {premium}\n"
+    ),
+    "be": (
+        "📊 Статыстыка Mindra:\n\n"
+        "👥 Усяго карыстальнікаў: {total}\n"
+        "💎 Падпісчыкаў: {premium}\n"
+    ),
+    "kk": (
+        "📊 Mindra статистикасы:\n\n"
+        "👥 Барлық қолданушылар: {total}\n"
+        "💎 Жазылушылар: {premium}\n"
+    ),
+    "kg": (
+        "📊 Mindra статистикасы:\n\n"
+        "👥 Жалпы колдонуучулар: {total}\n"
+        "💎 Жазылуучулар: {premium}\n"
+    ),
+    "hy": (
+        "📊 Mindra-ի վիճակագրությունը․\n\n"
+        "👥 Բոլոր օգտատերերը՝ {total}\n"
+        "💎 Բաժանորդներ՝ {premium}\n"
+    ),
+    "ce": (
+        "📊 Mindra статистика:\n\n"
+        "👥 Жалпы юзераш: {total}\n"
+        "💎 Подписчик: {premium}\n"
+    ),
+    "md": (
+        "📊 Statistica Mindra:\n\n"
+        "👥 Utilizatori totali: {total}\n"
+        "💎 Abonați: {premium}\n"
+    ),
+    "ka": (
+        "📊 Mindra სტატისტიკა:\n\n"
+        "👥 მომხმარებლები სულ: {total}\n"
+        "💎 გამომწერები: {premium}\n"
+    ),
+    "en": (
+        "📊 Mindra stats:\n\n"
+        "👥 Total users: {total}\n"
+        "💎 Subscribers: {premium}\n"
+    ),
+}
+
 async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
+    # Ограничение по ID можешь оставить или расширить для премиума
     if user_id != YOUR_ID:
         return
 
+    lang = user_languages.get(user_id, "ru")
     stats = get_stats()
-    text = (
-        f"📊 Статистика Mindra:\n\n"
-        f"👥 Всего пользователей: {stats['total_users']}\n"
-        f"💎 Подписчиков: {stats['premium_users']}\n"
-    )
+    text_template = STATS_TEXTS.get(lang, STATS_TEXTS["ru"])
+    text = text_template.format(total=stats['total_users'], premium=stats['premium_users'])
     await update.message.reply_text(text)
 
-# 👤 /mystats — личная статистика
-async def my_stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
-
-    # получаем данные
-    user_stats = get_user_stats(user_id)
-    points = user_stats.get("points", 0)
-    title = get_user_title(points)
-
-    # базовый текст
-    text = (
-        f"📌 *Твоя статистика*\n\n"
-        f"🌟 Твой титул: *{title}*\n"
-        f"🏅 Очков: *{points}*\n\n"
-        f"Продолжай выполнять цели и задания, чтобы расти! 💜"
-    )
-
-    # проверяем премиум
-    if user_id not in PREMIUM_USERS:
-        text += (
+MYSTATS_TEXTS = {
+    "ru": {
+        "title": "📌 *Твоя статистика*\n\n🌟 Твой титул: *{title}*\n🏅 Очков: *{points}*\n\nПродолжай выполнять цели и задания, чтобы расти! 💜",
+        "premium_info": (
             "\n\n🔒 В Mindra+ ты получишь:\n"
             "💎 Расширенную статистику по целям и привычкам\n"
             "💎 Больше лимитов и эксклюзивные задания\n"
             "💎 Уникальные челленджи и напоминания ✨"
-        )
-        keyboard = [[InlineKeyboardButton("💎 Узнать о Mindra+", url="https://t.me/talktomindra_bot")]]
+        ),
+        "premium_button": "💎 Узнать о Mindra+",
+        "extra": (
+            "\n✅ Целей выполнено: {completed_goals}"
+            "\n🌱 Привычек добавлено: {habits_tracked}"
+            "\n🔔 Напоминаний: {reminders}"
+            "\n📅 Дней активности: {days_active}"
+        ),
+    },
+    "uk": {
+        "title": "📌 *Твоя статистика*\n\n🌟 Твій титул: *{title}*\n🏅 Балів: *{points}*\n\nПродовжуй виконувати цілі й завдання, щоб зростати! 💜",
+        "premium_info": (
+            "\n\n🔒 У Mindra+ ти отримаєш:\n"
+            "💎 Розширену статистику по цілях та звичках\n"
+            "💎 Більше лімітів і ексклюзивні завдання\n"
+            "💎 Унікальні челенджі й нагадування ✨"
+        ),
+        "premium_button": "💎 Дізнатись про Mindra+",
+        "extra": (
+            "\n✅ Виконано цілей: {completed_goals}"
+            "\n🌱 Додано звичок: {habits_tracked}"
+            "\n🔔 Нагадувань: {reminders}"
+            "\n📅 Днів активності: {days_active}"
+        ),
+    },
+    "be": {
+        "title": "📌 *Твая статыстыка*\n\n🌟 Твой тытул: *{title}*\n🏅 Ачкоў: *{points}*\n\nПрацягвай ставіць мэты і выконваць заданні, каб расці! 💜",
+        "premium_info": (
+            "\n\n🔒 У Mindra+ ты атрымаеш:\n"
+            "💎 Пашыраную статыстыку па мэтах і звычках\n"
+            "💎 Больш лімітаў і эксклюзіўныя заданні\n"
+            "💎 Унікальныя чэленджы і напамінкі ✨"
+        ),
+        "premium_button": "💎 Даведайся пра Mindra+",
+        "extra": (
+            "\n✅ Выканана мэтаў: {completed_goals}"
+            "\n🌱 Дададзена звычак: {habits_tracked}"
+            "\n🔔 Напамінкаў: {reminders}"
+            "\n📅 Дзён актыўнасці: {days_active}"
+        ),
+    },
+    "kk": {
+        "title": "📌 *Сенің статистикаң*\n\n🌟 Титулың: *{title}*\n🏅 Ұпай: *{points}*\n\nМақсаттар мен тапсырмаларды орындауды жалғастыр! 💜",
+        "premium_info": (
+            "\n\n🔒 Mindra+ арқылы сен аласың:\n"
+            "💎 Мақсаттар мен әдеттер бойынша толық статистика\n"
+            "💎 Көп лимит және ерекше тапсырмалар\n"
+            "💎 Бірегей челлендждер мен ескертулер ✨"
+        ),
+        "premium_button": "💎 Mindra+ туралы білу",
+        "extra": (
+            "\n✅ Орындалған мақсаттар: {completed_goals}"
+            "\n🌱 Қосылған әдеттер: {habits_tracked}"
+            "\n🔔 Ескертулер: {reminders}"
+            "\n📅 Белсенді күндер: {days_active}"
+        ),
+    },
+    "kg": {
+        "title": "📌 *Сенин статистикаң*\n\n🌟 Сенин наамың: *{title}*\n🏅 Балл: *{points}*\n\nМаксаттар менен тапшырмаларды аткарууну улант! 💜",
+        "premium_info": (
+            "\n\n🔒 Mindra+ менен:\n"
+            "💎 Максаттар жана көнүмүштөр боюнча толук статистика\n"
+            "💎 Көп лимит жана өзгөчө тапшырмалар\n"
+            "💎 Уникалдуу челендждер жана эскертүүлөр ✨"
+        ),
+        "premium_button": "💎 Mindra+ жөнүндө билүү",
+        "extra": (
+            "\n✅ Аткарылган максаттар: {completed_goals}"
+            "\n🌱 Кошулган көнүмүштөр: {habits_tracked}"
+            "\n🔔 Эскертүүлөр: {reminders}"
+            "\n📅 Активдүү күндөр: {days_active}"
+        ),
+    },
+    "hy": {
+        "title": "📌 *Քո վիճակագրությունը*\n\n🌟 Քո տիտղոսը՝ *{title}*\n🏅 Մակարդակ՝ *{points}*\n\nՇարունակի՛ր նպատակների ու առաջադրանքների կատարումը, որպեսզի աճես։ 💜",
+        "premium_info": (
+            "\n\n🔒 Mindra+-ում կարող ես ստանալ՝\n"
+            "💎 Նպատակների ու սովորությունների վիճակագրությունը\n"
+            "💎 Ավելի շատ սահմանաչափեր ու յուրահատուկ առաջադրանքներ\n"
+            "💎 Ունիակլի մարտահրավերներ ու հիշեցումներ ✨"
+        ),
+        "premium_button": "💎 Իմանալ Mindra+-ի մասին",
+        "extra": (
+            "\n✅ Կատարված նպատակներ՝ {completed_goals}"
+            "\n🌱 Ավելացված սովորություններ՝ {habits_tracked}"
+            "\n🔔 Հիշեցումներ՝ {reminders}"
+            "\n📅 Ակտիվ օրեր՝ {days_active}"
+        ),
+    },
+    "ce": {
+        "title": "📌 *Хьоь статистика*\n\n🌟 Титул: *{title}*\n🏅 Балл: *{points}*\n\nДаймохь цуьнан кхолларча хетам хенна! 💜",
+        "premium_info": (
+            "\n\n🔒 Mindra+ хетам долу:\n"
+            "💎 Мацахь, привычка статистика\n"
+            "💎 Больше лимитов, эксклюзивные задачи\n"
+            "💎 Уникальные челленджи и напоминания ✨"
+        ),
+        "premium_button": "💎 Узнать о Mindra+",
+        "extra": (
+            "\n✅ Выполнено целей: {completed_goals}"
+            "\n🌱 Добавлено привычек: {habits_tracked}"
+            "\n🔔 Напоминаний: {reminders}"
+            "\n📅 Активных дней: {days_active}"
+        ),
+    },
+    "md": {
+        "title": "📌 *Statistica ta*\n\n🌟 Titlul tău: *{title}*\n🏅 Puncte: *{points}*\n\nContinuă să îți îndeplinești obiectivele și sarcinile pentru a crește! 💜",
+        "premium_info": (
+            "\n\n🔒 În Mindra+ vei obține:\n"
+            "💎 Statistici detaliate despre obiective și obiceiuri\n"
+            "💎 Mai multe limite și sarcini exclusive\n"
+            "💎 Provocări unice și notificări ✨"
+        ),
+        "premium_button": "💎 Află despre Mindra+",
+        "extra": (
+            "\n✅ Obiective realizate: {completed_goals}"
+            "\n🌱 Obiceiuri adăugate: {habits_tracked}"
+            "\n🔔 Notificări: {reminders}"
+            "\n📅 Zile active: {days_active}"
+        ),
+    },
+    "ka": {
+        "title": "📌 *შენი სტატისტიკა*\n\n🌟 შენი ტიტული: *{title}*\n🏅 ქულები: *{points}*\n\nაგრძელე მიზნების და დავალებების შესრულება, რომ გაიზარდო! 💜",
+        "premium_info": (
+            "\n\n🔒 Mindra+-ში მიიღებ:\n"
+            "💎 დეტალურ სტატისტიკას მიზნებსა და ჩვევებზე\n"
+            "💎 მეტი ლიმიტი და ექსკლუზიური დავალებები\n"
+            "💎 უნიკალური ჩელენჯები და შეხსენებები ✨"
+        ),
+        "premium_button": "💎 გაიგე Mindra+-ის შესახებ",
+        "extra": (
+            "\n✅ შესრულებული მიზნები: {completed_goals}"
+            "\n🌱 დამატებული ჩვევები: {habits_tracked}"
+            "\n🔔 შეხსენებები: {reminders}"
+            "\n📅 აქტიური დღეები: {days_active}"
+        ),
+    },
+    "en": {
+        "title": "📌 *Your stats*\n\n🌟 Your title: *{title}*\n🏅 Points: *{points}*\n\nKeep accomplishing your goals and tasks to grow! 💜",
+        "premium_info": (
+            "\n\n🔒 In Mindra+ you get:\n"
+            "💎 Advanced stats for goals and habits\n"
+            "💎 Higher limits & exclusive tasks\n"
+            "💎 Unique challenges and reminders ✨"
+        ),
+        "premium_button": "💎 Learn about Mindra+",
+        "extra": (
+            "\n✅ Goals completed: {completed_goals}"
+            "\n🌱 Habits added: {habits_tracked}"
+            "\n🔔 Reminders: {reminders}"
+            "\n📅 Active days: {days_active}"
+        ),
+    },
+}
+
+async def my_stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    lang = user_languages.get(user_id, "ru")
+    texts = MYSTATS_TEXTS.get(lang, MYSTATS_TEXTS["ru"])
+
+    # Данные пользователя
+    user_stats = get_user_stats(user_id)
+    points = user_stats.get("points", 0)
+    title = get_user_title(points)
+
+    # Базовый текст
+    text = texts["title"].format(title=title, points=points)
+
+    # Проверяем премиум
+    if user_id not in PREMIUM_USERS:
+        text += texts["premium_info"]
+        keyboard = [[InlineKeyboardButton(texts["premium_button"], url="https://t.me/talktomindra_bot")]]
         await update.message.reply_text(text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard))
     else:
-        # если премиум, можно добавить расширенные данные
-        extra = (
-            f"\n✅ Целей выполнено: {user_stats.get('completed_goals', 0)}"
-            f"\n🌱 Привычек добавлено: {user_stats.get('habits_tracked', 0)}"
-            f"\n🔔 Напоминаний: {user_stats.get('reminders', 0)}"
-            f"\n📅 Дней активности: {user_stats.get('days_active', 0)}"
+        # Для премиум — расширенные данные
+        extra = texts["extra"].format(
+            completed_goals=user_stats.get("completed_goals", 0),
+            habits_tracked=user_stats.get("habits_tracked", 0),
+            reminders=user_stats.get("reminders", 0),
+            days_active=user_stats.get("days_active", 0),
         )
         await update.message.reply_text(text + extra, parse_mode="Markdown")
-    
-# /habit
+
+
+HABIT_TEXTS = {
+    "ru": {
+        "limit": (
+            "🌱 В бесплатной версии можно добавить только 2 привычки.\n\n"
+            "✨ Подключи Mindra+, чтобы отслеживать неограниченное количество привычек 💜"
+        ),
+        "how_to": "Чтобы добавить привычку, напиши:\n/habit Делать зарядку",
+        "added": "🎯 Привычка добавлена: *{habit}*",
+    },
+    "uk": {
+        "limit": (
+            "🌱 У безкоштовній версії можна додати лише 2 звички.\n\n"
+            "✨ Підключи Mindra+, щоб відстежувати необмежену кількість звичок 💜"
+        ),
+        "how_to": "Щоб додати звичку, напиши:\n/habit Робити зарядку",
+        "added": "🎯 Звичка додана: *{habit}*",
+    },
+    "be": {
+        "limit": (
+            "🌱 У бясплатнай версіі можна дадаць толькі 2 звычкі.\n\n"
+            "✨ Падключы Mindra+, каб адсочваць неабмежаваную колькасць звычак 💜"
+        ),
+        "how_to": "Каб дадаць звычку, напішы:\n/habit Рабіць зарадку",
+        "added": "🎯 Звычка дададзена: *{habit}*",
+    },
+    "kk": {
+        "limit": (
+            "🌱 Тегін нұсқада тек 2 әдет қосуға болады.\n\n"
+            "✨ Mindra+ қосып, әдеттерді шексіз бақыла! 💜"
+        ),
+        "how_to": "Әдет қосу үшін жаз:\n/habit Таңертең жаттығу жасау",
+        "added": "🎯 Әдет қосылды: *{habit}*",
+    },
+    "kg": {
+        "limit": (
+            "🌱 Акысыз версияда болгону 2 көнүмүш кошууга болот.\n\n"
+            "✨ Mindra+ кошуп, чексиз көнүмүштөрдү көзөмөлдө! 💜"
+        ),
+        "how_to": "Көнүмүш кошуу үчүн жаз:\n/habit Таң эрте көнүгүү",
+        "added": "🎯 Көнүмүш кошулду: *{habit}*",
+    },
+    "hy": {
+        "limit": (
+            "🌱 Անվճար տարբերակում կարող ես ավելացնել միայն 2 սովորություն։\n\n"
+            "✨ Միացրու Mindra+, որպեսզի հետևես անսահմանափակ սովորությունների 💜"
+        ),
+        "how_to": "Սովորություն ավելացնելու համար գրիր՝\n/habit Վարժություն անել",
+        "added": "🎯 Սովորությունը ավելացվել է՝ *{habit}*",
+    },
+    "ce": {
+        "limit": (
+            "🌱 Бесплатна версийна дуьйна 2 привычка цуьнан дац.\n\n"
+            "✨ Mindra+ хетам болуш кхетам привычка хетам! 💜"
+        ),
+        "how_to": "Привычка дац дуьйна, хьоьшу напиши:\n/habit Зарядка",
+        "added": "🎯 Привычка дац: *{habit}*",
+    },
+    "md": {
+        "limit": (
+            "🌱 În versiunea gratuită poți adăuga doar 2 obiceiuri.\n\n"
+            "✨ Activează Mindra+ pentru a urmări oricâte obiceiuri vrei 💜"
+        ),
+        "how_to": "Pentru a adăuga un obicei, scrie:\n/habit Fă gimnastică",
+        "added": "🎯 Obiceiul a fost adăugat: *{habit}*",
+    },
+    "ka": {
+        "limit": (
+            "🌱 უფასო ვერსიაში შეგიძლია დაამატო მხოლოდ 2 ჩვევა.\n\n"
+            "✨ ჩართე Mindra+, რომ გააკონტროლო ულიმიტო ჩვევები 💜"
+        ),
+        "how_to": "ჩვევის დასამატებლად დაწერე:\n/habit დილას ვარჯიში",
+        "added": "🎯 ჩვევა დამატებულია: *{habit}*",
+    },
+    "en": {
+        "limit": (
+            "🌱 In the free version you can add only 2 habits.\n\n"
+            "✨ Unlock Mindra+ to track unlimited habits 💜"
+        ),
+        "how_to": "To add a habit, type:\n/habit Do morning exercise",
+        "added": "🎯 Habit added: *{habit}*",
+    },
+}
+
 async def habit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
+    lang = user_languages.get(user_id, "ru")
+    texts = HABIT_TEXTS.get(lang, HABIT_TEXTS["ru"])
     is_premium = (user_id == str(YOUR_ID)) or (user_id in PREMIUM_USERS)
 
     # Проверка лимита для бесплатных
     current_habits = get_habits(user_id)
     if not is_premium and len(current_habits) >= 2:
         await update.message.reply_text(
-            "🌱 В бесплатной версии можно добавить только 2 привычки.\n\n"
-            "✨ Подключи Mindra+, чтобы отслеживать неограниченное количество привычек 💜",
+            texts["limit"],
             parse_mode="Markdown"
         )
         return
 
     if not context.args:
         await update.message.reply_text(
-            "Чтобы добавить привычку, напиши:\n/habit Делать зарядку"
+            texts["how_to"]
         )
         return
 
     habit_text = " ".join(context.args)
     add_habit(user_id, habit_text)
     add_points(user_id, 1)  # +1 очко за новую привычку
+
     await update.message.reply_text(
-        f"🎯 Привычка добавлена: *{habit_text}*",
+        texts["added"].format(habit=habit_text),
         parse_mode="Markdown"
     )
 
-# /habits
+HABITS_TEXTS = {
+    "ru": {
+        "no_habits": "У тебя пока нет привычек. Добавь первую с помощью /habit",
+        "title": "📋 Твои привычки:",
+        "done": "✅",
+        "delete": "🗑️"
+    },
+    "uk": {
+        "no_habits": "У тебе поки немає звичок. Додай першу за допомогою /habit",
+        "title": "📋 Твої звички:",
+        "done": "✅",
+        "delete": "🗑️"
+    },
+    "be": {
+        "no_habits": "У цябе пакуль няма звычак. Дадай першую праз /habit",
+        "title": "📋 Твае звычкі:",
+        "done": "✅",
+        "delete": "🗑️"
+    },
+    "kk": {
+        "no_habits": "Сенде әлі әдеттер жоқ. Біріншісін /habit арқылы қостыр.",
+        "title": "📋 Сенің әдеттерің:",
+        "done": "✅",
+        "delete": "🗑️"
+    },
+    "kg": {
+        "no_habits": "Сизде азырынча көнүмүштөр жок. Биринчисин /habit менен кошуңуз.",
+        "title": "📋 Сиздин көнүмүштөрүңүз:",
+        "done": "✅",
+        "delete": "🗑️"
+    },
+    "hy": {
+        "no_habits": "Դու դեռ սովորություններ չունես։ Ավելացրու առաջինը՝ /habit հրամանով",
+        "title": "📋 Քո սովորությունները՝",
+        "done": "✅",
+        "delete": "🗑️"
+    },
+    "ce": {
+        "no_habits": "Хьоьшу хьалха привычка цуьнан цуьр. Дахьах /habit хетам.",
+        "title": "📋 Хьоьшу привычкаш:",
+        "done": "✅",
+        "delete": "🗑️"
+    },
+    "md": {
+        "no_habits": "Încă nu ai obiceiuri. Adaugă primul cu /habit",
+        "title": "📋 Obiceiurile tale:",
+        "done": "✅",
+        "delete": "🗑️"
+    },
+    "ka": {
+        "no_habits": "ჯერ არ გაქვს ჩვევები. დაამატე პირველი /habit ბრძანებით",
+        "title": "📋 შენი ჩვევები:",
+        "done": "✅",
+        "delete": "🗑️"
+    },
+    "en": {
+        "no_habits": "You don't have any habits yet. Add your first one with /habit",
+        "title": "📋 Your habits:",
+        "done": "✅",
+        "delete": "🗑️"
+    },
+}
+
 async def habits_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
+    lang = user_languages.get(user_id, "ru")
+    texts = HABITS_TEXTS.get(lang, HABITS_TEXTS["ru"])
+
     habits = get_habits(user_id)
     if not habits:
-        await update.message.reply_text("У тебя пока нет привычек. Добавь первую с помощью /habit")
+        await update.message.reply_text(texts["no_habits"])
         return
 
     keyboard = []
     for i, habit in enumerate(habits):
-        status = "✅" if habit["done"] else "🔸"
+        status = texts["done"] if habit["done"] else "🔸"
         keyboard.append([
             InlineKeyboardButton(f"{status} {habit['text']}", callback_data=f"noop"),
-            InlineKeyboardButton("✅", callback_data=f"done_habit_{i}"),
-            InlineKeyboardButton("🗑️", callback_data=f"delete_habit_{i}")
+            InlineKeyboardButton(texts["done"], callback_data=f"done_habit_{i}"),
+            InlineKeyboardButton(texts["delete"], callback_data=f"delete_habit_{i}")
         ])
 
-    await update.message.reply_text("📋 Твои привычки:", reply_markup=InlineKeyboardMarkup(keyboard))
+    await update.message.reply_text(texts["title"], reply_markup=InlineKeyboardMarkup(keyboard))
 
 # Обработка кнопок
 async def handle_habit_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
