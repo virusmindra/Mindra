@@ -3757,6 +3757,49 @@ async def delete_goal_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     else:
         await update.message.reply_text(msgs["not_found"])
 
+LANG_PATTERNS = {
+    "ru": {
+        "deadline": r"до (\d{4}-\d{2}-\d{2})",
+        "remind": "напомни"
+    },
+    "uk": {
+        "deadline": r"до (\d{4}-\d{2}-\d{2})",
+        "remind": "нагадай"
+    },
+    "be": {
+        "deadline": r"да (\d{4}-\d{2}-\d{2})",
+        "remind": "нагадай"
+    },
+    "kk": {
+        "deadline": r"(\d{4}-\d{2}-\d{2}) дейін",
+        "remind": "еске сал"
+    },
+    "kg": {
+        "deadline": r"(\d{4}-\d{2}-\d{2}) чейин",
+        "remind": "эскертип кой"
+    },
+    "hy": {
+        "deadline": r"մինչև (\d{4}-\d{2}-\d{2})",
+        "remind": "հիշեցրու"
+    },
+    "ce": {
+        "deadline": r"(\d{4}-\d{2}-\d{2}) даьлча",
+        "remind": "эха"
+    },
+    "md": {
+        "deadline": r"până la (\d{4}-\d{2}-\d{2})",
+        "remind": "amintește"
+    },
+    "ka": {
+        "deadline": r"(\d{4}-\d{2}-\d{2})-მდე",
+        "remind": "შემახსენე"
+    },
+    "en": {
+        "deadline": r"by (\d{4}-\d{2}-\d{2})",
+        "remind": "remind"
+    }
+}
+
 async def goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global user_goal_count
     user_id = str(update.effective_user.id)
