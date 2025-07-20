@@ -36,15 +36,19 @@ user_points = {}
 user_message_count = {}
 user_goal_count = {}
 user_languages = {}  # {user_id: 'ru'/'uk'/'md'/'be'/'kk'/'kg'/'hy'/'ka'/'ce'}
+# Импорт/определение всех констант:
+MODES = { ... }
+LANG_PROMPTS = { ... }
+WELCOME_TEXTS = { ... }
+
+def get_mode_prompt(mode, lang):
+    return MODES.get(mode, MODES["default"]).get(lang, MODES["default"]["ru"])
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 GOALS_FILE = Path("user_goals.json")
 
 YOUR_ID = "7775321566"  # твой ID
-
-def get_mode_prompt(mode: str, lang_code: str) -> str:
-    return MODES.get(mode, MODES["default"]).get(lang_code, MODES["default"]["ru"])
 
 WELCOME_TEXTS = {
     "ru": (
