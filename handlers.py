@@ -7513,7 +7513,7 @@ async def premium_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("🔒 Эта функция доступна только для Mindra+.")
         return
 
-    stats = get_stats()
+    stats = get_stats(user_id)  # <-- обязательно сюда передавай user_id!
     lang = user_languages.get(user_id, "ru")
     template = PREMIUM_REPORT_TEXTS.get(lang, PREMIUM_REPORT_TEXTS["ru"])
     report_text = template.format(
