@@ -41,17 +41,84 @@ def get_user_stats(user_id: str):
         return data.get(user_id, {"points": 0})
     return {"points": 0}
 
-def get_user_title(points: int) -> str:
-    if points < 50:
-        return "🌱 Новичок"
-    elif points < 100:
-        return "✨ Мотиватор"
-    elif points < 250:
-        return "🔥 Уверенный"
-    elif points < 500:
-        return "💎 Наставник"
-    else:
-        return "🌟 Легенда"
+def get_user_title(points: int, lang: str = "ru") -> str:
+    TITLES = {
+        "ru": [
+            (50,  "🌱 Новичок"),
+            (100, "✨ Мотиватор"),
+            (250, "🔥 Уверенный"),
+            (500, "💎 Наставник"),
+            (float('inf'), "🌟 Легенда")
+        ],
+        "uk": [
+            (50,  "🌱 Новачок"),
+            (100, "✨ Мотиватор"),
+            (250, "🔥 Впевнений"),
+            (500, "💎 Наставник"),
+            (float('inf'), "🌟 Легенда")
+        ],
+        "be": [
+            (50,  "🌱 Пачатковец"),
+            (100, "✨ Матыватар"),
+            (250, "🔥 Упэўнены"),
+            (500, "💎 Настаўнік"),
+            (float('inf'), "🌟 Легенда")
+        ],
+        "kk": [
+            (50,  "🌱 Бастаушы"),
+            (100, "✨ Мотивация беруші"),
+            (250, "🔥 Сенімді"),
+            (500, "💎 Ұстаз"),
+            (float('inf'), "🌟 Аңыз")
+        ],
+        "kg": [
+            (50,  "🌱 Жаңы келген"),
+            (100, "✨ Мотивациячы"),
+            (250, "🔥 Ишенимдүү"),
+            (500, "💎 Наcатчы"),
+            (float('inf'), "🌟 Легенда")
+        ],
+        "hy": [
+            (50,  "🌱 Նորեկ"),
+            (100, "✨ Մոտիվատոր"),
+            (250, "🔥 Վստահ"),
+            (500, "💎 Խորհրդատու"),
+            (float('inf'), "🌟 Լեգենդ")
+        ],
+        "ce": [
+            (50,  "🌱 Дика хьалхар"),
+            (100, "✨ Мотивация кхетар"),
+            (250, "🔥 Дукха ву"),
+            (500, "💎 Къастийна"),
+            (float('inf'), "🌟 Легенда")
+        ],
+        "md": [
+            (50,  "🌱 Începător"),
+            (100, "✨ Motivator"),
+            (250, "🔥 Încrezător"),
+            (500, "💎 Mentor"),
+            (float('inf'), "🌟 Legenda")
+        ],
+        "ka": [
+            (50,  "🌱 დამწყები"),
+            (100, "✨ მოტივატორი"),
+            (250, "🔥 დარწმუნებული"),
+            (500, "💎 მენტორი"),
+            (float('inf'), "🌟 ლეგენდა")
+        ],
+        "en": [
+            (50,  "🌱 Newbie"),
+            (100, "✨ Motivator"),
+            (250, "🔥 Confident"),
+            (500, "💎 Mentor"),
+            (float('inf'), "🌟 Legend")
+        ],
+    }
+    lang_titles = TITLES.get(lang, TITLES["ru"])
+    for threshold, title in lang_titles:
+        if points < threshold:
+            return title
+    return lang_titles[-1][1]
 
 def load_json_file(filename):
     if os.path.exists(filename):
@@ -102,17 +169,6 @@ def get_user_stats(user_id: str):
         "completed_goals": completed_goals,
         "habits": total_habits
     }
-
-# 🏅 Получение титула по очкам
-def get_user_title(points: int):
-    if points < 10:
-        return "Новичок 💫"
-    elif points < 30:
-        return "Уверенный 🌟"
-    elif points < 60:
-        return "Мастер 💎"
-    else:
-        return "Легенда 🔥"
 
 def add_points(user_id: str, amount: int):
     """Начислить пользователю очки."""
