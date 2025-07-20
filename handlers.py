@@ -19,7 +19,7 @@ from telegram.ext import ContextTypes, CommandHandler, MessageHandler, CallbackQ
 from habits import add_habit, get_habits, mark_habit_done, delete_habit
 from stats import get_stats, get_user_stats, get_user_title, add_points
 from telegram.constants import ChatAction, ParseMode
-from config import client, TELEGRAM_BOT_TOKEN, MODES
+from config import client, TELEGRAM_BOT_TOKEN
 from history import load_history, save_history, trim_history
 from goals import add_goal, get_goals, mark_goal_done, delete_goal
 from pathlib import Path
