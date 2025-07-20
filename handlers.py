@@ -1204,7 +1204,7 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_last_seen[user_id] = datetime.now(timezone.utc)
     logging.info(f"✅ user_last_seen обновлён в voice для {user_id}")
 
-    # Определяем язык пользователя
+    # 📌 Определяем язык пользователя
     lang = user_languages.get(user_id, "ru")
     texts = VOICE_TEXTS_BY_LANG.get(lang, VOICE_TEXTS_BY_LANG["ru"])
     prompt_text = SYSTEM_PROMPT_BY_LANG.get(lang, SYSTEM_PROMPT_BY_LANG["ru"])
@@ -1212,37 +1212,38 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         message = update.message
 
-        # 1. Получаем файл
+        # 🎧 Получаем файл голосового
         file = await context.bot.get_file(message.voice.file_id)
         file_path = f"/tmp/{file.file_unique_id}.oga"
         mp3_path = f"/tmp/{file.file_unique_id}.mp3"
         await file.download_to_drive(file_path)
 
-        # 2. Конвертируем в mp3
+        # 🔄 Конвертация в mp3
         subprocess.run([
             "ffmpeg", "-i", file_path, "-ar", "44100", "-ac", "2", "-b:a", "192k", mp3_path
         ], check=True)
 
-        # 3. Распознаём голос
+        # 🎙️ Распознаём голос
         with open(mp3_path, "rb") as f:
             result = client.audio.transcriptions.create(
                 model="whisper-1",
                 file=f,
                 response_format="text"
             )
-
         user_input = result.strip()
-        topic = detect_topic(user_input)
+
+        # 📌 Сохраняем тему
+        topic = detect_topic(user_input, lang)
         if topic:
             save_user_context(context, topic=topic)
 
-        # 📝 Ответ пользователю о том, что он сказал
+        # 📝 Отвечаем пользователю, что распознали
         await message.reply_text(f"{texts['you_said']} {user_input}")
 
-        # 4. Эмпатичная реакция
-        reaction = detect_emotion_reaction(user_input)
+        # 💜 Эмпатичная реакция
+        reaction = detect_emotion_reaction(user_input, lang)
 
-        # 5. История для GPT
+        # 🧠 Системный промпт для GPT
         system_prompt = {
             "role": "system",
             "content": prompt_text
@@ -1250,25 +1251,25 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         history = [system_prompt, {"role": "user", "content": user_input}]
         history = trim_history(history)
 
-        # 6. Ответ от ChatGPT
+        # 🤖 Запрос к OpenAI
         completion = openai.chat.completions.create(
             model="gpt-4o",
             messages=history
         )
         reply = completion.choices[0].message.content.strip()
 
-        # 7. Добавляем отсылку к теме (если есть)
-        reference = get_topic_reference(context)
+        # 📎 Добавляем отсылку к теме
+        reference = get_topic_reference(context, lang)
         if reference:
             reply = f"{reply}\n\n{reference}"
 
-        # 8. Добавляем follow-up вопрос
-        reply = insert_followup_question(reply, user_input)
+        # ❓ Добавляем follow-up вопрос
+        reply = insert_followup_question(reply, user_input, lang)
 
-        # 9. Добавляем эмпатичную реакцию
+        # 🔥 Добавляем эмпатичную реакцию
         reply = reaction + reply
 
-        # 10. Кнопки после ответа
+        # 📌 Генерируем кнопки
         goal_text = user_input if is_goal_like(user_input, lang) else None
         buttons = generate_post_response_buttons(goal_text=goal_text)
 
