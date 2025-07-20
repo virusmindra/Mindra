@@ -43,6 +43,9 @@ GOALS_FILE = Path("user_goals.json")
 
 YOUR_ID = "7775321566"  # твой ID
 
+def get_mode_prompt(mode: str, lang_code: str) -> str:
+    return MODES.get(mode, MODES["default"]).get(lang_code, MODES["default"]["ru"])
+
 WELCOME_TEXTS = {
     "ru": (
         f"👋 Привет, {{first_name}}! Я — Mindra 💜\n\n"
