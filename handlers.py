@@ -4654,8 +4654,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     welcome_text = WELCOME_TEXTS.get(lang_code, WELCOME_TEXTS["ru"]).format(first_name=first_name)
 
-    # создаём историю диалога с выбранным языком
-    system_prompt = f"{LANG_PROMPTS.get(lang_code, LANG_PROMPTS['ru'])}\n\n{MODES['default']}"
+    mode = user_modes.get(user_id, 'support')  # по умолчанию support
+    mode_prompt = MODES[mode].get(lang_code, MODES[mode]['ru'])
+    system_prompt = f"{LANG_PROMPTS.get(lang_code, LANG_PROMPTS['ru'])}\n\n{mode_prompt}"
     conversation_history[user_id] = [{"role": "system", "content": system_prompt}]
     save_history(conversation_history)
 
