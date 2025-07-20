@@ -36,10 +36,6 @@ user_points = {}
 user_message_count = {}
 user_goal_count = {}
 user_languages = {}  # {user_id: 'ru'/'uk'/'md'/'be'/'kk'/'kg'/'hy'/'ka'/'ce'}
-# Импорт/определение всех констант:
-MODES = { ... }
-LANG_PROMPTS = { ... }
-WELCOME_TEXTS = { ... }
 
 def get_mode_prompt(mode, lang):
     return MODES.get(mode, MODES["default"]).get(lang, MODES["default"]["ru"])
