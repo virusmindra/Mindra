@@ -282,21 +282,45 @@ async def language_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    user_id = str(query.from_user.id)
+    try:
+        query = update.callback_query
+        user_id = str(query.from_user.id)
 
-    lang_code = query.data.replace("lang_", "")
-    user_languages[user_id] = lang_code  # сохраняем язык
+        # ✅ получаем выбранный язык из callback_data
+        lang_code = query.data.replace("lang_", "")
+        user_languages[user_id] = lang_code  # сохраняем язык
+        logging.info(f"🌐 Пользователь {user_id} выбрал язык: {lang_code}")
 
-    # ✅ Сразу формируем приветственный текст
-    first_name = query.from_user.first_name or "друг"
-    welcome_text = WELCOME_TEXTS.get(lang_code, WELCOME_TEXTS["ru"]).format(first_name=first_name)
+        # ✅ сразу отвечаем на callback, чтобы Telegram не выдал ошибку
+        await query.answer()
 
-    # ✅ Обновляем историю диалога с учётом выбранного языка
-    system_prompt = f"{LANG_PROMPTS.get(lang_code, LANG_PROMPTS['ru'])}\n\n{MODES['default']}"
-    conversation_history[user_id] = [{"role": "system", "content": system_prompt}]
-    save_history(conversation_history)
+        # ✅ формируем приветственный текст
+        first_name = query.from_user.first_name or "друг"
+        welcome_text = WELCOME_TEXTS.get(lang_code, WELCOME_TEXTS["ru"]).format(first_name=first_name)
+
+        # ✅ обновляем системный промпт для истории
+        system_prompt = f"{LANG_PROMPTS.get(lang_code, LANG_PROMPTS['ru'])}\n\n{MODES['default']}"
+        conversation_history[user_id] = [{"role": "system", "content": system_prompt}]
+        save_history(conversation_history)
+
+        # ✅ редактируем сообщение с кнопками или отправляем новое
+        try:
+            await query.edit_message_text(
+                text=welcome_text,
+                parse_mode="Markdown"
+            )
+        except Exception as e:
+            logging.warning(f"Не удалось отредактировать сообщение, отправляем новое. Ошибка: {e}")
+            await context.bot.send_message(
+                chat_id=query.message.chat_id,
+                text=welcome_text,
+                parse_mode="Markdown"
+            )
+
+    except Exception as e:
+        logging.error(f"❌ Ошибка в language_callback: {e}")
+        # На всякий случай отправляем сообщение об ошибке пользователю
+        await update.effective_message.reply_text("😢 Произошла ошибка при выборе языка, попробуй снова.")
 
     # ✨ Сообщаем о выбранном языке
     lang_names = {
