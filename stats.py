@@ -25,15 +25,6 @@ def add_premium(user_id):
     stats["premium_users"][str(user_id)] = datetime.utcnow().isoformat()
     save_stats(stats)
 
-def add_points(user_id, points):
-    stats = load_stats()
-    user_id = str(user_id)
-    if user_id not in stats:
-        stats[user_id] = {"points": 0, "goals_completed": 0}
-    stats[user_id]["points"] += points
-    stats[user_id]["goals_completed"] += 1
-    save_stats(stats)
-
 def get_user_stats(user_id: str):
     if os.path.exists("stats.json"):
         with open("stats.json", "r", encoding="utf-8") as f:
@@ -170,9 +161,11 @@ def get_user_stats(user_id: str):
         "habits": total_habits
     }
 
-def add_points(user_id: str, amount: int):
-    """Начислить пользователю очки."""
-    global user_points
-    current = user_points.get(user_id, 0)
-    user_points[user_id] = current + amount
-    return user_points[user_id]
+def add_points(user_id: str, amount: int = 1):
+    stats = load_stats()
+    user_id = str(user_id)
+    if user_id not in stats:
+        stats[user_id] = {"points": 0, "goals_completed": 0}
+    stats[user_id]["points"] += amount
+    save_stats(stats)
+    return stats[user_id]["points"]
