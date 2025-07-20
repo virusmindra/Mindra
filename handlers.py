@@ -286,24 +286,22 @@ async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
         user_id = str(query.from_user.id)
 
-        # ✅ получаем выбранный язык из callback_data
         lang_code = query.data.replace("lang_", "")
-        user_languages[user_id] = lang_code  # сохраняем язык
+        user_languages[user_id] = lang_code
         logging.info(f"🌐 Пользователь {user_id} выбрал язык: {lang_code}")
 
-        # ✅ сразу отвечаем на callback, чтобы Telegram не выдал ошибку
         await query.answer()
 
-        # ✅ формируем приветственный текст
         first_name = query.from_user.first_name or "друг"
         welcome_text = WELCOME_TEXTS.get(lang_code, WELCOME_TEXTS["ru"]).format(first_name=first_name)
 
-        # ✅ обновляем системный промпт для истории
-        system_prompt = f"{LANG_PROMPTS.get(lang_code, LANG_PROMPTS['ru'])}\n\n{MODES['default']}"
+        # 🟣 Вставляем default из MODES_BY_LANG, а не MODES!
+        lang_prompt = LANG_PROMPTS.get(lang_code, LANG_PROMPTS["ru"])
+        mode_default = MODES_BY_LANG.get(lang_code, MODES_BY_LANG["ru"]).get("default", "")
+        system_prompt = f"{lang_prompt}\n\n{mode_default}"
         conversation_history[user_id] = [{"role": "system", "content": system_prompt}]
         save_history(conversation_history)
 
-        # ✅ редактируем сообщение с кнопками или отправляем новое
         try:
             await query.edit_message_text(
                 text=welcome_text,
@@ -316,10 +314,8 @@ async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 text=welcome_text,
                 parse_mode="Markdown"
             )
-
     except Exception as e:
         logging.error(f"❌ Ошибка в language_callback: {e}")
-        # На всякий случай отправляем сообщение об ошибке пользователю
         await update.effective_message.reply_text("😢 Произошла ошибка при выборе языка, попробуй снова.")
 
     # ✨ Сообщаем о выбранном языке
