@@ -5088,7 +5088,8 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # 📋 Определяем режим
     mode = user_modes.get(user_id, "default")
-    mode_prompt = MODES.get(mode, MODES["default"])
+    # ВАЖНО: режим теперь словарь, берём под язык
+    mode_prompt = MODES.get(mode, MODES["default"]).get(lang_code, MODES["default"]["ru"])
 
     system_prompt = f"{lang_prompt}\n\n{mode_prompt}"
 
