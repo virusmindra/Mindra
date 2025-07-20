@@ -59,34 +59,24 @@ def load_json_file(filename):
             return json.load(f)
     return {}
 
-def get_stats():
-    # Загружаем цели
+def get_stats(user_id):
     goals_data = load_json_file(GOALS_FILE)
-    completed_goals = 0
-    for user_goals in goals_data.values():
-        for goal in user_goals:
-            if goal.get("done"):
-                completed_goals += 1
+    user_goals = goals_data.get(user_id, [])
+    completed_goals = sum(1 for goal in user_goals if goal.get("done"))
 
-    # Загружаем привычки
     habits_data = load_json_file(HABITS_FILE)
-    completed_habits = 0
-    for user_habits in habits_data.values():
-        for habit in user_habits:
-            if habit.get("done"):  # если у тебя поле done
-                completed_habits += 1
+    user_habits = habits_data.get(user_id, [])
+    completed_habits = sum(1 for habit in user_habits if habit.get("done"))
 
-    # Дни активности можно считать по количеству уникальных пользователей
-    total_users = len(goals_data.keys())
+    days_active = len(set(g.get("date") for g in user_goals if g.get("date"))) if user_goals else 0
+    mood_entries = 0  # если есть mood.json — добавь подсчёт
 
     return {
-        "total_users": total_users,
         "completed_goals": completed_goals,
         "completed_habits": completed_habits,
-        "days_active": 25,  # 👈 сюда можно добавить реальную логику
-        "mood_entries": 14  # 👈 сюда тоже, если будешь хранить mood.json
+        "days_active": days_active,
+        "mood_entries": mood_entries
     }
-
 
 # 📊 Получение статистики пользователя
 def get_user_stats(user_id: str):
