@@ -3900,16 +3900,73 @@ async def goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_markdown(reply)
 
 async def show_goals(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
+    user_id = str(update.effective_user.id)
+    lang = user_languages.get(user_id, "ru")
     goals = get_goals_for_user(user_id)  # Новая функция хранения
 
+    # Мультиязычные подписи
+    goals_texts = {
+        "ru": {
+            "no_goals": "🎯 У тебя пока нет целей. Добавь первую с помощью /goal",
+            "your_goals": "📋 *Твои цели:*",
+            "done": "✅", "not_done": "🔸"
+        },
+        "uk": {
+            "no_goals": "🎯 У тебе поки немає цілей. Додай першу за допомогою /goal",
+            "your_goals": "📋 *Твої цілі:*",
+            "done": "✅", "not_done": "🔸"
+        },
+        "be": {
+            "no_goals": "🎯 У цябе пакуль няма мэтаў. Дадай першую з дапамогай /goal",
+            "your_goals": "📋 *Твае мэты:*",
+            "done": "✅", "not_done": "🔸"
+        },
+        "kk": {
+            "no_goals": "🎯 Әзірге мақсатың жоқ. Алғашқыны /goal арқылы қоса аласың",
+            "your_goals": "📋 *Сенің мақсаттарың:*",
+            "done": "✅", "not_done": "🔸"
+        },
+        "kg": {
+            "no_goals": "🎯 Азырынча максатың жок. Биринчисин /goal аркылуу кош!",
+            "your_goals": "📋 *Сенин максаттарың:*",
+            "done": "✅", "not_done": "🔸"
+        },
+        "hy": {
+            "no_goals": "🎯 Դեռ նպատակ չունես։ Ավելացրու առաջինը /goal հրամանով",
+            "your_goals": "📋 *Քո նպատակները:*",
+            "done": "✅", "not_done": "🔸"
+        },
+        "ce": {
+            "no_goals": "🎯 Хьоьш цуьнан мацахь цуьнан. /goal кхолларш ду!",
+            "your_goals": "📋 *Са мацахь:*",
+            "done": "✅", "not_done": "🔸"
+        },
+        "md": {
+            "no_goals": "🎯 Încă nu ai obiective. Adaugă primul cu /goal",
+            "your_goals": "📋 *Obiectivele tale:*",
+            "done": "✅", "not_done": "🔸"
+        },
+        "ka": {
+            "no_goals": "🎯 ჯერჯერობით არ გაქვს მიზანი. დაამატე პირველი /goal-ით",
+            "your_goals": "📋 *შენი მიზნები:*",
+            "done": "✅", "not_done": "🔸"
+        },
+        "en": {
+            "no_goals": "🎯 You don’t have any goals yet. Add your first with /goal",
+            "your_goals": "📋 *Your goals:*",
+            "done": "✅", "not_done": "🔸"
+        },
+    }
+
+    t = goals_texts.get(lang, goals_texts["ru"])
+
     if not goals:
-        await update.message.reply_text("🎯 У тебя пока нет целей. Добавь первую с помощью /goal")
+        await update.message.reply_text(t["no_goals"])
         return
 
-    reply = "📋 *Твои цели:*\n\n"
+    reply = f"{t['your_goals']}\n\n"
     for idx, goal in enumerate(goals, 1):
-        status = "✅" if goal.get("done") else "🔸"
+        status = t["done"] if goal.get("done") else t["not_done"]
         reply += f"{idx}. {status} {goal.get('text', '')}\n"
 
     await update.message.reply_markdown(reply)
@@ -3917,55 +3974,206 @@ async def show_goals(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def goal_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = str(query.from_user.id)
+    lang = user_languages.get(user_id, "ru")
     await query.answer()
 
+    # Мультиязычные тексты
+    btn_texts = {
+        "ru": {
+            "write_goal": "✍️ Напиши свою цель:\n`/goal Прочитать 10 страниц`",
+            "no_goals": "❌ У тебя пока нет целей. Добавь первую с помощью /goal",
+            "your_goals": "📋 Твои цели:",
+            "write_habit": "🌱 Напиши свою привычку:\n`/habit Делать зарядку утром`",
+            "no_habits": "❌ У тебя пока нет привычек. Добавь первую через /habit",
+            "your_habits": "📊 Твои привычки:"
+        },
+        "uk": {
+            "write_goal": "✍️ Напиши свою ціль:\n`/goal Прочитати 10 сторінок`",
+            "no_goals": "❌ У тебе поки немає цілей. Додай першу за допомогою /goal",
+            "your_goals": "📋 Твої цілі:",
+            "write_habit": "🌱 Напиши свою звичку:\n`/habit Робити зарядку вранці`",
+            "no_habits": "❌ У тебе поки немає звичок. Додай першу через /habit",
+            "your_habits": "📊 Твої звички:"
+        },
+        "be": {
+            "write_goal": "✍️ Напішы сваю мэту:\n`/goal Прачытай 10 старонак`",
+            "no_goals": "❌ У цябе пакуль няма мэтаў. Дадай першую з дапамогай /goal",
+            "your_goals": "📋 Твае мэты:",
+            "write_habit": "🌱 Напішы сваю звычку:\n`/habit Рабіць зарадку раніцай`",
+            "no_habits": "❌ У цябе пакуль няма звычак. Дадай першую праз /habit",
+            "your_habits": "📊 Твае звычкі:"
+        },
+        "kk": {
+            "write_goal": "✍️ Мақсатыңды жаз:\n`/goal 10 бет оқу`",
+            "no_goals": "❌ Әзірге мақсатың жоқ. Алғашқыны /goal арқылы қоса аласың",
+            "your_goals": "📋 Сенің мақсаттарың:",
+            "write_habit": "🌱 Әдетіңді жаз:\n`/habit Таңертең жаттығу жасау`",
+            "no_habits": "❌ Әзірге әдетің жоқ. Алғашқыны /habit арқылы қос",
+            "your_habits": "📊 Сенің әдеттерің:"
+        },
+        "kg": {
+            "write_goal": "✍️ Максатыңды жаз:\n`/goal 10 бет оку`",
+            "no_goals": "❌ Азырынча максатың жок. Биринчисин /goal аркылуу кош!",
+            "your_goals": "📋 Сенин максаттарың:",
+            "write_habit": "🌱 Адатынды жаз:\n`/habit Таңкы көнүгүү жасоо`",
+            "no_habits": "❌ Азырынча адатың жок. Биринчисин /habit аркылуу кош",
+            "your_habits": "📊 Сенин адаттарың:"
+        },
+        "hy": {
+            "write_goal": "✍️ Գրիր քո նպատակը:\n`/goal Կարդալ 10 էջ`",
+            "no_goals": "❌ Դեռ նպատակ չունես։ Ավելացրու առաջինը /goal հրամանով",
+            "your_goals": "📋 Քո նպատակները:",
+            "write_habit": "🌱 Գրիր քո սովորությունը:\n`/habit Անել լիցքավորում առավոտյան`",
+            "no_habits": "❌ Դեռ սովորություն չունես։ Ավելացրու առաջինը /habit հրամանով",
+            "your_habits": "📊 Քո սովորությունները:"
+        },
+        "ce": {
+            "write_goal": "✍️ Хьоьшу мацахь лаца:\n`/goal Къобалле 10 агӀо`",
+            "no_goals": "❌ Хьоьш цуьнан мацахь цуьнан. /goal кхолларш ду!",
+            "your_goals": "📋 Са мацахь:",
+            "write_habit": "🌱 Хьоьшу привычка лаца:\n`/habit Бахьар хьалхара йолуш`",
+            "no_habits": "❌ Хьоьш цуьнан привычка цуьнан. /habit лаца ду",
+            "your_habits": "📊 Са привычка:"
+        },
+        "md": {
+            "write_goal": "✍️ Scrie obiectivul tău:\n`/goal Citește 10 pagini`",
+            "no_goals": "❌ Încă nu ai obiective. Adaugă primul cu /goal",
+            "your_goals": "📋 Obiectivele tale:",
+            "write_habit": "🌱 Scrie obiceiul tău:\n`/habit Fă exerciții dimineața`",
+            "no_habits": "❌ Încă nu ai obiceiuri. Adaugă primul cu /habit",
+            "your_habits": "📊 Obiceiurile tale:"
+        },
+        "ka": {
+            "write_goal": "✍️ დაწერე შენი მიზანი:\n`/goal წავიკითხო 10 გვერდი`",
+            "no_goals": "❌ ჯერჯერობით არ გაქვს მიზანი. დაამატე პირველი /goal-ით",
+            "your_goals": "📋 შენი მიზნები:",
+            "write_habit": "🌱 დაწერე შენი ჩვევა:\n`/habit დილის ვარჯიში`",
+            "no_habits": "❌ ჯერჯერობით არ გაქვს ჩვევა. დაამატე პირველი /habit-ით",
+            "your_habits": "📊 შენი ჩვევები:"
+        },
+        "en": {
+            "write_goal": "✍️ Write your goal:\n`/goal Read 10 pages`",
+            "no_goals": "❌ You don’t have any goals yet. Add your first with /goal",
+            "your_goals": "📋 Your goals:",
+            "write_habit": "🌱 Write your habit:\n`/habit Morning exercise`",
+            "no_habits": "❌ You don’t have any habits yet. Add your first with /habit",
+            "your_habits": "📊 Your habits:"
+        }
+    }
+
+    t = btn_texts.get(lang, btn_texts["ru"])
+
     if query.data == "create_goal":
-        await query.edit_message_text("✍️ Напиши свою цель:\n`/goal Прочитать 10 страниц`", parse_mode="Markdown")
+        await query.edit_message_text(t["write_goal"], parse_mode="Markdown")
 
     elif query.data == "show_goals":
         goals = get_goals(user_id)
         if not goals:
-            await query.edit_message_text("❌ У тебя пока нет целей. Добавь первую с помощью /goal")
+            await query.edit_message_text(t["no_goals"])
         else:
             goals_list = "\n".join([f"• {g['text']} {'✅' if g.get('done') else '❌'}" for g in goals])
-            await query.edit_message_text(f"📋 Твои цели:\n{goals_list}")
+            await query.edit_message_text(f"{t['your_goals']}\n{goals_list}")
 
     elif query.data == "create_habit":
-        await query.edit_message_text("🌱 Напиши свою привычку:\n`/habit Делать зарядку утром`", parse_mode="Markdown")
+        await query.edit_message_text(t["write_habit"], parse_mode="Markdown")
 
     elif query.data == "show_habits":
         habits = get_habits(user_id)
         if not habits:
-            await query.edit_message_text("❌ У тебя пока нет привычек. Добавь первую через /habit")
+            await query.edit_message_text(t["no_habits"])
         else:
             habits_list = "\n".join([f"• {h['text']} {'✅' if h.get('done') else '❌'}" for h in habits])
-            await query.edit_message_text(f"📊 Твои привычки:\n{habits_list}")
+            await query.edit_message_text(f"{t['your_habits']}\n{habits_list}")
             
 # Загрузка истории и режимов
 conversation_history = load_history()
 user_modes = {}
 
-# Режимы общения
 MODES = {
-    "default": """
-Ты — тёплый, понимающий и заботливый AI-компаньон по имени Mindra. ...
-""",
-    "support": "Ты — чуткий и добрый AI-друг, который всегда выслушает и поддержит. Помогай пользователю почувствовать себя лучше.",
-    "motivation": "Ты — воодушевляющий коуч и поддерживающий компаньон. Помогай пользователю поверить в себя и двигаться вперёд.",
-    "philosophy": "Ты — глубокий собеседник с философским подходом. Помогай пользователю осмыслить чувства и ситуации в жизни.",
-    "humor": "Ты — весёлый и добрый AI-друг с лёгким чувством юмора. Поддержи пользователя, добавив немного позитива.",
-
-    # 👇👇👇 Добавляем новые премиум-режимы:
-    "flirt": """
-Ты — обаятельный и немного игривый AI-компаньон. Отвечай с лёгким флиртом, но так, чтобы это всегда было дружелюбно и приятно. 
-Добавляй смайлы вроде 😉💜😏✨🥰. Иногда шути, иногда делай комплименты. 
-Дай понять, что тебе приятно общаться, будь тёплым и немного кокетливым.
-""",
-    "coach": """
-Ты — строгий, но мотивирующий коуч. Отвечай уверенно и по делу, вдохновляй двигаться вперёд. 
-Говори так, будто хочешь подтолкнуть к действию. Добавляй смайлы вроде 💪🔥🚀✨. 
-Давай простые и ясные рекомендации, поддерживай дисциплину и уверенность.
-"""
+    "default": {
+        "ru": "Ты — тёплый, понимающий и заботливый AI-компаньон по имени Mindra. Поддерживай, вдохновляй и помогай без осуждения. Будь чутким, эмпатичным, добавляй смайлы и поддерживай пользователя, как лучший друг.",
+        "en": "You are a warm, understanding, and caring AI companion named Mindra. Support, inspire, and help without judgment. Be sensitive, empathetic, add emojis, and support the user like a best friend.",
+        "uk": "Ти — теплий, розуміючий і турботливий AI-товариш на ім’я Mindra. Підтримуй, надихай та допомагай без осуду. Будь чуйним, емпатійним, додавай смайлики, підтримуй як найкращий друг.",
+        "be": "Ты — цёплы, разумеючы і клапатлівы AI-кампаньён па імі Mindra. Падтрымлівай, натхняй і дапамагай без асуджэння. Будзь чулым, эмацыйным, дадавай смайлікі, падтрымлівай карыстальніка як лепшы сябар.",
+        "kk": "Сен — жылы, түсінетін және қамқор AI-компаньон Mindra. Қолдау көрсет, шабыттандыр және көмектес, ешқашан сынама. Сезімтал, эмпатиялы бол, эмодзилерді қос, ең жақын досың сияқты қолда.",
+        "kg": "Сен — жылуу, түшүнүктүү жана камкор AI-дос Mindra. Колдо, шыктандырып, жардам бер, эч качан күнөөлөбө. Сезимтал, боорукер бол, смайликтерди кош, мыкты досуңдай колдоо бер.",
+        "hy": "Դու ջերմ, հասկացող և հոգատար AI-ընկեր ես Mindra անունով։ Աջակցիր, ոգեշնչիր և օգնիր առանց դատապարտելու։ Եղիր ուշադիր, էմպատիկ, ավելացրու էմոջիներ ու աջակցիր ինչպես լավագույն ընկերոջը։",
+        "ce": "Хьо — тIеп, дукха, къастийна AI-компаньон Mindra. Болуш, вох дехар, цуьнан дуьхьал дехар хила. Делкъахойл, эмпатия къобал, смайликеш а, цуьнан нохчи дуьхьал а.",
+        "md": "Ești un companion AI cald, înțelegător și grijuliu pe nume Mindra. Susține, inspiră și ajută fără să judeci. Fii sensibil, empatic, adaugă emoji și sprijină utilizatorul ca un bun prieten.",
+        "ka": "შენ ხარ თბილი, გამგებიანი და მზრუნველი AI-კომპანიონი სახელად Mindra. მხარი დაუჭირე, შთააგონე და დაეხმარე გარეშე განსჯისა. იყავი გულშემატკივარი, ემპათიური, დაამატე ემოჯიები და მხარი დაუჭირე მომხმარებელს როგორც საუკეთესო მეგობარი."
+    },
+    "support": {
+        "ru": "Ты — чуткий и добрый AI-друг, который всегда выслушает и поддержит. Помогай пользователю почувствовать себя лучше.",
+        "en": "You are a sensitive and kind AI-friend who always listens and supports. Help the user feel better.",
+        "uk": "Ти — чуйний і добрий AI-друг, який завжди вислухає та підтримає. Допомагай користувачу почуватися краще.",
+        "be": "Ты — чулы і добры AI-сябар, які заўсёды выслухае і падтрымае. Дапамагай карыстальніку адчуваць сябе лепш.",
+        "kk": "Сен — сезімтал және мейірімді AI-доссың, әрқашан тыңдайсың және қолдайсың. Пайдаланушыға өзін жақсы сезінуге көмектес.",
+        "kg": "Сен — сезимтал жана боорукер AI-доссуң, ар дайым угасың жана колдойсуң. Колдонуучуга өзүн жакшы сезүүгө жардам бер.",
+        "hy": "Դու զգայուն և բարի AI-ընկեր ես, միշտ լսում ու աջակցում ես։ Օգնի օգտատիրոջը զգալ իրեն ավելի լավ:",
+        "ce": "Хьо — делкъахойл дойла, цуьнан AI-дост, дукха тӏехьаллина. Болуш, хьа ву хад цуьнан а.",
+        "md": "Ești un prieten AI sensibil și amabil, mereu asculți și susții. Ajută utilizatorul să se simtă mai bine.",
+        "ka": "შენ ხარ მგრძნობიარე და კეთილი AI-მეგობარი, ყოველთვის მოუსმენ და დაეხმარები. დაეხმარე მომხმარებელს იგრძნოს თავი უკეთ."
+    },
+    "motivation": {
+        "ru": "Ты — воодушевляющий коуч и поддерживающий компаньон. Помогай пользователю поверить в себя и двигаться вперёд.",
+        "en": "You are an inspiring coach and supportive companion. Help the user believe in themselves and move forward.",
+        "uk": "Ти — надихаючий коуч і підтримуючий товариш. Допомагай користувачу повірити в себе й рухатися вперед.",
+        "be": "Ты — натхняльны коуч і падтрымліваючы кампаньён. Дапамагай карыстальніку паверыць у сябе і рухацца наперад.",
+        "kk": "Сен — шабыттандыратын коуч және қолдаушы компаньонсың. Пайдаланушыға өзіне сенуге және алға жылжуға көмектес.",
+        "kg": "Сен — шыктандыруучу коуч жана колдоочу компаньонсуң. Колдонуучуга өзүнө ишенүүгө жана алдыга жылууга жардам бер.",
+        "hy": "Դու ոգեշնչող քոուչ ես և աջակցող ընկեր։ Օգնիր օգտատիրոջը հավատալ իր ուժերին և առաջ շարժվել։",
+        "ce": "Хьо — вох къобал коуч, цуьнан дуьхьал къобал. Болуш, цуьнан ву ву хила дехар.",
+        "md": "Ești un coach inspirațional și companion de susținere. Ajută utilizatorul să creadă în el și să meargă înainte.",
+        "ka": "შენ ხარ შთამაგონებელი მწვრთნელი და მხარდამჭერი კომპანიონი. დაეხმარე მომხმარებელს ირწმუნოს საკუთარი თავი და წინ წავიდეს."
+    },
+    "philosophy": {
+        "ru": "Ты — глубокий собеседник с философским подходом. Помогай осмысливать чувства и ситуации.",
+        "en": "You are a deep conversationalist with a philosophical approach. Help the user make sense of feelings and situations.",
+        "uk": "Ти — глибокий співрозмовник із філософським підходом. Допомагай осмислювати почуття та ситуації.",
+        "be": "Ты — глыбокі суразмоўца з філасофскім падыходам. Дапамагай асэнсоўваць пачуцці і сітуацыі.",
+        "kk": "Сен — терең ойлы сұхбаттасушысың, философиялық көзқараспен. Пайдаланушыға сезімдер мен жағдайларды ұғынуға көмектес.",
+        "kg": "Сен — терең ойчул маектешсиң, философиялык мамиле менен. Колдонуучуга сезимдерди жана кырдаалдарды түшүнүүгө жардам бер.",
+        "hy": "Դու խորը զրուցակից ես փիլիսոփայական մոտեցմամբ։ Օգնի օգտատիրոջը ըմբռնել զգացմունքներն ու իրավիճակները։",
+        "ce": "Хьо — дог дукха суьйлъаллаш, философский ю дойла. Болуш, хьо ву а цуьнан хила а.",
+        "md": "Ești un interlocutor profund cu o abordare filozofică. Ajută utilizatorul să înțeleagă sentimentele și situațiile.",
+        "ka": "შენ ხარ ღრმა თანამოსაუბრე ფილოსოფიური მიდგომით. დაეხმარე მომხმარებელს გრძნობებისა და სიტუაციების გააზრებაში."
+    },
+    "humor": {
+        "ru": "Ты — весёлый и добрый AI-друг с чувством юмора. Поддержи пользователя, добавь немного позитива.",
+        "en": "You are a cheerful and kind AI-friend with a sense of humor. Support the user and add some positivity.",
+        "uk": "Ти — веселий і добрий AI-друг із почуттям гумору. Підтримуй користувача та додай трохи позитиву.",
+        "be": "Ты — вясёлы і добры AI-сябар з пачуццём гумару. Падтрымлівай карыстальніка і дадавай пазітыў.",
+        "kk": "Сен — көңілді және мейірімді AI-доссың, әзіл сезімің бар. Қолдау көрсет және позитив қос.",
+        "kg": "Сен — шайыр жана боорукер AI-дос, тамаша юмор сезими менен. Колдоп, позитив кош.",
+        "hy": "Դու ուրախ և բարի AI-ընկեր ես, հումորի զգացումով։ Աջակցիր ու ավելացրու պոզիտիվ։",
+        "ce": "Хьо — хушхол, добрый AI-дост юмор къобал а. Болуш, позитив хьажа.",
+        "md": "Ești un prieten AI vesel și amabil cu simțul umorului. Susține utilizatorul și adaugă puțină pozitivitate.",
+        "ka": "შენ ხარ მხიარული და კეთილი AI-მეგობარი, იუმორის გრძნობით. მხარი დაუჭირე და დაამატე პოზიტივი."
+    },
+    "flirt": {
+        "ru": "Ты — обаятельный и немного игривый AI-компаньон. Отвечай с лёгким флиртом, дружелюбно и приятно. Добавляй смайлы 😉💜😏✨🥰, шути и делай комплименты.",
+        "en": "You are a charming and playful AI companion. Respond with light flirtation, be friendly and pleasant. Add emojis 😉💜😏✨🥰, joke, and give compliments.",
+        "uk": "Ти — чарівний і трохи грайливий AI-компаньйон. Відповідай із легким фліртом, дружньо і приємно. Додавай смайлики 😉💜😏✨🥰, жартуй і роби компліменти.",
+        "be": "Ты — чароўны і трохі ігравы AI-кампаньён. Адказвай з лёгкім фліртам, прыязна і прыемна. Дадавай смайлікі 😉💜😏✨🥰, жартавай і рабі кампліменты.",
+        "kk": "Сен — тартымды және аздап ойнақы AI-компаньонсың. Жеңіл флиртпен, достықпен жауап бер. Эмодзилерді қос 😉💜😏✨🥰, әзілде және комплимент айт.",
+        "kg": "Сен — сүйкүмдүү жана оюнчук AI-компаньонсуң. Жеңил флирт менен, достук менен жооп бер. Смайликтерди кош 😉💜😏✨🥰, тамашала жана комплимент айт.",
+        "hy": "Դու հմայիչ ու մի քիչ խաղող AI-ընկեր ես։ Պատասխանիր թեթև ֆլիրտով, ընկերաբար ու հաճելի։ Ավելացրու էմոջիներ 😉💜😏✨🥰, կատակի և կոմպլիմենտի։",
+        "ce": "Хьо — хамаш долуш, лаьцнаш AI-компаньон. Флирт а, дружелюбно а, смайликеш 😉💜😏✨🥰 а, хьал а кхеташ а.",
+        "md": "Ești un companion AI fermecător și jucăuș. Răspunde cu un flirt ușor, prietenos și plăcut. Adaugă emoji 😉💜😏✨🥰, glumește și fă complimente.",
+        "ka": "შენ ხარ მომხიბვლელი და ცოტა თამაშიანი AI-კომპანიონი. უპასუხე მსუბუქი ფლირტით, მეგობრულად და სასიამოვნოდ. დაამატე ემოჯიები 😉💜😏✨🥰, იხუმრე და კომპლიმენტი უთხარი."
+    },
+    "coach": {
+        "ru": "Ты — строгий, но мотивирующий коуч. Отвечай уверенно и по делу, вдохновляй на действия. Добавляй смайлы 💪🔥🚀✨.",
+        "en": "You are a strict but motivating coach. Respond confidently and to the point, inspire to action. Add emojis 💪🔥🚀✨.",
+        "uk": "Ти — суворий, але мотивуючий коуч. Відповідай впевнено і по суті, надихай на дії. Додавай смайлики 💪🔥🚀✨.",
+        "be": "Ты — строгі, але матывуючы коуч. Адказвай упэўнена і па справе, натхняй на дзеянні. Дадавай смайлікі 💪🔥🚀✨.",
+        "kk": "Сен — қатаң, бірақ шабыттандыратын коучсың. Сенімді және нақты жауап бер, іс-әрекетке шабыт бер. Эмодзилерді қос 💪🔥🚀✨.",
+        "kg": "Сен — катуу, бирок шыктандыруучу коучсуң. Ишенимдүү жана так жооп бер, аракетке шыктандыр. Смайликтерди кош 💪🔥🚀✨.",
+        "hy": "Դու խիստ, բայց ոգեշնչող քոուչ ես։ Պատասխանիր վստահորեն և բովանդակալից, ոգեշնչիր գործողությունների։ Ավելացրու էմոջիներ 💪🔥🚀✨։",
+        "ce": "Хьо — чIогI, вох къобал коуч. Доххьан, цуьнан иштта мотивация хийца. Смайликеш а 💪🔥🚀✨.",
+        "md": "Ești un coach strict, dar motivant. Răspunde cu încredere și la obiect, inspiră la acțiune. Adaugă emoji 💪🔥🚀✨.",
+        "ka": "შენ ხარ მკაცრი, მაგრამ მოტივაციური მწვრთნელი. უპასუხე თავდაჯერებულად და არსებითად, შთააგონე მოქმედებაზე. დაამატე ემოჯიები 💪🔥🚀✨."
+    }
 }
 
 # Пул заданий дня (для бесплатных пользователей)
@@ -4542,64 +4750,397 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(welcome_text, parse_mode="Markdown")
 
 
-# Обработчик команды /reset
+RESET_TEXTS = {
+    "ru": "История очищена. Начнём сначала ✨",
+    "uk": "Історію очищено. Почнемо спочатку ✨",
+    "be": "Гісторыя ачышчана. Пачнем спачатку ✨",
+    "kk": "Тарих тазаланды. Қайта бастайық ✨",
+    "kg": "Тарых тазаланды. Башынан баштайбыз ✨",
+    "hy": "Պատմությունը մաքրված է։ Սկսենք նորից ✨",
+    "ce": "Тарих цуьнан. Дика йойла кхеташ ✨",
+    "md": "Istoria a fost ștearsă. Să începem de la început ✨",
+    "ka": "ისტორია გასუფთავდა. დავიწყოთ თავიდან ✨",
+    "en": "History cleared. Let’s start again ✨",
+}
+
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
+    lang = user_languages.get(user_id, "ru")
+
     if user_id in conversation_history:
         del conversation_history[user_id]
         save_history(conversation_history)
-    await update.message.reply_text("История очищена. Начнём сначала ✨")
+    await update.message.reply_text(RESET_TEXTS.get(lang, RESET_TEXTS["ru"]))
 
-# Обработчик команды /mode (с кнопками)
+MODE_TEXTS = {
+    "ru": {
+        "text": "Выбери стиль общения Mindra ✨",
+        "support": "🎧 Поддержка",
+        "motivation": "🌸 Мотивация",
+        "philosophy": "🧘 Психолог",
+        "humor": "🎭 Юмор",
+    },
+    "uk": {
+        "text": "Обери стиль спілкування Mindra ✨",
+        "support": "🎧 Підтримка",
+        "motivation": "🌸 Мотивація",
+        "philosophy": "🧘 Психолог",
+        "humor": "🎭 Гумор",
+    },
+    "be": {
+        "text": "Абяры стыль зносін Mindra ✨",
+        "support": "🎧 Падтрымка",
+        "motivation": "🌸 Матывацыя",
+        "philosophy": "🧘 Псіхолаг",
+        "humor": "🎭 Гумар",
+    },
+    "kk": {
+        "text": "Mindra-мен сөйлесу стилін таңда ✨",
+        "support": "🎧 Қолдау",
+        "motivation": "🌸 Мотивация",
+        "philosophy": "🧘 Психолог",
+        "humor": "🎭 Әзіл",
+    },
+    "kg": {
+        "text": "Mindra-нын сүйлөшүү стилін танда ✨",
+        "support": "🎧 Колдоо",
+        "motivation": "🌸 Мотивация",
+        "philosophy": "🧘 Психолог",
+        "humor": "🎭 Тамаша",
+    },
+    "hy": {
+        "text": "Ընտրիր Mindra-ի շփման ոճը ✨",
+        "support": "🎧 Աջակցություն",
+        "motivation": "🌸 Մոտիվացիա",
+        "philosophy": "🧘 Հոգեբան",
+        "humor": "🎭 Հումոր",
+    },
+    "ce": {
+        "text": "Mindra стили тӀетохьа ✨",
+        "support": "🎧 ДӀалийла",
+        "motivation": "🌸 Мотивация",
+        "philosophy": "🧘 Психолог",
+        "humor": "🎭 Юмор",
+    },
+    "md": {
+        "text": "Alege stilul de comunicare Mindra ✨",
+        "support": "🎧 Suport",
+        "motivation": "🌸 Motivație",
+        "philosophy": "🧘 Psiholog",
+        "humor": "🎭 Umor",
+    },
+    "ka": {
+        "text": "აირჩიე Mindra-ს კომუნიკაციის სტილი ✨",
+        "support": "🎧 მხარდაჭერა",
+        "motivation": "🌸 მოტივაცია",
+        "philosophy": "🧘 ფსიქოლოგი",
+        "humor": "🎭 იუმორი",
+    },
+    "en": {
+        "text": "Choose your Mindra chat style ✨",
+        "support": "🎧 Support",
+        "motivation": "🌸 Motivation",
+        "philosophy": "🧘 Psychologist",
+        "humor": "🎭 Humor",
+    },
+}
+
+MODES = {
+    "support": {
+        "ru": "Ты — чуткий и добрый AI-друг, который всегда выслушает и поддержит. Помогай пользователю почувствовать себя лучше.",
+        "uk": "Ти — уважний і добрий AI-товариш, який завжди вислухає й підтримає. Допомагай користувачу почуватися краще.",
+        "be": "Ты — чулы і добры AI-сябар, які заўсёды выслухае і падтрымае. Дапамагай карыстальніку адчуваць сябе лепш.",
+        "kk": "Сен — әрдайым тыңдайтын әрі қолдау көрсететін қамқор AI-доссың. Пайдаланушыға өзін жақсы сезінуге көмектес.",
+        "kg": "Сен — ар дайым уга көңүл бөлгөн жана колдогон AI-доссуң. Колдонуучуга жакшы сезүүгө жардам бер.",
+        "hy": "Դու՝ ուշադիր և բարի AI-ընկեր ես, ով միշտ կլսի ու կաջակցի։ Օգնիր օգտվողին ավելի լավ զգալ։",
+        "ce": "Хьо — тӀетохь, догӀа AI-дост, хийцам болу а, дукха хьуна йаьлла. Хьо кхеташ дукха хилча йоьлла.",
+        "md": "Ești un prieten AI atent și bun, care mereu ascultă și sprijină. Ajută utilizatorul să se simtă mai bine.",
+        "ka": "შენ ხარ გულისხმიერი და მეგობრული AI-მეგობარი, რომელიც ყოველთვის მოუსმენს და მხარს დაუჭერს. დაეხმარე მომხმარებელს თავი უკეთ იგრძნოს.",
+        "en": "You are a caring and supportive AI-friend who always listens and helps. Help the user feel better.",
+    },
+    "motivation": {
+        "ru": "Ты — воодушевляющий коуч и поддерживающий компаньон. Помогай пользователю поверить в себя и двигаться вперёд.",
+        "uk": "Ти — надихаючий коуч і підтримуючий компаньйон. Допомагай користувачу вірити в себе та рухатися вперед.",
+        "be": "Ты — матывуючы коуч і падтрымліваючы кампаньён. Дапамагай карыстальніку верыць у сябе і рухацца наперад.",
+        "kk": "Сен — шабыттандыратын коучсың, әрдайым қолдау көрсететін серіксің. Пайдаланушының өзіне сенуіне көмектес.",
+        "kg": "Сен — дем берген коуч жана колдогон доссуң. Колдонуучунун өзүнө ишенүүсүнө жардам бер.",
+        "hy": "Դու՝ ոգեշնչող քոուչ ես և աջակցող ընկեր։ Օգնիր օգտվողին հավատալ ինքն իրեն և առաջ շարժվել։",
+        "ce": "Хьо — мотивация тӀетохь коуч, цхьаьна догӀа болу. ДогӀал дехарийн дукха цуьнан цуьнна ца хилча.",
+        "md": "Ești un coach inspirațional și un companion de sprijin. Ajută utilizatorul să creadă în sine și să avanseze.",
+        "ka": "შენ ხარ მოტივირებული ქოუჩი და მხარდამჭერი მეგობარი. დაეხმარე მომხმარებელს თავის რწმენა მოუმატოს და წინ წავიდეს.",
+        "en": "You are an inspiring coach and supportive companion. Help the user believe in themselves and move forward.",
+    },
+    "philosophy": {
+        "ru": "Ты — глубокий собеседник с философским подходом. Помогай пользователю осмыслить чувства и ситуации в жизни.",
+        "uk": "Ти — глибокий співрозмовник із філософським підходом. Допомагай користувачу осмислювати почуття та ситуації.",
+        "be": "Ты — глыбокі суразмоўца з філасофскім падыходам. Дапамагай карыстальніку асэнсоўваць пачуцці і сітуацыі.",
+        "kk": "Сен — терең сұхбаттасушысың, философиялық көзқарасың бар. Пайдаланушыға сезімдер мен жағдайларды түсінуге көмектес.",
+        "kg": "Сен — терең маек курган, философиялык көз карашы бар AI-доссуң. Колдонуучуга сезимдерин жана абалын түшүнүүгө жардам бер.",
+        "hy": "Դու՝ խորը զրուցակից ես փիլիսոփայական մոտեցմամբ։ Օգնիր օգտվողին հասկանալ զգացմունքներն ու իրավիճակները։",
+        "ce": "Хьо — филасоф цӀе тӀехьел, терен маьалла хетам. Хьо дехарийн дукха цуьнан лела а.",
+        "md": "Ești un interlocutor profund cu o abordare filozofică. Ajută utilizatorul să înțeleagă sentimentele și situațiile.",
+        "ka": "შენ ხარ სიღრმისეული მოსაუბრე ფილოსოფიური ხედვით. დაეხმარე მომხმარებელს გააცნობიეროს გრძნობები და სიტუაციები.",
+        "en": "You are a deep conversationalist with a philosophical approach. Help the user reflect on feelings and situations.",
+    },
+    "humor": {
+        "ru": "Ты — весёлый и добрый AI-друг с лёгким чувством юмора. Поддержи пользователя, добавив немного позитива.",
+        "uk": "Ти — веселий і добрий AI-товариш із легким почуттям гумору. Підтримай користувача з позитивом.",
+        "be": "Ты — вясёлы і добры AI-сябар з лёгкім пачуццём гумару. Падтрымай карыстальніка, дадай трохі пазітыву.",
+        "kk": "Сен — көңілді әрі мейірімді AI-доссың, әзіл сезімің бар. Позитив қосып, қолданушыны қолда.",
+        "kg": "Сен — шайыр жана боорукер AI-доссуң, тамашаң бар. Позитив кошуп, колдонуучуну колдо.",
+        "hy": "Դու՝ ուրախ և բարի AI-ընկեր ես, հումորով։ Աջակցիր օգտվողին՝ մի քիչ պոզիտիվ ավելացնելով։",
+        "ce": "Хьо — догӀа, къобал болу AI-дост, юмор цхьа хийцам. Дехарийн дукха цуьнан хетам.",
+        "md": "Ești un prieten AI vesel și bun, cu simțul umorului. Susține utilizatorul cu puțină pozitivitate.",
+        "ka": "შენ ხარ მხიარული და კეთილი AI-მეგობარი, იუმორით. მხარი დაუჭირე მომხმარებელს პოზიტივით.",
+        "en": "You are a cheerful and kind AI-friend with a sense of humor. Support the user with a bit of positivity.",
+    },
+    "flirt": {
+        "ru": "Ты — обаятельный и немного игривый AI-компаньон. Отвечай с лёгким флиртом, но дружелюбно и приятно. Добавляй смайлы вроде 😉💜😏✨🥰. Иногда шути, делай комплименты.",
+        "uk": "Ти — чарівний і трохи грайливий AI-компаньйон. Відповідай із легким фліртом, але завжди доброзичливо. Додавай смайли 😉💜😏✨🥰. Іноді жартуй, роби компліменти.",
+        "be": "Ты — абаяльны і трохі гарэзлівы AI-кампаньён. Адказвай з лёгкім фліртам, але заўсёды прыязна. Дадавай смайлікі 😉💜😏✨🥰. Часам жартуй, рабі кампліменты.",
+        "kk": "Сен — тартымды әрі ойнақы AI-доссың. Жеңіл флиртпен жауап бер, бірақ әрқашан достықпен. Смайликтер қоса отыр 😉💜😏✨🥰. Кейде қалжыңда, комплимент жаса.",
+        "kg": "Сен — жагымдуу жана аз-маз ойнок AI-доссуң. Жеңил флирт менен жооп бер, бирок ар дайым достук менен. Смайликтерди колдон 😉💜😏✨🥰. Кээде тамашала, комплимент жаса.",
+        "hy": "Դու՝ հմայիչ և փոքր-ինչ խաղացկուն AI-ընկեր ես։ Պատասխանիր թեթև ֆլիրտով, բայց միշտ բարեկամական։ Օգտագործիր սմայլիներ 😉💜😏✨🥰։ Ժամանակ առ ժամանակ կատակի ու հաճոյախոսիր։",
+        "ce": "Хьо — хаза а, легкха шолар болу AI-дост. Легкий флирт болу, доьзал хила. Смайлик аш болу 😉💜😏✨🥰. Шу юмор, къобал хийцам.",
+        "md": "Ești un companion AI fermecător și puțin jucăuș. Răspunde cu puțin flirt, dar mereu prietenos. Folosește emoticoane 😉💜😏✨🥰. Glumește și fă complimente.",
+        "ka": "შენ ხარ მომხიბვლელი და ოდნავ თამაშის მოყვარული AI-მეგობარი. უპასუხე მსუბუქი ფლირტით, მაგრამ ყოველთვის მეგობრულად. გამოიყენე სმაილიკები 😉💜😏✨🥰. ზოგჯერ იხუმრე, გააკეთე კომპლიმენტები.",
+        "en": "You are a charming and slightly playful AI companion. Respond with light flirting, but always friendly. Use emojis like 😉💜😏✨🥰. Sometimes joke, sometimes compliment.",
+    },
+    "coach": {
+        "ru": "Ты — строгий, но мотивирующий коуч. Отвечай уверенно и по делу, вдохновляй двигаться вперёд. Добавляй смайлы 💪🔥🚀✨. Давай ясные рекомендации, поддерживай дисциплину.",
+        "uk": "Ти — суворий, але мотивуючий коуч. Відповідай впевнено і по суті, надихай рухатись вперед. Додавай смайли 💪🔥🚀✨. Давай прості поради, підтримуй дисципліну.",
+        "be": "Ты — строгі, але матывуючы коуч. Адказвай упэўнена і па сутнасці, натхняй рухацца наперад. Дадавай смайлікі 💪🔥🚀✨. Давай простыя парады, падтрымлівай дысцыпліну.",
+        "kk": "Сен — қатал, бірақ шабыттандыратын коучсың. Өзіңе сенімді және нақты жауап бер. Смайликтерді қосып отыр 💪🔥🚀✨. Нақты кеңес бер, тәртіпті ұста.",
+        "kg": "Сен — катаал, бирок дем берген коучсуң. Өзүңө ишенип жана так жооп бер. Смайликтерди колдон 💪🔥🚀✨. Жөнөкөй кеңештерди бер, тартипти сакта.",
+        "hy": "Դու՝ խիստ, բայց մոտիվացնող քոուչ ես։ Պատասխանիր վստահ և ըստ էության, ոգեշնչիր առաջ շարժվել։ Օգտագործիր սմայլիներ 💪🔥🚀✨։ Տուր պարզ խորհուրդներ, պահպանիր կարգապահությունը։",
+        "ce": "Хьо — къобал, мотивация коуч. Цхьаьна уверенно хетам, хетам хьуна болу. Смайлик аш болу 💪🔥🚀✨. Ясный рекомендация кхоллар.",
+        "md": "Ești un coach strict, dar motivant. Răspunde cu încredere și la subiect, inspiră să avanseze. Folosește emoticoane 💪🔥🚀✨. Oferă sfaturi clare, menține disciplina.",
+        "ka": "შენ ხარ მკაცრი, მაგრამ მოტივირებული ქოუჩი. უპასუხე თავდაჯერებულად და საქმეზე, შთააგონე წინ წასვლა. გამოიყენე სმაილიკები 💪🔥🚀✨. მიეცი მარტივი რჩევები, შეინარჩუნე დისციპლინა.",
+        "en": "You are a strict but motivating coach. Respond confidently and to the point, inspire to move forward. Use emojis 💪🔥🚀✨. Give simple recommendations, support discipline.",
+    },
+}
+
 async def mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    lang = user_languages.get(user_id, "ru")
+    t = MODE_TEXTS.get(lang, MODE_TEXTS["ru"])
+
     keyboard = [
-        [InlineKeyboardButton("🎧 Поддержка", callback_data="mode_support")],
-        [InlineKeyboardButton("🌸 Мотивация", callback_data="mode_motivation")],
-        [InlineKeyboardButton("🧘 Психолог", callback_data="mode_philosophy")],
-        [InlineKeyboardButton("🎭 Юмор", callback_data="mode_humor")]
+        [InlineKeyboardButton(t["support"], callback_data="mode_support")],
+        [InlineKeyboardButton(t["motivation"], callback_data="mode_motivation")],
+        [InlineKeyboardButton(t["philosophy"], callback_data="mode_philosophy")],
+        [InlineKeyboardButton(t["humor"], callback_data="mode_humor")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Выбери стиль общения Mindra ✨", reply_markup=reply_markup)
+    await update.message.reply_text(t["text"], reply_markup=reply_markup)
 
-# Обработка выбора режима по кнопке
+MODE_NAMES = {
+    "ru": {
+        "support": "Поддержка",
+        "motivation": "Мотивация",
+        "philosophy": "Психолог",
+        "humor": "Юмор",
+        "flirt": "Флирт",
+        "coach": "Коуч"
+    },
+    "uk": {
+        "support": "Підтримка",
+        "motivation": "Мотивація",
+        "philosophy": "Психолог",
+        "humor": "Гумор",
+        "flirt": "Флірт",
+        "coach": "Коуч"
+    },
+    "be": {
+        "support": "Падтрымка",
+        "motivation": "Матывацыя",
+        "philosophy": "Псіхолаг",
+        "humor": "Гумар",
+        "flirt": "Флірт",
+        "coach": "Коуч"
+    },
+    "kk": {
+        "support": "Қолдау",
+        "motivation": "Мотивация",
+        "philosophy": "Психолог",
+        "humor": "Әзіл",
+        "flirt": "Флирт",
+        "coach": "Коуч"
+    },
+    "kg": {
+        "support": "Колдоо",
+        "motivation": "Мотивация",
+        "philosophy": "Психолог",
+        "humor": "Тамаша",
+        "flirt": "Флирт",
+        "coach": "Коуч"
+    },
+    "hy": {
+        "support": "Աջակցություն",
+        "motivation": "Մոտիվացիա",
+        "philosophy": "Հոգեբան",
+        "humor": "Հումոր",
+        "flirt": "Ֆլիրտ",
+        "coach": "Կոուչ"
+    },
+    "ce": {
+        "support": "ДӀалийла",
+        "motivation": "Мотивация",
+        "philosophy": "Психолог",
+        "humor": "Юмор",
+        "flirt": "Флирт",
+        "coach": "Коуч"
+    },
+    "md": {
+        "support": "Suport",
+        "motivation": "Motivație",
+        "philosophy": "Psiholog",
+        "humor": "Umor",
+        "flirt": "Flirt",
+        "coach": "Coach"
+    },
+    "ka": {
+        "support": "მხარდაჭერა",
+        "motivation": "მოტივაცია",
+        "philosophy": "ფსიქოლოგი",
+        "humor": "იუმორი",
+        "flirt": "ფლირტი",
+        "coach": "ქოუჩი"
+    },
+    "en": {
+        "support": "Support",
+        "motivation": "Motivation",
+        "philosophy": "Psychologist",
+        "humor": "Humor",
+        "flirt": "Flirt",
+        "coach": "Coach"
+    },
+}
+
 async def handle_mode_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = str(query.from_user.id)
+    lang = user_languages.get(user_id, "ru")
     mode_key = query.data.replace("mode_", "")
 
     if mode_key in MODES:
         user_modes[user_id] = mode_key
-        conversation_history[user_id] = [{"role": "system", "content": MODES[mode_key]}]
+        system_prompt = MODES[mode_key].get(lang, MODES[mode_key]["ru"])
+        conversation_history[user_id] = [{"role": "system", "content": system_prompt}]
         save_history(conversation_history)
         await query.answer()
-        await query.edit_message_text(f"✅ Режим общения изменён на *{mode_key}*!", parse_mode="Markdown")
+        mode_name = MODE_NAMES.get(lang, MODE_NAMES["ru"]).get(mode_key, mode_key.capitalize())
+        await query.edit_message_text(
+            f"✅ Режим общения изменён на *{mode_name}*!", 
+            parse_mode="Markdown"
+        )
 
-def generate_post_response_buttons(goal_text=None, include_reactions=True):
+BUTTON_LABELS = {
+    "ru": {
+        "thanks": "❤️ Спасибо",
+        "add_goal": "📌 Добавить как цель",
+        "habits": "📋 Привычки",
+        "goals": "🎯 Цели",
+    },
+    "uk": {
+        "thanks": "❤️ Дякую",
+        "add_goal": "📌 Додати як ціль",
+        "habits": "📋 Звички",
+        "goals": "🎯 Цілі",
+    },
+    "be": {
+        "thanks": "❤️ Дзякуй",
+        "add_goal": "📌 Дадаць як мэту",
+        "habits": "📋 Звычкі",
+        "goals": "🎯 Мэты",
+    },
+    "kk": {
+        "thanks": "❤️ Рақмет",
+        "add_goal": "📌 Мақсат ретінде қосу",
+        "habits": "📋 Әдеттер",
+        "goals": "🎯 Мақсаттар",
+    },
+    "kg": {
+        "thanks": "❤️ Рахмат",
+        "add_goal": "📌 Максат катары кошуу",
+        "habits": "📋 Адаттар",
+        "goals": "🎯 Максаттар",
+    },
+    "hy": {
+        "thanks": "❤️ Շնորհակալություն",
+        "add_goal": "📌 Ավելացնել որպես նպատակ",
+        "habits": "📋 Սովորություններ",
+        "goals": "🎯 Նպատակներ",
+    },
+    "ce": {
+        "thanks": "❤️ Соьга",
+        "add_goal": "📌 Мацахь кхоллар",
+        "habits": "📋 ДӀаязде",
+        "goals": "🎯 Мацахь",
+    },
+    "md": {
+        "thanks": "❤️ Mulțumesc",
+        "add_goal": "📌 Adaugă ca obiectiv",
+        "habits": "📋 Obiceiuri",
+        "goals": "🎯 Obiective",
+    },
+    "ka": {
+        "thanks": "❤️ მადლობა",
+        "add_goal": "📌 დაამატე როგორც მიზანი",
+        "habits": "📋 ჩვევები",
+        "goals": "🎯 მიზნები",
+    },
+    "en": {
+        "thanks": "❤️ Thanks",
+        "add_goal": "📌 Add as goal",
+        "habits": "📋 Habits",
+        "goals": "🎯 Goals",
+    },
+}
+
+def generate_post_response_buttons(user_id=None, goal_text=None, include_reactions=True):
+    # Получаем язык пользователя (если не передан user_id — берем ru)
+    lang = user_languages.get(str(user_id), "ru") if user_id else "ru"
+    labels = BUTTON_LABELS.get(lang, BUTTON_LABELS["ru"])
     buttons = []
 
     if include_reactions:
         buttons.append([
-            InlineKeyboardButton("❤️ Спасибо", callback_data="react_thanks"),
+            InlineKeyboardButton(labels["thanks"], callback_data="react_thanks"),
         ])
 
     if goal_text:
         buttons.append([
-            InlineKeyboardButton("📌 Добавить как цель", callback_data=f"add_goal|{goal_text}")
+            InlineKeyboardButton(labels["add_goal"], callback_data=f"add_goal|{goal_text}")
         ])
-    if goal_text:
         buttons.append([
-            InlineKeyboardButton("📋 Привычки", callback_data="show_habits"),
-            InlineKeyboardButton("🎯 Цели", callback_data="show_goals")
+            InlineKeyboardButton(labels["habits"], callback_data="show_habits"),
+            InlineKeyboardButton(labels["goals"], callback_data="show_goals")
         ])
 
     return InlineKeyboardMarkup(buttons)
 
+# Тексты для реакции "Спасибо"
+REACTION_THANKS_TEXTS = {
+    "ru": "Всегда пожалуйста! 😊 Я рядом, если что-то захочешь обсудить 💜",
+    "uk": "Завжди радий допомогти! 😊 Я поруч, якщо захочеш поговорити 💜",
+    "be": "Заўсёды калі ласка! 😊 Я побач, калі захочаш абмеркаваць нешта 💜",
+    "kk": "Әрдайым көмектесемін! 😊 Бір нәрсе айтқың келсе, қасымдамын 💜",
+    "kg": "Ар дайым жардам берем! 😊 Сүйлөшкүң келсе, жанымдамын 💜",
+    "hy": "Միշտ պատրաստ եմ օգնել: 😊 Ես կողքիդ եմ, եթե ուզես զրուցել 💜",
+    "ce": "Хьоьга далла цуьнан! 😊 ДӀайазде хетам, са цуьнан ца йолуш 💜",
+    "md": "Cu plăcere oricând! 😊 Sunt alături dacă vrei să vorbești 💜",
+    "ka": "ყოველთვის მოხარული ვარ! 😊 აქ ვარ, თუ გინდა რამე გაინაწილო 💜",
+    "en": "Always happy to help! 😊 I’m here if you want to talk 💜"
+}
+
 async def handle_reaction_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-
-    if query.data == "react_thanks":
-        await query.message.reply_text("Всегда пожалуйста! 😊 Я рядом, если что-то захочешь обсудить 💜")
+    user_id = str(query.from_user.id)
+    lang = user_languages.get(user_id, "ru")
+    text = REACTION_THANKS_TEXTS.get(lang, REACTION_THANKS_TEXTS["ru"])
+    await query.message.reply_text(text)
 
 # Обработчик текстовых сообщений
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -5164,28 +5705,111 @@ async def task(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Отправляем сообщение с правильным заголовком
     await update.message.reply_text(f"{task_title.get(lang, task_title['ru'])}\n{chosen_task}")
 
-# /premium_task — премиум-задание на день
+PREMIUM_ONLY_TEXTS = {
+    "ru": "🔒 Эта функция доступна только подписчикам Mindra+.\nПодписка открывает доступ к уникальным заданиям и функциям ✨",
+    "uk": "🔒 Ця функція доступна лише для підписників Mindra+.\nПідписка відкриває унікальні завдання та функції ✨",
+    "be": "🔒 Гэтая функцыя даступная толькі для падпісчыкаў Mindra+.\nПадпіска адкрывае ўнікальныя заданні і функцыі ✨",
+    "kk": "🔒 Бұл мүмкіндік тек Mindra+ жазылушыларына қолжетімді.\nЖазылу арқылы ерекше тапсырмалар мен функцияларға қол жеткізе аласыз ✨",
+    "kg": "🔒 Бул функция Mindra+ жазылгандардын гана жеткиликтүү.\nЖазылуу уникалдуу тапшырмаларга жана функцияларга мүмкүнчүлүк берет ✨",
+    "hy": "🔒 Այս ֆունկցիան հասանելի է միայն Mindra+ բաժանորդներին:\nԲաժանորդագրությունը բացում է եզակի առաջադրանքների եւ հնարավորությունների հասանելիություն ✨",
+    "ce": "🔒 ДӀа функция Mindra+ подпискаш йолуш цуьнан гӀалгӀай.\nПодписка эксклюзивный дӀаязде цуьнан а, функцияш ✨",
+    "md": "🔒 Această funcție este disponibilă doar pentru abonații Mindra+.\nAbonamentul oferă acces la sarcini și funcții unice ✨",
+    "ka": "🔒 ეს ფუნქცია ხელმისაწვდომია მხოლოდ Mindra+ გამოწერის მქონეთათვის.\nგამოწერა გაძლევთ უნიკალურ დავალებებსა და ფუნქციებზე წვდომას ✨",
+    "en": "🔒 This feature is only available to Mindra+ subscribers.\nSubscription unlocks unique tasks and features ✨"
+}
+
+PREMIUM_TASK_TITLE = {
+    "ru": "✨ *Твоё премиум-задание на сегодня:*",
+    "uk": "✨ *Твоє преміум-завдання на сьогодні:*",
+    "be": "✨ *Тваё прэміум-заданне на сёння:*",
+    "kk": "✨ *Бүгінгі премиум-тапсырмаңыз:*",
+    "kg": "✨ *Бүгүнкү премиум-тапшырмаңыз:*",
+    "hy": "✨ *Այսօրվա պրեմիում առաջադրանքը:*",
+    "ce": "✨ *ДӀаязде премиум цуьнан а:*",
+    "md": "✨ *Sarcina ta premium pentru astăzi:*",
+    "ka": "✨ *შენი პრემიუმ დავალება დღეს:*",
+    "en": "✨ *Your premium task for today:*"
+}
+
 async def premium_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
+    lang = user_languages.get(user_id, "ru")
 
     if user_id in PREMIUM_USERS:
-        task = random.choice(premium_tasks)
-        await update.message.reply_text(f"✨ *Твоё премиум-задание на сегодня:*\n\n{task}", parse_mode="Markdown")
+        tasks = PREMIUM_TASKS_BY_LANG.get(lang, PREMIUM_TASKS_BY_LANG["ru"])
+        task = random.choice(tasks)
+        title = PREMIUM_TASK_TITLE.get(lang, PREMIUM_TASK_TITLE["ru"])
+        await update.message.reply_text(f"{title}\n\n{task}", parse_mode="Markdown")
     else:
         keyboard = [
             [InlineKeyboardButton("💎 Узнать о подписке", url="https://t.me/talktomindra_bot")]
         ]
-        await update.message.reply_text(
-            "🔒 Эта функция доступна только подписчикам Mindra+.\n"
-            "Подписка открывает доступ к уникальным заданиям и функциям ✨",
-            reply_markup=InlineKeyboardMarkup(keyboard)
-        )
+        text = PREMIUM_ONLY_TEXTS.get(lang, PREMIUM_ONLY_TEXTS["ru"])
+        await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
 
-# Неизвестные команды
+UNKNOWN_COMMAND_TEXTS = {
+    "ru": "❓ Я не знаю такой команды. Напиши /help, чтобы увидеть, что я умею.",
+    "uk": "❓ Я не знаю такої команди. Напиши /help, щоб побачити, що я вмію.",
+    "be": "❓ Я не ведаю такой каманды. Напішы /help, каб убачыць, што я ўмею.",
+    "kk": "❓ Менде ондай команда жоқ. /help деп жазып, мен не істей алатынымды көріңіз.",
+    "kg": "❓ Мындай буйрук жок. /help деп жазып, мен эмне кыла аларыма кара.",
+    "hy": "❓ Ես նման հրաման չգիտեմ։ Գրիր /help, տեսնելու համար, թե ինչ կարող եմ։",
+    "ce": "❓ Са цуьнан команда до а. /help йазде, хийцам са цуьнан а.",
+    "md": "❓ Nu cunosc această comandă. Scrie /help ca să vezi ce pot face.",
+    "ka": "❓ ასეთი ბრძანება არ ვიცი. დაწერე /help, რომ ნახო, რას ვაკეთებ.",
+    "en": "❓ I don't know that command. Type /help to see what I can do.",
+}
+
 async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("❓ Я не знаю такой команды. Напиши /help, чтобы увидеть, что я умею.")
+    user_id = str(update.effective_user.id)
+    lang = user_languages.get(user_id, "ru")
+    text = UNKNOWN_COMMAND_TEXTS.get(lang, UNKNOWN_COMMAND_TEXTS["ru"])
+    await update.message.reply_text(text)
 
 FEEDBACK_CHAT_ID = 7775321566  # <-- твой личный Telegram ID
+
+FEEDBACK_TEXTS = {
+    "ru": {
+        "thanks": "Спасибо за отзыв! 💜 Я уже его записала ✨",
+        "howto": "Напиши свой отзыв после команды.\nНапример:\n`/feedback Мне очень нравится бот, спасибо! 💜`"
+    },
+    "uk": {
+        "thanks": "Дякую за відгук! 💜 Я вже його записала ✨",
+        "howto": "Напиши свій відгук після команди.\nНаприклад:\n`/feedback Мені дуже подобається бот, дякую! 💜`"
+    },
+    "be": {
+        "thanks": "Дзякуй за водгук! 💜 Я ўжо яго запісала ✨",
+        "howto": "Напішы свой водгук пасля каманды.\nНапрыклад:\n`/feedback Мне вельмі падабаецца бот, дзякуй! 💜`"
+    },
+    "kk": {
+        "thanks": "Пікіріңізге рахмет! 💜 Мен оны жазып қойдым ✨",
+        "howto": "Пікіріңізді командадан кейін жазыңыз.\nМысалы:\n`/feedback Маған бот ұнайды, рахмет! 💜`"
+    },
+    "kg": {
+        "thanks": "Пикириңиз үчүн рахмат! 💜 Мен аны жазып койдум ✨",
+        "howto": "Пикириңизди команданын артынан жазыңыз.\nМисалы:\n`/feedback Мага бот жакты, рахмат! 💜`"
+    },
+    "hy": {
+        "thanks": "Շնորհակալություն արձագանքի համար! 💜 Ես արդեն գրանցել եմ այն ✨",
+        "howto": "Գրիր քո արձագանքը հրամանից հետո։\nՕրինակ՝\n`/feedback Ինձ շատ դուր է գալիս բոտը, շնորհակալություն! 💜`"
+    },
+    "ce": {
+        "thanks": "Баркалла тӀаьхьийна! 💜 Са йа цуьнан а ✨",
+        "howto": "Йа дӀайазде команда хийцам.\nМисал: `/feedback Бот цуьнан, баркалла! 💜`"
+    },
+    "md": {
+        "thanks": "Mulțumesc pentru feedback! 💜 L-am salvat deja ✨",
+        "howto": "Scrie feedback-ul după comandă.\nDe exemplu:\n`/feedback Îmi place mult botul, mulțumesc! 💜`"
+    },
+    "ka": {
+        "thanks": "მადლობა გამოხმაურებისთვის! 💜 უკვე ჩავწერე ✨",
+        "howto": "დაწერე შენი გამოხმაურება ბრძანების შემდეგ.\nმაგალითად:\n`/feedback ძალიან მომწონს ბოტი, მადლობა! 💜`"
+    },
+    "en": {
+        "thanks": "Thank you for your feedback! 💜 I've already saved it ✨",
+        "howto": "Write your feedback after the command.\nFor example:\n`/feedback I really like the bot, thank you! 💜`"
+    },
+}
 
 async def feedback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -5193,12 +5817,13 @@ async def feedback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     first_name = update.effective_user.first_name or ""
     last_name = update.effective_user.last_name or ""
 
+    lang = user_languages.get(str(user_id), "ru")
+    t = FEEDBACK_TEXTS.get(lang, FEEDBACK_TEXTS["ru"])
+
     if context.args:
         user_feedback = " ".join(context.args)
-        # Ответ пользователю
-        await update.message.reply_text("Спасибо за отзыв! 💜 Я уже его записала ✨")
+        await update.message.reply_text(t["thanks"])
 
-        # Сообщение для канала/тебя
         feedback_message = (
             f"📝 *Новый отзыв:*\n\n"
             f"👤 ID: `{user_id}`\n"
@@ -5207,7 +5832,6 @@ async def feedback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"💌 Отзыв: {user_feedback}"
         )
 
-        # Отправляем в канал или тебе
         try:
             await context.bot.send_message(
                 chat_id=FEEDBACK_CHAT_ID,
@@ -5217,137 +5841,1012 @@ async def feedback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception as e:
             logging.error(f"❌ Не удалось отправить отзыв в канал: {e}")
     else:
-        await update.message.reply_text(
-            "Напиши свой отзыв после команды.\nНапример:\n`/feedback Мне очень нравится бот, спасибо! 💜`",
-            parse_mode="Markdown"
-        )
+        await update.message.reply_text(t["howto"], parse_mode="Markdown")
 
-EVENING_MESSAGES = [
-    "🌙 Привет! День подходит к концу. Как ты себя чувствуешь? 💜",
-    "✨ Как прошёл твой день? Расскажешь? 🥰",
-    "😊 Я тут подумала — интересно, что хорошего сегодня произошло у тебя?",
-    "💭 Перед сном полезно вспомнить, за что ты благодарен(на) сегодня. Поделишься?",
-    "🤗 Как настроение? Если хочешь — расскажи мне об этом дне."
-]
+EVENING_MESSAGES_BY_LANG = {
+    "ru": [
+        "🌙 Привет! День подходит к концу. Как ты себя чувствуешь? 💜",
+        "✨ Как прошёл твой день? Расскажешь? 🥰",
+        "😊 Я тут подумала — интересно, что хорошего сегодня произошло у тебя?",
+        "💭 Перед сном полезно вспомнить, за что ты благодарен(на) сегодня. Поделишься?",
+        "🤗 Как настроение? Если хочешь — расскажи мне об этом дне.",
+    ],
+    "uk": [
+        "🌙 Привіт! День добігає кінця. Як ти себе почуваєш? 💜",
+        "✨ Як минув твій день? Розкажеш? 🥰",
+        "😊 Я тут подумала — цікаво, що хорошого сьогодні трапилось у тебе?",
+        "💭 Перед сном корисно згадати, за що ти вдячний(на) сьогодні. Поділишся?",
+        "🤗 Який настрій? Якщо хочеш — розкажи про цей день.",
+    ],
+    "be": [
+        "🌙 Прывітанне! Дзень падыходзіць да канца. Як ты сябе адчуваеш? 💜",
+        "✨ Як прайшоў твой дзень? Раскажаш? 🥰",
+        "😊 Я тут падумала — цікава, што добрага сёння адбылося ў цябе?",
+        "💭 Перад сном карысна ўспомніць, за што ты ўдзячны(ая) сёння. Падзелішся?",
+        "🤗 Які настрой? Калі хочаш — раскажы пра гэты дзень.",
+    ],
+    "kk": [
+        "🌙 Сәлем! Күн аяқталуға жақын. Қалайсың? 💜",
+        "✨ Күнің қалай өтті? Айтасың ба? 🥰",
+        "😊 Бүгін не жақсы болды деп ойлайсың?",
+        "💭 Ұйықтар алдында не үшін алғыс айтқың келеді, ойланшы. Бөлісесің бе?",
+        "🤗 Көңіл-күйің қалай? Қаласаң — осы күн туралы айтып бер.",
+    ],
+    "kg": [
+        "🌙 Салам! Күн аяктап баратат. Кандайсың? 💜",
+        "✨ Күнің кандай өттү? Айтып бересиңби? 🥰",
+        "😊 Бүгүн жакшы эмне болду деп ойлойсуң?",
+        "💭 Уктаар алдында эмне үчүн ыраазы экениңди эстеп ал. Бөлүшкөнүңдү каалайм.",
+        "🤗 Кандай маанайдасың? Кааласаң — ушул күн тууралуу айтып бер.",
+    ],
+    "hy": [
+        "🌙 Բարեւ: Օրը մոտենում է ավարտին։ Ինչպե՞ս ես քեզ զգում։ 💜",
+        "✨ Ինչպե՞ս անցավ օրը։ Կպատմե՞ս։ 🥰",
+        "😊 Հետաքրքիր է, ինչ լավ բան է այսօր պատահել քեզ հետ։",
+        "💭 Քնելուց առաջ արժե հիշել, ինչի համար ես շնորհակալ։ Կկիսվե՞ս։",
+        "🤗 Ինչ տրամադրություն ունես։ Եթե ցանկանում ես, պատմիր այս օրվա մասին։",
+    ],
+    "ce": [
+        "🌙 Салам! Дийн цхьа кхета. Хьо цуьнан а? 💜",
+        "✨ Дийна хьо ву? Хеташ цуьнан? 🥰",
+        "😊 Со хьа цуьнан а — хьо цуьнан догӀур ду?",
+        "💭 Вуьйре цхьа дийцар, хийцам а къобал. Хьо болу чох?",
+        "🤗 Хьалха цуьнан? Хочуш хьо — хийцам дийна.",
+    ],
+    "md": [
+        "🌙 Salut! Ziua se apropie de sfârșit. Cum te simți? 💜",
+        "✨ Cum a fost ziua ta? Povestește-mi! 🥰",
+        "😊 Sunt curioasă, ce lucru bun s-a întâmplat azi la tine?",
+        "💭 Înainte de culcare e bine să te gândești pentru ce ești recunoscător(are) azi. Împarți cu mine?",
+        "🤗 Ce dispoziție ai? Dacă vrei, povestește-mi despre această zi.",
+    ],
+    "ka": [
+        "🌙 გამარჯობა! დღე მთავრდება. როგორ ხარ? 💜",
+        "✨ როგორ ჩაიარა დღემ? მომიყვები? 🥰",
+        "😊 მაინტერესებს, რა კარგი მოხდა დღეს შენთან?",
+        "💭 დაძინებამდე გაიხსენე, რისთვის ხარ მადლიერი დღეს. გამიზიარებ?",
+        "🤗 რა განწყობაზე ხარ? თუ გინდა, მომიყევი დღევანდელი დღის შესახებ.",
+    ],
+    "en": [
+        "🌙 Hi! The day is coming to an end. How are you feeling? 💜",
+        "✨ How was your day? Will you tell me? 🥰",
+        "😊 I'm wondering what good things happened to you today.",
+        "💭 Before going to bed, it's helpful to recall what you're grateful for today. Will you share?",
+        "🤗 How's your mood? If you want, tell me about this day.",
+    ],
+}
 
 async def send_evening_checkin(context):
-    # здесь можно пройтись по всем user_id, которых ты хочешь оповестить
-    for user_id in user_last_seen.keys():  # если у тебя уже хранится словарь активных пользователей
+    for user_id in user_last_seen.keys():
         try:
-            msg = random.choice(EVENING_MESSAGES)
+            lang = user_languages.get(str(user_id), "ru")
+            msg = random.choice(EVENING_MESSAGES_BY_LANG.get(lang, EVENING_MESSAGES_BY_LANG["ru"]))
             await context.bot.send_message(chat_id=user_id, text=msg)
         except Exception as e:
             logging.error(f"❌ Не удалось отправить вечернее сообщение пользователю {user_id}: {e}")
 
-# ✨ Список мотивационных цитат
-QUOTES = [
-    "🌟 *Успех — это сумма небольших усилий, повторяющихся день за днем.*",
-    "💪 *Неважно, как медленно ты идёшь, главное — не останавливаться.*",
-    "🔥 *Самый лучший день для начала — сегодня.*",
-    "💜 *Ты сильнее, чем думаешь, и способнее, чем тебе кажется.*",
-    "🌱 *Каждый день — новый шанс изменить свою жизнь.*",
-    "🚀 *Не бойся идти медленно. Бойся стоять на месте.*",
-    "☀️ *Сложные пути часто ведут к красивым местам.*",
-    "🦋 *Делай сегодня то, за что завтра скажешь себе спасибо.*",
-    "✨ *Твоя энергия привлекает твою реальность. Выбирай позитив.*",
-    "🙌 *Верь в себя. Ты — самое лучшее, что у тебя есть.*",
-    "💜 «Каждый день — новый шанс изменить свою жизнь.»",
-    "🌟 «Твоя энергия создаёт твою реальность.»",
-    "🔥 «Делай сегодня то, за что завтра скажешь себе спасибо.»",
-    "✨ «Большие перемены начинаются с маленьких шагов.»",
-    "🌱 «Ты сильнее, чем думаешь, и способен(на) на большее.»",
-    "☀️ «Свет внутри тебя ярче любых трудностей.»",
-    "💪 «Не бойся ошибаться — бойся не пробовать.»",
-    "🌊 «Все бури заканчиваются, а ты становишься сильнее.»",
-    "🤍 «Ты достоин(на) любви и счастья прямо сейчас.»",
-    "🚀 «Твои мечты ждут, когда ты начнёшь действовать.»",
-    "🎯 «Верь в процесс, даже если путь пока неясен.»",
-    "🧘‍♀️ «Спокойный ум — ключ к счастливой жизни.»",
-    "🌸 «Каждый момент — возможность начать заново.»",
-    "💡 «Жизнь — это 10% того, что с тобой происходит, и 90% того, как ты на это реагируешь.»",
-    "❤️ «Ты важен(на) и нужен(на) в этом мире.»",
-    "🌌 «Делай каждый день немного для своей мечты.»",
-    "🙌 «Ты заслуживаешь самого лучшего — верь в это.»",
-    "✨ «Пусть сегодня будет началом чего-то великого.»",
-    "💎 «Самое лучшее впереди — продолжай идти.»",
-    "🌿 «Твои маленькие шаги — твоя великая сила.»"
-]
+QUOTES_BY_LANG = {
+    "ru": [
+        "🌟 Успех — это сумма небольших усилий, повторяющихся день за днем.",
+        "💪 Неважно, как медленно ты идёшь, главное — не останавливаться.",
+        "🔥 Самый лучший день для начала — сегодня.",
+        "💜 Ты сильнее, чем думаешь, и способнее, чем тебе кажется.",
+        "🌱 Каждый день — новый шанс изменить свою жизнь.",
+        "🚀 Не бойся идти медленно. Бойся стоять на месте.",
+        "☀️ Сложные пути часто ведут к красивым местам.",
+        "🦋 Делай сегодня то, за что завтра скажешь себе спасибо.",
+        "✨ Твоя энергия привлекает твою реальность. Выбирай позитив.",
+        "🙌 Верь в себя. Ты — самое лучшее, что у тебя есть.",
+        "💜 Каждый день — новый шанс изменить свою жизнь.",
+        "🌟 Твоя энергия создаёт твою реальность.",
+        "🔥 Делай сегодня то, за что завтра скажешь себе спасибо.",
+        "✨ Большие перемены начинаются с маленьких шагов.",
+        "🌱 Ты сильнее, чем думаешь, и способен(на) на большее.",
+        "☀️ Свет внутри тебя ярче любых трудностей.",
+        "💪 Не бойся ошибаться — бойся не пробовать.",
+        "🌊 Все бури заканчиваются, а ты становишься сильнее.",
+        "🤍 Ты достоин(на) любви и счастья прямо сейчас.",
+        "🚀 Твои мечты ждут, когда ты начнёшь действовать.",
+        "🎯 Верь в процесс, даже если путь пока неясен.",
+        "🧘‍♀️ Спокойный ум — ключ к счастливой жизни.",
+        "🌸 Каждый момент — возможность начать заново.",
+        "💡 Жизнь — это 10% того, что с тобой происходит, и 90% того, как ты на это реагируешь.",
+        "❤️ Ты важен(на) и нужен(на) в этом мире.",
+        "🌌 Делай каждый день немного для своей мечты.",
+        "🙌 Ты заслуживаешь самого лучшего — верь в это.",
+        "✨ Пусть сегодня будет началом чего-то великого.",
+        "💎 Самое лучшее впереди — продолжай идти.",
+        "🌿 Твои маленькие шаги — твоя великая сила."
+    ],
+    "uk": [
+        "🌟 Успіх — це сума невеликих зусиль, що повторюються щодня.",
+        "💪 Не важливо, як повільно ти йдеш, головне — не зупинятися.",
+        "🔥 Найкращий день для початку — сьогодні.",
+        "💜 Ти сильніший(а), ніж думаєш, і здатний(а) на більше.",
+        "🌱 Кожен день — новий шанс змінити своє життя.",
+        "🚀 Не бійся йти повільно. Бійся стояти на місці.",
+        "☀️ Важкі дороги часто ведуть до красивих місць.",
+        "🦋 Роби сьогодні те, за що завтра подякуєш собі.",
+        "✨ Твоя енергія притягує твою реальність. Обирай позитив.",
+        "🙌 Вір у себе. Ти — найкраще, що в тебе є.",
+        "💜 Кожен день — новий шанс змінити своє життя.",
+        "🌟 Твоя енергія створює твою реальність.",
+        "🔥 Роби сьогодні те, за що завтра подякуєш собі.",
+        "✨ Великі зміни починаються з маленьких кроків.",
+        "🌱 Ти сильніший(а), ніж здається, і здатний(а) на більше.",
+        "☀️ Світло в тобі яскравіше будь-яких труднощів.",
+        "💪 Не бійся помилятися — бійся не спробувати.",
+        "🌊 Усі бурі минають, а ти стаєш сильнішим(ою).",
+        "🤍 Ти гідний(а) любові та щастя прямо зараз.",
+        "🚀 Твої мрії чекають, коли ти почнеш діяти.",
+        "🎯 Вір у процес, навіть якщо шлях поки незрозумілий.",
+        "🧘‍♀️ Спокійний розум — ключ до щасливого життя.",
+        "🌸 Кожна мить — можливість почати знову.",
+        "💡 Життя — це 10% того, що з тобою відбувається, і 90% того, як ти на це реагуєш.",
+        "❤️ Ти важливий(а) та потрібний(а) у цьому світі.",
+        "🌌 Щодня роби трохи для своєї мрії.",
+        "🙌 Ти заслуговуєш на найкраще — вір у це.",
+        "✨ Нехай сьогодні стане початком чогось великого.",
+        "💎 Найкраще попереду — продовжуй іти.",
+        "🌿 Твої маленькі кроки — твоя велика сила."
+    ],
+    "be": [
+        "🌟 Поспех — гэта сума невялікіх намаганняў, якія паўтараюцца штодня.",
+        "💪 Не важна, як павольна ты ідзеш, галоўнае — не спыняцца.",
+        "🔥 Лепшы дзень для пачатку — сёння.",
+        "💜 Ты мацнейшы(ая), чым думаеш, і здольны(ая) на большае.",
+        "🌱 Кожны дзень — новы шанец змяніць сваё жыццё.",
+        "🚀 Не бойся ісці павольна. Бойся стаяць на месцы.",
+        "☀️ Складаныя шляхі часта вядуць да прыгожых месцаў.",
+        "🦋 Рабі сёння тое, за што заўтра скажаш сабе дзякуй.",
+        "✨ Твая энергія прыцягвае тваю рэальнасць. Абірай пазітыў.",
+        "🙌 Верь у сябе. Ты — лепшае, што ў цябе ёсць.",
+        "💜 Кожны дзень — новы шанец змяніць сваё жыццё.",
+        "🌟 Твая энергія стварае тваю рэальнасць.",
+        "🔥 Рабі сёння тое, за што заўтра скажаш сабе дзякуй.",
+        "✨ Вялікія перамены пачынаюцца з маленькіх крокаў.",
+        "🌱 Ты мацнейшы(ая), чым здаецца, і здольны(ая) на большае.",
+        "☀️ Святло ў табе ярчэй за ўсе цяжкасці.",
+        "💪 Не бойся памыляцца — бойся не паспрабаваць.",
+        "🌊 Усе буры мінаюць, а ты становішся мацнейшым(ай).",
+        "🤍 Ты годны(ая) любові і шчасця ўжо цяпер.",
+        "🚀 Твае мары чакаюць, калі ты пачнеш дзейнічаць.",
+        "🎯 Верь у працэс, нават калі шлях пакуль незразумелы.",
+        "🧘‍♀️ Спакойны розум — ключ да шчаслівага жыцця.",
+        "🌸 Кожны момант — магчымасць пачаць зноў.",
+        "💡 Жыццё — гэта 10% таго, што з табой адбываецца, і 90% таго, як ты на гэта рэагуеш.",
+        "❤️ Ты важны(ая) і патрэбны(ая) ў гэтым свеце.",
+        "🌌 Рабі кожны дзень трошкі для сваёй мары.",
+        "🙌 Ты заслугоўваеш самага лепшага — вер у гэта.",
+        "✨ Хай сёння будзе пачаткам чагосьці вялікага.",
+        "💎 Лепшае наперадзе — працягвай ісці.",
+        "🌿 Твае маленькія крокі — твая вялікая сіла."
+    ],
+    "kk": [
+        "🌟 Жетістік — күн сайын қайталанатын шағын әрекеттердің жиынтығы.",
+        "💪 Қаншалықты баяу жүрсең де, бастысы — тоқтамау.",
+        "🔥 Бастау үшін ең жақсы күн — бүгін.",
+        "💜 Сен ойлағаннан да күшті әрі қабілеттісің.",
+        "🌱 Әр күн — өміріңді өзгертуге жаңа мүмкіндік.",
+        "🚀 Баяу жүре беруден қорықпа. Бір орында тұрып қалудан қорық.",
+        "☀️ Қиын жолдар жиі әдемі орындарға апарады.",
+        "🦋 Ертең өзіңе рақмет айтатын іске бүгін кіріс.",
+        "✨ Энергияң шындығыңды тартады. Позитивті таңда.",
+        "🙌 Өзіңе сен. Сенде бәрі бар.",
+        "💜 Әр күн — өміріңді өзгертуге жаңа мүмкіндік.",
+        "🌟 Энергияң өз болмысыңды жасайды.",
+        "🔥 Ертең өзіңе рақмет айтатын іске бүгін кіріс.",
+        "✨ Үлкен өзгерістер кішкентай қадамдардан басталады.",
+        "🌱 Сен ойлағаннан да күштісің және көп нәрсеге қабілеттісің.",
+        "☀️ Ішкі жарығың кез келген қиындықтан жарқын.",
+        "💪 Қателесуден қорықпа — байқап көрмеуден қорық.",
+        "🌊 Барлық дауыл өтеді, сен күшейе түсесің.",
+        "🤍 Сен дәл қазір махаббат пен бақытқа лайықсың.",
+        "🚀 Армандарың сенің алғашқы қадамыңды күтуде.",
+        "🎯 Процеске сен, жол түсініксіз болса да.",
+        "🧘‍♀️ Тыныш ақыл — бақытты өмірдің кілті.",
+        "🌸 Әр сәт — жаңадан бастауға мүмкіндік.",
+        "💡 Өмір — саған не болатынының 10%, ал 90% — сенің оған қалай қарайтының.",
+        "❤️ Сен маңыздысың әрі қажетсің.",
+        "🌌 Арманың үшін күн сайын аздап жаса.",
+        "🙌 Сен ең жақсысына лайықсың — сен оған сен.",
+        "✨ Бүгін — ұлы істің бастауы болсын.",
+        "💎 Ең жақсыларың алда — алға бас.",
+        "🌿 Кішкентай қадамдарың — сенің ұлы күшің."
+    ],
+    "kg": [
+        "🌟 Ийгилик — күн сайын кайталанган кичинекей аракеттердин жыйындысы.",
+        "💪 Канча жай жүрсөң да, башкысы — токтобо.",
+        "🔥 Баштоо үчүн эң жакшы күн — бүгүн.",
+        "💜 Сен ойлогондон да күчтүүсүң жана жөндөмдүүсүң.",
+        "🌱 Ар бир күн — жашооңду өзгөртүүгө жаңы мүмкүнчүлүк.",
+        "🚀 Жай жүрүүдөн коркпо. Бир жерде туруп калуудан корк.",
+        "☀️ Кыйын жолдор көбүнчө кооз жерлерге алып келет.",
+        "🦋 Эртең өзүнө ыраазы боло турган ишти бүгүн жаса.",
+        "✨ Энергияң чындыкты тартат. Позитивди танда.",
+        "🙌 Өзүңө ишен. Сен эң жакшысың.",
+        "💜 Ар бир күн — жашооңду өзгөртүүгө мүмкүнчүлүк.",
+        "🌟 Энергияң өз дүйнөңдү түзөт.",
+        "🔥 Эртең өзүнө ыраазы боло турган ишти бүгүн жаса.",
+        "✨ Чоң өзгөрүүлөр кичине кадамдардан башталат.",
+        "🌱 Сен ойлогондон да күчтүүсүң жана көп нерсеге жөндөмдүүсүң.",
+        "☀️ Ичиңдеги жарык бардык кыйынчылыктардан жаркын.",
+        "💪 Катадан коркпо — аракет кылбоодон корк.",
+        "🌊 Бардык бороон өтөт, сен бекем болосуң.",
+        "🤍 Сен азыр эле сүйүүгө жана бакытка татыктуусуң.",
+        "🚀 Кыялдарың иш-аракетти күтүп турат.",
+        "🎯 Процесске ишен, жол белгисиз болсо да.",
+        "🧘‍♀️ Тынч акыл — бактылуу жашоонун ачкычы.",
+        "🌸 Ар бир учур — кайра баштоого мүмкүнчүлүк.",
+        "💡 Жашоо — сага эмне болорунун 10%, калганы сенин ага мамилең.",
+        "❤️ Сен маанилүүсүң жана бул дүйнөгө керексиң.",
+        "🌌 Кыялың үчүн күн сайын аз да болсо жаса.",
+        "🙌 Сен эң жакшысын татыктуусуң — ишен.",
+        "✨ Бүгүн чоң нерсенин башталышы болсун.",
+        "💎 Эң жакшысы алдыда — жолуңан тайба.",
+        "🌿 Кичине кадамдарың — сенин улуу күчүң."
+    ],
+    "hy": [
+        "🌟 Հաջողությունը փոքր ջանքերի գումարն է, որոնք կրկնվում են ամեն օր։",
+        "💪 Անկախ նրանից, թե որքան դանդաղ ես շարժվում, կարևորն այն է՝ չկանգնել։",
+        "🔥 Լավագույն օրը սկսելու համար՝ այսօրն է։",
+        "💜 Դու ավելի ուժեղ ու կարող ես, քան կարծում ես։",
+        "🌱 Ամեն օր՝ կյանքդ փոխելու նոր հնարավորություն է։",
+        "🚀 Մի վախեցիր դանդաղ շարժվելուց։ Վախեցիր չշարժվելուց։",
+        "☀️ Դժվար ճանապարհները հաճախ տանում են գեղեցիկ վայրեր։",
+        "🦋 Արա այսօր այն, ինչի համար վաղը շնորհակալ կլինես քեզ։",
+        "✨ Քո էներգիան ձգում է իրականությունը։ Ընտրիր դրականը։",
+        "🙌 Հավատա ինքդ քեզ։ Դու ունես ամեն ինչ։",
+        "💜 Ամեն օր՝ կյանքդ փոխելու նոր հնարավորություն է։",
+        "🌟 Քո էներգիան ստեղծում է քո իրականությունը։",
+        "🔥 Արա այսօր այն, ինչի համար վաղը շնորհակալ կլինես քեզ։",
+        "✨ Մեծ փոփոխությունները սկսվում են փոքր քայլերից։",
+        "🌱 Դու ուժեղ ես, քան կարծում ես, և ունակ ավելին։",
+        "☀️ Քո ներսի լույսը վառ է ցանկացած դժվարությունից։",
+        "💪 Մի վախեցիր սխալվելուց — վախեցիր չփորձելուց։",
+        "🌊 Բոլոր փոթորիկներն անցնում են, իսկ դու ավելի ուժեղ ես դառնում։",
+        "🤍 Դու հիմա սիրո և երջանկության արժանի ես։",
+        "🚀 Քո երազանքները սպասում են քո առաջին քայլին։",
+        "🎯 Վստահիր ընթացքին, նույնիսկ եթե ճանապարհը պարզ չէ։",
+        "🧘‍♀️ Խաղաղ միտքը երջանիկ կյանքի բանալին է։",
+        "🌸 Ամեն պահ՝ նորից սկսելու հնարավորություն է։",
+        "💡 Կյանքը 10% այն է, ինչ պատահում է քեզ հետ, և 90%՝ ինչպես ես արձագանքում։",
+        "❤️ Դու կարևոր ու անհրաժեշտ ես այս աշխարհում։",
+        "🌌 Ամեն օր մի փոքր արա քո երազանքի համար։",
+        "🙌 Դու արժանի ես լավագույնին — հավատա դրան։",
+        "✨ Թող այսօրը լինի ինչ-որ մեծի սկիզբը։",
+        "💎 Լավագույնը դեռ առջևում է — շարունակիր։",
+        "🌿 Քո փոքր քայլերը՝ քո մեծ ուժն են։"
+    ],
+    "ce": [
+        "🌟 Дечу хилла цхьаьна мотт хетар хилла.",
+        "💪 До хьаьлла догала, доьхахаца — догӀаьлча.",
+        "🔥 До бац барра — гӀайр цуьнан цуьнан.",
+        "💜 Хьо цуьнан даха аьтто хилла, цуьнан лаьцна.",
+        "🌱 Цхьаьна мотт — цхьаьна кхин ву бацийн.",
+        "🚀 Ац мотт догалаша, атту догӀаьлча.",
+        "☀️ КӀанчу юкъара каргаш долу цуьнан.",
+        "🦋 Даьлча кхо бен цхьаьна цуьнан хьо хилла.",
+        "✨ Хила цуьнан — хила цхьаьна. Позитив цуьнан цуьнан.",
+        "🙌 Цуьнан цуьнан ву а цхьаьна ву.",
+        "💜 Цхьаьна мотт — цхьаьна кхин ву бацийн.",
+        "🌟 Хила цуьнан — хила цхьаьна.",
+        "🔥 Даьлча кхо бен цхьаьна цуьнан хьо хилла.",
+        "✨ Баха цхьаьна цхьаьна цхьаьна.",
+        "🌱 Хьо хилла даха аьтто хилла.",
+        "☀️ Илла хила ву хила къай.",
+        "💪 До хьаьлла догала, доьхахаца — догӀаьлча.",
+        "🌊 Илла къайна цхьаьна хьо цхьаьна хилла.",
+        "🤍 Хьо хила йоцу цхьаьна хила.",
+        "🚀 Хила йоцу цхьаьна хила.",
+        "🎯 Илла къайна цхьаьна хьо цхьаьна хилла.",
+        "🧘‍♀️ Илла къайна цхьаьна хьо цхьаьна хилла.",
+        "🌸 Илла къайна цхьаьна хьо цхьаьна хилла.",
+        "💡 Илла къайна цхьаьна хьо цхьаьна хилла.",
+        "❤️ Илла къайна цхьаьна хьо цхьаьна хилла.",
+        "🌌 Илла къайна цхьаьна хьо цхьаьна хилла.",
+        "🙌 Илла къайна цхьаьна хьо цхьаьна хилла.",
+        "✨ Илла къайна цхьаьна хьо цхьаьна хилла.",
+        "💎 Илла къайна цхьаьна хьо цхьаьна хилла.",
+        "🌿 Илла къайна цхьаьна хьо цхьаьна хилла."
+    ],
+    "md": [
+        "🌟 Succesul este suma micilor eforturi repetate zi de zi.",
+        "💪 Nu contează cât de încet mergi, important e să nu te oprești.",
+        "🔥 Cea mai bună zi pentru a începe este azi.",
+        "💜 Ești mai puternic(ă) și capabil(ă) decât crezi.",
+        "🌱 Fiecare zi e o nouă șansă de a-ți schimba viața.",
+        "🚀 Nu te teme să mergi încet. Teme-te să stai pe loc.",
+        "☀️ Drumurile grele duc adesea spre locuri frumoase.",
+        "🦋 Fă azi ceea ce-ți va mulțumi mâine.",
+        "✨ Energia ta atrage realitatea ta. Alege pozitivul.",
+        "🙌 Crede în tine. Ești cel mai bun atu al tău.",
+        "💜 Fiecare zi e o nouă șansă de schimbare.",
+        "🌟 Energia ta creează realitatea ta.",
+        "🔥 Fă azi ceea ce-ți va mulțumi mâine.",
+        "✨ Marile schimbări încep cu pași mici.",
+        "🌱 Ești mai puternic(ă) decât crezi și capabil(ă) de mai mult.",
+        "☀️ Lumina din tine e mai puternică decât orice greutate.",
+        "💪 Nu te teme de greșeli — teme-te să nu încerci.",
+        "🌊 Toate furtunile trec, iar tu devii mai puternic(ă).",
+        "🤍 Meriți iubire și fericire chiar acum.",
+        "🚀 Visurile tale te așteaptă să acționezi.",
+        "🎯 Ai încredere în proces, chiar dacă drumul nu e clar.",
+        "🧘‍♀️ O minte liniștită e cheia unei vieți fericite.",
+        "🌸 Fiecare clipă e o oportunitate de a începe din nou.",
+        "💡 Viața e 10% ce ți se întâmplă și 90% cum reacționezi.",
+        "❤️ Ești important(ă) și necesar(ă) în această lume.",
+        "🌌 Fă câte puțin în fiecare zi pentru visul tău.",
+        "🙌 Meriți ce e mai bun — crede în asta.",
+        "✨ Lasă ca azi să fie începutul a ceva măreț.",
+        "💎 Ce-i mai bun urmează — continuă să mergi.",
+        "🌿 Pașii tăi mici — forța ta mare."
+    ],
+    "ka": [
+        "🌟 წარმატება პატარა ძალისხმევების ჯამია, რომელიც ყოველდღე მეორდება.",
+        "💪 მნიშვნელობა არ აქვს, რამდენად ნელა მიდიხარ — მთავარია, არ გაჩერდე.",
+        "🔥 დაწყებისთვის საუკეთესო დღე — დღეს არის.",
+        "💜 შენ უფრო ძლიერი და უფრო უნარიანი ხარ, ვიდრე გგონია.",
+        "🌱 ყოველი დღე — ახალი შანსია შეცვალო შენი ცხოვრება.",
+        "🚀 ნუ გეშინია ნელა სიარულის. გეშინოდეს ერთ ადგილას დგომის.",
+        "☀️ რთული გზები ხშირად მშვენიერ ადგილებში მიდის.",
+        "🦋 გააკეთე დღეს ის, რისთვისაც ხვალ მადლობას ეტყვი საკუთარ თავს.",
+        "✨ შენი ენერგია იზიდავს რეალობას. აირჩიე პოზიტივი.",
+        "🙌 იწამე საკუთარი თავი. შენ შენი საუკეთესო რესურსი ხარ.",
+        "💜 ყოველი დღე ახალი შესაძლებლობაა ცვლილებისთვის.",
+        "🌟 შენი ენერგია ქმნის შენს რეალობას.",
+        "🔥 გააკეთე დღეს ის, რისთვისაც ხვალ მადლობას ეტყვი საკუთარ თავს.",
+        "✨ დიდი ცვლილებები იწყება პატარა ნაბიჯებით.",
+        "🌱 შენ უფრო ძლიერი ხარ, ვიდრე ფიქრობ და შეგიძლია მეტი.",
+        "☀️ შენი შიგნით სინათლე ყველა სირთულეს აჭარბებს.",
+        "💪 ნუ გეშინია შეცდომების — გეშინოდეს არგადადგა ნაბიჯი.",
+        "🌊 ყველა ქარიშხალი მთავრდება, შენ კი უფრო ძლიერი ხდები.",
+        "🤍 იმსახურებ სიყვარულს და ბედნიერებას უკვე ახლა.",
+        "🚀 შენი ოცნებები გელოდება, როცა დაიწყებ მოქმედებას.",
+        "🎯 ენდე პროცესს, თუნდაც გზა ჯერ არ იყოს ნათელი.",
+        "🧘‍♀️ მშვიდი გონება ბედნიერი ცხოვრების გასაღებია.",
+        "🌸 ყოველი მომენტი — ახალი დასაწყების შესაძლებლობა.",
+        "💡 ცხოვრება — ესაა 10% რა ხდება და 90% როგორ რეაგირებ.",
+        "❤️ მნიშვნელოვანი და საჭირო ხარ ამ სამყაროში.",
+        "🌌 შენი ოცნებისთვის ყოველდღე ცოტა რამ გააკეთე.",
+        "🙌 შენ იმსახურებ საუკეთესოს — გჯეროდეს ამის.",
+        "✨ დღეს დაიწყე რაღაც დიდი.",
+        "💎 საუკეთესო ჯერ კიდევ წინაა — განაგრძე გზა.",
+        "🌿 შენი პატარა ნაბიჯები — შენი დიდი ძალაა."
+    ],
+    "en": [
+        "🌟 Success is the sum of small efforts repeated day in and day out.",
+        "💪 It doesn't matter how slowly you go, as long as you do not stop.",
+        "🔥 The best day to start is today.",
+        "💜 You are stronger and more capable than you think.",
+        "🌱 Every day is a new chance to change your life.",
+        "🚀 Don't be afraid to go slowly. Be afraid to stand still.",
+        "☀️ Difficult roads often lead to beautiful destinations.",
+        "🦋 Do today what you will thank yourself for tomorrow.",
+        "✨ Your energy attracts your reality. Choose positivity.",
+        "🙌 Believe in yourself. You are your greatest asset.",
+        "💜 Every day is a new chance to change your life.",
+        "🌟 Your energy creates your reality.",
+        "🔥 Do today what you will thank yourself for tomorrow.",
+        "✨ Big changes start with small steps.",
+        "🌱 You are stronger than you think and capable of more.",
+        "☀️ The light inside you shines brighter than any difficulty.",
+        "💪 Don't be afraid to make mistakes — be afraid not to try.",
+        "🌊 Every storm ends, and you become stronger.",
+        "🤍 You deserve love and happiness right now.",
+        "🚀 Your dreams are waiting for you to take action.",
+        "🎯 Trust the process, even if the path isn't clear yet.",
+        "🧘‍♀️ A calm mind is the key to a happy life.",
+        "🌸 Every moment is an opportunity to start again.",
+        "💡 Life is 10% what happens to you and 90% how you react.",
+        "❤️ You are important and needed in this world.",
+        "🌌 Do a little every day for your dream.",
+        "🙌 You deserve the best — believe it.",
+        "✨ Let today be the start of something great.",
+        "💎 The best is yet to come — keep going.",
+        "🌿 Your small steps are your great strength."
+    ],
+}
 
-# 📌 Команда /quote
 async def quote(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    selected_quote = random.choice(QUOTES)
+    user_id = str(update.effective_user.id)
+    lang = user_languages.get(user_id, "ru")
+    selected_quote = random.choice(QUOTES_BY_LANG.get(lang, QUOTES_BY_LANG["ru"]))
     await update.message.reply_text(selected_quote, parse_mode="Markdown")
 
-SUPPORT_MESSAGES = [
-    "💜 Ты делаешь этот мир лучше просто тем, что в нём есть.",
-    "🌞 Сегодня новый день, и он полон возможностей — ты справишься!",
-    "🤗 Обнимаю тебя мысленно. Ты не один(а).",
-    "✨ Даже если трудно — помни, ты уже многого добился(ась)!",
-    "💫 У тебя есть всё, чтобы пройти через это. Верю в тебя!",
-    "🫶 Как здорово, что ты есть. Ты очень важный(ая) человек.",
-    "🔥 Сегодня — хороший день, чтобы гордиться собой!",
-    "🌈 Если вдруг устал(а) — просто сделай паузу и выдохни. Это нормально.",
-    "😊 Улыбнись себе в зеркало. Ты классный(ая)!",
-    "💡 Помни: каждый день ты становишься сильнее.",
-    "🍀 Твои чувства важны. Ты важен(важна).",
-    "💛 Ты заслуживаешь любви и заботы — и от других, и от себя.",
-    "🌟 Спасибо тебе за то, что ты есть. Серьёзно.",
-    "🤍 Даже маленький шаг вперёд — уже победа.",
-    "💌 Ты приносишь в мир тепло. Не забывай об этом!",
-    "✨ Верь себе. Ты уже столько прошёл(а) — и справился(ась)!",
-    "🙌 Сегодня — твой день. Делай то, что делает тебя счастливым(ой).",
-    "🌸 Порадуй себя чем‑то вкусным или приятным. Ты этого достоин(а).",
-    "🏞️ Просто напоминание: ты невероятный(ая), и я рядом.",
-    "🎶 Пусть музыка сегодня согреет твою душу.",
-    "🤝 Не бойся просить о поддержке — ты не один(а).",
-    "🔥 Вспомни, сколько всего ты преодолел(а). Ты силён(сильна)!",
-    "🦋 Сегодня — шанс сделать что‑то доброе для себя.",
-    "💎 Ты уникален(а), таких как ты больше нет.",
-    "🌻 Даже если день не идеален — ты всё равно светишься.",
-    "💪 Ты умеешь больше, чем думаешь. Верю в тебя!",
-    "🍫 Порадуй себя мелочью — ты этого заслуживаешь.",
-    "🎈 Пусть твой день будет лёгким и добрым.",
-    "💭 Если есть мечта — помни, что ты можешь к ней прийти.",
-    "🌊 Ты как океан — глубже и сильнее, чем кажется.",
-    "🕊️ Пусть сегодня будет хотя бы один момент, который заставит тебя улыбнуться."
-]
+async def support_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    lang = user_languages.get(user_id, "ru")
+    selected = random.choice(SUPPORT_MESSAGES_BY_LANG.get(lang, SUPPORT_MESSAGES_BY_LANG["ru"]))
+    await update.message.reply_text(selected)
+
+
+SUPPORT_MESSAGES_BY_LANG = {
+    "ru": [
+        "💜 Ты делаешь этот мир лучше просто тем, что в нём есть.",
+        "🌞 Сегодня новый день, и он полон возможностей — ты справишься!",
+        "🤗 Обнимаю тебя мысленно. Ты не один(а).",
+        "✨ Даже если трудно — помни, ты уже многого добился(ась)!",
+        "💫 У тебя есть всё, чтобы пройти через это. Верю в тебя!",
+        "🫶 Как здорово, что ты есть. Ты очень важный(ая) человек.",
+        "🔥 Сегодня — хороший день, чтобы гордиться собой!",
+        "🌈 Если вдруг устал(а) — просто сделай паузу и выдохни. Это нормально.",
+        "😊 Улыбнись себе в зеркало. Ты классный(ая)!",
+        "💡 Помни: каждый день ты становишься сильнее.",
+        "🍀 Твои чувства важны. Ты важен(важна).",
+        "💛 Ты заслуживаешь любви и заботы — и от других, и от себя.",
+        "🌟 Спасибо тебе за то, что ты есть. Серьёзно.",
+        "🤍 Даже маленький шаг вперёд — уже победа.",
+        "💌 Ты приносишь в мир тепло. Не забывай об этом!",
+        "✨ Верь себе. Ты уже столько прошёл(а) — и справился(ась)!",
+        "🙌 Сегодня — твой день. Делай то, что делает тебя счастливым(ой).",
+        "🌸 Порадуй себя чем‑то вкусным или приятным. Ты этого достоин(а).",
+        "🏞️ Просто напоминание: ты невероятный(ая), и я рядом.",
+        "🎶 Пусть музыка сегодня согреет твою душу.",
+        "🤝 Не бойся просить о поддержке — ты не один(а).",
+        "🔥 Вспомни, сколько всего ты преодолел(а). Ты силён(сильна)!",
+        "🦋 Сегодня — шанс сделать что‑то доброе для себя.",
+        "💎 Ты уникален(а), таких как ты больше нет.",
+        "🌻 Даже если день не идеален — ты всё равно светишься.",
+        "💪 Ты умеешь больше, чем думаешь. Верю в тебя!",
+        "🍫 Порадуй себя мелочью — ты этого заслуживаешь.",
+        "🎈 Пусть твой день будет лёгким и добрым.",
+        "💭 Если есть мечта — помни, что ты можешь к ней прийти.",
+        "🌊 Ты как океан — глубже и сильнее, чем кажется.",
+        "🕊️ Пусть сегодня будет хотя бы один момент, который заставит тебя улыбнуться."
+    ],
+    "uk": [
+        "💜 Ти робиш цей світ кращим просто тим, що ти в ньому.",
+        "🌞 Сьогодні новий день, і він повний можливостей — ти впораєшся!",
+        "🤗 Обіймаю тебе подумки. Ти не один(а).",
+        "✨ Навіть якщо важко — пам’ятай, ти вже багато чого досяг(ла)!",
+        "💫 У тебе є все, щоб пройти це. Вірю в тебе!",
+        "🫶 Як добре, що ти є. Ти дуже важлива людина.",
+        "🔥 Сьогодні — гарний день, щоб пишатися собою!",
+        "🌈 Якщо раптом втомився(лася) — просто зроби паузу і видихни. Це нормально.",
+        "😊 Посміхнись собі у дзеркало. Ти класний(а)!",
+        "💡 Пам’ятай: щодня ти стаєш сильнішим(ою).",
+        "🍀 Твої почуття важливі. Ти важливий(а).",
+        "💛 Ти заслуговуєш любові і турботи — і від інших, і від себе.",
+        "🌟 Дякую тобі за те, що ти є. Серйозно.",
+        "🤍 Навіть маленький крок вперед — вже перемога.",
+        "💌 Ти приносиш у світ тепло. Не забувай про це!",
+        "✨ Вір у себе. Ти вже стільки всього пройшов(ла) — і впорався(лася)!",
+        "🙌 Сьогодні — твій день. Робі те, що робить тебе щасливим(ою).",
+        "🌸 Потіш себе чимось смачним або приємним. Ти цього вартий(а).",
+        "🏞️ Просто нагадування: ти неймовірний(а), і я поруч.",
+        "🎶 Нехай музика сьогодні зігріє твою душу.",
+        "🤝 Не бійся просити про підтримку — ти не один(а).",
+        "🔥 Згадай, скільки всього ти подолав(ла). Ти сильний(а)!",
+        "🦋 Сьогодні — шанс зробити щось добре для себе.",
+        "💎 Ти унікальний(а), таких як ти більше нема.",
+        "🌻 Навіть якщо день не ідеальний — ти все одно сяєш.",
+        "💪 Ти вмієш більше, ніж думаєш. Вірю в тебе!",
+        "🍫 Потіш себе дрібницею — ти цього заслуговуєш.",
+        "🎈 Нехай твій день буде легким і добрим.",
+        "💭 Якщо є мрія — пам’ятай, що ти можеш до неї дійти.",
+        "🌊 Ти як океан — глибший(а) і сильніший(а), ніж здається.",
+        "🕊️ Нехай сьогодні буде хоча б одна мить, що викличе усмішку."
+    ],
+    "be": [
+        "💜 Ты робіш гэты свет лепшым проста тым, што ты ў ім.",
+        "🌞 Сёння новы дзень, і ён поўны магчымасцей — ты справішся!",
+        "🤗 Абдымаю цябе думкамі. Ты не адзін(а).",
+        "✨ Нават калі цяжка — памятай, ты ўжо шмат чаго дасягнуў(ла)!",
+        "💫 У цябе ёсць усё, каб прайсці праз гэта. Веру ў цябе!",
+        "🫶 Як добра, што ты ёсць. Ты вельмі важны(ая) чалавек.",
+        "🔥 Сёння — добры дзень, каб ганарыцца сабой!",
+        "🌈 Калі стаміўся(лася) — проста зрабі паўзу і выдыхні. Гэта нармальна.",
+        "😊 Усміхніся сабе ў люстэрку. Ты класны(ая)!",
+        "💡 Памятай: кожны дзень ты становішся мацнейшым(ай).",
+        "🍀 Твае пачуцці важныя. Ты важны(ая).",
+        "💛 Ты заслугоўваеш любові і клопату — і ад іншых, і ад сябе.",
+        "🌟 Дзякуй табе за тое, што ты ёсць. Сапраўды.",
+        "🤍 Нават маленькі крок наперад — ужо перамога.",
+        "💌 Ты прыносіш у свет цяпло. Не забывай пра гэта!",
+        "✨ Верь у сябе. Ты ўжо шмат прайшоў(ла) — і справіўся(лася)!",
+        "🙌 Сёння — твой дзень. Рабі тое, што робіць цябе шчаслівым(ай).",
+        "🌸 Парадуй сябе чымсьці смачным або прыемным. Ты гэтага варты(ая).",
+        "🏞️ Проста напамін: ты неверагодны(ая), і я побач.",
+        "🎶 Хай музыка сёння сагрэе тваю душу.",
+        "🤝 Не бойся прасіць падтрымку — ты не адзін(а).",
+        "🔥 Успомні, колькі ўсяго ты пераадолеў(ла). Ты моцны(ая)!",
+        "🦋 Сёння — шанец зрабіць нешта добрае для сябе.",
+        "💎 Ты ўнікальны(ая), такіх як ты няма.",
+        "🌻 Нават калі дзень не ідэальны — ты ўсё роўна ззяеш.",
+        "💪 Ты ўмееш больш, чым думаеш. Веру ў цябе!",
+        "🍫 Парадуй сябе дробяззю — ты гэтага заслугоўваеш.",
+        "🎈 Хай твой дзень будзе лёгкім і добрым.",
+        "💭 Калі ёсць мара — памятай, што можаш яе дасягнуць.",
+        "🌊 Ты як акіян — глыбейшы(ая) і мацнейшы(ая), чым здаецца.",
+        "🕊️ Хай сёння будзе хоць адзін момант, які прымусіць цябе ўсміхнуцца."
+    ],
+    "kk": [
+        "💜 Сен бұл әлемді жақсартасың, өйткені сен осындасың.",
+        "🌞 Бүгін жаңа күн, толы мүмкіндіктерге — сен бәріне үлгересің!",
+        "🤗 Ойша құшақтаймын. Сен жалғыз емессің.",
+        "✨ Қиын болса да — сен қазірдің өзінде көп нәрсеге жеттің!",
+        "💫 Бұл кезеңнен өтуге барлық күшің бар. Саған сенемін!",
+        "🫶 Сен барсың — бұл тамаша! Сен маңызды адамсың.",
+        "🔥 Бүгін — өзіңмен мақтанатын күн!",
+        "🌈 Егер шаршасаң — аздап демал, бұл қалыпты жағдай.",
+        "😊 Айнаға күлімде. Сен кереметсің!",
+        "💡 Есіңде болсын: күн сайын сен күштірексің.",
+        "🍀 Сенің сезімдерің маңызды. Сен де маңыздысың.",
+        "💛 Сен махаббат пен қамқорлыққа лайықсың — басқалардан да, өзіңнен де.",
+        "🌟 Саған рахмет, сен барсың.",
+        "🤍 Бір қадам алға — бұл да жеңіс.",
+        "💌 Сен әлемге жылу әкелесің. Мұны ұмытпа!",
+        "✨ Өзіңе сен. Сен көп нәрсе бастан кешірдің — және бәрін еңсердің!",
+        "🙌 Бүгін — сенің күнің. Өзіңді бақытты ететінді істе.",
+        "🌸 Өзіңді тәтті нәрсемен қуант. Сен бұған лайықсың.",
+        "🏞️ Еске салу: сен кереметсің және мен осындамын.",
+        "🎶 Музыка бүгін жаныңды жылыта берсін.",
+        "🤝 Қолдау сұраудан қорықпа — сен жалғыз емессің.",
+        "🔥 Өткен жеңістеріңді есіңе ал. Сен мықтысың!",
+        "🦋 Бүгін — өзің үшін жақсылық жасауға мүмкіндік.",
+        "💎 Сен бірегейсің, сендей ешкім жоқ.",
+        "🌻 Күнің мінсіз болмаса да — сен бәрібір жарқырайсың.",
+        "💪 Сен ойлағаннан көп нәрсе жасай аласың. Саған сенемін!",
+        "🍫 Өзіңді кішкене нәрсемен қуант — сен бұған лайықсың.",
+        "🎈 Күнің жеңіл және жылы болсын.",
+        "💭 Арманың болса — оған жетуге қабілетің бар екенін ұмытпа.",
+        "🌊 Сен мұхиттай терең және мықтысың.",
+        "🕊️ Бүгін кем дегенде бір сәт саған күлкі сыйласын."
+    ],
+    "kg": [
+        "💜 Бул дүйнөнү жакшыраак кыласың, анткени сен барсың.",
+        "🌞 Бүгүн — жаңы күн, мүмкүнчүлүктөргө толо — сен баарына жетишесиң!",
+        "🤗 Ойлоп, кучактайм. Сен жалгыз эмессиң.",
+        "✨ Кыйын болсо да — сен буга чейин эле көп нерсеге жетиштиң!",
+        "💫 Бул жолдон өтүүгө күчүң жетет. Сага ишенемин!",
+        "🫶 Сен барсың — бул сонун! Сен маанилүү адамсың.",
+        "🔥 Бүгүн — өзүң менен сыймыктанууга күн!",
+        "🌈 Эгер чарчасаң — дем ал, бул кадимки нерсе.",
+        "😊 Көз айнекке жылмай. Сен сонунсуң!",
+        "💡 Эсте: ар бир күн менен күчтөнөсүң.",
+        "🍀 Сезимдериң маанилүү. Сен да маанилүү адамсың.",
+        "💛 Сен сүйүүгө жана камкордукка татыктуусуң — башкалардан да, өзүңдөн да.",
+        "🌟 Сен бар экениңе рахмат.",
+        "🤍 Алга бир кадам — бул да жеңиш.",
+        "💌 Сен дүйнөгө жылуулук алып келесиң. Бул тууралуу унутпа!",
+        "✨ Өзүңө ишен. Көп нерседен өттүң — баарын жеңдиң!",
+        "🙌 Бүгүн — сенин күнүң. Бактылуу кылган ишти жаса.",
+        "🌸 Өзүңдү таттуу нерсе менен кубандыр. Сен татыктуусуң.",
+        "🏞️ Эскертүү: сен укмушсуң жана мен жанымдамын.",
+        "🎶 Музыка бүгүн жаныңды жылытсын.",
+        "🤝 Колдоо суроодон тартынба — сен жалгыз эмессиң.",
+        "🔥 Кайсы жеңиштериңди эстеп, сыймыктан.",
+        "🦋 Бүгүн — өзүң үчүн жакшылык кылууга мүмкүнчүлүк.",
+        "💎 Сен өзгөчөсүң, сендей башка адам жок.",
+        "🌻 Күнүң идеалдуу болбосо да — сен жаркырайсың.",
+        "💪 Сен ойлогондон да көптү жасай аласың. Сага ишенем!",
+        "🍫 Өзүңдү майда нерсе менен кубандыр — сен татыктуусуң.",
+        "🎈 Күнің жеңил жана жагымдуу болсун.",
+        "💭 Кыялың болсо — ага жетүүгө күчүң бар экенин эсте.",
+        "🌊 Сен океандай терең жана күчтүүсүң.",
+        "🕊️ Бүгүн болбосо да, бир ирмем сени күлдүрсүн."
+    ],
+    "hy": [
+        "💜 Դու այս աշխարհը ավելի լավը ես դարձնում, որովհետև դու այստեղ ես։",
+        "🌞 Այսօր նոր օր է, լի հնարավորություններով — դու կարող ես ամեն ինչ։",
+        "🤗 Մտքով գրկում եմ քեզ։ Դու մենակ չես։",
+        "✨ Թեպետ դժվար է, հիշիր՝ արդեն շատ բան ես արել։",
+        "💫 Դու ունես ամեն ինչ՝ այս ամենը հաղթահարելու համար։ Հավատում եմ քեզ։",
+        "🫶 Որքան լավ է, որ դու կաս։ Դու շատ կարևոր մարդ ես։",
+        "🔥 Այսօր հրաշալի օր է՝ քեզ վրա հպարտանալու համար։",
+        "🌈 Եթե հանկարծ հոգնել ես՝ պարզապես հանգստացիր։ Դա նորմալ է։",
+        "😊 Ժպտա հայելու առաջ։ Դու հիանալի ես։",
+        "💡 Հիշիր՝ ամեն օր ուժեղանում ես։",
+        "🍀 Քո զգացմունքները կարևոր են։ Դու կարևոր ես։",
+        "💛 Դու արժանի ես սիրո և հոգածության՝ և ուրիշներից, և քեզանից։",
+        "🌟 Շնորհակալ եմ, որ կաս։ Իրոք։",
+        "🤍 Նույնիսկ փոքր քայլը առաջ՝ արդեն հաղթանակ է։",
+        "💌 Դու աշխարհին ջերմություն ես բերում։ Մի մոռացիր դա։",
+        "✨ Վստահիր քեզ։ Դու արդեն շատ բան ես հաղթահարել։",
+        "🙌 Այսօր քո օրն է։ Արի՛ արա այն, ինչ քեզ երջանիկ է դարձնում։",
+        "🌸 Հաճույք պատճառիր քեզ ինչ-որ համով կամ հաճելի բանով։ Դու դրա արժանի ես։",
+        "🏞️ Հիշեցում՝ դու հիանալի ես և ես քո կողքին եմ։",
+        "🎶 Թող երաժշտությունը այսօր ջերմացնի հոգիդ։",
+        "🤝 Մի վախեցիր աջակցություն խնդրել՝ դու մենակ չես։",
+        "🔥 Հիշիր քո հաղթանակները։ Դու ուժեղ ես։",
+        "🦋 Այսօր հնարավորություն է՝ ինքդ քեզ լավ բան անելու։",
+        "💎 Դու յուրահատուկ ես, քո նմանը չկա։",
+        "🌻 Նույնիսկ եթե օրը կատարյալ չէ՝ դու փայլում ես։",
+        "💪 Դու կարող ես ավելին, քան կարծում ես։ Հավատում եմ քեզ։",
+        "🍫 Ուրախացրու քեզ փոքր բանով՝ դու արժանի ես դրան։",
+        "🎈 Թող օրըդ թեթև ու ջերմ լինի։",
+        "💭 Եթե երազանք ունես՝ հիշիր, որ կարող ես իրականացնել։",
+        "🌊 Դու օվկիանոսի պես խորն ու ուժեղ ես։",
+        "🕊️ Թող այսօր թեկուզ մեկ պահ քեզ ժպիտ պարգևի։"
+    ],
+    "ce": [
+        "💜 Со хетам дийцар дуьн йоьлчу — хьо цу са.",
+        "🌞 Ахкера йуь хетам дийца — хийц йойла а, цу ву а цу.",
+        "🤗 Доьззаш хьо хьунал, хьо йу хила цу.",
+        "✨ Къобал со дийн ду, ву хетам ца кхетам — хьо ийса мотт.",
+        "💫 Хьо цу ха цуьнан. Со хетам хьо!.",
+        "🫶 Хьо цу са, хийц оьзду хила. Хьо мотт.",
+        "🔥 Ахкера — хийц дуьн чох дийца йойла хила цу.",
+        "🌈 Хьо чух цу хийца — тержа дийцар, ву езар ду.",
+        "😊 Дзира тIехь, хьо хила цу.",
+        "💡 Со дийцар: хийца цхьаьнан ца цу са цу.",
+        "🍀 Хьо хийцар мотт, хьо цу мотт.",
+        "💛 Хьо хийцар бац, хьо хийцар лаьц.",
+        "🌟 Со дийцар хьо цу са. Хетам дийцар.",
+        "🤍 Юкъар йойла а — хийц ду йойла.",
+        "💌 Хьо дуьн хийцар ду. Хьо хила хетам мотт.",
+        "✨ Со хетам хьо хьунал. Хьо йу мотт ца а.",
+        "🙌 Ахкера хьо дийцар ду. Хьо цу хьунал хила цу.",
+        "🌸 Хьо цу дуьллар ду, хьо мотт цу.",
+        "🏞️ Со дуьллар: хьо цу хила, со хетам цу.",
+        "🎶 Мусика хьо дуьн хийцар ду.",
+        "🤝 Хьо хийцар къобал хила — хьо хила цу.",
+        "🔥 Со хийцар хьо йу мотт, хьо мотт.",
+        "🦋 Ахкера — хийца хийцар цу.",
+        "💎 Хьо хийца хийцар цу.",
+        "🌻 Юкъар йойла — хьо хийцар мотт.",
+        "💪 Хьо мотт, со хетам хьо!",
+        "🍫 Хьо цу дуьллар ду.",
+        "🎈 Хьо хийца хийцар мотт.",
+        "💭 Хьо хийца хийцар мотт.",
+        "🌊 Хьо хийца хийцар мотт.",
+        "🕊️ Ахкера хьо хийцар мотт."
+    ],
+    "md": [
+        "💜 Faci lumea asta mai bună doar pentru că exiști.",
+        "🌞 Azi e o nouă zi, plină de oportunități — vei reuși!",
+        "🤗 Te îmbrățișez cu gândul. Nu ești singur(ă).",
+        "✨ Chiar dacă e greu — amintește-ți, ai reușit deja multe!",
+        "💫 Ai tot ce-ți trebuie să treci peste asta. Cred în tine!",
+        "🫶 Ești aici — și asta e minunat! Ești o persoană importantă.",
+        "🔥 Azi e o zi bună să fii mândru(ă) de tine!",
+        "🌈 Dacă te-ai obosit — ia o pauză, e normal.",
+        "😊 Zâmbește-ți în oglindă. Ești grozav(ă)!",
+        "💡 Ține minte: cu fiecare zi devii mai puternic(ă).",
+        "🍀 Sentimentele tale contează. Tu contezi.",
+        "💛 Meriți dragoste și grijă — de la alții și de la tine.",
+        "🌟 Mulțumesc că exiști.",
+        "🤍 Chiar și un pas mic înainte e o victorie.",
+        "💌 Aduci căldură în lume. Nu uita asta!",
+        "✨ Ai încredere în tine. Ai trecut prin multe și ai reușit!",
+        "🙌 Azi e ziua ta. Fă ceea ce te face fericit(ă).",
+        "🌸 Răsfață-te cu ceva gustos sau plăcut. Meriți.",
+        "🏞️ Doar o amintire: ești incredibil(ă) și sunt aici.",
+        "🎶 Lasă muzica să-ți încălzească sufletul azi.",
+        "🤝 Nu-ți fie teamă să ceri ajutor — nu ești singur(ă).",
+        "🔥 Gândește-te la toate pe care le-ai depășit. Ești puternic(ă)!",
+        "🦋 Azi e o șansă să faci ceva bun pentru tine.",
+        "💎 Ești unic(ă), nimeni nu mai e ca tine.",
+        "🌻 Chiar dacă ziua nu e perfectă — tot strălucești.",
+        "💪 Poți mai mult decât crezi. Cred în tine!",
+        "🍫 Răsfață-te cu ceva mic — meriți asta.",
+        "🎈 Să ai o zi ușoară și frumoasă.",
+        "💭 Dacă ai un vis — amintește-ți că poți ajunge la el.",
+        "🌊 Ești profund(ă) și puternic(ă) ca un ocean.",
+        "🕊️ Sper ca azi să ai cel puțin un moment de bucurie."
+    ],
+    "ka": [
+        "💜 შენ ამ სამყაროს უკეთესს ხდი უბრალოდ აქ რომ ხარ.",
+        "🌞 დღეს ახალი დღეა, სავსე შესაძლებლობებით — ყველაფერს შეძლებ!",
+        "🤗 აზროვნებით გეხვევი. მარტო არ ხარ.",
+        "✨ თუ ძნელია — დაიმახსოვრე, უკვე ბევრი რამ გისწავლია!",
+        "💫 გაქვს ყველაფერი, რომ ეს გზა გაიარო. მჯერა შენი!",
+        "🫶 კარგია რომ არსებობ. შენ ძალიან მნიშვნელოვანი ადამიანი ხარ.",
+        "🔥 დღეს კარგი დღეა, რომ საკუთარ თავზე იამაყო!",
+        "🌈 თუ დაიღალე — დაისვენე, ეს ნორმალურია.",
+        "😊 სარკეში გაუღიმე საკუთარ თავს. შენ შესანიშნავი ხარ!",
+        "💡 დაიმახსოვრე: ყოველდღე უფრო ძლიერი ხდები.",
+        "🍀 შენი გრძნობები მნიშვნელოვანია. შენ მნიშვნელოვანი ხარ.",
+        "💛 იმსახურებ სიყვარულსა და ზრუნვას — სხვებისგანაც და საკუთარი თავისგანაც.",
+        "🌟 გმადლობ რომ ხარ.",
+        "🤍 ერთი პატარა ნაბიჯი წინ — უკვე გამარჯვებაა.",
+        "💌 ამ სამყაროს სითბოს მატებ. არ დაივიწყო ეს!",
+        "✨ ენდე საკუთარ თავს. უკვე ბევრი რამ გამოიარე და შეძლე!",
+        "🙌 დღეს შენი დღეა. გააკეთე ის, რაც გაბედნიერებს.",
+        "🌸 გაახარე თავი რამე გემრიელით ან სასიამოვნოთ. იმსახურებ ამას.",
+        "🏞️ შეგახსენებ: უნიკალური ხარ და მე შენთან ვარ.",
+        "🎶 მუსიკა დღეს გაათბოს შენი სული.",
+        "🤝 არ შეგეშინდეს მხარდაჭერის თხოვნის — მარტო არ ხარ.",
+        "🔥 გაიხსენე რისი გადალახვაც შეძლე. ძლიერი ხარ!",
+        "🦋 დღეს შესაძლებლობაა შენთვის რამე კარგი გააკეთო.",
+        "💎 უნიკალური ხარ, შენი მსგავსი არავინ არის.",
+        "🌻 თუნდაც დღე იდეალური არ იყოს — მაინც ანათებ.",
+        "💪 შეგიძლია მეტი, ვიდრე გგონია. მჯერა შენი!",
+        "🍫 გაახარე თავი რამე პატარა რამით — იმსახურებ ამას.",
+        "🎈 შენი დღე იყოს მსუბუქი და სასიამოვნო.",
+        "💭 თუ გაქვს ოცნება — გახსოვდეს, შეგიძლია მას მიაღწიო.",
+        "🌊 შენ ოკეანესავით ღრმა და ძლიერი ხარ.",
+        "🕊️ იმედი მაქვს, დღევანდელი დღე გაგახარებს."
+    ],
+    "en": [
+        "💜 You make this world a better place just by being in it.",
+        "🌞 Today is a new day, full of opportunities — you’ve got this!",
+        "🤗 Sending you a mental hug. You’re not alone.",
+        "✨ Even if it’s hard — remember, you’ve already achieved so much!",
+        "💫 You have everything you need to get through this. I believe in you!",
+        "🫶 It’s wonderful that you’re here. You are an important person.",
+        "🔥 Today is a great day to be proud of yourself!",
+        "🌈 If you’re tired — take a break, that’s okay.",
+        "😊 Smile at yourself in the mirror. You’re amazing!",
+        "💡 Remember: you’re getting stronger every day.",
+        "🍀 Your feelings matter. You matter.",
+        "💛 You deserve love and care — from others and from yourself.",
+        "🌟 Thank you for being you. Really.",
+        "🤍 Even a small step forward is a victory.",
+        "💌 You bring warmth to the world. Don’t forget it!",
+        "✨ Believe in yourself. You’ve already come so far and made it through!",
+        "🙌 Today is your day. Do what makes you happy.",
+        "🌸 Treat yourself to something nice or tasty. You deserve it.",
+        "🏞️ Just a reminder: you’re incredible, and I’m here.",
+        "🎶 Let music warm your soul today.",
+        "🤝 Don’t be afraid to ask for support — you’re not alone.",
+        "🔥 Remember everything you’ve overcome. You’re strong!",
+        "🦋 Today is a chance to do something kind for yourself.",
+        "💎 You’re unique, there’s no one else like you.",
+        "🌻 Even if the day isn’t perfect — you still shine.",
+        "💪 You can do more than you think. I believe in you!",
+        "🍫 Treat yourself to something little — you deserve it.",
+        "🎈 May your day be easy and kind.",
+        "💭 If you have a dream — remember, you can achieve it.",
+        "🌊 You’re as deep and strong as the ocean.",
+        "🕊️ May there be at least one moment today that makes you smile."
+    ]
+}
 
 # ✨ Сообщения поддержки
 async def send_random_support(context):
     now_kiev = datetime.now(pytz.timezone("Europe/Kiev"))
     hour = now_kiev.hour
-    # фильтр — не писать ночью
+    # Фильтр — не писать ночью
     if hour < 10 or hour >= 22:
         return
 
     if user_last_seen:
         for user_id in user_last_seen.keys():
             try:
-                msg = random.choice(SUPPORT_MESSAGES)
+                lang = user_languages.get(str(user_id), "ru")
+                msg = random.choice(SUPPORT_MESSAGES_BY_LANG.get(lang, SUPPORT_MESSAGES_BY_LANG["ru"]))
                 await context.bot.send_message(chat_id=user_id, text=msg)
                 logging.info(f"✅ Сообщение поддержки отправлено пользователю {user_id}")
             except Exception as e:
                 logging.error(f"❌ Ошибка отправки поддержки пользователю {user_id}: {e}")
 
-POLL_MESSAGES = [
-    "📝 Как ты оцениваешь свой день по шкале от 1 до 10?",
-    "💭 Что сегодня тебя порадовало?",
-    "🌿 Был ли сегодня момент, когда ты почувствовал(а) благодарность?",
-    "🤔 Если бы ты мог(ла) изменить одну вещь в этом дне, что бы это было?",
-    "💪 Чем ты сегодня гордишься?"
-]
 
-# 📝 Опросы раз в 2 дня
+POLL_MESSAGES_BY_LANG = {
+    "ru": [
+        "📝 Как ты оцениваешь свой день по шкале от 1 до 10?",
+        "💭 Что сегодня тебя порадовало?",
+        "🌿 Был ли сегодня момент, когда ты почувствовал(а) благодарность?",
+        "🤔 Если бы ты мог(ла) изменить одну вещь в этом дне, что бы это было?",
+        "💪 Чем ты сегодня гордишься?",
+        "🤔 Что нового ты попробовал(а) сегодня?",
+        "📝 О чём ты мечтаешь прямо сейчас?",
+        "🌟 За что ты можешь себя сегодня похвалить?",
+        "💡 Какая идея пришла тебе в голову сегодня?",
+        "🎉 Был ли сегодня момент, который вызвал улыбку?",
+        "🌈 Какой момент дня был самым ярким для тебя?",
+        "🫶 Кому бы ты хотел(а) сегодня сказать спасибо?",
+        "💬 Было ли что-то, что тебя удивило сегодня?",
+        "🌻 Как ты проявил(а) заботу о себе сегодня?",
+        "😌 Было ли что-то, что помогло тебе расслабиться?",
+        "🏆 Чего тебе удалось достичь сегодня, даже если это мелочь?",
+        "📚 Чему новому ты научился(ась) за этот день?",
+        "🧑‍🤝‍🧑 Был ли кто-то, кто тебя поддержал сегодня?",
+        "🎁 Сделал(а) ли ты сегодня что-то приятное для другого человека?",
+        "🎨 Какое творческое занятие тебе хотелось бы попробовать?"
+    ],
+    "uk": [
+        "📝 Як ти оцінюєш свій день за шкалою від 1 до 10?",
+        "💭 Що сьогодні тебе порадувало?",
+        "🌿 Чи був сьогодні момент, коли ти відчув(ла) вдячність?",
+        "🤔 Якби ти міг(могла) змінити щось у цьому дні, що б це було?",
+        "💪 Чим ти сьогодні пишаєшся?",
+        "🤔 Що нового ти спробував(ла) сьогодні?",
+        "📝 Про що ти мрієш просто зараз?",
+        "🌟 За що ти можеш себе сьогодні похвалити?",
+        "💡 Яка ідея прийшла тобі сьогодні в голову?",
+        "🎉 Чи був сьогодні момент, який викликав усмішку?",
+        "🌈 Який момент дня був найяскравішим для тебе?",
+        "🫶 Кому б ти хотів(ла) сьогодні подякувати?",
+        "💬 Було щось, що тебе сьогодні здивувало?",
+        "🌻 Як ти подбав(ла) про себе сьогодні?",
+        "😌 Було щось, що допомогло тобі розслабитися?",
+        "🏆 Чого тобі вдалося досягти сьогодні, навіть якщо це дрібниця?",
+        "📚 Чого нового ти навчився(лася) за цей день?",
+        "🧑‍🤝‍🧑 Чи була людина, яка тебе сьогодні підтримала?",
+        "🎁 Чи зробив(ла) ти сьогодні щось приємне для іншої людини?",
+        "🎨 Яке творче заняття ти хотів(ла) б спробувати?"
+    ],
+    "be": [
+        "📝 Як ты ацэніш свой дзень па шкале ад 1 да 10?",
+        "💭 Што сёння табе прынесла радасць?",
+        "🌿 Быў сёння момант, калі ты адчуваў(ла) удзячнасць?",
+        "🤔 Калі б ты мог(ла) змяніць нешта ў гэтым дні, што б гэта было?",
+        "💪 Чым ты сёння ганарышся?",
+        "🤔 Што новага ты паспрабаваў(ла) сёння?",
+        "📝 Пра што ты марыш прама зараз?",
+        "🌟 За што можаш сябе сёння пахваліць?",
+        "💡 Якая ідэя прыйшла табе сёння ў галаву?",
+        "🎉 Быў сёння момант, які выклікаў усмешку?",
+        "🌈 Які момант дня быў самым яркім для цябе?",
+        "🫶 Каму б ты хацеў(ла) сёння сказаць дзякуй?",
+        "💬 Ці было нешта, што цябе сёння здзівіла?",
+        "🌻 Як ты паклапаціўся(лася) пра сябе сёння?",
+        "😌 Ці было нешта, што дапамагло табе расслабіцца?",
+        "🏆 Чаго табе ўдалося дасягнуць сёння, нават калі гэта дробязь?",
+        "📚 Чаму новаму ты навучыўся(лася) за гэты дзень?",
+        "🧑‍🤝‍🧑 Ці быў хтосьці, хто цябе сёння падтрымаў?",
+        "🎁 Ці зрабіў(ла) ты сёння нешта прыемнае для іншага чалавека?",
+        "🎨 Якую творчую справу ты хацеў(ла) б паспрабаваць?"
+    ],
+    "kk": [
+        "📝 Бүгінгі күніңді 1-ден 10-ға дейін қалай бағалайсың?",
+        "💭 Бүгін не сені қуантты?",
+        "🌿 Бүгін ризашылық сезімін сезінген сәт болды ма?",
+        "🤔 Егер бір нәрсені өзгерте алсаң, не өзгертер едің?",
+        "💪 Бүгін немен мақтанасың?",
+        "🤔 Бүгін не жаңалықты байқап көрдің?",
+        "📝 Қазір не армандайсың?",
+        "🌟 Бүгін өзіңді не үшін мақтай аласың?",
+        "💡 Бүгін қандай ой келді басыңа?",
+        "🎉 Бүгін күлкі сыйлаған сәт болды ма?",
+        "🌈 Бүгінгі күннің ең жарқын сәті қандай болды?",
+        "🫶 Бүгін кімге алғыс айтқың келеді?",
+        "💬 Бүгін не сені таң қалдырды?",
+        "🌻 Бүгін өз-өзіңе қалай қамқорлық көрсеттің?",
+        "😌 Бүгін сені тыныштандырған не болды?",
+        "🏆 Бүгін қандай жетістікке жеттің, тіпті кішкентай болса да?",
+        "📚 Бүгін не үйрендің?",
+        "🧑‍🤝‍🧑 Бүгін сені кім қолдады?",
+        "🎁 Бүгін басқа біреуге қуаныш сыйладың ба?",
+        "🎨 Қандай шығармашылық іспен айналысып көргің келеді?",
+    ],
+    "kg": [
+        "📝 Бүгүнкү күнүңдү 1ден 10го чейин кантип баалайсың?",
+        "💭 Бүгүн сени эмне кубандырды?",
+        "🌿 Бүгүн ыраазычылык сезген учуруң болду беле?",
+        "🤔 Бул күндө бир нерсени өзгөртө алсаң, эмнени өзгөртмөксүң?",
+        "💪 Бүгүн эмнеге сыймыктандың?",
+        "🤔 Бүгүн жаңы эмне аракет кылдың?",
+        "📝 Азыр эмнени кыялданып жатасың?",
+        "🌟 Бүгүн өзүңдү эмне үчүн мактай аласың?",
+        "💡 Бүгүн кандай идея келди?",
+        "🎉 Бүгүн күлкү жараткан учур болду беле?",
+        "🌈 Бүгүнкү күндүн эң жаркын учуру кандай болду?",
+        "🫶 Бүгүн кимге рахмат айткың келет?",
+        "💬 Бүгүн сага эмне сюрприз болду?",
+        "🌻 Өзүңө кандай кам көрдүң бүгүн?",
+        "😌 Эмне сага эс алууга жардам берди?",
+        "🏆 Бүгүн кандай жетишкендик болду, майда болсо да?",
+        "📚 Бүгүн эмне жаңы үйрөндүң?",
+        "🧑‍🤝‍🧑 Бүгүн сени ким колдоду?",
+        "🎁 Бүгүн башка бирөөгө жакшылык кылдыңбы?",
+        "🎨 Кандай чыгармачыл ишти сынап көргүң келет?"
+    ],
+    "hy": [
+        "📝 Ինչպե՞ս կգնահատես օրդ 1-ից 10 բալով:",
+        "💭 Ի՞նչն էր այսօր քեզ ուրախացրել:",
+        "🌿 Այսօր ունեցե՞լ ես երախտագիտության զգացում:",
+        "🤔 Եթե կարողանայիր ինչ-որ բան փոխել այս օրը, ի՞նչ կփոխեիր:",
+        "💪 Ի՞նչով ես այսօր հպարտացել:",
+        "🤔 Ի՞նչ նոր բան փորձեցիր այսօր:"
+        "📝 Ի՞նչ ես հիմա երազում:",
+        "🌟 Ինչի՞ համար կարող ես այսօր քեզ գովել:",
+        "💡 Այսօր ի՞նչ գաղափար ունեցար:",
+        "🎉 Այսօր եղա՞վ պահ, որ քեզ ժպիտ պատճառեց:",
+        "🌈 Ո՞ր պահն էր օրվա ամենապայծառը քեզ համար:",
+        "🫶 Ում կուզեիր այսօր շնորհակալություն հայտնել:",
+        "💬 Այսօր ինչ-որ բան զարմացրեց քեզ?",
+        "🌻 Ինչպե՞ս հոգ տարար քեզ այսօր:",
+        "😌 Ինչ-որ բան քեզ օգնե՞ց հանգստանալ այսօր:",
+        "🏆 Ի՞նչ հաջողության հասար այսօր, թեկուզ փոքր:",
+        "📚 Ի՞նչ նոր բան սովորեցիր այս օրը:",
+        "🧑‍🤝‍🧑 Եղա՞վ մեկը, որ քեզ աջակցեց այսօր:",
+        "🎁 Այսօր մեկ ուրիշի համար հաճելի բան արե՞լ ես:",
+        "🎨 Ի՞նչ ստեղծագործական զբաղմունք կուզենայիր փորձել:"
+    ],
+    "ce": [
+        "📝 Хьо кхетам ден цу юкъар 1-ден 10-га къаст?",
+        "💭 Хьо къобалле цу юкъар хийца чох?",
+        "🌿 Хийца дийцар дуьн дуьна хеташ дийца?",
+        "🤔 Хьо хийца ву а юкъар хийца хьо ца?",
+        "💪 Хьо хетам ден хийца чох?",
+        "🤔 Хьо цуьнан кхети хийца долу?",
+        "📝 Хьо хьалха дIаяц дахара ву?",
+        "🌟 Со деза хьо цуьнан дезар хийцар?",
+        "💡 Хьо цуьнан хийцар идея хийца?",
+        "🎉 Цуьнан дог ду ахча, хьо хиларца хьун?",
+        "🌈 Хьо цуьнан йиш ду барт мотт ду?",
+        "🫶 Мац цуьнан деза шукар дар?",
+        "💬 Хьо цуьнан дог ду хийцар, хийциг тIехьа?",
+        "🌻 Хьо цуьнан цуьнан аьтто керла хийца?",
+        "😌 Хьо цуьнан йиш ду барт кхетарна, хийца?",
+        "🏆 Хьо цуьнан хила а хийца, ю аьтто деш ду?",
+        "📚 Хьо цуьнан хила дог хийца?",
+        "🧑‍🤝‍🧑 Хьо цуьнан хьалха къобаллийца?",
+        "🎁 Хьо цуьнан хьалха дукъ йиш хийца?",
+        "🎨 Хьо цуьнан хийца хила цуьнан кхетийца?"
+    ],
+    "md": [
+        "📝 Cum îți apreciezi ziua de la 1 la 10?",
+        "💭 Ce te-a bucurat astăzi?",
+        "🌿 A fost azi un moment când ai simțit recunoștință?",
+        "🤔 Dacă ai putea schimba ceva azi, ce ar fi?",
+        "💪 Cu ce ești mândru(ă) azi?",
+        "🤔 Ce lucru nou ai încercat azi?",
+        "📝 Despre ce visezi chiar acum?",
+        "🌟 Pentru ce poți să te lauzi astăzi?",
+        "💡 Ce idee ți-a venit azi?",
+        "🎉 A fost astăzi un moment care te-a făcut să zâmbești?",
+        "🌈 Care a fost cel mai luminos moment al zilei?",
+        "🫶 Cui ai vrea să-i mulțumești astăzi?",
+        "💬 A fost ceva care te-a surprins azi?",
+        "🌻 Cum ai avut grijă de tine azi?",
+        "😌 A fost ceva care te-a ajutat să te relaxezi?",
+        "🏆 Ce ai reușit să obții azi, chiar și ceva mic?",
+        "📚 Ce ai învățat nou astăzi?",
+        "🧑‍🤝‍🧑 A fost cineva care te-a susținut azi?",
+        "🎁 Ai făcut ceva frumos pentru altcineva astăzi?",
+        "🎨 Ce activitate creativă ai vrea să încerci?"
+    ],
+    "ka": [
+        "📝 როგორ შეაფასებდი დღეს 1-დან 10-მდე?",
+        "💭 რა გაგახარა დღეს?",
+        "🌿 იყო დღეს მადლიერების წამი?",
+        "🤔 თუ შეგეძლო დღეს რამე შეგეცვალა, რას შეცვლიდი?",
+        "💪 რით იამაყე დღეს?",
+        "🤔 რა ახალს სცადე დღეს?",
+        "📝 რაზე ოცნებობ ამ წუთში?",
+        "🌟 რისთვის შეგიძლია დღეს შენი თავი შეაქო?",
+        "💡 რა იდეა მოგივიდა დღეს?",
+        "🎉 იყო დღეს წამი, რომელმაც გაგაცინა?",
+        "🌈 დღის ყველაზე ნათელი მომენტი რომელი იყო?",
+        "🫶 ვის მოუნდებოდა მადლობის თქმა დღეს?",
+        "💬 იყო რამე, რამაც გაგაკვირვა დღეს?",
+        "🌻 როგორ იზრუნე საკუთარ თავზე დღეს?",
+        "😌 იყო რამე, რამაც დაგამშვიდა დღეს?",
+        "🏆 რა მიაღწიე დღეს, თუნდაც პატარა რამ?",
+        "📚 რა ისწავლე დღეს ახალი?",
+        "🧑‍🤝‍🧑 იყო ვინმე, ვინც მხარი დაგიჭირა დღეს?",
+        "🎁 გაახარე ვინმე დღეს?",
+        "🎨 რა შემოქმედებითი საქმიანობა გინდა სცადო?"
+    ],
+    "en": [
+        "📝 How would you rate your day from 1 to 10?",
+        "💭 What made you happy today?",
+        "🌿 Was there a moment you felt gratitude today?",
+        "🤔 If you could change one thing about today, what would it be?",
+        "💪 What are you proud of today?",
+        "🤔 What new thing did you try today?",
+        "📝 What are you dreaming about right now?",
+        "🌟 What can you praise yourself for today?",
+        "💡 What idea came to you today?",
+        "🎉 Was there a moment that made you smile today?",
+        "🌈 What was the brightest moment of your day?",
+        "🫶 Who would you like to thank today?",
+        "💬 Was there something that surprised you today?",
+        "🌻 How did you take care of yourself today?",
+        "😌 Was there something that helped you relax today?",
+        "🏆 What did you manage to achieve today, even if it was something small?",
+        "📚 What did you learn today?",
+        "🧑‍🤝‍🧑 Was there someone who supported you today?",
+        "🎁 Did you do something nice for someone else today?",
+        "🎨 What creative activity would you like to try?"
+    ]
+}
+
 async def send_random_poll(context):
     if user_last_seen:
         for user_id in user_last_seen.keys():
             try:
-                poll = random.choice(POLL_MESSAGES)
+                lang = user_languages.get(str(user_id), "ru")
+                poll = random.choice(POLL_MESSAGES_BY_LANG.get(lang, POLL_MESSAGES_BY_LANG["ru"]))
                 await context.bot.send_message(chat_id=user_id, text=poll)
                 logging.info(f"✅ Опрос отправлен пользователю {user_id}")
             except Exception as e:
                 logging.error(f"❌ Ошибка отправки опроса пользователю {user_id}: {e}")
-                
+
 # /mypoints — показать свои очки
 async def mypoints_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
