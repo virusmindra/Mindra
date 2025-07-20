@@ -298,13 +298,12 @@ async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         first_name = query.from_user.first_name or "друг"
         welcome_text = WELCOME_TEXTS.get(lang_code, WELCOME_TEXTS["ru"]).format(first_name=first_name)
 
-        # 🟣 Вставляем default из MODES_BY_LANG, а не MODES!
-        lang_prompt = LANG_PROMPTS.get(lang_code, LANG_PROMPTS["ru"])
-        mode_default = MODES_BY_LANG.get(lang_code, MODES_BY_LANG["ru"]).get("default", "")
-        system_prompt = f"{lang_prompt}\n\n{mode_default}"
+        # 🟣 Выбираем стартовый режим
+        mode = "support"  # или другой дефолтный режим
+        mode_prompt = MODES[mode].get(lang_code, MODES[mode]['ru'])
+        system_prompt = f"{lang_prompt}\n\n{mode_prompt}"
         conversation_history[user_id] = [{"role": "system", "content": system_prompt}]
         save_history(conversation_history)
-
         try:
             await query.edit_message_text(
                 text=welcome_text,
