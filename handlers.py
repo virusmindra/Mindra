@@ -808,7 +808,7 @@ async def handle_add_goal_callback(update: Update, context: ContextTypes.DEFAULT
 
 import random
 
-IDLE_MESSAGES_BY_LANG = {
+IDLE_MESSAGES = {
     "ru": [
         "💌 Я немного скучаю. Расскажешь, как дела?",
         "🌙 Надеюсь, у тебя всё хорошо. Я здесь, если что 🫶",
