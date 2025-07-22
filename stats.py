@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timedelta, time
 
 STATS_FILE = "data/stats.json"
 GOALS_FILE = "goals.json"
@@ -23,6 +23,49 @@ def save_stats(stats):
 def add_premium(user_id):
     stats = load_stats()
     stats["premium_users"][str(user_id)] = datetime.utcnow().isoformat()
+    save_stats(stats)
+
+def get_premium_until(user_id):
+    stats = load_stats()
+    user = stats.get(str(user_id), {})
+    return user.get("premium_until", None)
+
+def set_premium_until(user_id, until_dt):
+    stats = load_stats()
+    user = stats.get(str(user_id), {})
+    user["premium_until"] = until_dt.isoformat()
+    stats[str(user_id)] = user
+    save_stats(stats)
+
+def is_premium(user_id):
+    until = get_premium_until(user_id)
+    if until:
+        try:
+            return datetime.fromisoformat(until) > datetime.utcnow()
+        except:
+            return False
+    return False
+
+def got_trial(user_id):
+    stats = load_stats()
+    user = stats.get(str(user_id), {})
+    return user.get("got_trial", False)
+
+def set_trial(user_id):
+    stats = load_stats()
+    user = stats.get(str(user_id), {})
+    user["got_trial"] = True
+    stats[str(user_id)] = user
+    save_stats(stats)
+
+def add_referral(user_id, referrer_id):
+    stats = load_stats()
+    user = stats.get(str(user_id), {})
+    referrals = user.get("referrals", [])
+    if referrer_id not in referrals:
+        referrals.append(referrer_id)
+    user["referrals"] = referrals
+    stats[str(user_id)] = user
     save_stats(stats)
 
 def get_user_stats(user_id: str):
@@ -169,3 +212,4 @@ def add_points(user_id: str, amount: int = 1):
     stats[user_id]["points"] += amount
     save_stats(stats)
     return stats[user_id]["points"]
+
