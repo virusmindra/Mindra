@@ -6,6 +6,8 @@ STATS_FILE = "data/stats.json"
 GOALS_FILE = "goals.json"
 HABITS_FILE = "habits.json"
 
+ADMIN_USER_IDS = ["7775321566"] 
+
 def load_stats():
     try:
         with open(STATS_FILE, "r") as f:
@@ -32,6 +34,9 @@ def set_premium_until(user_id, until_dt):
     save_stats(stats)
 
 def is_premium(user_id):
+    # для владельца всегда True
+    if str(user_id) in ADMIN_USER_IDS:
+        return True
     until = get_premium_until(user_id)
     if until:
         try:
