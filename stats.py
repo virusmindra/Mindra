@@ -7,6 +7,8 @@ GOALS_FILE = "goals.json"
 HABITS_FILE = "habits.json"
 
 ADMIN_USER_IDS = ["7775321566"] 
+OWNER_ID = "7775321566"
+ADMIN_USER_IDS = [OWNER_ID]  # Можно расширять список
 
 def load_stats():
     try:
