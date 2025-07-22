@@ -1,29 +1,23 @@
 import json
 import os
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta
 
 STATS_FILE = "data/stats.json"
 GOALS_FILE = "goals.json"
 HABITS_FILE = "habits.json"
-
-# Хранилище очков пользователей
-user_points = {}
 
 def load_stats():
     try:
         with open(STATS_FILE, "r") as f:
             return json.load(f)
     except FileNotFoundError:
-        return {"users": {}, "premium_users": {}}
+        return {}
 
 def save_stats(stats):
     with open(STATS_FILE, "w") as f:
         json.dump(stats, f, indent=2)
 
-def add_premium(user_id):
-    stats = load_stats()
-    stats["premium_users"][str(user_id)] = datetime.utcnow().isoformat()
-    save_stats(stats)
+# ==== PREMIUM/TRIAL/REFERRAL ====
 
 def get_premium_until(user_id):
     stats = load_stats()
@@ -68,13 +62,39 @@ def add_referral(user_id, referrer_id):
     stats[str(user_id)] = user
     save_stats(stats)
 
-def get_user_stats(user_id: str):
-    if os.path.exists("stats.json"):
-        with open("stats.json", "r", encoding="utf-8") as f:
-            data = json.load(f)
-        return data.get(user_id, {"points": 0})
-    return {"points": 0}
+# ==== USER PROGRESS ====
 
+def add_points(user_id: str, amount: int = 1):
+    stats = load_stats()
+    user_id = str(user_id)
+    user = stats.get(user_id, {})
+    user["points"] = user.get("points", 0) + amount
+    stats[user_id] = user
+    save_stats(stats)
+    return user["points"]
+
+def get_user_stats(user_id: str):
+    from goals import get_goals
+    from habits import get_habits
+
+    goals = get_goals(user_id)
+    total_goals = len(goals)
+    completed_goals = len([g for g in goals if g.get("done")])
+
+    habits = get_habits(user_id)
+    total_habits = len(habits)
+
+    stats = load_stats()
+    user = stats.get(str(user_id), {})
+    points = user.get("points", 0)
+
+    return {
+        "points": points,
+        "total_goals": total_goals,
+        "completed_goals": completed_goals,
+        "habits": total_habits
+    }
+    
 def get_user_title(points: int, lang: str = "ru") -> str:
     TITLES = {
         "ru": [
