@@ -249,6 +249,29 @@ async def set_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if lang in available_langs:
         user_languages[user_id] = lang
         await update.message.reply_text(f"✅ Язык изменён на: {available_langs[lang]}")
+
+        # === ДОБАВЛЯЕМ ЗДЕСЬ БОНУСЫ ===
+        # 1. Выдать пробный премиум если ещё не был выдан
+        trial_given = give_trial_if_needed(user_id)
+        if trial_given:
+            trial_text = TRIAL_GRANTED_TEXT.get(lang, TRIAL_GRANTED_TEXT["ru"])
+            await update.message.reply_text(trial_text, parse_mode="Markdown")
+
+        # 2. (Опционально) обработка реферала — если при смене языка ты хочешь поддерживать рефералы
+        if context.args and context.args[0].startswith("ref"):
+            referrer_id = context.args[0][3:]
+            if user_id != referrer_id:
+                referral_success = handle_referral(user_id, referrer_id)
+                if referral_success:
+                    bonus_text = REFERRAL_BONUS_TEXT.get(lang, REFERRAL_BONUS_TEXT["ru"])
+                    await update.message.reply_text(bonus_text, parse_mode="Markdown")
+
+        # 3. (Опционально) Отправить приветствие
+        first_name = update.effective_user.first_name or "друг"
+        welcome_text = WELCOME_TEXTS.get(lang, WELCOME_TEXTS["ru"]).format(first_name=first_name)
+        await update.message.reply_text(welcome_text, parse_mode="Markdown")
+        # (Можешь убрать если не нужно)
+
     else:
         await update.message.reply_text("⚠️ Неверный код языка. Используй `/language` чтобы посмотреть список.")
 
