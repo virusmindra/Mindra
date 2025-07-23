@@ -5176,7 +5176,7 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if user_message_count[user_id]["date"] != today:
             user_message_count[user_id] = {"date": today, "count": 0}
 
-    if user_id not in PREMIUM_USERS:
+    if user_id_int not in admin_user_ids and user_id_int != owner_id:
         if user_message_count[user_id]["count"] >= 10:
             lang = user_languages.get(user_id, "ru")
             lock_msg = LOCK_MESSAGES_BY_LANG.get(lang, LOCK_MESSAGES_BY_LANG["ru"])
