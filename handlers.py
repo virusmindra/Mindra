@@ -7528,8 +7528,7 @@ async def premium_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def premium_challenge(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     # Тут можешь оставить проверку на свой id или на PREMIUM_USERS
-    if user_id != YOUR_ID and user_id not in PREMIUM_USERS:
-        # Переведённое сообщение о недоступности
+    if not (is_premium(user_id) or user_id == OWNER_ID):        # Переведённое сообщение о недоступности
         lang = user_languages.get(user_id, "ru")
         locked_msgs = {
             "ru": "🔒 Эта функция доступна только Mindra+ ✨",
