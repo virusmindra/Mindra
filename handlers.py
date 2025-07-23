@@ -8360,7 +8360,7 @@ handlers = [
     CommandHandler("mytask", mytask_command),
     CommandHandler("language", language_command),
     CommandHandler("invite", invite),
-    CommandHandler("premiumdays", premium_days),
+    CommandHandler("premium_days", premium_days),
     CallbackQueryHandler(goal_buttons_handler, pattern="^(create_goal|show_goals|create_habit|show_habits)$"),
     CallbackQueryHandler(handle_mode_choice, pattern="^mode_"),  # pattern для /mode кнопок
     CallbackQueryHandler(handle_reaction_button, pattern="^react_"),
