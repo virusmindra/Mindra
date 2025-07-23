@@ -8163,7 +8163,28 @@ def handle_referral(user_id, referrer_id):
     stats[str(user_id)] = user
     save_stats(stats)
     return True
-    
+
+async def invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    lang = user_languages.get(user_id, "ru")
+    invite_link = f"https://t.me/talktomindra_bot?start=ref{user_id}"
+
+INVITE_TEXT = {
+    "ru": f"🎁 Пригласи друга по этой ссылке и оба получите +7 дней Mindra+!\n\nТвоя ссылка: [нажми сюда]({invite_link})",
+    "uk": f"🎁 Запроси друга за цим посиланням — і ви обидва отримаєте +7 днів Mindra+!\n\nТвоє посилання: [натисни тут]({invite_link})",
+    "be": f"🎁 Запрасі сябра па гэтай спасылцы і вы абодва атрымаеце +7 дзён Mindra+!\n\nТвая спасылка: [націсні тут]({invite_link})",
+    "kk": f"🎁 Осы сілтемемен досыңды шақыр — екеуің де +7 күн Mindra+ аласыңдар!\n\nСенің сілтемең: [осында бас]({invite_link})",
+    "kg": f"🎁 Бул шилтеме аркылуу досуңду чакыр — экөөңөргө тең +7 күн Mindra+ берилет!\n\nСенин шилтемең: [бул жакта бас]({invite_link})",
+    "hy": f"🎁 Հրավիրի՛ր ընկերոջդ այս հղումով, և երկուսդ էլ կստանաք +7 օր Mindra+!\n\nՔո հղումը՝ [սեղմիր այստեղ]({invite_link})",
+    "ce": f"🎁 Хьо цуьнан хьо дукха догхьа къобал сылкъе — тхо ду +7 Mindra+ дера дахийна!\n\nХьо сылкъа: [тӀаьха цуьнан]({invite_link})",
+    "md": f"🎁 Invită un prieten cu acest link și amândoi primiți +7 zile Mindra+!\n\nLinkul tău: [apasă aici]({invite_link})",
+    "ka": f"🎁 მოიწვიე მეგობარი ამ ბმულით და ორივემ მიიღეთ +7 დღე Mindra+!\n\nშენი ბმული: [დააკლიკე აქ]({invite_link})",
+    "en": f"🎁 Invite a friend with this link and you both get +7 days of Mindra+!\n\nYour link: [click here]({invite_link})",
+}
+
+text = INVITE_TEXT.get(lang, INVITE_TEXT["ru"])
+await update.message.reply_text(text, parse_mode="Markdown", disable_web_page_preview=True)
+
 # Список всех команд/обработчиков для экспорта
 handlers = [
     CommandHandler("start", start),
