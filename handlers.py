@@ -7629,6 +7629,14 @@ async def premium_mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Получаем язык пользователя
     lang = user_languages.get(user_id, "ru")
+
+     # Проверка доступа: либо премиум, либо твой Telegram ID
+    if not (is_premium(user_id) or user_id == "7775321566"):
+        await update.message.reply_text(
+            PREMIUM_ONLY_TEXTS.get(lang, PREMIUM_ONLY_TEXTS["ru"])
+        )
+        return
+        
     text = MODE_SELECT_TEXT.get(lang, MODE_SELECT_TEXT["ru"])
     keyboard = [MODE_BUTTONS.get(lang, MODE_BUTTONS["ru"])]
 
