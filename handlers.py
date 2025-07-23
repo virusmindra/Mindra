@@ -4668,6 +4668,19 @@ TRIAL_GRANTED_TEXT = {
     "en": "🎁 You have *3 days of Mindra+*! Enjoy all premium features 😉",
 }
 
+REFERRAL_BONUS_TEXT = {
+    "ru": "🎉 Ты и твой друг получили +7 дней Mindra+!",
+    "uk": "🎉 Ти і твій друг отримали +7 днів Mindra+!",
+    "be": "🎉 Ты і тваё сябра атрымалі +7 дзён Mindra+!",
+    "kk": "🎉 Сен және досың +7 күн Mindra+ алдыңдар!",
+    "kg": "🎉 Сен жана досуң +7 күн Mindra+ алдыңар!",
+    "hy": "🎉 Դու և ընկերդ ստացել եք +7 օր Mindra+!",
+    "ce": "🎉 Хьо цуьнан догъа +7 кхоллар Mindra+ болу а!",
+    "md": "🎉 Tu și prietenul tău ați primit +7 zile Mindra+!",
+    "ka": "🎉 შენ და შენს მეგობარს დამატებით +7 დღე Mindra+ გექნებათ!",
+    "en": "🎉 You and your friend received +7 days of Mindra+!",
+}
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
 
@@ -4706,14 +4719,21 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lang_code = user_languages.get(user_id, "ru")
     first_name = update.effective_user.first_name or "друг"
 
-    welcome_text = WELCOME_TEXTS.get(lang_code, WELCOME_TEXTS["ru"]).format(first_name=first_name)
+    # --- 1. Обработка реферала ---
+    if context.args and context.args[0].startswith("ref"):
+        referrer_id = context.args[0][3:]
+        referral_success = handle_referral(user_id, referrer_id)
+        if referral_success:
+            bonus_text = REFERRAL_BONUS_TEXT.get(lang_code, REFERRAL_BONUS_TEXT["ru"])
+            await update.message.reply_text(bonus_text)
 
-        # Пробный период — выдаём 3 дня Mindra+ при первом запуске
+    # --- 2. Пробный период ---
     trial_given = give_trial_if_needed(user_id)
     if trial_given:
         trial_text = TRIAL_GRANTED_TEXT.get(lang_code, TRIAL_GRANTED_TEXT["ru"])
         await update.message.reply_text(trial_text, parse_mode="Markdown")
 
+    welcome_text = WELCOME_TEXTS.get(lang_code, WELCOME_TEXTS["ru"]).format(first_name=first_name)
     mode = user_modes.get(user_id, 'support')  # по умолчанию support
     mode_prompt = MODES[mode].get(lang_code, MODES[mode]['ru'])
     system_prompt = f"{LANG_PROMPTS.get(lang_code, LANG_PROMPTS['ru'])}\n\n{mode_prompt}"
