@@ -12,12 +12,10 @@ import traceback
 import asyncio
 import pytz
 import shutil
-from config import PREMIUM_USERS
 from datetime import datetime, timedelta, timezone, date
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, CommandHandler, MessageHandler, CallbackQueryHandler, filters
 from habits import add_habit, get_habits, mark_habit_done, delete_habit
-from stats import get_stats, get_user_stats, get_user_title, add_points
 from telegram.constants import ChatAction, ParseMode
 from config import client, TELEGRAM_BOT_TOKEN
 from history import load_history, save_history, trim_history
@@ -26,7 +24,7 @@ from pathlib import Path
 from apscheduler.schedulers.background import BackgroundScheduler
 from storage import add_goal_for_user, get_goals_for_user, mark_goal_done
 from random import randint, choice
-from stats import get_user_stats, get_user_title, get_stats
+from stats import get_user_stats, get_user_title, get_stats, is_premium, add_points, get_user_title, set_premium_until, get_premium_until, set_trial, got_trial
 
 # Глобальные переменные
 user_last_seen = {}
