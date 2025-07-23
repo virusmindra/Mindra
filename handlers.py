@@ -8121,6 +8121,28 @@ def give_trial_if_needed(user_id):
         save_stats(stats)
         return True  # Trial выдан
     return False     # Уже был trial
+
+def handle_referral(user_id, referrer_id):
+    if user_id == referrer_id:
+        return False  # Сам себя не приглашаешь
+    stats = load_stats()
+    user = stats.get(str(user_id), {})
+    if "referral_rewarded" in user:  # Уже получал награду за реферала
+        return False
+    # Дать 7 дней обоим
+    until = datetime.utcnow() + timedelta(days=7)
+    for uid in [user_id, referrer_id]:
+        u = stats.get(str(uid), {})
+        old_until = u.get("premium_until")
+        if old_until and datetime.fromisoformat(old_until) > datetime.utcnow():
+            u["premium_until"] = (datetime.fromisoformat(old_until) + timedelta(days=7)).isoformat()
+        else:
+            u["premium_until"] = until.isoformat()
+        stats[str(uid)] = u
+    user["referral_rewarded"] = True
+    stats[str(user_id)] = user
+    save_stats(stats)
+    return True
     
 # Список всех команд/обработчиков для экспорта
 handlers = [
