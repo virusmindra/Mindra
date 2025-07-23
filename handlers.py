@@ -8202,7 +8202,7 @@ INVITE_TEXT = {
     "en": f"🎁 Invite a friend with this link and you both get +7 days of Mindra+!\n\nYour link: [click here]({invite_link})",
 }
 
-    text = INVITE_TEXT.get(lang, INVITE_TEXT["ru"])
+text = INVITE_TEXT.get(lang, INVITE_TEXT["ru"])
     await update.message.reply_text(text, parse_mode="Markdown", disable_web_page_preview=True)
 
 def plural_ru(number, one, few, many):
