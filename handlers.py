@@ -7508,7 +7508,9 @@ PREMIUM_REPORT_TEXTS = {
 
 async def premium_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
-    if user_id != "7775321566":  # доступ только тебе (замени, если нужно)
+
+    # Проверка: только премиум или ты
+    if not (is_premium(user_id) or user_id == "7775321566"):
         await update.message.reply_text("🔒 Эта функция доступна только для Mindra+.")
         return
 
@@ -7522,7 +7524,7 @@ async def premium_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
         mood_entries=stats.get("mood_entries", 0),
     )
     await update.message.reply_text(report_text, parse_mode="Markdown")
-
+    
 async def premium_challenge(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     # Тут можешь оставить проверку на свой id или на PREMIUM_USERS
