@@ -8185,6 +8185,108 @@ INVITE_TEXT = {
 text = INVITE_TEXT.get(lang, INVITE_TEXT["ru"])
 await update.message.reply_text(text, parse_mode="Markdown", disable_web_page_preview=True)
 
+def plural_ru(number, one, few, many):
+    # Склонение для русского языка (можно добавить и для других, если нужно)
+    n = abs(number)
+    if n % 10 == 1 and n % 100 != 11:
+        return one
+    elif 2 <= n % 10 <= 4 and (n % 100 < 10 or n % 100 >= 20):
+        return few
+    else:
+        return many
+
+async def premium_days(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    lang = user_languages.get(user_id, "ru")
+    until = get_premium_until(user_id)
+    now = datetime.utcnow()
+    days = 0
+    months = 0
+    years = 0
+    text = ""
+    if until:
+        try:
+            dt_until = datetime.fromisoformat(until)
+            diff = dt_until - now
+            days = diff.days
+            # future ready: считаем месяцы/годы
+            years = days // 365
+            months = (days % 365) // 30
+            days_left = (days % 365) % 30
+            if days < 0:
+                days = 0
+                years = months = days_left = 0
+        except Exception as e:
+            days = 0
+            years = months = days_left = 0
+
+    # Тексты для всех языков (русский — с падежами)
+    if lang == "ru":
+        years_text = f"{years} " + plural_ru(years, "год", "года", "лет") if years else ""
+        months_text = f"{months} " + plural_ru(months, "месяц", "месяца", "месяцев") if months else ""
+        days_text = f"{days_left} " + plural_ru(days_left, "день", "дня", "дней") if days_left or (not years and not months) else ""
+        parts = [years_text, months_text, days_text]
+        period = ", ".join([part for part in parts if part])
+        if period:
+            text = f"💎 У тебя осталось *{period}* Mindra+."
+        else:
+            text = "💎 У тебя нет активной подписки Mindra+."
+    else:
+        # Для остальных языков просто числа
+        if years > 0:
+            text = {
+                "uk": f"💎 У тебе залишилося *{years}* років Mindra+.",
+                "be": f"💎 У цябе засталося *{years}* гадоў Mindra+.",
+                "kk": f"💎 Сенде Mindra+ қалған *{years}* жыл бар.",
+                "kg": f"💎 Сенде Mindra+ дагы *{years}* жыл калды.",
+                "hy": f"💎 Դու ունես դեռ *{years}* տարի Mindra+:",
+                "ce": f"💎 Хьо даьлча Mindra+ *{years}* сахь кхетам.",
+                "md": f"💎 Ai rămas cu *{years}* ani de Mindra+.",
+                "ka": f"💎 შენ დაგრჩა *{years}* წელი Mindra+.",
+                "en": f"💎 You have *{years}* years of Mindra+ left.",
+            }.get(lang, f"💎 You have *{years}* years of Mindra+ left.")
+        elif months > 0:
+            text = {
+                "uk": f"💎 У тебе залишилося *{months}* місяців Mindra+.",
+                "be": f"💎 У цябе засталося *{months}* месяцаў Mindra+.",
+                "kk": f"💎 Сенде Mindra+ қалған *{months}* ай бар.",
+                "kg": f"💎 Сенде Mindra+ дагы *{months}* ай калды.",
+                "hy": f"💎 Դու ունես դեռ *{months}* ամիս Mindra+:",
+                "ce": f"💎 Хьо даьлча Mindra+ *{months}* буьйса кхетам.",
+                "md": f"💎 Ai rămas cu *{months}* luni de Mindra+.",
+                "ka": f"💎 შენ დაგრჩა *{months}* თვე Mindra+.",
+                "en": f"💎 You have *{months}* months of Mindra+ left.",
+            }.get(lang, f"💎 You have *{months}* months of Mindra+ left.")
+        else:
+            text = {
+                "ru": f"💎 У тебя осталось *{days_left}* дней Mindra+.",
+                "uk": f"💎 У тебе залишилося *{days_left}* днів Mindra+.",
+                "be": f"💎 У цябе засталося *{days_left}* дзён Mindra+.",
+                "kk": f"💎 Сенде Mindra+ қалған *{days_left}* күн бар.",
+                "kg": f"💎 Сенде Mindra+ дагы *{days_left}* күн калды.",
+                "hy": f"💎 Դու ունես դեռ *{days_left}* օր Mindra+:",
+                "ce": f"💎 Хьо даьлча Mindra+ *{days_left}* де кхетам.",
+                "md": f"💎 Ai rămas cu *{days_left}* zile de Mindra+.",
+                "ka": f"💎 შენ დაგრჩა *{days_left}* დღე Mindra+.",
+                "en": f"💎 You have *{days_left}* days of Mindra+ left.",
+            }.get(lang, f"💎 You have *{days_left}* days of Mindra+ left.")
+
+        if (not years and not months and not days_left):
+            text = {
+                "ru": "💎 У тебя нет активной подписки Mindra+.",
+                "uk": "💎 У тебе немає активної підписки Mindra+.",
+                "en": "💎 You don't have an active Mindra+ subscription.",
+                "be": "💎 У цябе няма актыўнай падпіскі Mindra+.",
+                "kk": "💎 Сенде белсенді Mindra+ жазылымы жоқ.",
+                "kg": "💎 Сенде активдүү Mindra+ жазылуусу жок.",
+                "hy": "💎 Դու չունես ակտիվ Mindra+ բաժանորդագրություն։",
+                "ce": "💎 Хьо доьзал хила Mindra+ яззийна цуьнан.",
+                "md": "💎 Nu ai un abonament activ Mindra+.",
+                "ka": "💎 შენ არ გაქვს აქტიური Mindra+ გამოწერა.",
+            }.get(lang, "💎 You don't have an active Mindra+ subscription.")
+
+    await update.message.reply_text(text, parse_mode="Markdown")
+    
 # Список всех команд/обработчиков для экспорта
 handlers = [
     CommandHandler("start", start),
