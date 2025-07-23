@@ -4655,6 +4655,19 @@ def get_random_daily_task(user_id: str) -> str:
     # Возвращаем случайное задание
     return random.choice(tasks)
 
+TRIAL_GRANTED_TEXT = {
+    "ru": "🎁 Тебе доступно *3 дня Mindra+*! Пользуйся всеми премиум-фишками 😉",
+    "uk": "🎁 Тобі доступно *3 дні Mindra+*! Користуйся всіма преміум-фішками 😉",
+    "be": "🎁 Табе даступна *3 дні Mindra+*! Скарыстайся ўсімі прэміум-фішкамі 😉",
+    "kk": "🎁 Саған қолжетімді *3 күн Mindra+*! Барлық премиум функцияларды пайдаланыңыз 😉",
+    "kg": "🎁 Сага *3 күн Mindra+* жеткиликтүү! Бардык премиум-функцияларды колдон 😉",
+    "hy": "🎁 Դու ստացել ես *3 օր Mindra+*! Օգտվիր բոլոր պրեմիում հնարավորություններից 😉",
+    "ce": "🎁 Тхо *3 кхоллар Mindra+* болу а! Барча премиум функцияш ву 😉",
+    "md": "🎁 Ai *3 zile Mindra+* disponibile! Folosește toate funcțiile premium 😉",
+    "ka": "🎁 შენ გაქვს *3 დღე Mindra+*! ისარგებლე ყველა პრემიუმ ფუნქციით 😉",
+    "en": "🎁 You have *3 days of Mindra+*! Enjoy all premium features 😉",
+}
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
 
@@ -4694,6 +4707,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     first_name = update.effective_user.first_name or "друг"
 
     welcome_text = WELCOME_TEXTS.get(lang_code, WELCOME_TEXTS["ru"]).format(first_name=first_name)
+
+        # Пробный период — выдаём 3 дня Mindra+ при первом запуске
+    trial_given = give_trial_if_needed(user_id)
+    if trial_given:
+        trial_text = TRIAL_GRANTED_TEXT.get(lang_code, TRIAL_GRANTED_TEXT["ru"])
+        await update.message.reply_text(trial_text, parse_mode="Markdown")
 
     mode = user_modes.get(user_id, 'support')  # по умолчанию support
     mode_prompt = MODES[mode].get(lang_code, MODES[mode]['ru'])
