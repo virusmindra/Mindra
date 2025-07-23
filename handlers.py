@@ -7371,13 +7371,12 @@ PREMIUM_CHALLENGES_BY_LANG = {
 }
 
 def get_premium_stats(user_id: str):
-    # Подразумевается, что get_user_stats возвращает словарь с нужными ключами
     stats = get_user_stats(user_id)
     return {
-        "completed_goals": stats.get("completed_goals", 0),
-        "habits_tracked": stats.get("habits_tracked", 0),
+        "completed_goals": stats.get("completed_goals", stats.get("goals_completed", 0)),  # поддержка старых и новых ключей
+        "habits_tracked": stats.get("habits", stats.get("total_habits", 0)),              # поддержка старых и новых ключей
         "days_active": stats.get("days_active", 0),
-        "mood_entries": stats.get("mood_entries", 0),
+        "mood_entries": stats.get("mood_entries", 0)
     }
 
 EXCLUSIVE_MODES_BY_LANG = {
