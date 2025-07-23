@@ -208,13 +208,3 @@ def get_user_stats(user_id: str):
         "completed_goals": completed_goals,
         "habits": total_habits
     }
-
-def add_points(user_id: str, amount: int = 1):
-    stats = load_stats()
-    user_id = str(user_id)
-    if user_id not in stats:
-        stats[user_id] = {"points": 0, "goals_completed": 0}
-    stats[user_id]["points"] += amount
-    save_stats(stats)
-    return stats[user_id]["points"]
-
