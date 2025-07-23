@@ -316,6 +316,15 @@ async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await query.answer()
 
+        trial_given = give_trial_if_needed(user_id)
+        if trial_given:
+            trial_text = TRIAL_GRANTED_TEXT.get(lang_code, TRIAL_GRANTED_TEXT["ru"])
+            await context.bot.send_message(
+                chat_id=query.message.chat_id,
+                text=trial_text,
+                parse_mode="Markdown"
+            )
+
         first_name = query.from_user.first_name or "друг"
         welcome_text = WELCOME_TEXTS.get(lang_code, WELCOME_TEXTS["ru"]).format(first_name=first_name)
 
