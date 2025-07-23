@@ -7696,7 +7696,7 @@ async def premium_mode_callback(update: Update, context: ContextTypes.DEFAULT_TY
     }
 
     # Ограничение по подписке
-    if not (is_premium(user_id) or user_id == YOUR_ID):
+    if not (is_premium(user_id) or user_id == OWNER_ID):
         await query.edit_message_text(LOCKED_MSGS.get(lang, LOCKED_MSGS["ru"]))
         return
     
