@@ -8246,6 +8246,7 @@ async def premium_days(update: Update, context: ContextTypes.DEFAULT_TYPE):
     days = 0
     months = 0
     years = 0
+    days_left = 0 
     text = ""
     if until:
         try:
