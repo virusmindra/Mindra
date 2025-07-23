@@ -4681,10 +4681,23 @@ REFERRAL_BONUS_TEXT = {
     "en": "🎉 You and your friend received +7 days of Mindra+!",
 }
 
+TRIAL_INFO_TEXT = {
+    "ru": "💎 У тебя активен Mindra+! Тебе доступно 3 дня премиума. Пользуйся всеми фишками 😉",
+    "uk": "💎 У тебе активний Mindra+! У тебе є 3 дні преміуму. Користуйся усіма можливостями 😉",
+    "be": "💎 У цябе актыўны Mindra+! У цябе ёсць 3 дні прэміуму. Скарыстайся ўсімі магчымасцямі 😉",
+    "kk": "💎 Сенде Mindra+ белсенді! 3 күн премиум қолжетімді. Барлық функцияларды қолданып көр 😉",
+    "kg": "💎 Сенде Mindra+ активдүү! 3 күн премиум бар. Бардык мүмкүнчүлүктөрдү колдон 😉",
+    "hy": "💎 Քեզ մոտ ակտիվ է Mindra+! Դու ունես 3 օր պրեմիում։ Օգտագործիր բոլոր հնարավորությունները 😉",
+    "ce": "💎 Хьо даьлча Mindra+ активна! 3 кхетам премиум. Хета функциеш йоза цуьнан 😉",
+    "md": "💎 Ai Mindra+ activ! Ai 3 zile premium. Profită de toate funcțiile 😉",
+    "ka": "💎 შენ გაქვს აქტიური Mindra+! 3 დღე პრემიუმი გაქვს. ისარგებლე ყველა ფუნქციით 😉",
+    "en": "💎 You have Mindra+ active! You have 3 days of premium. Enjoy all features 😉"
+}
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
 
-    # если язык ещё не выбран — показываем кнопки выбора
+    # --- 0. Если язык ещё не выбран — показываем кнопки выбора ---
     if user_id not in user_languages:
         keyboard = [
             [
@@ -4708,39 +4721,49 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 InlineKeyboardButton("English 🇬🇧", callback_data="lang_en")
             ]
         ]
-
         await update.message.reply_text(
             "🌐 Please select the language of communication:",
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
         return
 
-    # если язык выбран — выводим приветствие
+    # --- 1. Определяем язык и имя ---
     lang_code = user_languages.get(user_id, "ru")
     first_name = update.effective_user.first_name or "друг"
 
-    # --- 1. Обработка реферала ---
+    # --- 2. Реферальный бонус ---
+    ref_bonus_shown = False
     if context.args and context.args[0].startswith("ref"):
         referrer_id = context.args[0][3:]
-        referral_success = handle_referral(user_id, referrer_id)
-        if referral_success:
-            bonus_text = REFERRAL_BONUS_TEXT.get(lang_code, REFERRAL_BONUS_TEXT["ru"])
-            await update.message.reply_text(bonus_text)
+        # Защита: чтобы нельзя было пригласить сам себя
+        if user_id != referrer_id:
+            referral_success = handle_referral(user_id, referrer_id)
+            if referral_success:
+                bonus_text = REFERRAL_BONUS_TEXT.get(lang_code, REFERRAL_BONUS_TEXT["ru"])
+                await update.message.reply_text(bonus_text, parse_mode="Markdown")
+                ref_bonus_shown = True
 
-    # --- 2. Пробный период ---
+    # --- 3. Пробный период (выдаётся только если не было ранее) ---
     trial_given = give_trial_if_needed(user_id)
     if trial_given:
         trial_text = TRIAL_GRANTED_TEXT.get(lang_code, TRIAL_GRANTED_TEXT["ru"])
         await update.message.reply_text(trial_text, parse_mode="Markdown")
 
+    # --- 4. Приветствие всегда в конце ---
     welcome_text = WELCOME_TEXTS.get(lang_code, WELCOME_TEXTS["ru"]).format(first_name=first_name)
+    await update.message.reply_text(welcome_text, parse_mode="Markdown")
+
+    # --- 5. (Необязательно) Покажи статус Mindra+ (дней осталось)
+    if trial_given:
+        trial_info = TRIAL_INFO_TEXT.get(lang_code, TRIAL_INFO_TEXT["ru"])
+        await update.message.reply_text(trial_info, parse_mode="Markdown")
+        
+    # --- 6. Сохраняем историю диалога/режим ---
     mode = user_modes.get(user_id, 'support')  # по умолчанию support
     mode_prompt = MODES[mode].get(lang_code, MODES[mode]['ru'])
     system_prompt = f"{LANG_PROMPTS.get(lang_code, LANG_PROMPTS['ru'])}\n\n{mode_prompt}"
     conversation_history[user_id] = [{"role": "system", "content": system_prompt}]
     save_history(conversation_history)
-
-    await update.message.reply_text(welcome_text, parse_mode="Markdown")
 
 
 RESET_TEXTS = {
