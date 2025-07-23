@@ -18,6 +18,8 @@ def load_stats():
         return {}
 
 def save_stats(stats):
+    # 🟣 Создаём директорию, если её нет
+    os.makedirs(os.path.dirname(STATS_FILE), exist_ok=True)
     with open(STATS_FILE, "w") as f:
         json.dump(stats, f, indent=2)
 
