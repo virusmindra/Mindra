@@ -24,7 +24,7 @@ from pathlib import Path
 from apscheduler.schedulers.background import BackgroundScheduler
 from storage import add_goal_for_user, get_goals_for_user, mark_goal_done
 from random import randint, choice
-from stats import get_user_stats, get_user_title, get_stats, is_premium, add_points, get_user_title, set_premium_until, get_premium_until, set_trial, got_trial
+from stats import get_user_stats, get_user_title, get_stats, is_premium, add_points, get_user_title, set_premium_until, get_premium_until, set_trial, got_trial, load_stats
 
 # Глобальные переменные
 user_last_seen = {}
