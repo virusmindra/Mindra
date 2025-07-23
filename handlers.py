@@ -8091,6 +8091,18 @@ async def test_mood(update: Update, context: ContextTypes.DEFAULT_TYPE):
     moods = MOODS_BY_LANG.get(lang, MOODS_BY_LANG["ru"])
     await update.message.reply_text(random.choice(moods))
 
+def give_trial_if_needed(user_id):
+    stats = load_stats()
+    user = stats.get(str(user_id), {})
+    if not user.get("got_trial", False):
+        until = datetime.utcnow() + timedelta(days=3)
+        user["premium_until"] = until.isoformat()
+        user["got_trial"] = True
+        stats[str(user_id)] = user
+        save_stats(stats)
+        return True  # Trial выдан
+    return False     # Уже был trial
+    
 # Список всех команд/обработчиков для экспорта
 handlers = [
     CommandHandler("start", start),
