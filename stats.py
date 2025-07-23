@@ -80,28 +80,6 @@ def add_points(user_id: str, amount: int = 1):
     save_stats(stats)
     return user["points"]
 
-def get_user_stats(user_id: str):
-    from goals import get_goals
-    from habits import get_habits
-
-    goals = get_goals(user_id)
-    total_goals = len(goals)
-    completed_goals = len([g for g in goals if g.get("done")])
-
-    habits = get_habits(user_id)
-    total_habits = len(habits)
-
-    stats = load_stats()
-    user = stats.get(str(user_id), {})
-    points = user.get("points", 0)
-
-    return {
-        "points": points,
-        "total_goals": total_goals,
-        "completed_goals": completed_goals,
-        "habits": total_habits
-    }
-    
 def get_user_title(points: int, lang: str = "ru") -> str:
     TITLES = {
         "ru": [
