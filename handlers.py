@@ -7710,7 +7710,7 @@ async def premium_mode_callback(update: Update, context: ContextTypes.DEFAULT_TY
 async def premium_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
-    if user_id != str(YOUR_ID) and user_id not in PREMIUM_USERS:
+    if not (is_premium(user_id) or user_id == OWNER_ID):
         locked_msgs = {
             "ru": "🔒 Эта функция доступна только Mindra+ ✨",
             "uk": "🔒 Ця функція доступна лише для Mindra+ ✨",
