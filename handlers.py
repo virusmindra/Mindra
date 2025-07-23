@@ -5690,7 +5690,8 @@ async def premium_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
 
-    if user_id in PREMIUM_USERS:
+    # Проверяем: премиум или твой Telegram ID
+    if is_premium(user_id) or user_id == "7775321566":
         tasks = PREMIUM_TASKS_BY_LANG.get(lang, PREMIUM_TASKS_BY_LANG["ru"])
         task = random.choice(tasks)
         title = PREMIUM_TASK_TITLE.get(lang, PREMIUM_TASK_TITLE["ru"])
@@ -5701,7 +5702,7 @@ async def premium_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
         text = PREMIUM_ONLY_TEXTS.get(lang, PREMIUM_ONLY_TEXTS["ru"])
         await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
-
+        
 UNKNOWN_COMMAND_TEXTS = {
     "ru": "❓ Я не знаю такой команды. Напиши /help, чтобы увидеть, что я умею.",
     "uk": "❓ Я не знаю такої команди. Напиши /help, щоб побачити, що я вмію.",
