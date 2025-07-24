@@ -29,16 +29,22 @@ def get_premium_until(user_id):
     stats = load_stats()
     user = stats.get(str(user_id), {})
     return user.get("premium_until", None)
+    
 
 def set_premium_until(user_id, until_dt):
     stats = load_stats()
     user = stats.get(str(user_id), {})
+    current_until = user.get("premium_until")
+    if current_until:
+        current_until = datetime.fromisoformat(current_until)
+        # Всегда ставим большую дату!
+        if current_until > until_dt:
+            until_dt = current_until
     user["premium_until"] = until_dt.isoformat()
     stats[str(user_id)] = user
     save_stats(stats)
-
+    
 def is_premium(user_id):
-    # для владельца всегда True
     if str(user_id) in ADMIN_USER_IDS:
         return True
     until = get_premium_until(user_id)
@@ -53,7 +59,7 @@ def got_trial(user_id):
     stats = load_stats()
     user = stats.get(str(user_id), {})
     return user.get("got_trial", False)
-
+    
 def set_trial(user_id):
     stats = load_stats()
     user = stats.get(str(user_id), {})
@@ -61,6 +67,18 @@ def set_trial(user_id):
     stats[str(user_id)] = user
     save_stats(stats)
 
+def got_referral(user_id):
+    stats = load_stats()
+    user = stats.get(str(user_id), {})
+    return user.get("got_referral", False)
+
+def set_referral(user_id):
+    stats = load_stats()
+    user = stats.get(str(user_id), {})
+    user["got_referral"] = True
+    stats[str(user_id)] = user
+    save_stats(stats)
+    
 def add_referral(user_id, referrer_id):
     stats = load_stats()
     user = stats.get(str(user_id), {})
@@ -70,6 +88,26 @@ def add_referral(user_id, referrer_id):
     user["referrals"] = referrals
     stats[str(user_id)] = user
     save_stats(stats)
+
+def give_trial_if_needed(user_id, days=3):
+    stats = load_stats()
+    user = stats.get(str(user_id), {})
+    if user.get("got_trial", False):
+        return False
+    now = datetime.utcnow()
+    new_until = now + timedelta(days=days)
+    # Не обрезаем срок если уже есть больше
+    current_until = user.get("premium_until")
+    if current_until:
+        current_until = datetime.fromisoformat(current_until)
+        if current_until > new_until:
+            new_until = current_until
+    user["premium_until"] = new_until.isoformat()
+    user["got_trial"] = True
+    stats[str(user_id)] = user
+    save_stats(stats)
+    logging.info(f"Пользователь {user_id} получил триал до {new_until}")
+    return True
 
 # ==== USER PROGRESS ====
 
