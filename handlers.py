@@ -316,6 +316,11 @@ async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await query.answer()
 
+        # --- Реферальный бонус или триал (на всякий случай если кто-то сменил язык до старта) ---
+        ref_bonus_given = False
+        # context.args в callback могут быть недоступны!
+        # Можно попробовать context.chat_data/get("ref") если хочешь поддерживать рефералку и тут, но обычно она срабатывает только на /start!
+        # Поэтому тут логика только для триала
         trial_given = give_trial_if_needed(user_id)
         if trial_given:
             trial_text = TRIAL_GRANTED_TEXT.get(lang_code, TRIAL_GRANTED_TEXT["ru"])
@@ -330,7 +335,7 @@ async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # 🟣 Выбираем стартовый режим
         mode = "support"  # или другой дефолтный режим
-        lang_prompt = LANG_PROMPTS.get(lang_code, LANG_PROMPTS["ru"])   # <<=== ЭТОТ РЯДОК ДОБАВЬ!
+        lang_prompt = LANG_PROMPTS.get(lang_code, LANG_PROMPTS["ru"])
         mode_prompt = MODES[mode].get(lang_code, MODES[mode]['ru'])
         system_prompt = f"{lang_prompt}\n\n{mode_prompt}"
         conversation_history[user_id] = [{"role": "system", "content": system_prompt}]
@@ -351,6 +356,7 @@ async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logging.error(f"❌ Ошибка в language_callback: {e}")
         await update.effective_message.reply_text("😢 Произошла ошибка при выборе языка, попробуй снова.")
 
+    
     # ✨ Сообщаем о выбранном языке
     lang_names = {
         "ru": "Русский 🇷🇺",
