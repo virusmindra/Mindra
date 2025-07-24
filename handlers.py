@@ -337,7 +337,10 @@ async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text=welcome_text,
             parse_mode="Markdown"
         )
-
+        # Теперь вызываем старт с пустыми аргументами (или context.args = [])
+        context.args = []
+        await start(update, context)
+    
 # ✨ Сначала редактируем старое сообщение
 async def habit_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
