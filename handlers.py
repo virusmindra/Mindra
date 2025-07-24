@@ -4769,23 +4769,34 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lang_code = user_languages.get(user_id, "ru")
     first_name = update.effective_user.first_name or "друг"
 
-    # --- 2. Реферальный бонус ---
-    ref_bonus_shown = False
+    # --- 2. Реферальный бонус или триал ---
+    ref_bonus_given = False
     if context.args and context.args[0].startswith("ref"):
         referrer_id = context.args[0][3:]
         # Защита: чтобы нельзя было пригласить сам себя
         if user_id != referrer_id:
             referral_success = handle_referral(user_id, referrer_id)
             if referral_success:
+                # Сообщение новому пользователю
                 bonus_text = REFERRAL_BONUS_TEXT.get(lang_code, REFERRAL_BONUS_TEXT["ru"])
                 await update.message.reply_text(bonus_text, parse_mode="Markdown")
-                ref_bonus_shown = True
+                # Сообщение пригласившему
+                try:
+                    await context.bot.send_message(
+                        chat_id=int(referrer_id),
+                        text="🎉 Твой друг зарегистрировался по твоей ссылке! Вам обоим начислено +7 дней Mindra+ 🎉"
+                    )
+                except Exception as e:
+                    logging.warning(f"Не удалось отправить сообщение пригласившему: {e}")
+                ref_bonus_given = True
 
-    # --- 3. Пробный период (выдаётся только если не было ранее) ---
-    trial_given = give_trial_if_needed(user_id)
-    if trial_given:
-        trial_text = TRIAL_GRANTED_TEXT.get(lang_code, TRIAL_GRANTED_TEXT["ru"])
-        await update.message.reply_text(trial_text, parse_mode="Markdown")
+    # --- 3. Пробный период (если не было реферала) ---
+    trial_given = False
+    if not ref_bonus_given:
+        trial_given = give_trial_if_needed(user_id)
+        if trial_given:
+            trial_text = TRIAL_GRANTED_TEXT.get(lang_code, TRIAL_GRANTED_TEXT["ru"])
+            await update.message.reply_text(trial_text, parse_mode="Markdown")
 
     # --- 4. Приветствие всегда в конце ---
     welcome_text = WELCOME_TEXTS.get(lang_code, WELCOME_TEXTS["ru"]).format(first_name=first_name)
