@@ -310,67 +310,16 @@ async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         query = update.callback_query
         user_id = str(query.from_user.id)
-
         lang_code = query.data.replace("lang_", "")
         user_languages[user_id] = lang_code
         logging.info(f"🌐 Пользователь {user_id} выбрал язык: {lang_code}")
 
         await query.answer()
-
-        # --- Реферальный бонус или триал (на всякий случай если кто-то сменил язык до старта) ---
-        ref_bonus_given = False
-        # context.args в callback могут быть недоступны!
-        # Можно попробовать context.chat_data/get("ref") если хочешь поддерживать рефералку и тут, но обычно она срабатывает только на /start!
-        # Поэтому тут логика только для триала
-        trial_given = give_trial_if_needed(user_id)
-        if trial_given:
-            trial_text = TRIAL_GRANTED_TEXT.get(lang_code, TRIAL_GRANTED_TEXT["ru"])
-            await context.bot.send_message(
-                chat_id=query.message.chat_id,
-                text=trial_text,
-                parse_mode="Markdown"
-            )
-
-        first_name = query.from_user.first_name or "друг"
-        welcome_text = WELCOME_TEXTS.get(lang_code, WELCOME_TEXTS["ru"]).format(first_name=first_name)
-
-        # 🟣 Выбираем стартовый режим
-        mode = "support"  # или другой дефолтный режим
-        lang_prompt = LANG_PROMPTS.get(lang_code, LANG_PROMPTS["ru"])
-        mode_prompt = MODES[mode].get(lang_code, MODES[mode]['ru'])
-        system_prompt = f"{lang_prompt}\n\n{mode_prompt}"
-        conversation_history[user_id] = [{"role": "system", "content": system_prompt}]
-        save_history(conversation_history)
-        try:
-            await query.edit_message_text(
-                text=welcome_text,
-                parse_mode="Markdown"
-            )
-        except Exception as e:
-            logging.warning(f"Не удалось отредактировать сообщение, отправляем новое. Ошибка: {e}")
-            await context.bot.send_message(
-                chat_id=query.message.chat_id,
-                text=welcome_text,
-                parse_mode="Markdown"
-            )
+        # Просто повторно вызываем start — он покажет всё как при нормальном старте, с триалами и бонусами!
+        await start(update, context)
     except Exception as e:
         logging.error(f"❌ Ошибка в language_callback: {e}")
         await update.effective_message.reply_text("😢 Произошла ошибка при выборе языка, попробуй снова.")
-
-    
-    # ✨ Сообщаем о выбранном языке
-    lang_names = {
-        "ru": "Русский 🇷🇺",
-        "uk": "Українська 🇺🇦",
-        "md": "Moldovenească 🇲🇩",
-        "be": "Беларуская 🇧🇾",
-        "kk": "Қазақша 🇰🇿",
-        "kg": "Кыргызча 🇰🇬",
-        "hy": "Հայերեն 🇦🇲",
-        "ka": "ქართული 🇬🇪",
-        "ce": "Нохчийн мотт 🇷🇺"
-    }
-    chosen = lang_names.get(lang_code, lang_code)
 
 # ✨ Сначала редактируем старое сообщение
 async def habit_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
