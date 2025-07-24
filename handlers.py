@@ -34,6 +34,7 @@ user_points = {}
 user_message_count = {}
 user_goal_count = {}
 user_languages = {}  # {user_id: 'ru'/'uk'/'md'/'be'/'kk'/'kg'/'hy'/'ka'/'ce'}
+user_ref_args = {}
 
 def get_mode_prompt(mode, lang):
     return MODES.get(mode, MODES["default"]).get(lang, MODES["default"]["ru"])
