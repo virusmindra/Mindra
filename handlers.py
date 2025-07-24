@@ -8238,46 +8238,21 @@ def give_trial_if_needed(user_id, days=3):
     logging.info(f"Пользователь {user_id} получил триал до {new_until}")
     return True
     
-def handle_referral(user_id, referrer_id, days=7):
-    if user_id == referrer_id:
-        return False  # Сам себя пригласил, не работает
+def handle_referral(user_id, referrer_id):
+    # Проверка, был ли уже trial
+    if got_trial(user_id):
+        return False  # Уже был trial/реферал
 
-    stats = load_stats()
-    user = stats.get(str(user_id), {})
-    referrer = stats.get(str(referrer_id), {})
-
-    # Только если не было триала и не было реферала!
-    if user.get("got_trial", False) or user.get("got_referral", False):
-        return False
-
+    # Выдаём 7 дней премиума (и пригласившему, и приглашённому)
     now = datetime.utcnow()
-    new_until = now + timedelta(days=days)
-
-    # Новый пользователь получает премиум на days дней (но не меньше текущего)
-    current_until = user.get("premium_until")
-    if current_until:
-        current_until = datetime.fromisoformat(current_until)
-        if current_until > new_until:
-            new_until = current_until
-    user["premium_until"] = new_until.isoformat()
-    user["got_referral"] = True
-    user["got_trial"] = True  # чтобы не получить ещё trial
-    stats[str(user_id)] = user
-
-    # Реферер получает бонус к текущему сроку, если есть, иначе с сегодняшнего дня
-    ref_current_until = referrer.get("premium_until")
-    if ref_current_until:
-        ref_current_until = datetime.fromisoformat(ref_current_until)
-        referrer_until = ref_current_until + timedelta(days=days)
-    else:
-        referrer_until = now + timedelta(days=days)
-    referrer["premium_until"] = referrer_until.isoformat()
-    stats[str(referrer_id)] = referrer
-
-    save_stats(stats)
-    logging.info(f"Реферал: {user_id} получил {days} дней, пригласивший {referrer_id} получил {days} дней")
+    set_premium_until(user_id, now + timedelta(days=7))
+    set_premium_until(referrer_id, now + timedelta(days=7))
+    set_trial(user_id)
+    set_trial(referrer_id)  # на всякий случай, если пригласивший был без trial
+    add_referral(user_id, referrer_id)
+    logging.info(f"👥 Реферал: {user_id} пришёл по ссылке {referrer_id}, всем +7 дней")
     return True
-    
+
 async def invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
