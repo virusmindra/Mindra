@@ -4736,7 +4736,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     logging.info(f"/start: user_id={user_id}, context.args={context.args}, message.text={update.message.text}")
 
-    # --- 0. Если язык ещё не выбран — показываем кнопки выбора ---
+    # 0. Если язык ещё не выбран — показываем кнопки выбора
     if user_id not in user_languages:
         keyboard = [
             [
@@ -4755,7 +4755,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 InlineKeyboardButton("Հայերեն 🇦🇲", callback_data="lang_hy"),
                 InlineKeyboardButton("ქართული 🇬🇪", callback_data="lang_ka"),
             ],
-            [   
+            [
                 InlineKeyboardButton("Нохчийн мотт 🇷🇺", callback_data="lang_ce"),
                 InlineKeyboardButton("English 🇬🇧", callback_data="lang_en")
             ]
@@ -4766,22 +4766,19 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    # --- 1. Определяем язык и имя ---
+    # 1. Определяем язык и имя
     lang_code = user_languages.get(user_id, "ru")
     first_name = update.effective_user.first_name or "друг"
 
-    # --- 2. Реферальный бонус или триал ---
+    # 2. Реферальный бонус (и автоматический trial-флаг)
     ref_bonus_given = False
     if context.args and context.args[0].startswith("ref"):
         referrer_id = context.args[0][3:]
-        # Защита: чтобы нельзя было пригласить сам себя
         if user_id != referrer_id:
-            referral_success = handle_referral(user_id, referrer_id)
-            if referral_success:
-                # Сообщение новому пользователю
+            ref_bonus_given = handle_referral(user_id, referrer_id)
+            if ref_bonus_given:
                 bonus_text = REFERRAL_BONUS_TEXT.get(lang_code, REFERRAL_BONUS_TEXT["ru"])
                 await update.message.reply_text(bonus_text, parse_mode="Markdown")
-                # Сообщение пригласившему
                 try:
                     await context.bot.send_message(
                         chat_id=int(referrer_id),
@@ -4789,9 +4786,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     )
                 except Exception as e:
                     logging.warning(f"Не удалось отправить сообщение пригласившему: {e}")
-                ref_bonus_given = True
 
-    # --- 3. Пробный период (если не было реферала) ---
+    # 3. Пробный период (если не было реферала и trial ещё не получен)
     trial_given = False
     if not ref_bonus_given:
         trial_given = give_trial_if_needed(user_id)
@@ -4799,22 +4795,21 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             trial_text = TRIAL_GRANTED_TEXT.get(lang_code, TRIAL_GRANTED_TEXT["ru"])
             await update.message.reply_text(trial_text, parse_mode="Markdown")
 
-    # --- 4. Приветствие всегда в конце ---
+    # 4. Приветствие
     welcome_text = WELCOME_TEXTS.get(lang_code, WELCOME_TEXTS["ru"]).format(first_name=first_name)
     await update.message.reply_text(welcome_text, parse_mode="Markdown")
 
-    # --- 5. (Необязательно) Покажи статус Mindra+ (дней осталось)
+    # 5. Покажи статус Mindra+ (если был trial)
     if trial_given:
         trial_info = TRIAL_INFO_TEXT.get(lang_code, TRIAL_INFO_TEXT["ru"])
         await update.message.reply_text(trial_info, parse_mode="Markdown")
-        
-    # --- 6. Сохраняем историю диалога/режим ---
-    mode = user_modes.get(user_id, 'support')  # по умолчанию support
+
+    # 6. Сохраняем историю диалога/режим
+    mode = user_modes.get(user_id, 'support')
     mode_prompt = MODES[mode].get(lang_code, MODES[mode]['ru'])
     system_prompt = f"{LANG_PROMPTS.get(lang_code, LANG_PROMPTS['ru'])}\n\n{mode_prompt}"
     conversation_history[user_id] = [{"role": "system", "content": system_prompt}]
     save_history(conversation_history)
-
 
 RESET_TEXTS = {
     "ru": "История очищена. Начнём сначала ✨",
