@@ -8258,11 +8258,12 @@ def handle_referral(user_id, referrer_id):
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
+
 async def invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
     invite_link = f"https://t.me/talktomindra_bot?start=ref{user_id}"
-
+    
     INVITE_TEXT = {
         "ru": (
             "🎁 Пригласи друга и вы оба получите +7 дней Mindra+!\n\n"
@@ -8328,17 +8329,18 @@ async def invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = INVITE_TEXT.get(lang, INVITE_TEXT["ru"])
 
-    # Можно добавить инлайн-кнопку (на всех языках одинаково):
+    # Кнопка отдельно, не влияет на markdown
     keyboard = [
         [InlineKeyboardButton("Открыть ссылку", url=invite_link)]
     ]
 
     await update.message.reply_text(
         text,
-        parse_mode="Markdown",
+        parse_mode="Markdown",  # Можно даже без parse_mode — тогда точно никогда не упадёт!
         reply_markup=InlineKeyboardMarkup(keyboard),
         disable_web_page_preview=True
     )
+
 
 def plural_ru(number, one, few, many):
     # Склонение для русского языка (можно добавить и для других, если нужно)
