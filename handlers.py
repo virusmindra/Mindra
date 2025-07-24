@@ -8223,18 +8223,26 @@ async def test_mood(update: Update, context: ContextTypes.DEFAULT_TYPE):
     moods = MOODS_BY_LANG.get(lang, MOODS_BY_LANG["ru"])
     await update.message.reply_text(random.choice(moods))
 
-def give_trial_if_needed(user_id):
+def give_trial_if_needed(user_id, days=3):
     stats = load_stats()
     user = stats.get(str(user_id), {})
-    if not user.get("got_trial", False):
-        until = datetime.utcnow() + timedelta(days=3)
-        user["premium_until"] = until.isoformat()
-        user["got_trial"] = True
-        stats[str(user_id)] = user
-        save_stats(stats)
-        return True  # Trial выдан
-    return False     # Уже был trial
-
+    if user.get("got_trial", False):
+        return False
+    now = datetime.utcnow()
+    new_until = now + timedelta(days=days)
+    # Не обрезаем срок если уже есть больше
+    current_until = user.get("premium_until")
+    if current_until:
+        current_until = datetime.fromisoformat(current_until)
+        if current_until > new_until:
+            new_until = current_until
+    user["premium_until"] = new_until.isoformat()
+    user["got_trial"] = True
+    stats[str(user_id)] = user
+    save_stats(stats)
+    logging.info(f"Пользователь {user_id} получил триал до {new_until}")
+    return True
+    
 def handle_referral(user_id, referrer_id, days=7):
     if user_id == referrer_id:
         return False  # Сам себя пригласил, не работает
