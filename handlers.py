@@ -8326,11 +8326,6 @@ async def invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = INVITE_TEXT.get(lang, INVITE_TEXT["ru"])
 
-    # Кнопка (на всех языках одинаково)
-    keyboard = [
-        [InlineKeyboardButton("Открыть ссылку", url=invite_link)]
-    ]
-
     await update.message.reply_text(
         text,
         # parse_mode не указывай — либо 'Markdown', либо вообще убери этот параметр!
