@@ -4734,6 +4734,7 @@ TRIAL_INFO_TEXT = {
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
+    logging.info(f"/start: user_id={user_id}, context.args={context.args}, message.text={update.message.text}")
 
     # --- 0. Если язык ещё не выбран — показываем кнопки выбора ---
     if user_id not in user_languages:
