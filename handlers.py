@@ -8256,9 +8256,6 @@ def handle_referral(user_id, referrer_id):
     save_stats(stats)
     return True
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-
-
 async def invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
@@ -8329,18 +8326,17 @@ async def invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = INVITE_TEXT.get(lang, INVITE_TEXT["ru"])
 
-    # Кнопка отдельно, не влияет на markdown
+    # Кнопка (на всех языках одинаково)
     keyboard = [
         [InlineKeyboardButton("Открыть ссылку", url=invite_link)]
     ]
 
     await update.message.reply_text(
         text,
-        parse_mode="Markdown",  # Можно даже без parse_mode — тогда точно никогда не упадёт!
+        # parse_mode не указывай — либо 'Markdown', либо вообще убери этот параметр!
         reply_markup=InlineKeyboardMarkup(keyboard),
         disable_web_page_preview=True
     )
-
 
 def plural_ru(number, one, few, many):
     # Склонение для русского языка (можно добавить и для других, если нужно)
