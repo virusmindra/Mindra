@@ -307,19 +307,36 @@ async def language_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        query = update.callback_query
-        user_id = str(query.from_user.id)
-        lang_code = query.data.replace("lang_", "")
-        user_languages[user_id] = lang_code
-        logging.info(f"🌐 Пользователь {user_id} выбрал язык: {lang_code}")
+    query = update.callback_query
+    user_id = str(query.from_user.id)
+    lang_code = query.data.replace("lang_", "")
+    user_languages[user_id] = lang_code
+    logging.info(f"🌐 Пользователь {user_id} выбрал язык: {lang_code}")
+    await query.answer()
 
-        await query.answer()
-        # Просто повторно вызываем start — он покажет всё как при нормальном старте, с триалами и бонусами!
-        await start(update, context)
+    first_name = query.from_user.first_name or "друг"
+    welcome_text = WELCOME_TEXTS.get(lang_code, WELCOME_TEXTS["ru"]).format(first_name=first_name)
+
+    # Настрой стартовый режим и историю
+    mode = "support"
+    lang_prompt = LANG_PROMPTS.get(lang_code, LANG_PROMPTS["ru"])
+    mode_prompt = MODES[mode].get(lang_code, MODES[mode]['ru'])
+    system_prompt = f"{lang_prompt}\n\n{mode_prompt}"
+    conversation_history[user_id] = [{"role": "system", "content": system_prompt}]
+    save_history(conversation_history)
+
+    try:
+        await query.edit_message_text(
+            text=welcome_text,
+            parse_mode="Markdown"
+        )
     except Exception as e:
-        logging.error(f"❌ Ошибка в language_callback: {e}")
-        await update.effective_message.reply_text("😢 Произошла ошибка при выборе языка, попробуй снова.")
+        logging.warning(f"Не удалось отредактировать сообщение, отправляем новое. Ошибка: {e}")
+        await context.bot.send_message(
+            chat_id=query.message.chat_id,
+            text=welcome_text,
+            parse_mode="Markdown"
+        )
 
 # ✨ Сначала редактируем старое сообщение
 async def habit_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
