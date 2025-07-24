@@ -8328,11 +8328,10 @@ async def invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
         text,
-        # parse_mode не указывай — либо 'Markdown', либо вообще убери этот параметр!
-        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode="Markdown",
         disable_web_page_preview=True
     )
-
+    
 def plural_ru(number, one, few, many):
     # Склонение для русского языка (можно добавить и для других, если нужно)
     n = abs(number)
