@@ -89,26 +89,6 @@ def add_referral(user_id, referrer_id):
     stats[str(user_id)] = user
     save_stats(stats)
 
-def give_trial_if_needed(user_id, days=3):
-    stats = load_stats()
-    user = stats.get(str(user_id), {})
-    if user.get("got_trial", False):
-        return False
-    now = datetime.utcnow()
-    new_until = now + timedelta(days=days)
-    # Не обрезаем срок если уже есть больше
-    current_until = user.get("premium_until")
-    if current_until:
-        current_until = datetime.fromisoformat(current_until)
-        if current_until > new_until:
-            new_until = current_until
-    user["premium_until"] = new_until.isoformat()
-    user["got_trial"] = True
-    stats[str(user_id)] = user
-    save_stats(stats)
-    logging.info(f"Пользователь {user_id} получил триал до {new_until}")
-    return True
-
 # ==== USER PROGRESS ====
 
 def add_points(user_id: str, amount: int = 1):
