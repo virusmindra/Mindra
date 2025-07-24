@@ -8328,7 +8328,6 @@ async def invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
         text,
-        parse_mode="Markdown",
         disable_web_page_preview=True
     )
     
