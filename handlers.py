@@ -8189,7 +8189,7 @@ def give_trial_if_needed(user_id):
     if got_trial(user_id):
         return False
     now = datetime.utcnow()
-    set_premium_until(user_id, now + timedelta(days=3))
+    set_premium_until(user_id, now + timedelta(days=3), add_days=True)
     set_trial(user_id)
     logging.info(f"Пользователь {user_id} получил триал до {now + timedelta(days=3)}")
     return True
@@ -8197,14 +8197,13 @@ def give_trial_if_needed(user_id):
 def handle_referral(user_id, referrer_id):
     # Проверка, был ли уже trial
     if got_trial(user_id):
-        return False  # Уже был trial/реферал
-
-    # Выдаём 7 дней премиума (и пригласившему, и приглашённому)
+        # уже был триал, но можем добавить дни!
+        pass
     now = datetime.utcnow()
-    set_premium_until(user_id, now + timedelta(days=7))
-    set_premium_until(referrer_id, now + timedelta(days=7))
+    set_premium_until(user_id, now + timedelta(days=7), add_days=True)
+    set_premium_until(referrer_id, now + timedelta(days=7), add_days=True)
     set_trial(user_id)
-    set_trial(referrer_id)  # на всякий случай, если пригласивший был без trial
+    set_trial(referrer_id)
     add_referral(user_id, referrer_id)
     logging.info(f"👥 Реферал: {user_id} пришёл по ссылке {referrer_id}, всем +7 дней")
     return True
