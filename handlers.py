@@ -317,6 +317,42 @@ async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     first_name = query.from_user.first_name or "друг"
     welcome_text = WELCOME_TEXTS.get(lang_code, WELCOME_TEXTS["ru"]).format(first_name=first_name)
 
+    # -- ВАЖНО: Выдаём бонусы только при первом выборе языка! --
+    ref_bonus_given = False
+    trial_given = False
+
+    # Только если пользователь впервые выбирает язык (нет got_trial)
+    if not got_trial(user_id):
+        # -- Если был реферал, обрабатываем
+        ref_code = None
+        if user_id in user_ref_args:
+            ref_code = user_ref_args.pop(user_id)
+        if ref_code:
+            referrer_id = ref_code[3:]
+            if user_id != referrer_id:
+                ref_bonus_given = handle_referral(user_id, referrer_id)
+                if ref_bonus_given:
+                    bonus_text = REFERRAL_BONUS_TEXT.get(lang_code, REFERRAL_BONUS_TEXT["ru"])
+                    await context.bot.send_message(query.message.chat_id, bonus_text, parse_mode="Markdown")
+                    try:
+                        await context.bot.send_message(
+                            chat_id=int(referrer_id),
+                            text="🎉 Твой друг зарегистрировался по твоей ссылке! Вам обоим начислено +7 дней Mindra+ 🎉"
+                        )
+                    except Exception as e:
+                        logging.warning(f"Не удалось отправить сообщение пригласившему: {e}")
+
+        # -- Если не было реферала — триал
+        if not ref_bonus_given:
+            trial_given = give_trial_if_needed(user_id)
+            if trial_given:
+                trial_text = TRIAL_GRANTED_TEXT.get(lang_code, TRIAL_GRANTED_TEXT["ru"])
+                await context.bot.send_message(query.message.chat_id, trial_text, parse_mode="Markdown")
+        # -- После бонуса — статус (опционально)
+        if trial_given:
+            trial_info = TRIAL_INFO_TEXT.get(lang_code, TRIAL_INFO_TEXT["ru"])
+            await context.bot.send_message(query.message.chat_id, trial_info, parse_mode="Markdown")
+
     # Настрой стартовый режим и историю
     mode = "support"
     lang_prompt = LANG_PROMPTS.get(lang_code, LANG_PROMPTS["ru"])
@@ -325,6 +361,7 @@ async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conversation_history[user_id] = [{"role": "system", "content": system_prompt}]
     save_history(conversation_history)
 
+    # Приветствие
     try:
         await query.edit_message_text(
             text=welcome_text,
@@ -337,12 +374,7 @@ async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text=welcome_text,
             parse_mode="Markdown"
         )
-        # ВОТ ЭТО ГЛАВНОЕ!
-        await context.bot.send_message(
-            chat_id=query.message.chat_id,
-            text="/start"
-        )
-    
+
 # ✨ Сначала редактируем старое сообщение
 async def habit_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
