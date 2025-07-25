@@ -31,15 +31,24 @@ def get_premium_until(user_id):
     return user.get("premium_until", None)
     
 
-def set_premium_until(user_id, until_dt):
+def set_premium_until(user_id, until_dt, add_days=False):
     stats = load_stats()
     user = stats.get(str(user_id), {})
     current_until = user.get("premium_until")
+    now = datetime.utcnow()
+    # Если есть текущая дата — сравниваем с новой
     if current_until:
-        current_until = datetime.fromisoformat(current_until)
-        # Всегда ставим большую дату!
-        if current_until > until_dt:
-            until_dt = current_until
+        current_until_dt = datetime.fromisoformat(current_until)
+        if add_days:
+            # Если нужно добавить дни — прибавляем к текущей дате
+            if current_until_dt > now:
+                until_dt = current_until_dt + (until_dt - now)
+            else:
+                until_dt = now + (until_dt - now)
+        else:
+            # Обычная логика: берем максимальное значение
+            if current_until_dt > until_dt:
+                until_dt = current_until_dt
     user["premium_until"] = until_dt.isoformat()
     stats[str(user_id)] = user
     save_stats(stats)
