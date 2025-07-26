@@ -2341,30 +2341,33 @@ MORNING_MESSAGES_BY_LANG = {
 
 async def send_daily_reminder(context: ContextTypes.DEFAULT_TYPE):
     try:
-        # если есть конкретный чат — отправляем ему, иначе всем
-        chat_id = getattr(context.job, "chat_id", None)
+        now_kiev = datetime.now(pytz.timezone("Europe/Kiev"))
+        if not (DAILY_MIN_HOUR <= now_kiev.hour < DAILY_MAX_HOUR):
+            return  # Не утро — не отправляем
 
-        if not chat_id:
-            # Рассылка всем, кто есть в user_last_seen
-            for user_id in user_last_seen.keys():
-                lang = user_languages.get(str(user_id), "ru")
+        for user_id in user_last_seen.keys():
+            # Не отправлять если уже сегодня отправляли
+            if user_last_daily_sent.get(user_id) == now_kiev.date().isoformat():
+                continue
 
-                # Выбираем утреннее приветствие и задание по языку
-                greeting = choice(MORNING_MESSAGES_BY_LANG.get(lang, MORNING_MESSAGES_BY_LANG["ru"]))
-                task = choice(DAILY_TASKS_BY_LANG.get(lang, DAILY_TASKS_BY_LANG["ru"]))
+            # Не отправлять если был активен последние 8 часов
+            last_active = user_last_seen.get(user_id)
+            if last_active:
+                try:
+                    last_active_dt = datetime.fromisoformat(last_active)
+                    if (now_kiev - last_active_dt).total_seconds() < 8 * 3600:
+                        continue
+                except Exception:
+                    pass
 
-                text = f"{greeting}\n\n🎯 {task}"
-                await context.bot.send_message(chat_id=user_id, text=text)
-                logging.info(f"✅ Утреннее задание отправлено пользователю {user_id} на языке {lang}")
-        else:
-            # Если конкретный чат
-            lang = user_languages.get(str(chat_id), "ru")
+            lang = user_languages.get(str(user_id), "ru")
             greeting = choice(MORNING_MESSAGES_BY_LANG.get(lang, MORNING_MESSAGES_BY_LANG["ru"]))
             task = choice(DAILY_TASKS_BY_LANG.get(lang, DAILY_TASKS_BY_LANG["ru"]))
 
             text = f"{greeting}\n\n🎯 {task}"
-            await context.bot.send_message(chat_id=chat_id, text=text)
-            logging.info(f"✅ Утреннее задание отправлено в чат {chat_id} на языке {lang}")
+            await context.bot.send_message(chat_id=user_id, text=text)
+            logging.info(f"✅ Утреннее задание отправлено пользователю {user_id} на языке {lang}")
+            user_last_daily_sent[user_id] = now_kiev.date().isoformat()
 
     except Exception as e:
         logging.error(f"❌ Ошибка при отправке утреннего задания: {e}")
