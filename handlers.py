@@ -7955,11 +7955,18 @@ async def premium_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text, parse_mode="Markdown")
 
 async def send_weekly_report(context: ContextTypes.DEFAULT_TYPE):
+    now_kiev = datetime.now(pytz.timezone("Europe/Kiev"))
+    if not (REPORT_MIN_HOUR <= now_kiev.hour < REPORT_MAX_HOUR):
+        return
+
     for user_id in PREMIUM_USERS:
         try:
-            lang = user_languages.get(str(user_id), "ru")
+            # Проверяем: если уже сегодня отправляли — не дублируем
+            last_sent = user_last_report_sent.get(user_id)
+            if last_sent == now_kiev.date().isoformat():
+                continue
 
-            # Тексты отчёта по языкам
+            lang = user_languages.get(str(user_id), "ru")
             report_texts = {
                 "ru": (
                     "📊 *Твой недельный отчёт Mindra+* 💜\n\n"
@@ -8036,16 +8043,16 @@ async def send_weekly_report(context: ContextTypes.DEFAULT_TYPE):
                 goals=len(completed_goals),
                 habits=completed_habits
             )
-
             await context.bot.send_message(
                 chat_id=int(user_id),
                 text=text,
                 parse_mode="Markdown"
             )
+            user_last_report_sent[user_id] = now_kiev.date().isoformat()
+            logging.info(f"✅ Еженедельный отчёт отправлен пользователю {user_id}")
         except Exception as e:
             logging.error(f"❌ Ошибка при отправке отчёта пользователю {user_id}: {e}")
-
-
+            
 # Команда /remind — мультиязычный вариант
 
 REMIND_TEXTS = {
