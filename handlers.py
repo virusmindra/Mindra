@@ -6915,17 +6915,42 @@ POLL_MESSAGES_BY_LANG = {
     ]
 }
 
+MIN_HOURS_SINCE_LAST_POLL = 72  # минимум 3 дня между опросами для одного юзера
+MIN_HOURS_SINCE_ACTIVE = 6      # не отправлять, если был онлайн последние 6 часов
+POLL_RANDOM_CHANCE = 0.8        # 80% шанс отправить опрос
+
 async def send_random_poll(context):
+    now = datetime.utcnow()
     if user_last_seen:
         for user_id in user_last_seen.keys():
             try:
+                # --- Не спамим часто ---
+                last_polled = user_last_polled.get(user_id)
+                last_seen = user_last_seen.get(user_id)
+                if last_polled:
+                    # Если опрос был недавно — пропускаем
+                    if now - last_polled < timedelta(hours=MIN_HOURS_SINCE_LAST_POLL):
+                        continue
+                if last_seen:
+                    # Если был активен недавно — пропускаем
+                    if now - last_seen < timedelta(hours=MIN_HOURS_SINCE_ACTIVE):
+                        continue
+                # Случайная задержка — иногда не пишем вообще
+                if random.random() > POLL_RANDOM_CHANCE:
+                    continue
+
                 lang = user_languages.get(str(user_id), "ru")
                 poll = random.choice(POLL_MESSAGES_BY_LANG.get(lang, POLL_MESSAGES_BY_LANG["ru"]))
                 await context.bot.send_message(chat_id=user_id, text=poll)
                 logging.info(f"✅ Опрос отправлен пользователю {user_id}")
+
+                # --- Запоминаем, когда отправили ---
+                user_last_polled[user_id] = now
+
+                # Не забудь сохранить user_last_polled, если оно хранится в файле!
             except Exception as e:
                 logging.error(f"❌ Ошибка отправки опроса пользователю {user_id}: {e}")
-
+                
 async def mypoints_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
