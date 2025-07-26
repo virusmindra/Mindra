@@ -5967,14 +5967,33 @@ EVENING_MESSAGES_BY_LANG = {
 }
 
 async def send_evening_checkin(context):
+    now_utc = datetime.utcnow()
+
     for user_id in user_last_seen.keys():
+        # 1. Не писать тем, кто недавно общался (например, последние 2-3 часа)
+        last_active = user_last_seen.get(user_id)
+        if last_active:
+            # last_active должен быть datetime!
+            if (now_utc - last_active) < timedelta(hours=3):
+                continue
+
+        # 2. Ограничить: максимум одно сообщение в сутки
+        last_evening = user_last_evening.get(user_id)
+        if last_evening and last_evening.date() == now_utc.date():
+            continue
+
+        # 3. Рандомизация: 70% шанс получить вечернее напоминание
+        if random.random() > 0.7:
+            continue
+
         try:
             lang = user_languages.get(str(user_id), "ru")
             msg = random.choice(EVENING_MESSAGES_BY_LANG.get(lang, EVENING_MESSAGES_BY_LANG["ru"]))
             await context.bot.send_message(chat_id=user_id, text=msg)
+            user_last_evening[user_id] = now_utc
         except Exception as e:
             logging.error(f"❌ Не удалось отправить вечернее сообщение пользователю {user_id}: {e}")
-
+            
 QUOTES_BY_LANG = {
     "ru": [
         "🌟 Успех — это сумма небольших усилий, повторяющихся день за днем.",
