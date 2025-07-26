@@ -36,6 +36,10 @@ user_goal_count = {}
 user_languages = {}  # {user_id: 'ru'/'uk'/'md'/'be'/'kk'/'kg'/'hy'/'ka'/'ce'}
 user_ref_args = {}
 
+MIN_HOURS_SINCE_LAST_POLL = 96  # минимум 4 дня между опросами для одного юзера
+MIN_HOURS_SINCE_ACTIVE = 8      # не отправлять, если был онлайн последние 8 часов
+POLL_RANDOM_CHANCE = 0.7        # 70% шанс отправить опрос
+
 def get_mode_prompt(mode, lang):
     return MODES.get(mode, MODES["default"]).get(lang, MODES["default"]["ru"])
 
@@ -6915,9 +6919,6 @@ POLL_MESSAGES_BY_LANG = {
     ]
 }
 
-MIN_HOURS_SINCE_LAST_POLL = 72  # минимум 3 дня между опросами для одного юзера
-MIN_HOURS_SINCE_ACTIVE = 6      # не отправлять, если был онлайн последние 6 часов
-POLL_RANDOM_CHANCE = 0.8        # 80% шанс отправить опрос
 
 async def send_random_poll(context):
     now = datetime.utcnow()
