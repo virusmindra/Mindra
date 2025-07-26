@@ -6976,7 +6976,40 @@ async def send_random_poll(context):
                 # Не забудь сохранить user_last_polled, если оно хранится в файле!
             except Exception as e:
                 logging.error(f"❌ Ошибка отправки опроса пользователю {user_id}: {e}")
-                
+
+
+async def send_daily_task(context: ContextTypes.DEFAULT_TYPE):
+    now = datetime.now(pytz.timezone("Europe/Kiev"))
+
+    for user_id in user_last_seen.keys():
+        # Проверяем, было ли уже утреннее задание
+        last_prompted = user_last_prompted.get(f"{user_id}_morning_task")
+        if last_prompted:
+            try:
+                last_prompted_dt = datetime.fromisoformat(last_prompted)
+                if (now - last_prompted_dt) < timedelta(hours=MIN_HOURS_SINCE_LAST_MORNING_TASK):
+                    continue  # Уже отправляли сегодня
+            except Exception:
+                pass
+
+        # Не отправлять если человек был активен последний час
+        last_seen = user_last_seen[user_id]
+        if (now - last_seen) < timedelta(hours=1):
+            continue
+
+        try:
+            lang = user_languages.get(str(user_id), "ru")
+            greetings = MORNING_MESSAGES_BY_LANG.get(lang, MORNING_MESSAGES_BY_LANG["ru"])
+            greeting = random.choice(greetings)
+            tasks = DAILY_TASKS_BY_LANG.get(lang, DAILY_TASKS_BY_LANG["ru"])
+            task = random.choice(tasks)
+
+            text = f"{greeting}\n\n🎯 {task}"
+            await context.bot.send_message(chat_id=user_id, text=text)
+            user_last_prompted[f"{user_id}_morning_task"] = now.isoformat()  # фиксируем отправку
+            logging.info(f"✅ Утреннее задание отправлено пользователю {user_id} ({lang})")
+        except Exception as e:
+                            
 async def mypoints_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
