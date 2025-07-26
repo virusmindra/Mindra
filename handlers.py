@@ -53,6 +53,9 @@ MIN_IDLE_HOURS = 8  # Минимум 8 часов между idle-напомин
 IDLE_TIME_START = 10  # 10:00 утра по Киеву
 IDLE_TIME_END = 22    # 22:00 вечера по Киеву
 
+
+MIN_HOURS_SINCE_LAST_MORNING_TASK = 20  # Не отправлять чаще 1 раза в 20 часов
+
 def get_mode_prompt(mode, lang):
     return MODES.get(mode, MODES["default"]).get(lang, MODES["default"]["ru"])
 
