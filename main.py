@@ -117,6 +117,12 @@ async def main():
         interval=60, first=10
     )
 
+    app.job_queue.run_daily(
+        send_daily_reminder,
+        time=time(hour=8, minute=0, tzinfo=pytz.timezone("Europe/Kiev")),
+        name="daily_reminder"
+    )
+
     logging.info("🤖 Бот запущен!")
     await app.run_polling()
 
