@@ -1178,35 +1178,44 @@ IDLE_MESSAGES = {
 async def send_idle_reminders_compatible(app):
     logging.info(f"👥 user_last_seen: {user_last_seen}")
     logging.info(f"🧠 user_last_prompted: {user_last_prompted}")
-    now = datetime.now(timezone.utc)
+
+    now = datetime.now(pytz.timezone("Europe/Kiev"))
     logging.info("⏰ Проверка неактивных пользователей...")
 
     for user_id, last_seen in user_last_seen.items():
-        minutes_passed = (now - last_seen).total_seconds() / 60
-        logging.info(f"👀 user_id={user_id} | last_seen={last_seen} | прошло: {minutes_passed:.1f} мин.")
+        # --- Время последнего idle-напоминания (user_last_prompted)
+        last_prompted = user_last_prompted.get(user_id)
+        can_prompt = True
 
-        # Проверяем, прошло ли больше 6 часов
-        if (now - last_seen) > timedelta(hours=6):
+        # 1. Проверка: отправляли ли сегодня уже idle-напоминание?
+        if last_prompted:
             try:
-                # 🔥 Получаем язык пользователя
+                last_prompted_dt = datetime.fromisoformat(last_prompted)
+                # Интервал между напоминаниями
+                if (now - last_prompted_dt) < timedelta(hours=MIN_IDLE_HOURS):
+                    can_prompt = False
+            except Exception:
+                pass
+
+        # 2. Проверка: человек не был активен X часов?
+        if (now - last_seen) < timedelta(hours=6):
+            can_prompt = False
+
+        # 3. Проверка: только дневное время
+        if not (IDLE_TIME_START <= now.hour < IDLE_TIME_END):
+            can_prompt = False
+
+        if can_prompt:
+            try:
                 lang = user_languages.get(str(user_id), "ru")
-
-                # 🔥 Берём список сообщений для выбранного языка
                 idle_messages = IDLE_MESSAGES.get(lang, IDLE_MESSAGES["ru"])
-
-                # 👌 Выбираем случайную фразу
                 message = random.choice(idle_messages)
-
-                # Отправляем сообщение
                 await app.bot.send_message(chat_id=user_id, text=message)
-
-                # Обновляем время последней активности, чтобы не спамить
-                user_last_seen[user_id] = now
+                user_last_prompted[user_id] = now.isoformat()  # фиксируем время отправки
                 logging.info(f"📨 Напоминание отправлено пользователю {user_id} на языке {lang}")
-
             except Exception as e:
                 logging.error(f"❌ Ошибка при отправке сообщения пользователю {user_id}: {e}")
-
+                
 # 🔤 Сообщения для ответа пользователю при распознавании голоса
 VOICE_TEXTS_BY_LANG = {
     "ru": {"you_said": "📝 Ты сказал(а):", "error": "❌ Ошибка при распознавании голоса, попробуй позже."},
