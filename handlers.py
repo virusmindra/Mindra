@@ -37,6 +37,7 @@ user_languages = {}  # {user_id: 'ru'/'uk'/'md'/'be'/'kk'/'kg'/'hy'/'ka'/'ce'}
 user_ref_args = {}
 user_last_polled = {}
 user_last_report_sent = {}  # user_id: date (ISO)
+user_last_daily_sent = {}  # user_id: date (iso)
 
 MIN_HOURS_SINCE_LAST_POLL = 96  # минимум 4 дня между опросами для одного юзера
 MIN_HOURS_SINCE_ACTIVE = 8      # не отправлять, если был онлайн последние 8 часов
@@ -44,6 +45,9 @@ POLL_RANDOM_CHANCE = 0.7        # 70% шанс отправить опрос
 # Для фильтрации — время по Киеву, только с 14:00 до 18:00 (2pm-6pm)
 REPORT_MIN_HOUR = 14
 REPORT_MAX_HOUR = 18
+
+DAILY_MIN_HOUR = 9
+DAILY_MAX_HOUR = 12
 
 
 def get_mode_prompt(mode, lang):
