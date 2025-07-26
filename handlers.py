@@ -49,6 +49,9 @@ REPORT_MAX_HOUR = 18
 DAILY_MIN_HOUR = 9
 DAILY_MAX_HOUR = 12
 
+MIN_IDLE_HOURS = 8  # Минимум 8 часов между idle-напоминаниями
+IDLE_TIME_START = 10  # 10:00 утра по Киеву
+IDLE_TIME_END = 22    # 22:00 вечера по Киеву
 
 def get_mode_prompt(mode, lang):
     return MODES.get(mode, MODES["default"]).get(lang, MODES["default"]["ru"])
