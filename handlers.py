@@ -6646,23 +6646,33 @@ SUPPORT_MESSAGES_BY_LANG = {
 
 # ✨ Сообщения поддержки
 async def send_random_support(context):
+    now_utc = datetime.utcnow()
     now_kiev = datetime.now(pytz.timezone("Europe/Kiev"))
     hour = now_kiev.hour
-    # Фильтр — не писать ночью
+    # Не писать ночью
     if hour < 10 or hour >= 22:
         return
 
     if user_last_seen:
         for user_id in user_last_seen.keys():
+            # 1. Ограничение: максимум 2 раза в день, минимум 8 часов между сообщениями
+            last_support = user_last_support.get(user_id)
+            if last_support and (now_utc - last_support) < timedelta(hours=8):
+                continue  # Пропускаем, недавно было
+
+            # 2. Рандом: шанс получить поддержку 70%
+            if random.random() > 0.7:
+                continue
+
             try:
                 lang = user_languages.get(str(user_id), "ru")
                 msg = random.choice(SUPPORT_MESSAGES_BY_LANG.get(lang, SUPPORT_MESSAGES_BY_LANG["ru"]))
                 await context.bot.send_message(chat_id=user_id, text=msg)
                 logging.info(f"✅ Сообщение поддержки отправлено пользователю {user_id}")
+                user_last_support[user_id] = now_utc  # Запоминаем время
             except Exception as e:
                 logging.error(f"❌ Ошибка отправки поддержки пользователю {user_id}: {e}")
-
-
+                
 POLL_MESSAGES_BY_LANG = {
     "ru": [
         "📝 Как ты оцениваешь свой день по шкале от 1 до 10?",
