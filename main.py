@@ -41,21 +41,6 @@ async def error_handler(update, context):
     if update and update.effective_message:
         await update.effective_message.reply_text("😵 Ой, что-то пошло не так. Я уже разбираюсь с этим.")
 
-# ✨ Функция отправки задания утром
-async def send_daily_task(context: ContextTypes.DEFAULT_TYPE):
-    task = get_random_daily_task()
-    # рассылаем всем пользователям, которые известны
-    if user_last_seen:
-        for user_id in user_last_seen.keys():
-            try:
-                await context.bot.send_message(
-                    chat_id=user_id,
-                    text=f"🌞 Доброе утро! Вот твоё задание на сегодня:\n\n{task}"
-                )
-                logging.info(f"✅ Утреннее задание отправлено пользователю {user_id}")
-            except Exception as e:
-                logging.error(f"❌ Ошибка при отправке утреннего задания пользователю {user_id}: {e}")
-
 async def main():
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
