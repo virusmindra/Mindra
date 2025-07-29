@@ -37,7 +37,7 @@ from handlers import (
     send_daily_reminder,
     send_random_poll,
     check_custom_reminders,
-    all_handlers,
+    handlers,
     get_random_daily_task,
     user_last_seen,
     user_last_prompted,
