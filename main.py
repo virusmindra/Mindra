@@ -85,7 +85,7 @@ async def main():
     app.add_handler(MessageHandler(filters.VOICE, handle_voice))
 
     # 👉 Остальные хендлеры
-    for handler in all_handlers:
+    for handler in handlers:
         app.add_handler(handler)
 
     app.add_error_handler(error_handler)
