@@ -19,7 +19,7 @@ from handlers import (
     remind_command,
     handle_goal_done,
     habit_done,
-    handle_habit_delete,
+    handle_habit_button,
     handle_goal_delete,
     test_mood,
     give_trial_if_needed,
