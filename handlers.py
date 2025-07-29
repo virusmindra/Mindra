@@ -365,9 +365,6 @@ async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # -- Если не было реферала — триал
         if not ref_bonus_given:
             trial_given = give_trial_if_needed(user_id)
-            if trial_given:
-                trial_text = TRIAL_GRANTED_TEXT.get(lang_code, TRIAL_GRANTED_TEXT["ru"])
-                await context.bot.send_message(query.message.chat_id, trial_text, parse_mode="Markdown")
         # -- После бонуса — статус (опционально)
         if trial_given:
             trial_info = TRIAL_INFO_TEXT.get(lang_code, TRIAL_INFO_TEXT["ru"])
