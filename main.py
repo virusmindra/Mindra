@@ -20,7 +20,7 @@ from handlers import (
     handle_goal_done,
     habit_done,
     handle_habit_button,
-    handle_goal_delete,
+    handle_goal_done,
     test_mood,
     give_trial_if_needed,
     handle_referral,
