@@ -7012,6 +7012,7 @@ async def send_daily_task(context: ContextTypes.DEFAULT_TYPE):
             user_last_prompted[f"{user_id}_morning_task"] = now.isoformat()  # фиксируем отправку
             logging.info(f"✅ Утреннее задание отправлено пользователю {user_id} ({lang})")
         except Exception as e:
+            logging.error(f"❌ Ошибка при отправке утреннего задания пользователю {user_id}: {e}")
                             
 async def mypoints_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
