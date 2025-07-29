@@ -47,7 +47,6 @@ from handlers import (
     user_goal_count,
     user_languages,
     user_ref_args,
-    PREMIUM_USERS,
     get_goals,
     get_habits,
     save_history,
