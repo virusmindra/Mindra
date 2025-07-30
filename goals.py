@@ -26,6 +26,7 @@ def load_goals():
 
 # Добавляем новую цель (с дедлайном и напоминанием)
 def add_goal(user_id, goal_text, deadline=None, remind=False):
+    user_id = str(user_id)
     goals = load_goals()
     if user_id not in goals:
         goals[user_id] = []
@@ -165,14 +166,6 @@ async def goal_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
                     return True
     return False
 
-def add_goal_for_user(user_id, goal_text):
-    user_id = str(user_id)
-    data = load_goals()
-    if user_id not in data:
-        data[user_id] = []
-    if goal_text not in data[user_id]:
-        data[user_id].append(goal_text)
-    save_goals(data)
 
 async def show_goals(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
