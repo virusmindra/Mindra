@@ -5587,20 +5587,18 @@ buttons_text = {
     "md": ["🎯 Setează obiectiv", "📋 Obiectivele mele", "🌱 Adaugă obicei", "📊 Obiceiurile mele", "💎 Abonament Mindra+"],
     "ka": ["🎯 მიზნის დაყენება", "📋 ჩემი მიზნები", "🌱 ჩვევის დამატება", "📊 ჩემი ჩვევები", "💎 Mindra+ გამოწერა"]
 }
-
-    # Получаем кнопки для текущего языка
-    b = buttons_text.get(lang, buttons_text["ru"])
-    keyboard = [
-        [InlineKeyboardButton(b[0], callback_data="create_goal")],
-        [InlineKeyboardButton(b[1], callback_data="show_goals")],
-        [InlineKeyboardButton(b[2], callback_data="create_habit")],
-        [InlineKeyboardButton(b[3], callback_data="show_habits")],
-        [InlineKeyboardButton(b[4], url="https://t.me/talktomindra_bot")]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
-    # Отправляем сообщение
-    await update.message.reply_text(help_texts.get(lang, help_texts["ru"]), reply_markup=reply_markup)
+ # Получаем кнопки для текущего языка
+b = buttons_text.get(lang, buttons_text["ru"])
+keyboard = [
+    [InlineKeyboardButton(b[0], callback_data="create_goal")],
+    [InlineKeyboardButton(b[1], callback_data="show_goals")],
+    [InlineKeyboardButton(b[2], callback_data="create_habit")],
+    [InlineKeyboardButton(b[3], callback_data="show_habits")],
+    [InlineKeyboardButton(b[4], url="https://t.me/talktomindra_bot")]
+]
+reply_markup = InlineKeyboardMarkup(keyboard)
+# Отправляем сообщение
+await update.message.reply_text(help_texts.get(lang, help_texts["ru"]), reply_markup=reply_markup)
 
 async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
