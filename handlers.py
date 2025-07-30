@@ -630,29 +630,6 @@ async def check_custom_reminders(app):
                     print(f"Ошибка отправки напоминания пользователю {user_id}: {e}")
                 reminders.remove(r)
 
-def load_goals():
-    if GOALS_FILE.exists():
-        with open(GOALS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
-
-def save_goals(data):
-    with open(GOALS_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-
-def add_goal_for_user(user_id, goal_text):
-    user_id = str(user_id)
-    data = load_goals()
-    if user_id not in data:
-        data[user_id] = []
-    if goal_text not in data[user_id]:
-        data[user_id].append(goal_text)
-    save_goals(data)
-
-def get_goals_for_user(user_id):
-    user_id = str(user_id)
-    data = load_goals()
-    return data.get(user_id, [])
 
 # 🔑 Ключевые слова для определения "похоже на цель" на разных языках
 goal_keywords_by_lang = {
