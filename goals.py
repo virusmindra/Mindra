@@ -1,8 +1,8 @@
 import json
 import os
 from stats import add_points  # добавь в начало goals.py
+from pathlib import Path
 
-GOALS_FILE = "goals.json"
 GOALS_FILE = Path("user_goals.json")
 
 def mark_goal_done(user_id, index):
