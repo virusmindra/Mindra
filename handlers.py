@@ -5598,7 +5598,7 @@ keyboard = [
 ]
 reply_markup = InlineKeyboardMarkup(keyboard)
 # Отправляем сообщение
-await update.message.reply_text(help_texts.get(lang, help_texts["ru"]), reply_markup=reply_markup)
+    await update.message.reply_text(help_texts.get(lang, help_texts["ru"]), reply_markup=reply_markup)
 
 async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
