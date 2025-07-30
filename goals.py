@@ -14,11 +14,6 @@ def mark_goal_done(user_id, index):
         return True
     return False
 
-# Сохраняем цели
-def save_goals(data):
-    with open(GOALS_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-
 # Добавляем новую цель (с дедлайном и напоминанием)
 def add_goal(user_id, goal_text, deadline=None, remind=False):
     goals = load_goals()
@@ -168,16 +163,6 @@ async def goal_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
             await query.edit_message_text(f"{t['your_habits']}\n{habits_list}")
                     return True
     return False
-    
-def load_goals():
-    if GOALS_FILE.exists():
-        with open(GOALS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
-
-def save_goals(data):
-    with open(GOALS_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
 
 def add_goal_for_user(user_id, goal_text):
     user_id = str(user_id)
