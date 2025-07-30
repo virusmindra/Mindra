@@ -175,3 +175,27 @@ async def goal_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
             await query.edit_message_text(f"{t['your_habits']}\n{habits_list}")
                     return True
     return False
+    
+def load_goals():
+    if GOALS_FILE.exists():
+        with open(GOALS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+def save_goals(data):
+    with open(GOALS_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+def add_goal_for_user(user_id, goal_text):
+    user_id = str(user_id)
+    data = load_goals()
+    if user_id not in data:
+        data[user_id] = []
+    if goal_text not in data[user_id]:
+        data[user_id].append(goal_text)
+    save_goals(data)
+
+def get_goals_for_user(user_id):
+    user_id = str(user_id)
+    data = load_goals()
+    return data.get(user_id, [])
