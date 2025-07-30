@@ -5268,10 +5268,6 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logging.error(f"❌ Ошибка в chat(): {e}")
         await update.message.reply_text(ERROR_MESSAGES_BY_LANG.get(lang_code, ERROR_MESSAGES_BY_LANG["ru"]))
 
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
-    lang = user_languages.get(user_id, "ru")
-
 help_texts = {
     "ru": (
         "✨ Вот что я умею:\n\n"
@@ -5587,17 +5583,22 @@ buttons_text = {
     "md": ["🎯 Setează obiectiv", "📋 Obiectivele mele", "🌱 Adaugă obicei", "📊 Obiceiurile mele", "💎 Abonament Mindra+"],
     "ka": ["🎯 მიზნის დაყენება", "📋 ჩემი მიზნები", "🌱 ჩვევის დამატება", "📊 ჩემი ჩვევები", "💎 Mindra+ გამოწერა"]
 }
- # Получаем кнопки для текущего языка
-b = buttons_text.get(lang, buttons_text["ru"])
-keyboard = [
-    [InlineKeyboardButton(b[0], callback_data="create_goal")],
-    [InlineKeyboardButton(b[1], callback_data="show_goals")],
-    [InlineKeyboardButton(b[2], callback_data="create_habit")],
-    [InlineKeyboardButton(b[3], callback_data="show_habits")],
-    [InlineKeyboardButton(b[4], url="https://t.me/talktomindra_bot")]
-]
-reply_markup = InlineKeyboardMarkup(keyboard)
-# Отправляем сообщение
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    lang = user_languages.get(user_id, "ru")
+
+    # Получаем текст help и кнопки
+    help_text = help_texts.get(lang, help_texts["ru"])
+    b = buttons_text.get(lang, buttons_text["ru"])
+    keyboard = [
+        [InlineKeyboardButton(b[0], callback_data="create_goal")],
+        [InlineKeyboardButton(b[1], callback_data="show_goals")],
+        [InlineKeyboardButton(b[2], callback_data="create_habit")],
+        [InlineKeyboardButton(b[3], callback_data="show_habits")],
+        [InlineKeyboardButton(b[4], url="https://t.me/talktomindra_bot")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    # Отправляем сообщение
     await update.message.reply_text(help_texts.get(lang, help_texts["ru"]), reply_markup=reply_markup)
 
 async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
