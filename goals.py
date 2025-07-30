@@ -14,13 +14,6 @@ def mark_goal_done(user_id, index):
         return True
     return False
 
-# Загружаем цели
-def load_goals():
-    if os.path.exists(GOALS_FILE):
-        with open(GOALS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
-
 # Сохраняем цели
 def save_goals(data):
     with open(GOALS_FILE, "w", encoding="utf-8") as f:
