@@ -329,3 +329,135 @@ def is_goal_like(text: str, lang: str = "ru") -> bool:
     keywords = goal_keywords_by_lang.get(lang, goal_keywords_by_lang["ru"])
     lower_text = text.lower()
     return any(kw in lower_text for kw in keywords)
+
+async def handle_goal_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    lang = user_languages.get(user_id, "ru")
+
+    # 🌐 Тексты для всех языков
+    texts = {
+        "ru": {
+            "no_index": "⚠️ Укажи номер цели, которую ты выполнил(а).",
+            "done": "🎉 Отлично! Цель отмечена как выполненная!",
+            "bonus": "\n🏅 Ты получил(а) +10 очков! Всего: {points}",
+            "not_found": "⚠️ Цель не найдена."
+        },
+        "uk": {
+            "no_index": "⚠️ Вкажи номер цілі, яку ти виконав(ла).",
+            "done": "🎉 Чудово! Ціль відзначена як виконана!",
+            "bonus": "\n🏅 Ти отримав(ла) +10 балів! Разом: {points}",
+            "not_found": "⚠️ Ціль не знайдена."
+        },
+        "be": {
+            "no_index": "⚠️ Пакажы нумар мэты, якую ты выканаў(ла).",
+            "done": "🎉 Выдатна! Мэта адзначана як выкананая!",
+            "bonus": "\n🏅 Ты атрымаў(ла) +10 ачкоў! Усяго: {points}",
+            "not_found": "⚠️ Мэта не знойдзена."
+        },
+        "kk": {
+            "no_index": "⚠️ Орындаған мақсатыңның нөмірін көрсет.",
+            "done": "🎉 Тамаша! Мақсат орындалды деп белгіленді!",
+            "bonus": "\n🏅 Сен +10 ұпай алдың! Барлығы: {points}",
+            "not_found": "⚠️ Мақсат табылмады."
+        },
+        "kg": {
+            "no_index": "⚠️ Аткарган максатыңдын номерин көрсөт.",
+            "done": "🎉 Сонун! Максат аткарылды деп белгиленди!",
+            "bonus": "\n🏅 Сен +10 упай алдың! Баары: {points}",
+            "not_found": "⚠️ Максат табылган жок."
+        },
+        "hy": {
+            "no_index": "⚠️ Նշիր նպատակի համարը, որը կատարել ես։",
+            "done": "🎉 Հիանալի է! Նպատակը նշված է որպես կատարված։",
+            "bonus": "\n🏅 Դու ստացել ես +10 միավոր։ Ընդամենը՝ {points}",
+            "not_found": "⚠️ Նպատակը չի գտնվել։"
+        },
+        "ce": {
+            "no_index": "⚠️ Цахьана мацахь номер язде.",
+            "done": "🎉 Баркалла! Мацахь тӀетоха цаьнан!",
+            "bonus": "\n🏅 Хьо +10 балл дӀабула! Юкъ: {points}",
+            "not_found": "⚠️ Мацахь йац."
+        },
+        "md": {
+            "no_index": "⚠️ Indică numărul obiectivului pe care l-ai îndeplinit.",
+            "done": "🎉 Minunat! Obiectivul a fost marcat ca îndeplinit!",
+            "bonus": "\n🏅 Ai primit +10 puncte! Total: {points}",
+            "not_found": "⚠️ Obiectivul nu a fost găsit."
+        },
+        "ka": {
+            "no_index": "⚠️ მიუთითე მიზნის ნომერი, რომელიც შეასრულე.",
+            "done": "🎉 შესანიშნავია! მიზანი შესრულებულად მონიშნულია!",
+            "bonus": "\n🏅 შენ მიიღე +10 ქულა! სულ: {points}",
+            "not_found": "⚠️ მიზანი ვერ მოიძებნა."
+        },
+        "en": {
+            "no_index": "⚠️ Specify the number of the goal you completed.",
+            "done": "🎉 Great! The goal has been marked as completed!",
+            "bonus": "\n🏅 You got +10 points! Total: {points}",
+            "not_found": "⚠️ Goal not found."
+        }
+    }
+
+    t = texts.get(lang, texts["ru"])
+
+    # если не передан номер
+    index = int(context.args[0]) if context.args else None
+    if index is None:
+        await update.message.reply_text(t["no_index"])
+        return
+
+    if mark_goal_done(user_id, index):
+        add_points(user_id, 5)
+        response = t["done"]
+        # Премиум бонус
+        if user_id in PREMIUM_USERS:  # ✅ замени на свою проверку
+            user_points[user_id] = user_points.get(user_id, 0) + 10
+            response += t["bonus"].format(points=user_points[user_id])
+        await update.message.reply_text(response)
+    else:
+        await update.message.reply_text(t["not_found"])
+
+async def handle_add_goal_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    user_id = str(update.effective_user.id)
+    lang = user_languages.get(user_id, "ru")
+
+    # 🌐 Тексты для всех языков
+    texts = {
+        "ru": "✨ Готово! Я записала это как твою цель 💪\n\n👉 {goal}",
+        "uk": "✨ Готово! Я записала це як твою ціль 💪\n\n👉 {goal}",
+        "be": "✨ Гатова! Я запісала гэта як тваю мэту 💪\n\n👉 {goal}",
+        "kk": "✨ Дайын! Мен мұны сенің мақсатың ретінде жазып қойдым 💪\n\n👉 {goal}",
+        "kg": "✨ Даяр! Муну сенин максатың катары жазып койдум 💪\n\n👉 {goal}",
+        "hy": "✨ Պատրաստ է! Ես սա գրեցի որպես քո նպատակ 💪\n\n👉 {goal}",
+        "ce": "✨ Лелош! Са хаьа я хьайн мацахьара дӀасер 💪\n\n👉 {goal}",
+        "md": "✨ Gata! Am salvat asta ca obiectivul tău 💪\n\n👉 {goal}",
+        "ka": "✨ მზადაა! ეს შენს მიზნად ჩავწერე 💪\n\n👉 {goal}",
+        "en": "✨ Done! I’ve saved this as your goal 💪\n\n👉 {goal}",
+    }
+
+    # 📌 Получаем текст цели
+    if "|" in query.data:
+        _, goal_text = query.data.split("|", 1)
+    else:
+        # запасной вариант, если почему-то нет данных
+        goal_text = context.chat_data.get("goal_candidate", {
+            "ru": "Моя цель",
+            "uk": "Моя ціль",
+            "be": "Мая мэта",
+            "kk": "Менің мақсатым",
+            "kg": "Менин максатым",
+            "hy": "Իմ նպատակս",
+            "ce": "Са мацахь",
+            "md": "Obiectivul meu",
+            "ka": "ჩემი მიზანი",
+            "en": "My goal",
+        }.get(lang, "Моя цель"))
+
+    # 💾 Сохраняем цель
+    add_goal_for_user(user_id, goal_text)
+
+    # 📤 Отправляем сообщение
+    await query.message.reply_text(texts.get(lang, texts["ru"]).format(goal=goal_text))
