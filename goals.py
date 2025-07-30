@@ -461,3 +461,20 @@ async def handle_add_goal_callback(update: Update, context: ContextTypes.DEFAULT
 
     # 📤 Отправляем сообщение
     await query.message.reply_text(texts.get(lang, texts["ru"]).format(goal=goal_text))
+
+async def delete_goal_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    lang = user_languages.get(user_id, "ru")
+    msgs = DELETE_MESSAGES.get(lang, DELETE_MESSAGES["ru"])
+
+    if not context.args or not context.args[0].isdigit():
+        await update.message.reply_text(msgs["usage"], parse_mode="Markdown")
+        return
+
+    index = int(context.args[0]) - 1
+    success = delete_goal(user_id, index)
+
+    if success:
+        await update.message.reply_text(msgs["deleted"])
+    else:
+        await update.message.reply_text(msgs["not_found"])
