@@ -37,8 +37,8 @@ def add_goal(user_id, goal_text, deadline=None, remind=False):
     })
     save_goals(goals)
 
-# Получаем цели
 def get_goals(user_id):
+    user_id = str(user_id)
     goals = load_goals()
     return goals.get(user_id, [])
 
@@ -173,11 +173,6 @@ def add_goal_for_user(user_id, goal_text):
     if goal_text not in data[user_id]:
         data[user_id].append(goal_text)
     save_goals(data)
-
-def get_goals_for_user(user_id):
-    user_id = str(user_id)
-    data = load_goals()
-    return data.get(user_id, [])
 
 async def show_goals(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
