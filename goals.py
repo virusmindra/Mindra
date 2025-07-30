@@ -14,6 +14,16 @@ def mark_goal_done(user_id, index):
         return True
     return False
 
+def save_goals(data):
+    with GOALS_FILE.open("w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+def load_goals():
+    if GOALS_FILE.exists():
+        with GOALS_FILE.open("r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
 # Добавляем новую цель (с дедлайном и напоминанием)
 def add_goal(user_id, goal_text, deadline=None, remind=False):
     goals = load_goals()
