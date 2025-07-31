@@ -484,7 +484,7 @@ async def show_goals(update: Update, context: ContextTypes.DEFAULT_TYPE):
         },
     }
 
-   t = goals_texts.get(lang, goals_texts["ru"])
+    t = goals_texts.get(lang, goals_texts["ru"])
 
     if not goals:
         await update.message.reply_text(t["no_goals"])
