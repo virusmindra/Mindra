@@ -277,6 +277,24 @@ async def set_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("⚠️ Неверный код языка. Используй `/language` чтобы посмотреть список.")
 
+async def mark_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    lang = user_languages.get(user_id, "ru")
+    texts = HABIT_BUTTON_TEXTS.get(lang, HABIT_BUTTON_TEXTS["ru"])
+
+    goals = get_goals_for_user(user_id)
+    if not goals:
+        await update.message.reply_text(texts["no_goals"])
+        return
+
+    buttons = [
+        [InlineKeyboardButton(goal, callback_data=f"done_goal|{goal}")]
+        for goal in goals
+    ]
+
+    reply_markup = InlineKeyboardMarkup(buttons)
+    await update.message.reply_text(texts["choose_goal"], reply_markup=reply_markup)
+
 async def goal_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = str(query.from_user.id)
