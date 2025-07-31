@@ -249,24 +249,6 @@ REACTIONS_GOAL_DONE = {
     ]
 }
 
-async def mark_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
-    lang = user_languages.get(user_id, "ru")
-    texts = HABIT_BUTTON_TEXTS.get(lang, HABIT_BUTTON_TEXTS["ru"])
-
-    goals = get_goals_for_user(user_id)
-    if not goals:
-        await update.message.reply_text(texts["no_goals"])
-        return
-
-    buttons = [
-        [InlineKeyboardButton(goal, callback_data=f"done_goal|{goal}")]
-        for goal in goals
-    ]
-
-    reply_markup = InlineKeyboardMarkup(buttons)
-    await update.message.reply_text(texts["choose_goal"], reply_markup=reply_markup)
-
 DELETE_MESSAGES = {
     "ru": {
         "usage": "❌ Чтобы удалить цель, напиши так:\n`/delete 1`",
