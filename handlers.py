@@ -318,12 +318,14 @@ async def goal_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     lang = user_languages.get(user_id, "ru")
     await query.answer()
 
-    # Мультиязычные тексты
     btn_texts = {
         "ru": {
             "write_goal": "✍️ Напиши свою цель:\n`/goal Прочитать 10 страниц`",
             "no_goals": "❌ У тебя пока нет целей. Добавь первую с помощью /goal",
-            "your_goals": "📋 Твои цели:",
+            "your_goals": "📋 *Твои цели:*",
+            "delete": "🗑️ Удалить цель",
+            "add": "➕ Добавить ещё одну",
+
             "write_habit": "🌱 Напиши свою привычку:\n`/habit Делать зарядку утром`",
             "no_habits": "❌ У тебя пока нет привычек. Добавь первую через /habit",
             "your_habits": "📊 Твои привычки:"
@@ -331,7 +333,10 @@ async def goal_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         "uk": {
             "write_goal": "✍️ Напиши свою ціль:\n`/goal Прочитати 10 сторінок`",
             "no_goals": "❌ У тебе поки немає цілей. Додай першу за допомогою /goal",
-            "your_goals": "📋 Твої цілі:",
+            "your_goals": "📋 *Твої цілі:*",
+            "delete": "🗑️ Видалити ціль",
+            "add": "➕ Додати ще одну",
+
             "write_habit": "🌱 Напиши свою звичку:\n`/habit Робити зарядку вранці`",
             "no_habits": "❌ У тебе поки немає звичок. Додай першу через /habit",
             "your_habits": "📊 Твої звички:"
@@ -339,7 +344,10 @@ async def goal_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         "be": {
             "write_goal": "✍️ Напішы сваю мэту:\n`/goal Прачытай 10 старонак`",
             "no_goals": "❌ У цябе пакуль няма мэтаў. Дадай першую з дапамогай /goal",
-            "your_goals": "📋 Твае мэты:",
+            "your_goals": "📋 *Твае мэты:*",
+            "delete": "🗑️ Выдаліць мэту",
+            "add": "➕ Дадаць яшчэ адну",
+
             "write_habit": "🌱 Напішы сваю звычку:\n`/habit Рабіць зарадку раніцай`",
             "no_habits": "❌ У цябе пакуль няма звычак. Дадай першую праз /habit",
             "your_habits": "📊 Твае звычкі:"
@@ -347,7 +355,10 @@ async def goal_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         "kk": {
             "write_goal": "✍️ Мақсатыңды жаз:\n`/goal 10 бет оқу`",
             "no_goals": "❌ Әзірге мақсатың жоқ. Алғашқыны /goal арқылы қоса аласың",
-            "your_goals": "📋 Сенің мақсаттарың:",
+            "your_goals": "📋 *Сенің мақсаттарың:*",
+            "delete": "🗑️ Мақсатты өшіру",
+            "add": "➕ Тағы біреуін қосу",
+
             "write_habit": "🌱 Әдетіңді жаз:\n`/habit Таңертең жаттығу жасау`",
             "no_habits": "❌ Әзірге әдетің жоқ. Алғашқыны /habit арқылы қос",
             "your_habits": "📊 Сенің әдеттерің:"
@@ -355,7 +366,10 @@ async def goal_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         "kg": {
             "write_goal": "✍️ Максатыңды жаз:\n`/goal 10 бет оку`",
             "no_goals": "❌ Азырынча максатың жок. Биринчисин /goal аркылуу кош!",
-            "your_goals": "📋 Сенин максаттарың:",
+            "your_goals": "📋 *Сенин максаттарың:*",
+            "delete": "🗑️ Максатты өчүрүү",
+            "add": "➕ Дагы бир кошуу",
+
             "write_habit": "🌱 Адатынды жаз:\n`/habit Таңкы көнүгүү жасоо`",
             "no_habits": "❌ Азырынча адатың жок. Биринчисин /habit аркылуу кош",
             "your_habits": "📊 Сенин адаттарың:"
@@ -363,7 +377,10 @@ async def goal_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         "hy": {
             "write_goal": "✍️ Գրիր քո նպատակը:\n`/goal Կարդալ 10 էջ`",
             "no_goals": "❌ Դեռ նպատակ չունես։ Ավելացրու առաջինը /goal հրամանով",
-            "your_goals": "📋 Քո նպատակները:",
+            "your_goals": "📋 *Քո նպատակները:*",
+            "delete": "🗑️ Հեռացնել նպատակը",
+            "add": "➕ Ավելացնել ևս մեկը",
+
             "write_habit": "🌱 Գրիր քո սովորությունը:\n`/habit Անել լիցքավորում առավոտյան`",
             "no_habits": "❌ Դեռ սովորություն չունես։ Ավելացրու առաջինը /habit հրամանով",
             "your_habits": "📊 Քո սովորությունները:"
@@ -371,7 +388,10 @@ async def goal_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         "ce": {
             "write_goal": "✍️ Хьоьшу мацахь лаца:\n`/goal Къобалле 10 агӀо`",
             "no_goals": "❌ Хьоьш цуьнан мацахь цуьнан. /goal кхолларш ду!",
-            "your_goals": "📋 Са мацахь:",
+            "your_goals": "📋 *Са мацахь:*",
+            "delete": "🗑️ Мацахь дӀелла",
+            "add": "➕ Дахьада хила",
+
             "write_habit": "🌱 Хьоьшу привычка лаца:\n`/habit Бахьар хьалхара йолуш`",
             "no_habits": "❌ Хьоьш цуьнан привычка цуьнан. /habit лаца ду",
             "your_habits": "📊 Са привычка:"
@@ -379,7 +399,10 @@ async def goal_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         "md": {
             "write_goal": "✍️ Scrie obiectivul tău:\n`/goal Citește 10 pagini`",
             "no_goals": "❌ Încă nu ai obiective. Adaugă primul cu /goal",
-            "your_goals": "📋 Obiectivele tale:",
+            "your_goals": "📋 *Obiectivele tale:*",
+            "delete": "🗑️ Șterge obiectivul",
+            "add": "➕ Adaugă încă unul",
+
             "write_habit": "🌱 Scrie obiceiul tău:\n`/habit Fă exerciții dimineața`",
             "no_habits": "❌ Încă nu ai obiceiuri. Adaugă primul cu /habit",
             "your_habits": "📊 Obiceiurile tale:"
@@ -387,7 +410,10 @@ async def goal_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         "ka": {
             "write_goal": "✍️ დაწერე შენი მიზანი:\n`/goal წავიკითხო 10 გვერდი`",
             "no_goals": "❌ ჯერჯერობით არ გაქვს მიზანი. დაამატე პირველი /goal-ით",
-            "your_goals": "📋 შენი მიზნები:",
+            "your_goals": "📋 *შენი მიზნები:*",
+            "delete": "🗑️ მიზნის წაშლა",
+            "add": "➕ კიდევ ერთი დამატება",
+
             "write_habit": "🌱 დაწერე შენი ჩვევა:\n`/habit დილის ვარჯიში`",
             "no_habits": "❌ ჯერჯერობით არ გაქვს ჩვევა. დაამატე პირველი /habit-ით",
             "your_habits": "📊 შენი ჩვევები:"
@@ -395,7 +421,10 @@ async def goal_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         "en": {
             "write_goal": "✍️ Write your goal:\n`/goal Read 10 pages`",
             "no_goals": "❌ You don’t have any goals yet. Add your first with /goal",
-            "your_goals": "📋 Your goals:",
+            "your_goals": "📋 *Your goals:*",
+            "delete": "🗑️ Delete goal",
+            "add": "➕ Add another",
+
             "write_habit": "🌱 Write your habit:\n`/habit Morning exercise`",
             "no_habits": "❌ You don’t have any habits yet. Add your first with /habit",
             "your_habits": "📊 Your habits:"
@@ -413,7 +442,15 @@ async def goal_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
             await query.edit_message_text(t["no_goals"])
         else:
             goals_list = "\n".join([f"• {g['text']} {'✅' if g.get('done') else '❌'}" for g in goals])
-            await query.edit_message_text(f"{t['your_goals']}\n{goals_list}")
+            # Две кнопки: удалить и добавить, на нужном языке!
+            buttons = [
+                [
+                    InlineKeyboardButton(t["delete"], callback_data="delete_goal_choose"),
+                    InlineKeyboardButton(t["add"], callback_data="create_goal")
+                ]
+            ]
+            reply_markup = InlineKeyboardMarkup(buttons)
+            await query.edit_message_text(f"{t['your_goals']}\n{goals_list}", reply_markup=reply_markup, parse_mode="Markdown")
 
     elif query.data == "create_habit":
         await query.edit_message_text(t["write_habit"], parse_mode="Markdown")
@@ -424,10 +461,8 @@ async def goal_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
             await query.edit_message_text(t["no_habits"])
         else:
             habits_list = "\n".join([f"• {h['text']} {'✅' if h.get('done') else '❌'}" for h in habits])
-            await query.edit_message_text(f"{t['your_habits']}\n{habits_list}")
-
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-
+            await query.edit_message_text(f"{t['your_habits']}\n{habits_list}", parse_mode="Markdown")
+            
 async def show_goals(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
