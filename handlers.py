@@ -590,7 +590,7 @@ async def handle_goal_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
         add_points(user_id, 5)
         response = t["done"]
         # Премиум бонус
-        if user_id in PREMIUM_USERS:  # ✅ замени на свою проверку
+        if is_premium(user_id):
             user_points[user_id] = user_points.get(user_id, 0) + 10
             response += t["bonus"].format(points=user_points[user_id])
         await update.message.reply_text(response)
