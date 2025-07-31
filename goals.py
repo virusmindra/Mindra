@@ -5,15 +5,6 @@ from pathlib import Path
 
 GOALS_FILE = Path("user_goals.json")
 
-def mark_goal_done(user_id, index):
-    goals = load_goals()
-    if user_id in goals and 0 <= index < len(goals[user_id]):
-        goals[user_id][index]["done"] = True
-        save_goals(goals)
-        add_points(user_id, 10)  # начисляем 10 баллов
-        return True
-    return False
-
 def load_goals():
     if GOALS_FILE.exists():
         with GOALS_FILE.open("r", encoding="utf-8") as f:
@@ -42,14 +33,24 @@ def get_goals(user_id):
     goals = load_goals()
     return goals.get(user_id, [])
 
-# Удалить цель
+def mark_goal_done(user_id, index):
+    user_id = str(user_id)
+    goals = load_goals()
+    if user_id in goals and 0 <= index < len(goals[user_id]):
+        goals[user_id][index]["done"] = True
+        save_goals(goals)
+        return True
+    return False
+
 def delete_goal(user_id, index):
+    user_id = str(user_id)
     goals = load_goals()
     if user_id in goals and 0 <= index < len(goals[user_id]):
         goals[user_id].pop(index)
         save_goals(goals)
-
-
+        return True
+    return False
+    
 # 🔑 Ключевые слова для определения "похоже на цель" на разных языках
 goal_keywords_by_lang = {
     "ru": [
@@ -102,13 +103,11 @@ goal_keywords_by_lang = {
     ],
 }
 
-# 🔍 Функция определения
 def is_goal_like(text: str, lang: str = "ru") -> bool:
     keywords = goal_keywords_by_lang.get(lang, goal_keywords_by_lang["ru"])
     lower_text = text.lower()
     return any(kw in lower_text for kw in keywords)
-
-
+    
 REACTIONS_GOAL_DONE = {
     "ru": [
         "🌟 Горжусь тобой! Ещё один шаг вперёд.",
