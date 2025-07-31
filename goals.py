@@ -297,51 +297,6 @@ def is_goal_like(text: str, lang: str = "ru") -> bool:
     lower_text = text.lower()
     return any(kw in lower_text for kw in keywords)
 
-async def handle_add_goal_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-
-    user_id = str(update.effective_user.id)
-    lang = user_languages.get(user_id, "ru")
-
-    # 🌐 Тексты для всех языков
-    texts = {
-        "ru": "✨ Готово! Я записала это как твою цель 💪\n\n👉 {goal}",
-        "uk": "✨ Готово! Я записала це як твою ціль 💪\n\n👉 {goal}",
-        "be": "✨ Гатова! Я запісала гэта як тваю мэту 💪\n\n👉 {goal}",
-        "kk": "✨ Дайын! Мен мұны сенің мақсатың ретінде жазып қойдым 💪\n\n👉 {goal}",
-        "kg": "✨ Даяр! Муну сенин максатың катары жазып койдум 💪\n\n👉 {goal}",
-        "hy": "✨ Պատրաստ է! Ես սա գրեցի որպես քո նպատակ 💪\n\n👉 {goal}",
-        "ce": "✨ Лелош! Са хаьа я хьайн мацахьара дӀасер 💪\n\n👉 {goal}",
-        "md": "✨ Gata! Am salvat asta ca obiectivul tău 💪\n\n👉 {goal}",
-        "ka": "✨ მზადაა! ეს შენს მიზნად ჩავწერე 💪\n\n👉 {goal}",
-        "en": "✨ Done! I’ve saved this as your goal 💪\n\n👉 {goal}",
-    }
-
-    # 📌 Получаем текст цели
-    if "|" in query.data:
-        _, goal_text = query.data.split("|", 1)
-    else:
-        # запасной вариант, если почему-то нет данных
-        goal_text = context.chat_data.get("goal_candidate", {
-            "ru": "Моя цель",
-            "uk": "Моя ціль",
-            "be": "Мая мэта",
-            "kk": "Менің мақсатым",
-            "kg": "Менин максатым",
-            "hy": "Իմ նպատակս",
-            "ce": "Са мацахь",
-            "md": "Obiectivul meu",
-            "ka": "ჩემი მიზანი",
-            "en": "My goal",
-        }.get(lang, "Моя цель"))
-
-    # 💾 Сохраняем цель
-    add_goal_for_user(user_id, goal_text)
-
-    # 📤 Отправляем сообщение
-    await query.message.reply_text(texts.get(lang, texts["ru"]).format(goal=goal_text))
-
 async def delete_goal_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
