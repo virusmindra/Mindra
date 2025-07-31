@@ -25,6 +25,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from storage import add_goal_for_user, get_goals_for_user, mark_goal_done
 from random import randint, choice
 from stats import load_stats, save_stats, get_premium_until, set_premium_until, is_premium, got_trial, set_trial, add_referral, add_points, get_user_stats, get_user_title, load_json_file, get_stats, OWNER_ID, ADMIN_USER_IDS 
+from telegram.error import BadRequest
 
 # Глобальные переменные
 user_last_seen = {}
@@ -440,8 +441,18 @@ async def show_goals(update, context):
     ]
     reply_markup = InlineKeyboardMarkup(buttons)
 
-    await send_func(reply, reply_markup=reply_markup, parse_mode="Markdown")
-
+    # Только один вызов, с защитой от "Message is not modified"
+    try:
+        await send_func(reply, reply_markup=reply_markup, parse_mode="Markdown")
+    except BadRequest as e:
+        if "Message is not modified" in str(e):
+            # Не уведомляем второй раз, если пользователь уже на этом экране
+            if hasattr(update, "callback_query") and update.callback_query is not None:
+                await update.callback_query.answer("Ты уже смотришь цели!", show_alert=False)
+            pass
+        else:
+            raise
+            
 async def handle_goal_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     index = int(context.args[0]) - 1  # если пользователь вводит с 1, а не с 0
