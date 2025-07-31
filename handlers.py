@@ -3897,7 +3897,7 @@ async def goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if user_goal_count[user_id]["date"] != today:
             user_goal_count[user_id] = {"date": today, "count": 0}
 
-    if user_id not in PREMIUM_USERS:
+    if not is_premium(user_id):
         if user_goal_count[user_id]["count"] >= 3:
             await update.message.reply_text(t["limit"])
             return
