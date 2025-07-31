@@ -8177,44 +8177,62 @@ async def premium_days(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
 # Список всех команд/обработчиков для экспорта
 handlers = [
+    # --- Старт и информация
     CommandHandler("start", start),
     CommandHandler("help", help_command),
     CommandHandler("about", about),
-    CommandHandler("mode", mode),
-    CommandHandler("reset", reset),
+
+    # --- Язык
+    CommandHandler("language", language_command),
+    CallbackQueryHandler(language_callback, pattern="^lang_"),
+
+    # --- Цели и привычки
     CommandHandler("goal", goal),
     CommandHandler("goals", show_goals),
     CommandHandler("habit", habit),
     CommandHandler("habits", habits_list),
-    CommandHandler("feedback", feedback),
-    CommandHandler("done", mark_done),
+    CommandHandler("done", handle_goal_done),  # Убери дубль!
     CommandHandler("delete", delete_goal_command),
+
+    # --- Кнопки целей/привычек
+    CallbackQueryHandler(show_goals, pattern="^(create_goal|show_goals|create_habit|show_habits)$"),
+
+    # --- Работа с задачами
     CommandHandler("task", task),
     CommandHandler("premium_task", premium_task),
+    CommandHandler("remind", remind_command),
+
+    # --- Статистика и очки
     CommandHandler("stats", stats_command),
-    CommandHandler("quote", quote),
     CommandHandler("mypoints", mypoints_command),
     CommandHandler("mystats", my_stats_command),
+    CommandHandler("premium_stats", premium_stats),
+
+    # --- Премиум и челленджи
     CommandHandler("premium_report", premium_report),
     CommandHandler("premium_challenge", premium_challenge),
     CommandHandler("premium_mode", premium_mode),
-    CommandHandler("premium_stats", premium_stats),
-    CommandHandler("remind", remind_command),
-    CommandHandler("done", handle_goal_done),
-    CommandHandler("test_mood", test_mood),
-    CommandHandler("mytask", mytask_command),
-    CommandHandler("language", language_command),
-    CommandHandler("invite", invite),
+    CallbackQueryHandler(premium_mode_callback, pattern="^premium_mode_"),
     CommandHandler("premium_days", premium_days),
-    CallbackQueryHandler(goal_buttons_handler, pattern="^(create_goal|show_goals|create_habit|show_habits)$"),
-    CallbackQueryHandler(handle_mode_choice, pattern="^mode_"),  # pattern для /mode кнопок
+
+    # --- Разное
+    CommandHandler("feedback", feedback),
+    CommandHandler("mode", mode),
+    CallbackQueryHandler(handle_mode_choice, pattern="^mode_"),
+    CommandHandler("quote", quote),
+    CommandHandler("invite", invite),
+    CommandHandler("mytask", mytask_command),
+    CommandHandler("reset", reset),
+    CommandHandler("test_mood", test_mood),
+
+    # --- Кнопки реакции и добавления цели
     CallbackQueryHandler(handle_reaction_button, pattern="^react_"),
     CallbackQueryHandler(handle_add_goal_callback, pattern="^add_goal\\|"),
-    CallbackQueryHandler(premium_mode_callback, pattern="^premium_mode_"),
-    CallbackQueryHandler(language_callback, pattern="^lang_"),
+
+    # --- Чаты и голос
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
-    MessageHandler(filters.COMMAND, unknown_command),
+    MessageHandler(filters.COMMAND, unknown_command),  # Unknown в самом конце!
 ]
 
 __all__ = [
