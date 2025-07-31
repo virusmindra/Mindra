@@ -429,8 +429,7 @@ async def goal_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
 async def show_goals(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
-    goals = get_goals_for_user(user_id)  # Новая функция хранения
-
+    goals = get_goals(user_id)
     # Мультиязычные подписи
     goals_texts = {
         "ru": {
@@ -485,7 +484,7 @@ async def show_goals(update: Update, context: ContextTypes.DEFAULT_TYPE):
         },
     }
 
-    t = goals_texts.get(lang, goals_texts["ru"])
+   t = goals_texts.get(lang, goals_texts["ru"])
 
     if not goals:
         await update.message.reply_text(t["no_goals"])
@@ -494,10 +493,12 @@ async def show_goals(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply = f"{t['your_goals']}\n\n"
     for idx, goal in enumerate(goals, 1):
         status = t["done"] if goal.get("done") else t["not_done"]
-        reply += f"{idx}. {status} {goal.get('text', '')}\n"
+        deadline = f" | Дедлайн: {goal['deadline']}" if goal.get("deadline") else ""
+        remind = " | 🔔 Напоминание" if goal.get("remind") else ""
+        reply += f"{idx}. {status} {goal.get('text', '')}{deadline}{remind}\n"
 
     await update.message.reply_markdown(reply)
-    
+
 async def handle_goal_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
