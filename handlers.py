@@ -501,7 +501,7 @@ async def show_goals(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_goal_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
-    lang = user_languages.get(user_id, "ru")
+    index = int(context.args[0]) - 1  # если пользователь вводит с 1, а не с 0
 
     # 🌐 Тексты для всех языков
     texts = {
@@ -569,23 +569,27 @@ async def handle_goal_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     t = texts.get(lang, texts["ru"])
 
-    # если не передан номер
-    index = int(context.args[0]) if context.args else None
-    if index is None:
+    if not context.args or not context.args[0].isdigit():
         await update.message.reply_text(t["no_index"])
         return
 
+    index = int(context.args[0]) - 1  # минус 1, если пользователь считает с 1
+
     if mark_goal_done(user_id, index):
-        add_points(user_id, 5)
-        response = t["done"]
+        points = 5
+        add_points(user_id, points)
+        response = t["done"] + f"\n🏅 +{points} очков!"
+
         # Премиум бонус
         if is_premium(user_id):
-            user_points[user_id] = user_points.get(user_id, 0) + 10
-            response += t["bonus"].format(points=user_points[user_id])
+            premium_bonus = 10
+            add_points(user_id, premium_bonus)
+            total_points = get_user_points(user_id)  # эта функция должна быть в stats.py
+            response += t["bonus"].format(points=total_points)
         await update.message.reply_text(response)
     else:
         await update.message.reply_text(t["not_found"])
-
+        
 async def language_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [
