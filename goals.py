@@ -1,6 +1,6 @@
 import json
 import os
-from stats import add_points  # добавь в начало goals.py
+from stats import add_points, get_premium_until # добавь в начало goals.py
 from pathlib import Path
 
 GOALS_FILE = Path("user_goals.json")
