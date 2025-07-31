@@ -437,9 +437,6 @@ async def goal_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         else:
             habits_list = "\n".join([f"• {h['text']} {'✅' if h.get('done') else '❌'}" for h in habits])
             await query.edit_message_text(f"{t['your_habits']}\n{habits_list}")
-                    return True
-    return False
-
 
 async def show_goals(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
