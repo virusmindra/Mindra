@@ -19,7 +19,19 @@ from habits import add_habit, get_habits, mark_habit_done, delete_habit
 from telegram.constants import ChatAction, ParseMode
 from config import client, TELEGRAM_BOT_TOKEN
 from history import load_history, save_history, trim_history
-from goals import add_goal, get_goals, mark_goal_done, delete_goal
+from goals import (
+    GOALS_FILE,
+    mark_goal_done,
+    save_goals,
+    load_goals,
+    add_goal,
+    get_goals,
+    delete_goal,
+    goal_keywords_by_lang,
+    is_goal_like,
+    REACTIONS_GOAL_DONE,
+    DELETE_MESSAGES
+)
 from pathlib import Path
 from apscheduler.schedulers.background import BackgroundScheduler
 from storage import add_goal_for_user, get_goals_for_user, mark_goal_done
