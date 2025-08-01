@@ -4053,7 +4053,6 @@ async def goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global user_goal_count
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
-
     # 🎯 Тексты для разных языков
     goal_texts = {
         "ru": {
@@ -4139,14 +4138,26 @@ async def goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
     }
 
     t = goal_texts.get(lang, goal_texts["ru"])
-    # Паттерны для дедлайна и напоминалки
     patterns = LANG_PATTERNS.get(lang, LANG_PATTERNS["ru"])
     deadline_pattern = patterns["deadline"]
     remind_kw = patterns["remind"]
 
+    # Универсальная функция для ответа (через команду или кнопку)
+    def get_send_func(update):
+        if getattr(update, "message", None):
+            return update.message.reply_text
+        elif getattr(update, "callback_query", None):
+            return update.callback_query.edit_message_text
+        else:
+            return None
+
+    send_func = get_send_func(update)
+    if send_func is None:
+        return
+
     # ✅ Проверка аргументов
     if not context.args:
-        await update.message.reply_text(t["no_args"], parse_mode="Markdown")
+        await send_func(t["no_args"], parse_mode="Markdown")
         return
 
     today = str(date.today())
@@ -4158,7 +4169,7 @@ async def goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not is_premium(user_id):
         if user_goal_count[user_id]["count"] >= 3:
-            await update.message.reply_text(t["limit"])
+            await send_func(t["limit"])
             return
 
     user_goal_count[user_id]["count"] += 1
@@ -4174,7 +4185,7 @@ async def goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
             deadline = deadline_match.group(1)
             datetime.strptime(deadline, "%Y-%m-%d")
         except ValueError:
-            await update.message.reply_text(t["bad_date"])
+            await send_func(t["bad_date"])
             return
 
     goal_text = re.sub(deadline_pattern, '', text, flags=re.IGNORECASE).replace(remind_kw, "").strip()
@@ -4188,7 +4199,7 @@ async def goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if remind:
         reply += f"\n{t['remind']}"
 
-    await update.message.reply_markdown(reply)
+    await send_func(reply, parse_mode="Markdown")
     
 # Загрузка истории и режимов
 conversation_history = load_history()
