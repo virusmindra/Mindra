@@ -8206,8 +8206,15 @@ handlers = [
     CommandHandler("delete", delete_goal_command),
 
     # --- Кнопки целей/привычек
-    CallbackQueryHandler(show_goals, pattern="^(create_goal|show_goals|create_habit|show_habits)$"),
-
+    # Для показа списка целей и кнопок "Добавить/Удалить"
+    CallbackQueryHandler(show_goals, pattern="^show_goals$"),
+    CallbackQueryHandler(create_goal_handler, pattern="^create_goal$"),
+    CallbackQueryHandler(delete_goal_choose_handler, pattern="^delete_goal_choose$"),
+    CallbackQueryHandler(delete_goal_confirm_handler, pattern="^delete_goal_\\d+$"),
+    CallbackQueryHandler(show_habits, pattern="^show_habits$"),
+    CallbackQueryHandler(create_habit_handler, pattern="^create_habit$"),
+    CallbackQueryHandler(delete_habit_choose_handler, pattern="^delete_habit_choose$"),
+    CallbackQueryHandler(delete_habit_confirm_handler, pattern="^delete_habit_\\d+$"),
     # --- Работа с задачами
     CommandHandler("task", task),
     CommandHandler("premium_task", premium_task),
