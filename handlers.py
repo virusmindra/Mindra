@@ -224,6 +224,116 @@ LANG_PROMPTS = {
       "Your responses are always human, empathetic and respectful. Reply warmly, gently, emotionally and use emojis (for example, 💜✨🤗😊).",
 }
 
+HABIT_LANG_TEXTS = {
+    "ru": {
+        "no_habits": "❌ У тебя пока нет привычек. Добавь первую через /habit",
+        "your_habits": "📊 *Твои привычки:*",
+        "done": "✅", "not_done": "🔸",
+        "delete": "🗑️ Удалить привычку",
+        "add": "➕ Добавить ещё одну"
+    },
+    "uk": {
+        "no_habits": "❌ У тебе поки немає звичок. Додай першу через /habit",
+        "your_habits": "📊 *Твої звички:*",
+        "done": "✅", "not_done": "🔸",
+        "delete": "🗑️ Видалити звичку",
+        "add": "➕ Додати ще одну"
+    },
+    "be": {
+        "no_habits": "❌ У цябе пакуль няма звычак. Дадай першую праз /habit",
+        "your_habits": "📊 *Твае звычкі:*",
+        "done": "✅", "not_done": "🔸",
+        "delete": "🗑️ Выдаліць звычку",
+        "add": "➕ Дадаць яшчэ адну"
+    },
+    "kk": {
+        "no_habits": "❌ Әзірге әдетің жоқ. Алғашқыны /habit арқылы қос",
+        "your_habits": "📊 *Сенің әдеттерің:*",
+        "done": "✅", "not_done": "🔸",
+        "delete": "🗑️ Әдетті өшіру",
+        "add": "➕ Тағы біреуін қосу"
+    },
+    "kg": {
+        "no_habits": "❌ Азырынча адатың жок. Биринчисин /habit аркылуу кош",
+        "your_habits": "📊 *Сенин адаттарың:*",
+        "done": "✅", "not_done": "🔸",
+        "delete": "🗑️ Адатты өчүрүү",
+        "add": "➕ Дагы бирөөнү кошуу"
+    },
+    "hy": {
+        "no_habits": "❌ Դեռ սովորություն չունես։ Ավելացրու առաջինը /habit հրամանով",
+        "your_habits": "📊 *Քո սովորությունները:*",
+        "done": "✅", "not_done": "🔸",
+        "delete": "🗑️ Ջնջել սովորությունը",
+        "add": "➕ Ավելացնել ևս մեկը"
+    },
+    "ce": {
+        "no_habits": "❌ Хьоьш цуьнан привычка цуьнан. /habit лаца ду",
+        "your_habits": "📊 *Са привычка:*",
+        "done": "✅", "not_done": "🔸",
+        "delete": "🗑️ Привычка дӀелла",
+        "add": "➕ Цуьнан привычка кхоллар"
+    },
+    "md": {
+        "no_habits": "❌ Încă nu ai obiceiuri. Adaugă primul cu /habit",
+        "your_habits": "📊 *Obiceiurile tale:*",
+        "done": "✅", "not_done": "🔸",
+        "delete": "🗑️ Șterge obiceiul",
+        "add": "➕ Adaugă încă unul"
+    },
+    "ka": {
+        "no_habits": "❌ ჯერჯერობით არ გაქვს ჩვევა. დაამატე პირველი /habit-ით",
+        "your_habits": "📊 *შენი ჩვევები:*",
+        "done": "✅", "not_done": "🔸",
+        "delete": "🗑️ ჩვევის წაშლა",
+        "add": "➕ კიდევ ერთი დამატება"
+    },
+    "en": {
+        "no_habits": "❌ You don’t have any habits yet. Add your first with /habit",
+        "your_habits": "📊 *Your habits:*",
+        "done": "✅", "not_done": "🔸",
+        "delete": "🗑️ Delete habit",
+        "add": "➕ Add another"
+    }
+}
+
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+async def show_habits(update, context):
+    # Универсальная поддержка и команды, и callback
+    if hasattr(update, "callback_query") and update.callback_query is not None:
+        query = update.callback_query
+        await query.answer()
+        user_id = str(query.from_user.id)
+        send_func = query.edit_message_text
+    else:
+        user_id = str(update.effective_user.id)
+        send_func = update.message.reply_text
+
+    lang = user_languages.get(user_id, "ru")
+    t = HABIT_LANG_TEXTS.get(lang, HABIT_LANG_TEXTS["ru"])
+    habits = get_habits(user_id)
+
+    if not habits:
+        await send_func(t["no_habits"])
+        return
+
+    reply = f"{t['your_habits']}\n\n"
+    for idx, habit in enumerate(habits, 1):
+        status = t["done"] if habit.get("done") else t["not_done"]
+        reply += f"{idx}. {status} {habit.get('text', '')}\n"
+
+    # Кнопки: удалить и добавить
+    buttons = [
+        [
+            InlineKeyboardButton(t["delete"], callback_data="delete_habit_choose"),
+            InlineKeyboardButton(t["add"], callback_data="create_habit"),
+        ]
+    ]
+    reply_markup = InlineKeyboardMarkup(buttons)
+
+    await send_func(reply, reply_markup=reply_markup, parse_mode="Markdown")
+
 async def delete_goal_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
