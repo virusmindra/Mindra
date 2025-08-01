@@ -1446,6 +1446,117 @@ async def handle_add_goal_callback(update: Update, context: ContextTypes.DEFAULT
     # 📤 Отправляем сообщение
     await query.message.reply_text(texts.get(lang, texts["ru"]).format(goal=goal_text))
 
+
+GOAL_DELETE_TEXTS = {
+    "ru": "🗑️ Выбери цель для удаления:",
+    "uk": "🗑️ Обери ціль для видалення:",
+    "be": "🗑️ Абяры мэту для выдалення:",
+    "kk": "🗑️ Өшіру үшін мақсатты таңдаңыз:",
+    "kg": "🗑️ Өчүрүү үчүн максатты тандаңыз:",
+    "hy": "🗑️ Ընտրեք նպատակը ջնջելու համար:",
+    "ce": "🗑️ ДӀелла мацахь цуьнан хьажа:",
+    "md": "🗑️ Alege obiectivul de șters:",
+    "ka": "🗑️ აირჩიე მიზანი წაშლისთვის:",
+    "en": "🗑️ Choose a goal to delete:",
+}
+
+NO_GOALS_TEXTS = {
+    "ru": "❌ Нет целей для удаления.",
+    "uk": "❌ Немає цілей для видалення.",
+    "be": "❌ Няма мэт для выдалення.",
+    "kk": "❌ Өшіруге мақсат жоқ.",
+    "kg": "❌ Өчүрүүгө максат жок.",
+    "hy": "❌ Ջնջելու նպատակ չկա։",
+    "ce": "❌ Мацахь дӀелла цуьнан йац.",
+    "md": "❌ Nu există obiective de șters.",
+    "ka": "❌ წასაშლელი მიზანი არ არის.",
+    "en": "❌ No goals to delete.",
+}
+
+async def delete_goal_choose_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    user_id = str(query.from_user.id)
+    lang = user_languages.get(user_id, "ru")
+    goals = get_goals(user_id)
+
+    t = GOAL_DELETE_TEXTS.get(lang, GOAL_DELETE_TEXTS["ru"])
+    no_goals_text = NO_GOALS_TEXTS.get(lang, NO_GOALS_TEXTS["ru"])
+
+    if not goals:
+        await query.edit_message_text(no_goals_text)
+        return
+
+    # Формируем кнопки для каждой цели (обрезаем текст до 40 символов)
+    buttons = [
+        [InlineKeyboardButton(f"{i+1}. {g.get('text','')[:40]}", callback_data=f"delete_goal_{i}")]
+        for i, g in enumerate(goals)
+    ]
+    reply_markup = InlineKeyboardMarkup(buttons)
+
+    await query.edit_message_text(t, reply_markup=reply_markup)
+
+GOAL_DELETED_TEXTS = {
+    "ru": "🗑️ Цель удалена.",
+    "uk": "🗑️ Ціль видалена.",
+    "be": "🗑️ Мэта выдалена.",
+    "kk": "🗑️ Мақсат өшірілді.",
+    "kg": "🗑️ Максат өчүрүлдү.",
+    "hy": "🗑️ Նպատակը ջնջված է։",
+    "ce": "🗑️ Мацахь дӀелла.",
+    "md": "🗑️ Obiectivul a fost șters.",
+    "ka": "🗑️ მიზანი წაშლილია.",
+    "en": "🗑️ Goal deleted.",
+}
+
+GOAL_NOT_FOUND_TEXTS = {
+    "ru": "❌ Цель не найдена.",
+    "uk": "❌ Ціль не знайдена.",
+    "be": "❌ Мэта не знойдзена.",
+    "kk": "❌ Мақсат табылмады.",
+    "kg": "❌ Максат табылган жок.",
+    "hy": "❌ Նպատակը չի գտնվել։",
+    "ce": "❌ Мацахь йац.",
+    "md": "❌ Obiectivul nu a fost găsit.",
+    "ka": "❌ მიზანი ვერ მოიძებნა.",
+    "en": "❌ Goal not found.",
+}
+
+ERROR_SELECT_TEXTS = {
+    "ru": "Ошибка выбора цели.",
+    "uk": "Помилка вибору цілі.",
+    "be": "Памылка выбару мэты.",
+    "kk": "Мақсатты таңдауда қате.",
+    "kg": "Максат тандоодо ката.",
+    "hy": "Նպատակը ընտրելու սխալ։",
+    "ce": "Мацахь хьажа хата.",
+    "md": "Eroare la selectarea obiectivului.",
+    "ka": "მიზნის არჩევის შეცდომა.",
+    "en": "Error selecting goal.",
+}
+
+async def delete_goal_confirm_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    user_id = str(query.from_user.id)
+    lang = user_languages.get(user_id, "ru")
+    data = query.data  # например, "delete_goal_2"
+
+    try:
+        index = int(data.split("_")[-1])
+    except Exception:
+        await query.answer(ERROR_SELECT_TEXTS.get(lang, ERROR_SELECT_TEXTS["ru"]), show_alert=True)
+        return
+
+    goals = get_goals(user_id)
+    if not goals or index < 0 or index >= len(goals):
+        await query.edit_message_text(GOAL_NOT_FOUND_TEXTS.get(lang, GOAL_NOT_FOUND_TEXTS["ru"]))
+        return
+
+    # Удаляем выбранную цель
+    del goals[index]
+    save_goals({user_id: goals})
+
+    await query.edit_message_text(GOAL_DELETED_TEXTS.get(lang, GOAL_DELETED_TEXTS["ru"]))
+    
 PREMIUM_TASKS_BY_LANG = {
     "ru": [
         "🧘 Проведи 10 минут в тишине. Просто сядь, закрой глаза и подыши. Отметь, какие мысли приходят.",
@@ -8208,7 +8319,7 @@ handlers = [
     # --- Кнопки целей/привычек
     # Для показа списка целей и кнопок "Добавить/Удалить"
     CallbackQueryHandler(show_goals, pattern="^show_goals$"),
-    CallbackQueryHandler(create_goal_handler, pattern="^create_goal$"),
+    CallbackQueryHandler(goal, pattern="^create_goal$"),
     CallbackQueryHandler(delete_goal_choose_handler, pattern="^delete_goal_choose$"),
     CallbackQueryHandler(delete_goal_confirm_handler, pattern="^delete_goal_\\d+$"),
     CallbackQueryHandler(show_habits, pattern="^show_habits$"),
