@@ -3793,23 +3793,114 @@ async def habits_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
     texts = HABITS_TEXTS.get(lang, HABITS_TEXTS["ru"])
-
     habits = get_habits(user_id)
+
     if not habits:
         await update.message.reply_text(texts["no_habits"])
         return
 
     keyboard = []
     for i, habit in enumerate(habits):
-        status = texts["done"] if habit["done"] else "🔸"
+        status = texts["done"] if habit.get("done") else "🔸"
         keyboard.append([
-            InlineKeyboardButton(f"{status} {habit['text']}", callback_data=f"noop"),
+            InlineKeyboardButton(f"{status} {habit['text']}", callback_data="noop"),
             InlineKeyboardButton(texts["done"], callback_data=f"done_habit_{i}"),
             InlineKeyboardButton(texts["delete"], callback_data=f"delete_habit_{i}")
         ])
+    # Добавляем кнопки “Добавить” и “Удалить” внизу
+    keyboard.append([
+        InlineKeyboardButton(
+            "➕ " + {
+                "ru": "Добавить", "uk": "Додати", "be": "Дадаць", "kk": "Қосу",
+                "kg": "Кошуу", "hy": "Ավելացնել", "ce": "Хила", "md": "Adaugă",
+                "ka": "დამატება", "en": "Add"
+            }.get(lang, "Добавить"),
+            callback_data="create_habit"
+        ),
+        InlineKeyboardButton(
+            "🗑️ " + {
+                "ru": "Удалить", "uk": "Видалити", "be": "Выдаліць", "kk": "Өшіру",
+                "kg": "Өчүрүү", "hy": "Ջնջել", "ce": "ДӀелла", "md": "Șterge",
+                "ka": "წაშლა", "en": "Delete"
+            }.get(lang, "Удалить"),
+            callback_data="delete_habit_choose"
+        )
+    ])
+    await update.message.reply_text(
+        texts["title"], reply_markup=InlineKeyboardMarkup(keyboard)
+    )
 
-    await update.message.reply_text(texts["title"], reply_markup=InlineKeyboardMarkup(keyboard))
+# ——— Handler: Показывает инструкцию по добавлению привычки ———
+async def create_habit_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    user_id = str(query.from_user.id)
+    lang = user_languages.get(user_id, "ru")
+    texts = HABIT_TEXTS.get(lang, HABIT_TEXTS["ru"])
+    await query.answer()
+    await query.edit_message_text(texts["how_to"])
 
+# ——— Handler: Выбор привычки для удаления ———
+async def delete_habit_choose_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    user_id = str(query.from_user.id)
+    lang = user_languages.get(user_id, "ru")
+    habits = get_habits(user_id)
+    choose_texts = {
+        "ru": "🗑️ Выбери привычку для удаления:",
+        "uk": "🗑️ Обери звичку для видалення:",
+        "be": "🗑️ Абяры звычку для выдалення:",
+        "kk": "🗑️ Өшіру үшін әдетті таңда:",
+        "kg": "🗑️ Өчүрүү үчүн көнүмүштү танда:",
+        "hy": "🗑️ Ընտրիր սովորությունը ջնջելու համար:",
+        "ce": "🗑️ Привычка дӀелла хетам:",
+        "md": "🗑️ Alege obiceiul pentru ștergere:",
+        "ka": "🗑️ აირჩიე ჩვევა წაშლისთვის:",
+        "en": "🗑️ Choose a habit to delete:"
+    }
+    t = choose_texts.get(lang, choose_texts["ru"])
+    if not habits:
+        await query.edit_message_text(t + "\n\n❌ Нет привычек для удаления.")
+        return
+    buttons = [
+        [InlineKeyboardButton(f"{i+1}. {h.get('text','')[:40]}", callback_data=f"delete_habit_{i}")]
+        for i, h in enumerate(habits)
+    ]
+    reply_markup = InlineKeyboardMarkup(buttons)
+    await query.edit_message_text(t, reply_markup=reply_markup)
+
+# ——— Handler: Удаляет привычку по индексу ———
+async def delete_habit_confirm_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    user_id = str(query.from_user.id)
+    lang = user_languages.get(user_id, "ru")
+    data = query.data
+    try:
+        index = int(data.split("_")[-1])
+    except Exception:
+        await query.answer("Ошибка выбора привычки.", show_alert=True)
+        return
+    habits = get_habits(user_id)
+    if not habits or index < 0 or index >= len(habits):
+        await query.edit_message_text("❌ Привычка не найдена.")
+        return
+    delete_texts = {
+        "ru": "🗑️ Привычка удалена.",
+        "uk": "🗑️ Звичка видалена.",
+        "be": "🗑️ Звычка выдалена.",
+        "kk": "🗑️ Әдет жойылды.",
+        "kg": "🗑️ Көнүмүш өчүрүлдү.",
+        "hy": "🗑️ Սովորությունը ջնջված է։",
+        "ce": "🗑️ Привычка дӀелла.",
+        "md": "🗑️ Obiceiul a fost șters.",
+        "ka": "🗑️ ჩვევა წაიშალა.",
+        "en": "🗑️ Habit deleted.",
+    }
+    # Удаляем
+    if delete_habit(user_id, index):
+        await query.edit_message_text(delete_texts.get(lang, delete_texts["ru"]))
+    else:
+        await query.edit_message_text(HABIT_BUTTON_TEXTS.get(lang, HABIT_BUTTON_TEXTS["ru"])["delete_error"])
+        
 HABIT_BUTTON_TEXTS = {
     "ru": {
         "habit_done": "🎉 Привычка отмечена как выполненная!",
