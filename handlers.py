@@ -8615,6 +8615,7 @@ handlers = [
     CommandHandler("premium_days", premium_days),
 
     # --- Разное
+    CommandHandler("timezone", set_timezone),
     CommandHandler("feedback", feedback),
     CommandHandler("mode", mode),
     CallbackQueryHandler(handle_mode_choice, pattern="^mode_"),
