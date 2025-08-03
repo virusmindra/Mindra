@@ -66,8 +66,11 @@ from handlers import (
     POLL_MESSAGES_BY_LANG,
 )
 from config import TELEGRAM_BOT_TOKEN
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 logging.basicConfig(level=logging.INFO)
+scheduler = AsyncIOScheduler()
+scheduler.start()
 
 # ⛑ Глобальный обработчик ошибок
 async def error_handler(update, context):
