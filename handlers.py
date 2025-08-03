@@ -26,6 +26,7 @@ from storage import add_goal_for_user, get_goals_for_user, mark_goal_done
 from random import randint, choice
 from stats import load_stats, save_stats, get_premium_until, set_premium_until, is_premium, got_trial, set_trial, add_referral, add_points, get_user_stats, get_user_title, load_json_file, get_stats, OWNER_ID, ADMIN_USER_IDS 
 from telegram.error import BadRequest
+global user_timezones
 
 # Глобальные переменные
 user_last_seen = {}
@@ -39,6 +40,7 @@ user_ref_args = {}
 user_last_polled = {}
 user_last_report_sent = {}  # user_id: date (ISO)
 user_last_daily_sent = {}  # user_id: date (iso)
+user_timezones = {}
 
 MIN_HOURS_SINCE_LAST_POLL = 96  # минимум 4 дня между опросами для одного юзера
 MIN_HOURS_SINCE_ACTIVE = 8      # не отправлять, если был онлайн последние 8 часов
