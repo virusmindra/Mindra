@@ -78,17 +78,125 @@ GOALS_FILE = Path("user_goals.json")
 
 YOUR_ID = "7775321566"  # твой ID
 
+TIMEZONE_TEXTS = {
+    "ru": (
+        "🌍 *Часовой пояс для напоминаний*\n\n"
+        "Эта команда позволяет выбрать свой часовой пояс. "
+        "Все напоминания будут приходить по твоему локальному времени!\n\n"
+        "Примеры:\n"
+        "`/timezone kiev` — Киев (Украина)\n"
+        "`/timezone moscow` — Москва (Россия)\n"
+        "`/timezone ny` — Нью-Йорк (США)\n\n"
+        "Если живёшь в другом городе — выбери ближайший по времени.\n"
+        "Сменить таймзону можно в любой момент этой же командой."
+    ),
+    "uk": (
+        "🌍 *Часовий пояс для нагадувань*\n\n"
+        "Ця команда дозволяє обрати свій часовий пояс. "
+        "Всі нагадування будуть приходити за вашим місцевим часом!\n\n"
+        "Приклади:\n"
+        "`/timezone kiev` — Київ (Україна)\n"
+        "`/timezone moscow` — Москва (Росія)\n"
+        "`/timezone ny` — Нью-Йорк (США)\n\n"
+        "Якщо живете в іншому місті — оберіть найближчий варіант.\n"
+        "Змінити часовий пояс можна будь-коли цією ж командою."
+    ),
+    "be": (
+        "🌍 *Гадзінны пояс для напамінаў*\n\n"
+        "Гэтая каманда дазваляе выбраць свой гадзінны пояс. "
+        "Усе напаміны будуць прыходзіць у ваш мясцовы час!\n\n"
+        "Прыклад:\n"
+        "`/timezone kiev` — Кіеў (Украіна)\n"
+        "`/timezone moscow` — Масква (Расія)\n"
+        "`/timezone ny` — Нью-Ёрк (ЗША)\n\n"
+        "Калі вы жывяце ў іншым горадзе — абярыце бліжэйшы варыянт.\n"
+        "Змяніць гадзінны пояс можна ў любы час гэтай жа камандай."
+    ),
+    "kk": (
+        "🌍 *Еске салу үшін уақыт белдеуі*\n\n"
+        "Бұл команда өз уақыт белдеуіңді таңдауға мүмкіндік береді. "
+        "Барлық еске салулар жергілікті уақытыңызда келеді!\n\n"
+        "Мысалдар:\n"
+        "`/timezone kiev` — Киев (Украина)\n"
+        "`/timezone moscow` — Мәскеу (Ресей)\n"
+        "`/timezone ny` — Нью-Йорк (АҚШ)\n\n"
+        "Басқа қалада тұрсаңыз — ең жақын уақытты таңдаңыз.\n"
+        "Белдеуді кез келген уақытта өзгертуге болады."
+    ),
+    "kg": (
+        "🌍 *Эскертүү үчүн убакыт зонасы*\n\n"
+        "Бул команда убакыт зонасын тандоого мүмкүндүк берет. "
+        "Бардык эскертмелер жергиликтүү убактыңызга жараша келет!\n\n"
+        "Мисалдар:\n"
+        "`/timezone kiev` — Киев (Украина)\n"
+        "`/timezone moscow` — Москва (Россия)\n"
+        "`/timezone ny` — Нью-Йорк (АКШ)\n\n"
+        "Башка шаарда жашасаңыз — жакыныраакты тандаңыз.\n"
+        "Зонаны каалаган убакта алмаштырса болот."
+    ),
+    "hy": (
+        "🌍 *Հիշեցումների ժամանակային գոտի*\n\n"
+        "Այս հրամանը թույլ է տալիս ընտրել քո ժամանակային գոտին։ "
+        "Բոլոր հիշեցումները կգան քո տեղական ժամով:\n\n"
+        "Օրինակներ՝\n"
+        "`/timezone kiev` — Կիեւ (Ուկրաինա)\n"
+        "`/timezone moscow` — Մոսկվա (Ռուսաստան)\n"
+        "`/timezone ny` — Նյու Յորք (ԱՄՆ)\n\n"
+        "Եթե ապրում ես այլ քաղաքում — ընտրիր ամենամոտ տարբերակը։\n"
+        "Ժամանակային գոտին կարող ես փոխել ցանկացած պահին այս հրամանով։"
+    ),
+    "ce": (
+        "🌍 *Напоминаний хьажа хийцна лаьцна*\n\n"
+        "Хьалха цуьнан хийцар цуьнан цхьаьнан лаьцна. "
+        "Цхьаьнан напоминаний цуьнан чур дийцар цхьаьнан локальнай хийцара!\n\n"
+        "Мисал:\n"
+        "`/timezone kiev` — Киев (Украина)\n"
+        "`/timezone moscow` — Москва (Россия)\n"
+        "`/timezone ny` — Нью-Йорк (США)\n\n"
+        "Хьалха цуьнан хийцар цуьнан хийцна локальнай хийцара цхьаьнан цхьаьнан."
+    ),
+    "md": (
+        "🌍 *Fusul orar pentru mementouri*\n\n"
+        "Această comandă permite să alegi fusul tău orar. "
+        "Toate mementourile vor veni la ora locală!\n\n"
+        "Exemple:\n"
+        "`/timezone kiev` — Kiev (Ucraina)\n"
+        "`/timezone moscow` — Moscova (Rusia)\n"
+        "`/timezone ny` — New York (SUA)\n\n"
+        "Dacă locuiești în alt oraș — alege varianta cea mai apropiată.\n"
+        "Poți schimba fusul orar oricând cu această comandă."
+    ),
+    "ka": (
+        "🌍 *შეხსენებების დროის სარტყელი*\n\n"
+        "ეს ბრძანება საშუალებას გაძლევთ აირჩიოთ თქვენი დროის სარტყელი. "
+        "ყველა შეხსენება მოვა თქვენს ადგილობრივ დროზე!\n\n"
+        "მაგალითები:\n"
+        "`/timezone kiev` — კიევი (უკრაინა)\n"
+        "`/timezone moscow` — მოსკოვი (რუსეთი)\n"
+        "`/timezone ny` — ნიუ-იორკი (აშშ)\n\n"
+        "თუ სხვა ქალაქში ცხოვრობთ — აირჩიეთ ყველაზე ახლოს მყოფი ვარიანტი.\n"
+        "დროის სარტყელის შეცვლა შეგიძლიათ ნებისმიერ დროს ამავე ბრძანებით."
+    ),
+    "en": (
+        "🌍 *Timezone for reminders*\n\n"
+        "This command lets you choose your timezone. "
+        "All reminders will come at your local time!\n\n"
+        "Examples:\n"
+        "`/timezone kiev` — Kyiv (Ukraine)\n"
+        "`/timezone moscow` — Moscow (Russia)\n"
+        "`/timezone ny` — New York (USA)\n\n"
+        "If you live in another city, just choose the closest option.\n"
+        "You can change your timezone anytime using this command."
+    ),
+}
+
 async def set_timezone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
+    lang = user_languages.get(user_id, "ru")  # Или как у тебя определяется язык
 
     if not context.args:
-        zones = "\n".join([f"{k} — {v}" for k, v in TIMEZONE_NAMES.items()])
         await update.message.reply_text(
-            "🌍 Укажи свой часовой пояс для напоминаний:\n"
-            "`/timezone kiev` — Киев\n"
-            "`/timezone moscow` — Москва\n"
-            "`/timezone ny` — Нью-Йорк (США)\n\n"
-            f"Доступные таймзоны:\n{zones}",
+            TIMEZONE_TEXTS.get(lang, TIMEZONE_TEXTS["ru"]),
             parse_mode="Markdown"
         )
         return
@@ -98,12 +206,36 @@ async def set_timezone(update: Update, context: ContextTypes.DEFAULT_TYPE):
         tz = TIMEZONES[arg]
         user_timezones[user_id] = tz
         await update.message.reply_text(
-            f"✅ Таймзона установлена: {TIMEZONE_NAMES[tz]}\nТеперь напоминания будут приходить по твоему времени!"
+            f"✅ {TIMEZONE_NAMES[tz]}\n"
+            + (
+                {
+                    "ru": "Теперь напоминания будут приходить по твоему времени!",
+                    "uk": "Тепер нагадування будуть надходити за вашим часом!",
+                    "be": "Цяпер напаміны будуць прыходзіць у ваш мясцовы час!",
+                    "kk": "Еске салулар жергілікті уақытыңызда келеді!",
+                    "kg": "Эскертмелер жергиликтүү убактыңызда келет!",
+                    "hy": "Հիշեցումները կգան քո տեղական ժամով!",
+                    "ce": "Цхьаьнан напоминаний чур дийцар локальнай хийцара!",
+                    "md": "Mementourile vor veni la ora locală!",
+                    "ka": "შეხსენებები მოვა თქვენს ადგილობრივ დროზე!",
+                    "en": "Reminders will now be sent in your local time!"
+                }.get(lang, "Теперь напоминания будут приходить по твоему времени!")
+            )
         )
     else:
         await update.message.reply_text(
-            "❗ Неверная таймзона. Используй одну из: kiev, moscow, ny\n"
-            "Пример: `/timezone moscow`",
+            {
+                "ru": "❗ Неверная таймзона. Используй одну из: `kiev`, `moscow`, `ny`\nПример: `/timezone moscow`",
+                "uk": "❗ Невірна таймзона. Використовуйте одну з: `kiev`, `moscow`, `ny`\nПриклад: `/timezone moscow`",
+                "be": "❗ Няправільная таймзона. Выкарыстоўвайце адну з: `kiev`, `moscow`, `ny`\nПрыклад: `/timezone moscow`",
+                "kk": "❗ Қате белдеу. Осыны қолданыңыз: `kiev`, `moscow`, `ny`\nМысал: `/timezone moscow`",
+                "kg": "❗ Туура эмес зона. Булардын бирин колдонуңуз: `kiev`, `moscow`, `ny`\nМисал: `/timezone moscow`",
+                "hy": "❗ Սխալ ժամանակային գոտի։ Օգտագործեք՝ `kiev`, `moscow`, `ny`\nՕրինակ՝ `/timezone moscow`",
+                "ce": "❗ Нохчийн таймзона дукха. Цуьнан: `kiev`, `moscow`, `ny`\nМисал: `/timezone moscow`",
+                "md": "❗ Fus orar greșit. Folosește: `kiev`, `moscow`, `ny`\nExemplu: `/timezone moscow`",
+                "ka": "❗ არასწორი დროის სარტყელი. გამოიყენეთ: `kiev`, `moscow`, `ny`\nმაგალითი: `/timezone moscow`",
+                "en": "❗ Wrong timezone. Use one of: `kiev`, `moscow`, `ny`\nExample: `/timezone moscow`",
+            }.get(lang, "❗ Неверная таймзона. Используй одну из: `kiev`, `moscow`, `ny`\nПример: `/timezone moscow`"),
             parse_mode="Markdown"
         )
 
