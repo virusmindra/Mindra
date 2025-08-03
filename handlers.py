@@ -1034,20 +1034,23 @@ async def check_custom_reminders(app):
     for user_id, reminders in list(user_reminders.items()):
         lang = user_languages.get(str(user_id), "ru")
         header = reminder_headers.get(lang, reminder_headers["ru"])
+        tz_str = user_timezones.get(user_id, "Europe/Kiev")
+        tz = pytz.timezone(tz_str)
+        now = datetime.now(tz)
 
         for r in reminders[:]:
             reminder_time = r["time"]
-            # Если reminder_time строка, конвертируем обратно
+            # Если reminder_time строка, конвертируем обратно (с учетом tz)
             if isinstance(reminder_time, str):
                 try:
                     reminder_time = datetime.fromisoformat(reminder_time)
+                    # reminder_time = tz.localize(reminder_time)  # Не нужно, если iso уже aware
                 except Exception as e:
                     print(f"Ошибка конвертации времени: {e}")
                     continue
 
             print(f"[DEBUG] now={now}, reminder_time={reminder_time}")
 
-            # Проверяем диапазон: если сейчас >= времени напоминания и не прошло больше 2 минут
             if now >= reminder_time and (now - reminder_time).total_seconds() < 120:
                 try:
                     await app.bot.send_message(
@@ -1058,7 +1061,7 @@ async def check_custom_reminders(app):
                 except Exception as e:
                     print(f"Ошибка отправки напоминания пользователю {user_id}: {e}")
                 reminders.remove(r)
-
+                
 IDLE_MESSAGES = {
     "ru": [
         "💌 Я немного скучаю. Расскажешь, как дела?",
