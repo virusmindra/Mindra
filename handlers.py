@@ -8221,6 +8221,8 @@ async def remind_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             user_reminders[user_id] = []
         user_reminders[user_id].append({"time": reminder_time, "text": text_part})
 
+        print(f"[DEBUG] Добавлено напоминание: {user_reminders[user_id]}")
+
         await update.message.reply_text(
             t["success"].format(hour=hour, minute=minute, text=text_part),
             parse_mode="Markdown"
