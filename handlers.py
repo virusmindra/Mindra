@@ -990,19 +990,32 @@ async def check_custom_reminders(app):
         "en": "⏰ Reminder:"
     }
 
+    print("[DEBUG] check_custom_reminders запускается!")
+
     for user_id, reminders in list(user_reminders.items()):
-        # Определяем язык пользователя
         lang = user_languages.get(str(user_id), "ru")
         header = reminder_headers.get(lang, reminder_headers["ru"])
 
         for r in reminders[:]:
-            # Проверяем, пора ли отправить
-            if now.hour == r["time"].hour and now.minute == r["time"].minute:
+            reminder_time = r["time"]
+            # Если reminder_time строка, конвертируем обратно
+            if isinstance(reminder_time, str):
+                try:
+                    reminder_time = datetime.fromisoformat(reminder_time)
+                except Exception as e:
+                    print(f"Ошибка конвертации времени: {e}")
+                    continue
+
+            print(f"[DEBUG] now={now}, reminder_time={reminder_time}")
+
+            # Проверяем диапазон: если сейчас >= времени напоминания и не прошло больше 2 минут
+            if now >= reminder_time and (now - reminder_time).total_seconds() < 120:
                 try:
                     await app.bot.send_message(
                         chat_id=user_id,
                         text=f"{header} {r['text']}"
                     )
+                    print(f"[DEBUG] Отправлено напоминание для {user_id}: {reminder_time}, текст: {r['text']}")
                 except Exception as e:
                     print(f"Ошибка отправки напоминания пользователю {user_id}: {e}")
                 reminders.remove(r)
