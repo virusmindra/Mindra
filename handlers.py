@@ -8244,18 +8244,17 @@ async def remind_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
     t = REMIND_TEXTS.get(lang, REMIND_TEXTS["ru"])
+    tz_str = user_timezones.get(user_id, "Europe/Kiev")  # Default — Киев
 
     # Проверка: премиум или нет
     is_premium = (user_id == str(YOUR_ID)) or (user_id in PREMIUM_USERS)
 
-    # Лимит для бесплатных: только 1 напоминание
     if not is_premium:
         current_reminders = user_reminders.get(user_id, [])
         if len(current_reminders) >= 1:
             await update.message.reply_text(t["limit"], parse_mode="Markdown")
             return
 
-    # Проверяем корректность аргументов
     if len(context.args) < 2:
         await update.message.reply_text(t["usage"], parse_mode="Markdown")
         return
@@ -8264,14 +8263,16 @@ async def remind_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         time_part = context.args[0]
         text_part = " ".join(context.args[1:])
         hour, minute = map(int, time_part.split(":"))
-        now = datetime.now()
+        tz = pytz.timezone(tz_str)
+        now = datetime.now(tz)
         reminder_time = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
         if reminder_time < now:
             reminder_time += timedelta(days=1)
 
         if user_id not in user_reminders:
             user_reminders[user_id] = []
-        user_reminders[user_id].append({"time": reminder_time, "text": text_part})
+        # Сохраняем как ISO (строка), чтобы не было проблем с tz
+        user_reminders[user_id].append({"time": reminder_time.isoformat(), "text": text_part})
 
         print(f"[DEBUG] Добавлено напоминание: {user_reminders[user_id]}")
 
@@ -8282,7 +8283,7 @@ async def remind_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(t["bad_format"], parse_mode="Markdown")
         print(e)
-
+        
 MOODS_BY_LANG = {
     "ru": [
         "💜 Ты сегодня как солнечный лучик! Продолжай так!",
