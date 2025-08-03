@@ -54,6 +54,16 @@ MIN_IDLE_HOURS = 8  # Минимум 8 часов между idle-напомин
 IDLE_TIME_START = 10  # 10:00 утра по Киеву
 IDLE_TIME_END = 22    # 22:00 вечера по Киеву
 
+TIMEZONES = {
+    "kiev": "Europe/Kiev",
+    "moscow": "Europe/Moscow",
+    "ny": "America/New_York"
+}
+TIMEZONE_NAMES = {
+    "Europe/Kiev": "Киев (Украина)",
+    "Europe/Moscow": "Москва (Россия)",
+    "America/New_York": "Нью-Йорк (США)"
+}
 
 MIN_HOURS_SINCE_LAST_MORNING_TASK = 20  # Не отправлять чаще 1 раза в 20 часов
 
@@ -65,6 +75,35 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 GOALS_FILE = Path("user_goals.json")
 
 YOUR_ID = "7775321566"  # твой ID
+
+async def set_timezone(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+
+    if not context.args:
+        zones = "\n".join([f"{k} — {v}" for k, v in TIMEZONE_NAMES.items()])
+        await update.message.reply_text(
+            "🌍 Укажи свой часовой пояс для напоминаний:\n"
+            "`/timezone kiev` — Киев\n"
+            "`/timezone moscow` — Москва\n"
+            "`/timezone ny` — Нью-Йорк (США)\n\n"
+            f"Доступные таймзоны:\n{zones}",
+            parse_mode="Markdown"
+        )
+        return
+
+    arg = context.args[0].lower()
+    if arg in TIMEZONES:
+        tz = TIMEZONES[arg]
+        user_timezones[user_id] = tz
+        await update.message.reply_text(
+            f"✅ Таймзона установлена: {TIMEZONE_NAMES[tz]}\nТеперь напоминания будут приходить по твоему времени!"
+        )
+    else:
+        await update.message.reply_text(
+            "❗ Неверная таймзона. Используй одну из: kiev, moscow, ny\n"
+            "Пример: `/timezone moscow`",
+            parse_mode="Markdown"
+        )
 
 WELCOME_TEXTS = {
     "ru": (
