@@ -711,28 +711,34 @@ async def show_goals(update, context):
 
     reply = f"{t['your_goals']}\n\n"
     for idx, goal in enumerate(goals, 1):
-        status = t["done"] if goal.get("done") else t["not_done"]
+        status = t["done"] if goal.get("done") else "🔸"
         deadline = f" | {t['deadline']}: {goal['deadline']}" if goal.get("deadline") else ""
         remind = f" | {t['remind']}" if goal.get("remind") else ""
         reply += f"{idx}. {status} {goal.get('text', '')}{deadline}{remind}\n"
 
+    # Кнопки: три внизу, как у привычек — добавить, выполнить, удалить (пирамидой)
     buttons = [
-        [
-            InlineKeyboardButton(t["delete"], callback_data="delete_goal_choose"),
-            InlineKeyboardButton(t["add"], callback_data="create_goal"),
-        ]
+        [InlineKeyboardButton("➕ " + {
+            "ru": "Добавить", "uk": "Додати", "be": "Дадаць", "kk": "Қосу", "kg": "Кошуу",
+            "hy": "Ավելացնել", "ce": "Хила", "md": "Adaugă", "ka": "დამატება", "en": "Add"
+        }.get(lang, "Добавить"), callback_data="create_goal")],
+        [InlineKeyboardButton("✅ " + {
+            "ru": "Выполнить", "uk": "Виконати", "be": "Выканаць", "kk": "Аяқтау", "kg": "Аткаруу",
+            "hy": "Կատարել", "ce": "Батта", "md": "Finalizează", "ka": "შესრულება", "en": "Done"
+        }.get(lang, "Выполнить"), callback_data="mark_goal_done_choose")],
+        [InlineKeyboardButton("🗑️ " + {
+            "ru": "Удалить", "uk": "Видалити", "be": "Выдаліць", "kk": "Өшіру", "kg": "Өчүрүү",
+            "hy": "Ջնջել", "ce": "ДӀелла", "md": "Șterge", "ka": "წაშლა", "en": "Delete"
+        }.get(lang, "Удалить"), callback_data="delete_goal_choose")]
     ]
     reply_markup = InlineKeyboardMarkup(buttons)
 
-    # Только один вызов, с защитой от "Message is not modified"
     try:
         await send_func(reply, reply_markup=reply_markup, parse_mode="Markdown")
     except BadRequest as e:
         if "Message is not modified" in str(e):
-            # Не уведомляем второй раз, если пользователь уже на этом экране
             if hasattr(update, "callback_query") and update.callback_query is not None:
                 await update.callback_query.answer("Ты уже смотришь цели!", show_alert=False)
-            pass
         else:
             raise
             
