@@ -3988,37 +3988,46 @@ async def habits_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(texts["no_habits"])
         return
 
-    keyboard = []
-    for i, habit in enumerate(habits):
+     # Формируем текстовый список привычек
+    reply = f"{texts['title']}\n"
+    for i, habit in enumerate(habits, 1):
         status = texts["done"] if habit.get("done") else "🔸"
-        keyboard.append([
-            InlineKeyboardButton(f"{status} {habit['text']}", callback_data="noop"),
-            InlineKeyboardButton(texts["done"], callback_data=f"done_habit_{i}"),
-            InlineKeyboardButton(texts["delete"], callback_data=f"delete_habit_{i}")
-        ])
-    # Добавляем кнопки “Добавить” и “Удалить” внизу
-    keyboard.append([
-        InlineKeyboardButton(
-            "➕ " + {
-                "ru": "Добавить", "uk": "Додати", "be": "Дадаць", "kk": "Қосу",
-                "kg": "Кошуу", "hy": "Ավելացնել", "ce": "Хила", "md": "Adaugă",
-                "ka": "დამატება", "en": "Add"
-            }.get(lang, "Добавить"),
-            callback_data="create_habit"
-        ),
-        InlineKeyboardButton(
-            "🗑️ " + {
-                "ru": "Удалить", "uk": "Видалити", "be": "Выдаліць", "kk": "Өшіру",
-                "kg": "Өчүрүү", "hy": "Ջնջել", "ce": "ДӀелла", "md": "Șterge",
-                "ka": "წაშლა", "en": "Delete"
-            }.get(lang, "Удалить"),
-            callback_data="delete_habit_choose"
-        )
-    ])
-    await update.message.reply_text(
-        texts["title"], reply_markup=InlineKeyboardMarkup(keyboard)
-    )
+        reply += f"{i}. {status} {habit['text']}\n"
 
+    # Клавиатура: только внизу
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                "➕ " + {
+                    "ru": "Добавить", "uk": "Додати", "be": "Дадаць", "kk": "Қосу",
+                    "kg": "Кошуу", "hy": "Ավելացնել", "ce": "Хила", "md": "Adaugă",
+                    "ka": "დამატება", "en": "Add"
+                }.get(lang, "Добавить"),
+                callback_data="create_habit"
+            ),
+            InlineKeyboardButton(
+                "✅ " + {
+                    "ru": "Выполнить", "uk": "Виконати", "be": "Выканаць", "kk": "Аяқтау",
+                    "kg": "Аткаруу", "hy": "Կատարել", "ce": "Батта", "md": "Finalizează",
+                    "ka": "შესრულება", "en": "Done"
+                }.get(lang, "Выполнить"),
+                callback_data="mark_habit_done"
+            ),
+            InlineKeyboardButton(
+                "🗑️ " + {
+                    "ru": "Удалить", "uk": "Видалити", "be": "Выдаліць", "kk": "Өшіру",
+                    "kg": "Өчүрүү", "hy": "Ջնջել", "ce": "ДӀелла", "md": "Șterge",
+                    "ka": "წაშლა", "en": "Delete"
+                }.get(lang, "Удалить"),
+                callback_data="delete_habit_choose"
+            )
+        ]
+    ]
+
+    await update.message.reply_text(
+        reply, reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+    
 # ——— Handler: Показывает инструкцию по добавлению привычки ———
 async def create_habit_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
