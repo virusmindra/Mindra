@@ -8821,7 +8821,7 @@ handlers = [
     CommandHandler("mytask", mytask_command),
     CommandHandler("reset", reset),
     CommandHandler("test_mood", test_mood),
-    CallbackQueryHandler(handle_done_goal_callback, pattern="^done_goal\|"),
+    CallbackQueryHandler(handle_done_goal_callback, pattern=r"^done_goal\|"),
     
     # --- Кнопки реакции и добавления цели
     CallbackQueryHandler(handle_reaction_button, pattern="^react_"),
