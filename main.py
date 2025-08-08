@@ -21,6 +21,8 @@ from handlers import (
     habit_done,
     handle_habit_button,
     handle_goal_done,
+    handle_done_goal_callback,
+    parse_goal_index,
     test_mood,
     give_trial_if_needed,
     handle_referral,
