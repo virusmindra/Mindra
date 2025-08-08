@@ -725,7 +725,7 @@ async def show_goals(update, context):
         [InlineKeyboardButton("✅ " + {
             "ru": "Выполнить", "uk": "Виконати", "be": "Выканаць", "kk": "Аяқтау", "kg": "Аткаруу",
             "hy": "Կատարել", "ce": "Батта", "md": "Finalizează", "ka": "შესრულება", "en": "Done"
-        }.get(lang, "Выполнить"), callback_data=f"done_goal|{idx}")],
+        }.get(lang, "Выполнить"), callback_data="mark_goal_done_choose")],
         [InlineKeyboardButton("🗑️ " + {
             "ru": "Удалить", "uk": "Видалити", "be": "Выдаліць", "kk": "Өшіру", "kg": "Өчүрүү",
             "hy": "Ջնջել", "ce": "ДӀелла", "md": "Șterge", "ka": "წაშლა", "en": "Delete"
