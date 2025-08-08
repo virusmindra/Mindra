@@ -755,26 +755,18 @@ def parse_goal_index(goals, goal_name):
 async def handle_done_goal_callback(update: Update, context: CallbackContext):
     query = update.callback_query
     user_id = str(query.from_user.id)
-    lang = user_languages.get(user_id, "ru")
-    texts = HABIT_BUTTON_TEXTS.get(lang, HABIT_BUTTON_TEXTS["ru"])
     data = query.data
 
     if data.startswith("done_goal|"):
-        goal_name = data.split("|", 1)[1]
+        index = int(data.split("|")[1])
         goals = get_goals_for_user(user_id)
-        index = parse_goal_index(goals, goal_name)
-        if index is not None:
+        print("DEBUG GOALS:", goals)
+        print("DEBUG INDEX:", index)
+        if 0 <= index < len(goals):
             if mark_goal_done(user_id, index):
-                points = 5
-                add_points(user_id, points)
-                response = texts["done"] + f"\n🏅 +{points} очков!"
-                if is_premium(user_id):
-                    premium_bonus = 10
-                    add_points(user_id, premium_bonus)
-                    total_points = get_user_points(user_id)
-                    response += texts["bonus"].format(points=total_points)
+                add_points(user_id, 5)
                 await query.answer("Цель отмечена как выполненная!")
-                await query.edit_message_text(response)
+                await query.edit_message_text("✅ Цель выполнена! Поздравляю! 🎉")
             else:
                 await query.answer("Ошибка при обновлении цели.", show_alert=True)
         else:
