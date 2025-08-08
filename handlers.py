@@ -4283,6 +4283,32 @@ LANG_PATTERNS = {
     }
 }
 
+def goal_title(g):
+    # если цель — dict
+    if isinstance(g, dict):
+        # подстрой под твою структуру: "name" или "title"
+        return g.get("name") or g.get("title") or str(g)
+    return str(g)
+
+async def handle_mark_goal_done_choose(update: Update, context: CallbackContext):
+    query = update.callback_query
+    await query.answer()
+    user_id = str(query.from_user.id)
+
+    goals = get_goals(user_id)  # ВАЖНО: одна и та же функция, что и в mark_goal_done
+    # показываем только невыполненные
+    active = [(i, g) for i, g in enumerate(goals) if not (isinstance(g, dict) and g.get("done"))]
+
+    if not active:
+        await query.edit_message_text("У тебя нет активных целей.")
+        return
+
+    buttons = [
+        [InlineKeyboardButton(f"{i+1}. {goal_title(g)}", callback_data=f"done_goal|{i}")]
+        for i, g in active
+    ]
+    await query.edit_message_text("Выбери цель, которую выполнить:", reply_markup=InlineKeyboardMarkup(buttons))
+    
 async def goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global user_goal_count
     user_id = str(update.effective_user.id)
