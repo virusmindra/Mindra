@@ -1534,32 +1534,6 @@ async def task(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Отправляем сообщение с правильным заголовком
     await update.message.reply_text(f"{task_title.get(lang, task_title['ru'])}\n{chosen_task}")
 
-PREMIUM_ONLY_TEXTS = {
-    "ru": "🔒 Эта функция доступна только подписчикам Mindra+.\nПодписка открывает доступ к уникальным заданиям и функциям ✨",
-    "uk": "🔒 Ця функція доступна лише для підписників Mindra+.\nПідписка відкриває унікальні завдання та функції ✨",
-    "be": "🔒 Гэтая функцыя даступная толькі для падпісчыкаў Mindra+.\nПадпіска адкрывае ўнікальныя заданні і функцыі ✨",
-    "kk": "🔒 Бұл мүмкіндік тек Mindra+ жазылушыларына қолжетімді.\nЖазылу арқылы ерекше тапсырмалар мен функцияларға қол жеткізе аласыз ✨",
-    "kg": "🔒 Бул функция Mindra+ жазылгандардын гана жеткиликтүү.\nЖазылуу уникалдуу тапшырмаларга жана функцияларга мүмкүнчүлүк берет ✨",
-    "hy": "🔒 Այս ֆունկցիան հասանելի է միայն Mindra+ բաժանորդներին:\nԲաժանորդագրությունը բացում է եզակի առաջադրանքների եւ հնարավորությունների հասանելիություն ✨",
-    "ce": "🔒 ДӀа функция Mindra+ подпискаш йолуш цуьнан гӀалгӀай.\nПодписка эксклюзивный дӀаязде цуьнан а, функцияш ✨",
-    "md": "🔒 Această funcție este disponibilă doar pentru abonații Mindra+.\nAbonamentul oferă acces la sarcini și funcții unice ✨",
-    "ka": "🔒 ეს ფუნქცია ხელმისაწვდომია მხოლოდ Mindra+ გამოწერის მქონეთათვის.\nგამოწერა გაძლევთ უნიკალურ დავალებებსა და ფუნქციებზე წვდომას ✨",
-    "en": "🔒 This feature is only available to Mindra+ subscribers.\nSubscription unlocks unique tasks and features ✨"
-}
-
-PREMIUM_TASK_TITLE = {
-    "ru": "✨ *Твоё премиум-задание на сегодня:*",
-    "uk": "✨ *Твоє преміум-завдання на сьогодні:*",
-    "be": "✨ *Тваё прэміум-заданне на сёння:*",
-    "kk": "✨ *Бүгінгі премиум-тапсырмаңыз:*",
-    "kg": "✨ *Бүгүнкү премиум-тапшырмаңыз:*",
-    "hy": "✨ *Այսօրվա պրեմիում առաջադրանքը:*",
-    "ce": "✨ *ДӀаязде премиум цуьнан а:*",
-    "md": "✨ *Sarcina ta premium pentru astăzi:*",
-    "ka": "✨ *შენი პრემიუმ დავალება დღეს:*",
-    "en": "✨ *Your premium task for today:*"
-}
-
 async def premium_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
