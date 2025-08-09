@@ -1119,50 +1119,6 @@ async def handle_habit_button(update: Update, context: ContextTypes.DEFAULT_TYPE
         else:
             await query.edit_message_text(texts["delete_error"])
 
-
-LANG_PATTERNS = {
-    "ru": {
-        "deadline": r"до (\d{4}-\d{2}-\d{2})",
-        "remind": "напомни"
-    },
-    "uk": {
-        "deadline": r"до (\d{4}-\d{2}-\d{2})",
-        "remind": "нагадай"
-    },
-    "be": {
-        "deadline": r"да (\d{4}-\d{2}-\d{2})",
-        "remind": "нагадай"
-    },
-    "kk": {
-        "deadline": r"(\d{4}-\d{2}-\d{2}) дейін",
-        "remind": "еске сал"
-    },
-    "kg": {
-        "deadline": r"(\d{4}-\d{2}-\d{2}) чейин",
-        "remind": "эскертип кой"
-    },
-    "hy": {
-        "deadline": r"մինչև (\d{4}-\d{2}-\d{2})",
-        "remind": "հիշեցրու"
-    },
-    "ce": {
-        "deadline": r"(\d{4}-\d{2}-\d{2}) даьлча",
-        "remind": "эха"
-    },
-    "md": {
-        "deadline": r"până la (\d{4}-\d{2}-\d{2})",
-        "remind": "amintește"
-    },
-    "ka": {
-        "deadline": r"(\d{4}-\d{2}-\d{2})-მდე",
-        "remind": "შემახსენე"
-    },
-    "en": {
-        "deadline": r"by (\d{4}-\d{2}-\d{2})",
-        "remind": "remind"
-    }
-}
-
 def goal_title(g):
     # Красиво формируем заголовок для кнопки
     if isinstance(g, dict):
