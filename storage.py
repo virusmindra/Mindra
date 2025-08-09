@@ -152,3 +152,11 @@ def mark_habit_done(user_id, index: int):
     all_habits[user_id] = items
     save_habits(all_habits)
     return True
+
+def delete_habit(user_id, index):
+    habits = load_habits()
+    if user_id in habits and 0 <= index < len(habits[user_id]):
+        habits[user_id].pop(index)
+        save_habits(habits)
+        return True
+    return False
