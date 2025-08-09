@@ -18,6 +18,15 @@ def save_goals(data: dict):
     with GOALS_FILE.open("w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
+def delete_goal(user_id, index):
+    user_id = str(user_id)
+    goals = load_goals()
+    if user_id in goals and 0 <= index < len(goals[user_id]):
+        goals[user_id].pop(index)
+        save_goals(goals)
+        return True
+    return False
+    
 # ---------- high-level ----------
 def get_goals(user_id):
     """Вернуть список целей пользователя (список dict)."""
