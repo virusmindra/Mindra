@@ -97,3 +97,58 @@ def get_goals_for_user(user_id):
             # строковый формат
             out.append(str(g))
     return out
+
+# ---------- HABITS (единый источник правды) ----------
+HABITS_FILE = DATA_DIR / "habits.json"
+
+def load_habits():
+    if HABITS_FILE.exists():
+        with HABITS_FILE.open("r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+def save_habits(data: dict):
+    with HABITS_FILE.open("w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+def get_habits(user_id):
+    """Вернуть список привычек пользователя (список dict)."""
+    user_id = str(user_id)
+    all_habits = load_habits() or {}
+    if user_id not in all_habits:
+        all_habits = {str(k): v for k, v in all_habits.items()}
+    return all_habits.get(user_id, [])
+
+def add_habit(user_id, text, schedule=None, extra: dict | None = None):
+    """Добавить привычку в едином формате dict."""
+    user_id = str(user_id)
+    all_habits = load_habits() or {}
+    items = all_habits.get(user_id, [])
+    habit = {"text": str(text), "done": False}
+    if schedule:
+        habit["schedule"] = schedule
+    if extra:
+        habit.update(extra)
+    items.append(habit)
+    all_habits[user_id] = items
+    save_habits(all_habits)
+    return habit
+
+def mark_habit_done(user_id, index: int):
+    """Отметить привычку по индексу выполненной (сегодня/разово)."""
+    user_id = str(user_id)
+    all_habits = load_habits() or {}
+    if user_id not in all_habits:
+        all_habits = {str(k): v for k, v in all_habits.items()}
+    items = all_habits.get(user_id, [])
+    if not (0 <= index < len(items)):
+        return False
+    item = items[index]
+    if isinstance(item, dict):
+        item["done"] = True
+    else:
+        item = {"text": str(item), "done": True}
+        items[index] = item
+    all_habits[user_id] = items
+    save_habits(all_habits)
+    return True
