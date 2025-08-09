@@ -768,7 +768,9 @@ async def handle_done_goal_callback(update: Update, context: CallbackContext):
         add_points(user_id, 5)
         title = goal_title(goals_snapshot[index]) if 0 <= index < len(goals_snapshot) else "Цель"
         await query.answer("Готово! +5 поинтов.")
-        await query.edit_message_text(f"✅ Цель «{title}» выполнена! 🎉")
+        lang = user_languages.get(str(user_id), "ru")
+        message = GOAL_DONE_MESSAGES.get(lang, GOAL_DONE_MESSAGES["ru"]).format(goal=goal_text)
+        await update.message.reply_text(message)
     else:
         await query.answer("Не смог отметить. Смотрю логи.", show_alert=True)
 
