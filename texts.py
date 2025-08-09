@@ -435,3 +435,14 @@ GOAL_LANG_TEXTS = {
         "remind": "🔔 Reminder"
     }
 }
+
+TIMEZONES = {
+    "kiev": "Europe/Kiev",
+    "moscow": "Europe/Moscow",
+    "ny": "America/New_York"
+}
+TIMEZONE_NAMES = {
+    "Europe/Kiev": "Киев (Украина)",
+    "Europe/Moscow": "Москва (Россия)",
+    "America/New_York": "Нью-Йорк (США)"
+}
