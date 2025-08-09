@@ -12,6 +12,18 @@ VOICE_TEXTS_BY_LANG = {
     "en": {"you_said": "📝 You said:", "error": "❌ Error recognizing voice, please try again later."},
 }
 
+RESET_TEXTS = {
+    "ru": "История очищена. Начнём сначала ✨",
+    "uk": "Історію очищено. Почнемо спочатку ✨",
+    "be": "Гісторыя ачышчана. Пачнем спачатку ✨",
+    "kk": "Тарих тазаланды. Қайта бастайық ✨",
+    "kg": "Тарых тазаланды. Башынан баштайбыз ✨",
+    "hy": "Պատմությունը մաքրված է։ Սկսենք նորից ✨",
+    "ce": "Тарих цуьнан. Дика йойла кхеташ ✨",
+    "md": "Istoria a fost ștearsă. Să începem de la început ✨",
+    "ka": "ისტორია გასუფთავდა. დავიწყოთ თავიდან ✨",
+    "en": "History cleared. Let’s start again ✨",
+}
 
 TRIAL_GRANTED_TEXT = {
     "ru": "🎁 Тебе доступно *3 дня Mindra+*! Пользуйся всеми премиум-фишками 😉",
