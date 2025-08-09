@@ -767,7 +767,7 @@ HABIT_DONE_MESSAGES = {
     "ce": "✅ Дин цхьалат „{habit}” хийцам еза! 🎉"
 }
 
-POINTS_ADDED_MESSAGES = {
+POINTS_ADDED_GOAL = {
     "ru": "Готово! +5 поинтов.",
     "uk": "Готово! +5 балів.",
     "en": "Done! +5 points.",
