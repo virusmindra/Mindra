@@ -15,7 +15,6 @@ import shutil
 from datetime import datetime, timedelta, timezone, date
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, CommandHandler, MessageHandler, CallbackQueryHandler, filters, CallbackContext
-from habits import add_habit, get_habits, mark_habit_done, delete_habit
 from telegram.constants import ChatAction, ParseMode
 from config import client, TELEGRAM_BOT_TOKEN
 from history import load_history, save_history, trim_history
