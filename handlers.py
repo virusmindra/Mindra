@@ -4298,7 +4298,25 @@ def habit_title(h):
         text = h.get("text") or h.get("name") or "Без названия"
         return text[:60]
     return str(h)[:60]
-    
+
+async def handle_mark_habit_done_choose(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    user_id = str(query.from_user.id)
+
+    habits = get_habits(user_id)
+    active_indices = [i for i,h in enumerate(habits) if not (isinstance(h, dict) and h.get("done"))]
+
+    if not active_indices:
+        await query.edit_message_text("У тебя нет активных привычек.")
+        return
+
+    buttons = [
+        [InlineKeyboardButton(f"{n}. {habit_title(habits[i])}", callback_data=f"done_habit|{i}")]
+        for n, i in enumerate(active_indices, start=1)
+    ]
+    await query.edit_message_text("Выбери привычку, которую выполнить:", reply_markup=InlineKeyboardMarkup(buttons))
+
 async def handle_mark_goal_done_choose(update: Update, context: CallbackContext):
     query = update.callback_query
     await query.answer()
@@ -4317,7 +4335,32 @@ async def handle_mark_goal_done_choose(update: Update, context: CallbackContext)
         for n, i in enumerate(active_indices, start=1)
     ]
     await query.edit_message_text("Выбери цель, которую выполнить:", reply_markup=InlineKeyboardMarkup(buttons))
-    
+
+async def handle_done_habit_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    user_id = str(query.from_user.id)
+    data = query.data
+
+    if not data.startswith("done_habit|"):
+        await query.answer("Некорректный выбор.", show_alert=True)
+        return
+
+    try:
+        index = int(data.split("|", 1)[1])
+    except Exception:
+        await query.answer("Ошибка индекса.", show_alert=True)
+        return
+
+    if mark_habit_done(user_id, index):
+        # поинты за привычку — поставь свою логику
+        add_points(user_id, 2)  # например, 2 очка за привычку
+        habits = get_habits(user_id)
+        title = habit_title(habits[index]) if 0 <= index < len(habits) else "Привычка"
+        await query.answer("Готово! +2 поинта.")
+        await query.edit_message_text(f"✅ Привычка «{title}» выполнена! 🎉")
+    else:
+        await query.answer("Ошибка при обновлении.", show_alert=True)
+        
 async def goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global user_goal_count
     user_id = str(update.effective_user.id)
@@ -8854,7 +8897,9 @@ handlers = [
     # --- Кнопки реакции и добавления цели
     CallbackQueryHandler(handle_reaction_button, pattern="^react_"),
     CallbackQueryHandler(handle_add_goal_callback, pattern="^add_goal\\|"),
-
+    CallbackQueryHandler(handle_mark_habit_done_choose, pattern=r"^mark_habit_done_choose$"),
+    CallbackQueryHandler(handle_done_habit_callback,    pattern=r"^done_habit\|\d+$"),
+    
     # --- Чаты и голос
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
