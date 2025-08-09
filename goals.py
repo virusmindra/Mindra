@@ -36,10 +36,14 @@ def get_goals(user_id):
 def mark_goal_done(user_id, index):
     user_id = str(user_id)
 
-    # читаем общий словарь {user_id: [goals]}
     goals_all = load_goals() or {}
 
-    # нормализуем ключи на строковые (на всякий случай)
+    # если вдруг корень оказался списком (не словарём) — быстро починим
+    if isinstance(goals_all, list):
+        # храним у всех пользователей под одним ключом (fallback)
+        goals_all = {user_id: goals_all}
+
+    # нормализуем ключи
     if user_id not in goals_all:
         goals_all = {str(k): v for k, v in goals_all.items()}
 
@@ -47,11 +51,11 @@ def mark_goal_done(user_id, index):
     if not (0 <= index < len(items)):
         return False
 
-    # цель может быть dict или строка
     item = items[index]
     if isinstance(item, dict):
         item["done"] = True
     else:
+        # если цель была строкой — превращаем в dict
         item = {"text": str(item), "done": True}
         items[index] = item
 
