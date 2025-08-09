@@ -12,6 +12,90 @@ VOICE_TEXTS_BY_LANG = {
     "en": {"you_said": "📝 You said:", "error": "❌ Error recognizing voice, please try again later."},
 }
 
+
+MODE_NAMES = {
+    "ru": {
+        "support": "Поддержка",
+        "motivation": "Мотивация",
+        "philosophy": "Психолог",
+        "humor": "Юмор",
+        "flirt": "Флирт",
+        "coach": "Коуч"
+    },
+    "uk": {
+        "support": "Підтримка",
+        "motivation": "Мотивація",
+        "philosophy": "Психолог",
+        "humor": "Гумор",
+        "flirt": "Флірт",
+        "coach": "Коуч"
+    },
+    "be": {
+        "support": "Падтрымка",
+        "motivation": "Матывацыя",
+        "philosophy": "Псіхолаг",
+        "humor": "Гумар",
+        "flirt": "Флірт",
+        "coach": "Коуч"
+    },
+    "kk": {
+        "support": "Қолдау",
+        "motivation": "Мотивация",
+        "philosophy": "Психолог",
+        "humor": "Әзіл",
+        "flirt": "Флирт",
+        "coach": "Коуч"
+    },
+    "kg": {
+        "support": "Колдоо",
+        "motivation": "Мотивация",
+        "philosophy": "Психолог",
+        "humor": "Тамаша",
+        "flirt": "Флирт",
+        "coach": "Коуч"
+    },
+    "hy": {
+        "support": "Աջակցություն",
+        "motivation": "Մոտիվացիա",
+        "philosophy": "Հոգեբան",
+        "humor": "Հումոր",
+        "flirt": "Ֆլիրտ",
+        "coach": "Կոուչ"
+    },
+    "ce": {
+        "support": "ДӀалийла",
+        "motivation": "Мотивация",
+        "philosophy": "Психолог",
+        "humor": "Юмор",
+        "flirt": "Флирт",
+        "coach": "Коуч"
+    },
+    "md": {
+        "support": "Suport",
+        "motivation": "Motivație",
+        "philosophy": "Psiholog",
+        "humor": "Umor",
+        "flirt": "Flirt",
+        "coach": "Coach"
+    },
+    "ka": {
+        "support": "მხარდაჭერა",
+        "motivation": "მოტივაცია",
+        "philosophy": "ფსიქოლოგი",
+        "humor": "იუმორი",
+        "flirt": "ფლირტი",
+        "coach": "ქოუჩი"
+    },
+    "en": {
+        "support": "Support",
+        "motivation": "Motivation",
+        "philosophy": "Psychologist",
+        "humor": "Humor",
+        "flirt": "Flirt",
+        "coach": "Coach"
+    },
+}
+
 MODE_TEXTS = {
     "ru": {
         "text": "Выбери стиль общения Mindra ✨",
