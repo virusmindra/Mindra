@@ -35,26 +35,28 @@ def get_goals(user_id):
 
 def mark_goal_done(user_id, index):
     user_id = str(user_id)
-    goals = load_goals() or {}
 
-    # Нормализуем ключи на всякий случай
-    if user_id not in goals and any(isinstance(k, int) and str(k) == user_id for k in goals.keys()):
-        goals = {str(k): v for k, v in goals.items()}
+    # читаем общий словарь {user_id: [goals]}
+    goals_all = load_goals() or {}
 
-    items = goals.get(user_id, [])
+    # нормализуем ключи на строковые (на всякий случай)
+    if user_id not in goals_all:
+        goals_all = {str(k): v for k, v in goals_all.items()}
+
+    items = goals_all.get(user_id, [])
     if not (0 <= index < len(items)):
         return False
 
+    # цель может быть dict или строка
     item = items[index]
     if isinstance(item, dict):
         item["done"] = True
     else:
-        # если почему‑то было строкой — аккуратно преобразуем
         item = {"text": str(item), "done": True}
         items[index] = item
 
-    goals[user_id] = items
-    save_goals(goals)
+    goals_all[user_id] = items
+    save_goals(goals_all)
     return True
 
 def delete_goal(user_id, index):
