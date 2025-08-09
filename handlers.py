@@ -1550,19 +1550,6 @@ async def premium_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
         text = PREMIUM_ONLY_TEXTS.get(lang, PREMIUM_ONLY_TEXTS["ru"])
         await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
-        
-UNKNOWN_COMMAND_TEXTS = {
-    "ru": "❓ Я не знаю такой команды. Напиши /help, чтобы увидеть, что я умею.",
-    "uk": "❓ Я не знаю такої команди. Напиши /help, щоб побачити, що я вмію.",
-    "be": "❓ Я не ведаю такой каманды. Напішы /help, каб убачыць, што я ўмею.",
-    "kk": "❓ Менде ондай команда жоқ. /help деп жазып, мен не істей алатынымды көріңіз.",
-    "kg": "❓ Мындай буйрук жок. /help деп жазып, мен эмне кыла аларыма кара.",
-    "hy": "❓ Ես նման հրաման չգիտեմ։ Գրիր /help, տեսնելու համար, թե ինչ կարող եմ։",
-    "ce": "❓ Са цуьнан команда до а. /help йазде, хийцам са цуьнан а.",
-    "md": "❓ Nu cunosc această comandă. Scrie /help ca să vezi ce pot face.",
-    "ka": "❓ ასეთი ბრძანება არ ვიცი. დაწერე /help, რომ ნახო, რას ვაკეთებ.",
-    "en": "❓ I don't know that command. Type /help to see what I can do.",
-}
 
 async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
