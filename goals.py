@@ -5,15 +5,6 @@ from pathlib import Path
 
 GOALS_FILE = Path("user_goals.json")
 
-
-def delete_goal(user_id, index):
-    user_id = str(user_id)
-    goals = load_goals()
-    if user_id in goals and 0 <= index < len(goals[user_id]):
-        goals[user_id].pop(index)
-        save_goals(goals)
-        return True
-    return False
     
 # 🔑 Ключевые слова для определения "похоже на цель" на разных языках
 goal_keywords_by_lang = {
