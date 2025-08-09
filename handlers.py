@@ -4291,28 +4291,30 @@ LANG_PATTERNS = {
 }
 
 def goal_title(g):
-    # если цель — dict
+    # Красиво формируем заголовок для кнопки
     if isinstance(g, dict):
-        # подстрой под твою структуру: "name" или "title"
-        return g.get("name") or g.get("title") or str(g)
-    return str(g)
-
+        text = g.get("text") or g.get("name") or g.get("title") or "Без названия"
+        deadline = g.get("deadline") or g.get("date")
+        badge = " ⏳" + str(deadline) if deadline else ""
+        return (text + badge)[:60]
+    return str(g)[:60]
+    
 async def handle_mark_goal_done_choose(update: Update, context: CallbackContext):
     query = update.callback_query
     await query.answer()
     user_id = str(query.from_user.id)
 
-    goals = get_goals(user_id)  # ВАЖНО: одна и та же функция, что и в mark_goal_done
-    # показываем только невыполненные
-    active = [(i, g) for i, g in enumerate(goals) if not (isinstance(g, dict) and g.get("done"))]
+    goals = get_goals(user_id)  # та же функция, что читает mark_goal_done
+    # берём только НЕвыполненные цели, но сохраняем ИСХОДНЫЙ индекс i
+    active_indices = [i for i, g in enumerate(goals) if not (isinstance(g, dict) and g.get("done"))]
 
-    if not active:
+    if not active_indices:
         await query.edit_message_text("У тебя нет активных целей.")
         return
 
     buttons = [
-        [InlineKeyboardButton(f"{i+1}. {goal_title(g)}", callback_data=f"done_goal|{i}")]
-        for i, g in active
+        [InlineKeyboardButton(f"{n}. {goal_title(goals[i])}", callback_data=f"done_goal|{i}")]
+        for n, i in enumerate(active_indices, start=1)
     ]
     await query.edit_message_text("Выбери цель, которую выполнить:", reply_markup=InlineKeyboardMarkup(buttons))
     
