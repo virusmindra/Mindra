@@ -892,45 +892,6 @@ async def delete_goal_choose_handler(update: Update, context: ContextTypes.DEFAU
 
     await query.edit_message_text(t, reply_markup=reply_markup)
 
-GOAL_DELETED_TEXTS = {
-    "ru": "🗑️ Цель удалена.",
-    "uk": "🗑️ Ціль видалена.",
-    "be": "🗑️ Мэта выдалена.",
-    "kk": "🗑️ Мақсат өшірілді.",
-    "kg": "🗑️ Максат өчүрүлдү.",
-    "hy": "🗑️ Նպատակը ջնջված է։",
-    "ce": "🗑️ Мацахь дӀелла.",
-    "md": "🗑️ Obiectivul a fost șters.",
-    "ka": "🗑️ მიზანი წაშლილია.",
-    "en": "🗑️ Goal deleted.",
-}
-
-GOAL_NOT_FOUND_TEXTS = {
-    "ru": "❌ Цель не найдена.",
-    "uk": "❌ Ціль не знайдена.",
-    "be": "❌ Мэта не знойдзена.",
-    "kk": "❌ Мақсат табылмады.",
-    "kg": "❌ Максат табылган жок.",
-    "hy": "❌ Նպատակը չի գտնվել։",
-    "ce": "❌ Мацахь йац.",
-    "md": "❌ Obiectivul nu a fost găsit.",
-    "ka": "❌ მიზანი ვერ მოიძებნა.",
-    "en": "❌ Goal not found.",
-}
-
-ERROR_SELECT_TEXTS = {
-    "ru": "Ошибка выбора цели.",
-    "uk": "Помилка вибору цілі.",
-    "be": "Памылка выбару мэты.",
-    "kk": "Мақсатты таңдауда қате.",
-    "kg": "Максат тандоодо ката.",
-    "hy": "Նպատակը ընտրելու սխալ։",
-    "ce": "Мацахь хьажа хата.",
-    "md": "Eroare la selectarea obiectivului.",
-    "ka": "მიზნის არჩევის შეცდომა.",
-    "en": "Error selecting goal.",
-}
-
 async def delete_goal_confirm_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = str(query.from_user.id)
