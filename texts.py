@@ -13,6 +13,169 @@ VOICE_TEXTS_BY_LANG = {
 }
 
 
+MYSTATS_TEXTS = {
+    "ru": {
+        "title": "📌 *Твоя статистика*\n\n🌟 Твой титул: *{title}*\n🏅 Очков: *{points}*\n\nПродолжай выполнять цели и задания, чтобы расти! 💜",
+        "premium_info": (
+            "\n\n🔒 В Mindra+ ты получишь:\n"
+            "💎 Расширенную статистику по целям и привычкам\n"
+            "💎 Больше лимитов и эксклюзивные задания\n"
+            "💎 Уникальные челленджи и напоминания ✨"
+        ),
+        "premium_button": "💎 Узнать о Mindra+",
+        "extra": (
+            "\n✅ Целей выполнено: {completed_goals}"
+            "\n🌱 Привычек добавлено: {habits_tracked}"
+            "\n🔔 Напоминаний: {reminders}"
+            "\n📅 Дней активности: {days_active}"
+        ),
+    },
+    "uk": {
+        "title": "📌 *Твоя статистика*\n\n🌟 Твій титул: *{title}*\n🏅 Балів: *{points}*\n\nПродовжуй виконувати цілі й завдання, щоб зростати! 💜",
+        "premium_info": (
+            "\n\n🔒 У Mindra+ ти отримаєш:\n"
+            "💎 Розширену статистику по цілях та звичках\n"
+            "💎 Більше лімітів і ексклюзивні завдання\n"
+            "💎 Унікальні челенджі й нагадування ✨"
+        ),
+        "premium_button": "💎 Дізнатись про Mindra+",
+        "extra": (
+            "\n✅ Виконано цілей: {completed_goals}"
+            "\n🌱 Додано звичок: {habits_tracked}"
+            "\n🔔 Нагадувань: {reminders}"
+            "\n📅 Днів активності: {days_active}"
+        ),
+    },
+    "be": {
+        "title": "📌 *Твая статыстыка*\n\n🌟 Твой тытул: *{title}*\n🏅 Ачкоў: *{points}*\n\nПрацягвай ставіць мэты і выконваць заданні, каб расці! 💜",
+        "premium_info": (
+            "\n\n🔒 У Mindra+ ты атрымаеш:\n"
+            "💎 Пашыраную статыстыку па мэтах і звычках\n"
+            "💎 Больш лімітаў і эксклюзіўныя заданні\n"
+            "💎 Унікальныя чэленджы і напамінкі ✨"
+        ),
+        "premium_button": "💎 Даведайся пра Mindra+",
+        "extra": (
+            "\n✅ Выканана мэтаў: {completed_goals}"
+            "\n🌱 Дададзена звычак: {habits_tracked}"
+            "\n🔔 Напамінкаў: {reminders}"
+            "\n📅 Дзён актыўнасці: {days_active}"
+        ),
+    },
+    "kk": {
+        "title": "📌 *Сенің статистикаң*\n\n🌟 Титулың: *{title}*\n🏅 Ұпай: *{points}*\n\nМақсаттар мен тапсырмаларды орындауды жалғастыр! 💜",
+        "premium_info": (
+            "\n\n🔒 Mindra+ арқылы сен аласың:\n"
+            "💎 Мақсаттар мен әдеттер бойынша толық статистика\n"
+            "💎 Көп лимит және ерекше тапсырмалар\n"
+            "💎 Бірегей челлендждер мен ескертулер ✨"
+        ),
+        "premium_button": "💎 Mindra+ туралы білу",
+        "extra": (
+            "\n✅ Орындалған мақсаттар: {completed_goals}"
+            "\n🌱 Қосылған әдеттер: {habits_tracked}"
+            "\n🔔 Ескертулер: {reminders}"
+            "\n📅 Белсенді күндер: {days_active}"
+        ),
+    },
+    "kg": {
+        "title": "📌 *Сенин статистикаң*\n\n🌟 Сенин наамың: *{title}*\n🏅 Балл: *{points}*\n\nМаксаттар менен тапшырмаларды аткарууну улант! 💜",
+        "premium_info": (
+            "\n\n🔒 Mindra+ менен:\n"
+            "💎 Максаттар жана көнүмүштөр боюнча толук статистика\n"
+            "💎 Көп лимит жана өзгөчө тапшырмалар\n"
+            "💎 Уникалдуу челендждер жана эскертүүлөр ✨"
+        ),
+        "premium_button": "💎 Mindra+ жөнүндө билүү",
+        "extra": (
+            "\n✅ Аткарылган максаттар: {completed_goals}"
+            "\n🌱 Кошулган көнүмүштөр: {habits_tracked}"
+            "\n🔔 Эскертүүлөр: {reminders}"
+            "\n📅 Активдүү күндөр: {days_active}"
+        ),
+    },
+    "hy": {
+        "title": "📌 *Քո վիճակագրությունը*\n\n🌟 Քո տիտղոսը՝ *{title}*\n🏅 Մակարդակ՝ *{points}*\n\nՇարունակի՛ր նպատակների ու առաջադրանքների կատարումը, որպեսզի աճես։ 💜",
+        "premium_info": (
+            "\n\n🔒 Mindra+-ում կարող ես ստանալ՝\n"
+            "💎 Նպատակների ու սովորությունների վիճակագրությունը\n"
+            "💎 Ավելի շատ սահմանաչափեր ու յուրահատուկ առաջադրանքներ\n"
+            "💎 Ունիակլի մարտահրավերներ ու հիշեցումներ ✨"
+        ),
+        "premium_button": "💎 Իմանալ Mindra+-ի մասին",
+        "extra": (
+            "\n✅ Կատարված նպատակներ՝ {completed_goals}"
+            "\n🌱 Ավելացված սովորություններ՝ {habits_tracked}"
+            "\n🔔 Հիշեցումներ՝ {reminders}"
+            "\n📅 Ակտիվ օրեր՝ {days_active}"
+        ),
+    },
+    "ce": {
+        "title": "📌 *Хьоь статистика*\n\n🌟 Титул: *{title}*\n🏅 Балл: *{points}*\n\nДаймохь цуьнан кхолларча хетам хенна! 💜",
+        "premium_info": (
+            "\n\n🔒 Mindra+ хетам долу:\n"
+            "💎 Мацахь, привычка статистика\n"
+            "💎 Больше лимитов, эксклюзивные задачи\n"
+            "💎 Уникальные челленджи и напоминания ✨"
+        ),
+        "premium_button": "💎 Узнать о Mindra+",
+        "extra": (
+            "\n✅ Выполнено целей: {completed_goals}"
+            "\n🌱 Добавлено привычек: {habits_tracked}"
+            "\n🔔 Напоминаний: {reminders}"
+            "\n📅 Активных дней: {days_active}"
+        ),
+    },
+    "md": {
+        "title": "📌 *Statistica ta*\n\n🌟 Titlul tău: *{title}*\n🏅 Puncte: *{points}*\n\nContinuă să îți îndeplinești obiectivele și sarcinile pentru a crește! 💜",
+        "premium_info": (
+            "\n\n🔒 În Mindra+ vei obține:\n"
+            "💎 Statistici detaliate despre obiective și obiceiuri\n"
+            "💎 Mai multe limite și sarcini exclusive\n"
+            "💎 Provocări unice și notificări ✨"
+        ),
+        "premium_button": "💎 Află despre Mindra+",
+        "extra": (
+            "\n✅ Obiective realizate: {completed_goals}"
+            "\n🌱 Obiceiuri adăugate: {habits_tracked}"
+            "\n🔔 Notificări: {reminders}"
+            "\n📅 Zile active: {days_active}"
+        ),
+    },
+    "ka": {
+        "title": "📌 *შენი სტატისტიკა*\n\n🌟 შენი ტიტული: *{title}*\n🏅 ქულები: *{points}*\n\nაგრძელე მიზნების და დავალებების შესრულება, რომ გაიზარდო! 💜",
+        "premium_info": (
+            "\n\n🔒 Mindra+-ში მიიღებ:\n"
+            "💎 დეტალურ სტატისტიკას მიზნებსა და ჩვევებზე\n"
+            "💎 მეტი ლიმიტი და ექსკლუზიური დავალებები\n"
+            "💎 უნიკალური ჩელენჯები და შეხსენებები ✨"
+        ),
+        "premium_button": "💎 გაიგე Mindra+-ის შესახებ",
+        "extra": (
+            "\n✅ შესრულებული მიზნები: {completed_goals}"
+            "\n🌱 დამატებული ჩვევები: {habits_tracked}"
+            "\n🔔 შეხსენებები: {reminders}"
+            "\n📅 აქტიური დღეები: {days_active}"
+        ),
+    },
+    "en": {
+        "title": "📌 *Your stats*\n\n🌟 Your title: *{title}*\n🏅 Points: *{points}*\n\nKeep accomplishing your goals and tasks to grow! 💜",
+        "premium_info": (
+            "\n\n🔒 In Mindra+ you get:\n"
+            "💎 Advanced stats for goals and habits\n"
+            "💎 Higher limits & exclusive tasks\n"
+            "💎 Unique challenges and reminders ✨"
+        ),
+        "premium_button": "💎 Learn about Mindra+",
+        "extra": (
+            "\n✅ Goals completed: {completed_goals}"
+            "\n🌱 Habits added: {habits_tracked}"
+            "\n🔔 Reminders: {reminders}"
+            "\n📅 Active days: {days_active}"
+        ),
+    },
+}
+
 STATS_TEXTS = {
     "ru": (
         "📊 Статистика Mindra:\n\n"
