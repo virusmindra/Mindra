@@ -12,6 +12,82 @@ VOICE_TEXTS_BY_LANG = {
     "en": {"you_said": "📝 You said:", "error": "❌ Error recognizing voice, please try again later."},
 }
 
+            
+# Команда /remind — мультиязычный вариант
+
+REMIND_TEXTS = {
+    "ru": {
+        "limit": "🔔 В бесплатной версии можно установить только 1 активное напоминание.\n\n"
+                 "✨ Оформи Mindra+, чтобы иметь неограниченные напоминания 💜",
+        "usage": "⏰ Использование: `/remind 19:30 Сделай зарядку!`",
+        "success": "✅ Напоминание установлено на {hour:02d}:{minute:02d}: *{text}*",
+        "bad_format": "⚠️ Неверный формат. Пример: `/remind 19:30 Сделай зарядку!`",
+    },
+    "uk": {
+        "limit": "🔔 У безкоштовній версії можна встановити лише 1 активне нагадування.\n\n"
+                 "✨ Оформи Mindra+, щоб мати необмежені нагадування 💜",
+        "usage": "⏰ Використання: `/remind 19:30 Зроби зарядку!`",
+        "success": "✅ Нагадування встановлено на {hour:02d}:{minute:02d}: *{text}*",
+        "bad_format": "⚠️ Неправильний формат. Приклад: `/remind 19:30 Зроби зарядку!`",
+    },
+    "be": {
+        "limit": "🔔 У бясплатнай версіі можна ўсталяваць толькі 1 актыўнае напамінанне.\n\n"
+                 "✨ Аформі Mindra+, каб мець неабмежаваную колькасць напамінанняў 💜",
+        "usage": "⏰ Выкарыстанне: `/remind 19:30 Зрабі зарадку!`",
+        "success": "✅ Напамінанне ўсталявана на {hour:02d}:{minute:02d}: *{text}*",
+        "bad_format": "⚠️ Няправільны фармат. Прыклад: `/remind 19:30 Зрабі зарадку!`",
+    },
+    "kk": {
+        "limit": "🔔 Тегін нұсқада тек 1 белсенді еске салу орнатуға болады.\n\n"
+                 "✨ Mindra+ арқылы шексіз еске салулар орнатыңыз 💜",
+        "usage": "⏰ Қолдану: `/remind 19:30 Жаттығу жаса!`",
+        "success": "✅ Еске салу орнатылды: {hour:02d}:{minute:02d}: *{text}*",
+        "bad_format": "⚠️ Қате формат. Мысал: `/remind 19:30 Жаттығу жаса!`",
+    },
+    "kg": {
+        "limit": "🔔 Акысыз версияда бир эле эскертме коюуга болот.\n\n"
+                 "✨ Mindra+ менен чексиз эскертмелерди коюңуз 💜",
+        "usage": "⏰ Колдонуу: `/remind 19:30 Зарядка жаса!`",
+        "success": "✅ Эскертүү коюлду: {hour:02d}:{minute:02d}: *{text}*",
+        "bad_format": "⚠️ Формат туура эмес. Мисал: `/remind 19:30 Зарядка жаса!`",
+    },
+    "hy": {
+        "limit": "🔔 Անվճար տարբերակում կարելի է ավելացնել միայն 1 ակտիվ հիշեցում։\n\n"
+                 "✨ Միացրու Mindra+, որ ունենաս անսահման հիշեցումներ 💜",
+        "usage": "⏰ Օգտագործում: `/remind 19:30 Կատարի՛ր վարժանքներ!`",
+        "success": "✅ Հիշեցումը սահմանվել է {hour:02d}:{minute:02d}: *{text}*",
+        "bad_format": "⚠️ Սխալ ձևաչափ։ Օրինակ: `/remind 19:30 Կատարի՛ր վարժանքներ!`",
+    },
+    "ce": {
+        "limit": "🔔 Аьтто версия хийцна, цхьаьнан 1 активан напоминание ца хилла цуьнан.\n\n"
+                 "✨ Mindra+ хийцар, цуьнан цуьнан цхьаьнан напоминаний хилла 💜",
+        "usage": "⏰ Цуьнан: `/remind 19:30 Зарядка йоцу!`",
+        "success": "✅ Напоминание хийна {hour:02d}:{minute:02d}: *{text}*",
+        "bad_format": "⚠️ Формат дукха. Мисал: `/remind 19:30 Зарядка йоцу!`",
+    },
+    "md": {
+        "limit": "🔔 În versiunea gratuită poți seta doar 1 memento activ.\n\n"
+                 "✨ Activează Mindra+ pentru mementouri nelimitate 💜",
+        "usage": "⏰ Utilizare: `/remind 19:30 Fă exerciții!`",
+        "success": "✅ Mementoul a fost setat la {hour:02d}:{minute:02d}: *{text}*",
+        "bad_format": "⚠️ Format greșit. Exemplu: `/remind 19:30 Fă exerciții!`",
+    },
+    "ka": {
+        "limit": "🔔 უფასო ვერსიაში შეგიძლიათ დააყენოთ მხოლოდ 1 აქტიური შეხსენება.\n\n"
+                 "✨ გაააქტიურეთ Mindra+ ულიმიტო შეხსენებებისთვის 💜",
+        "usage": "⏰ გამოყენება: `/remind 19:30 გააკეთე ვარჯიში!`",
+        "success": "✅ შეხსენება დაყენებულია {hour:02d}:{minute:02d}: *{text}*",
+        "bad_format": "⚠️ არასწორი ფორმატი. მაგალითი: `/remind 19:30 გააკეთე ვარჯიში!`",
+    },
+    "en": {
+        "limit": "🔔 In the free version, you can set only 1 active reminder.\n\n"
+                 "✨ Get Mindra+ for unlimited reminders 💜",
+        "usage": "⏰ Usage: `/remind 19:30 Do your workout!`",
+        "success": "✅ Reminder set for {hour:02d}:{minute:02d}: *{text}*",
+        "bad_format": "⚠️ Wrong format. Example: `/remind 19:30 Do your workout!`",
+    },
+}
+
     LOCKED_MSGS = {
         "ru": "🔒 Эта функция доступна только подписчикам Mindra+.",
         "uk": "🔒 Ця функція доступна лише для підписників Mindra+.",
