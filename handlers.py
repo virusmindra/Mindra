@@ -806,38 +806,35 @@ def parse_goal_index(goals, goal_name):
 
 async def handle_done_goal_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    user_id = str(query.from_user.id)  # важно: str, чтобы совпадало с user_languages
+    user_id = str(query.from_user.id)
+    lang = user_languages.get(user_id, "ru")
     data = query.data
 
     try:
         index = int(data.split("|", 1)[1])
     except Exception:
-        await query.answer("Некорректный индекс.", show_alert=True)
+        await query.answer({"ru":"Некорректный индекс.","uk":"Некоректний індекс.","en":"Invalid index."}.get(lang,"Некорректный индекс."), show_alert=True)
         return
 
     goals = get_goals(user_id)
     if not (0 <= index < len(goals)):
-        await query.answer("Цель не найдена.", show_alert=True)
+        await query.answer({"ru":"Цель не найдена.","uk":"Ціль не знайдена.","en":"Goal not found."}.get(lang,"Цель не найдена."), show_alert=True)
         return
 
     if mark_goal_done(user_id, index):
         add_points(user_id, 5)
-
         title = goal_title(goals[index])
-        lang = user_languages.get(user_id, "ru")  # исправил на str(user_id)
-        
-        text = GOAL_DONE_MESSAGES.get(lang, GOAL_DONE_MESSAGES["ru"]).format(goal=title)
+        text  = GOAL_DONE_MESSAGES.get(lang, GOAL_DONE_MESSAGES["ru"]).format(goal=title)
         toast = POINTS_ADDED_GOAL.get(lang, POINTS_ADDED_GOAL["ru"])
 
         await query.answer(toast)
-
         try:
             await query.edit_message_text(text)
         except Exception:
             await context.bot.send_message(chat_id=query.message.chat_id, text=text)
     else:
-        await query.answer("Не смог отметить. Смотрю логи.", show_alert=True)
-
+        await query.answer({"ru":"Не смог отметить. Смотрю логи.","uk":"Не вдалося відмітити. Перевіряю логи.","en":"Couldn’t mark as done. Checking logs."}.get(lang,"Не смог отметить. Смотрю логи."), show_alert=True)
+        
 async def language_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [
