@@ -870,33 +870,6 @@ async def handle_add_goal_callback(update: Update, context: ContextTypes.DEFAULT
     # 📤 Отправляем сообщение
     await query.message.reply_text(texts.get(lang, texts["ru"]).format(goal=goal_text))
 
-
-GOAL_DELETE_TEXTS = {
-    "ru": "🗑️ Выбери цель для удаления:",
-    "uk": "🗑️ Обери ціль для видалення:",
-    "be": "🗑️ Абяры мэту для выдалення:",
-    "kk": "🗑️ Өшіру үшін мақсатты таңдаңыз:",
-    "kg": "🗑️ Өчүрүү үчүн максатты тандаңыз:",
-    "hy": "🗑️ Ընտրեք նպատակը ջնջելու համար:",
-    "ce": "🗑️ ДӀелла мацахь цуьнан хьажа:",
-    "md": "🗑️ Alege obiectivul de șters:",
-    "ka": "🗑️ აირჩიე მიზანი წაშლისთვის:",
-    "en": "🗑️ Choose a goal to delete:",
-}
-
-NO_GOALS_TEXTS = {
-    "ru": "❌ Нет целей для удаления.",
-    "uk": "❌ Немає цілей для видалення.",
-    "be": "❌ Няма мэт для выдалення.",
-    "kk": "❌ Өшіруге мақсат жоқ.",
-    "kg": "❌ Өчүрүүгө максат жок.",
-    "hy": "❌ Ջնջելու նպատակ չկա։",
-    "ce": "❌ Мацахь дӀелла цуьнан йац.",
-    "md": "❌ Nu există obiective de șters.",
-    "ka": "❌ წასაშლელი მიზანი არ არის.",
-    "en": "❌ No goals to delete.",
-}
-
 async def delete_goal_choose_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = str(query.from_user.id)
