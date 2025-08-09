@@ -7,6 +7,8 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 GOALS_FILE = DATA_DIR / "goals.json"
 
+ISO = "%Y-%m-%d"
+
 # ---------- low-level ----------
 def load_goals():
     if GOALS_FILE.exists():
@@ -56,14 +58,10 @@ def add_goal(user_id, text, deadline=None, remind=False, extra: dict | None = No
     return goal
 
 def mark_goal_done(user_id, index: int):
-    """Отметить цель по ИНДЕКСУ (из списка get_goals) выполненной."""
     user_id = str(user_id)
     all_goals = load_goals() or {}
-
-    # нормализуем ключи
     if user_id not in all_goals:
         all_goals = {str(k): v for k, v in all_goals.items()}
-
     items = all_goals.get(user_id, [])
     if not (0 <= index < len(items)):
         return False
@@ -71,15 +69,16 @@ def mark_goal_done(user_id, index: int):
     item = items[index]
     if isinstance(item, dict):
         item["done"] = True
+        # новое:
+        item["done_at"] = datetime.now(timezone.utc).strftime(ISO)
     else:
-        # на случай старого формата (строка)
-        item = {"text": str(item), "done": True}
+        item = {"text": str(item), "done": True, "done_at": datetime.now(timezone.utc).strftime(ISO)}
         items[index] = item
 
     all_goals[user_id] = items
     save_goals(all_goals)
     return True
-
+    
 # ---------- совместимость со старым кодом ----------
 def add_goal_for_user(user_id, goal_text):
     """Alias для старых вызовов."""
@@ -135,7 +134,6 @@ def add_habit(user_id, text, schedule=None, extra: dict | None = None):
     return habit
 
 def mark_habit_done(user_id, index: int):
-    """Отметить привычку по индексу выполненной (сегодня/разово)."""
     user_id = str(user_id)
     all_habits = load_habits() or {}
     if user_id not in all_habits:
@@ -143,16 +141,20 @@ def mark_habit_done(user_id, index: int):
     items = all_habits.get(user_id, [])
     if not (0 <= index < len(items)):
         return False
+
     item = items[index]
     if isinstance(item, dict):
         item["done"] = True
+        # новое:
+        item["done_at"] = datetime.now(timezone.utc).strftime(ISO)
     else:
-        item = {"text": str(item), "done": True}
+        item = {"text": str(item), "done": True, "done_at": datetime.now(timezone.utc).strftime(ISO)}
         items[index] = item
+
     all_habits[user_id] = items
     save_habits(all_habits)
     return True
-
+    
 def delete_habit(user_id, index):
     habits = load_habits()
     if user_id in habits and 0 <= index < len(habits[user_id]):
