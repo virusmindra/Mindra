@@ -4381,6 +4381,19 @@ async def handle_mark_goal_done_choose(update: Update, context: CallbackContext)
     ]
     await query.edit_message_text("Выбери цель, которую выполнить:", reply_markup=InlineKeyboardMarkup(buttons))
 
+POINTS_ADDED_HABIT = {
+    "ru": "Готово! +2 поинта.",
+    "uk": "Готово! +2 бали.",
+    "en": "Done! +2 points.",
+    "md": "Gata! +2 puncte.",
+    "be": "Гатова! +2 балы.",
+    "kk": "Дайын! +2 ұпай.",
+    "kg": "Даяр! +2 упай.",
+    "hy": "Պատրաստ է. +2 միավոր։",
+    "ka": "მზადაა! +2 ქულა.",
+    "ce": "Дайо! +2 балл."
+}
+
 async def handle_done_habit_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = str(query.from_user.id)
@@ -4396,18 +4409,26 @@ async def handle_done_habit_callback(update: Update, context: ContextTypes.DEFAU
         await query.answer("Ошибка индекса.", show_alert=True)
         return
 
+    # отмечаем
     if mark_habit_done(user_id, index):
-        # поинты за привычку — поставь свою логику
-        add_points(user_id, 2)  # например, 2 очка за привычку
+        add_points(user_id, 2)  # +2 за привычку
+
         habits = get_habits(user_id)
         title = habit_title(habits[index]) if 0 <= index < len(habits) else "Привычка"
-        await query.answer("Готово! +2 поинта.")
-        lang = user_languages.get(str(user_id), "ru")
-        message = HABIT_DONE_MESSAGES.get(lang, GOAL_DONE_MESSAGES["ru"]).format(goal=goal_text)
-        await update.message.reply_text(message)
+
+        lang = user_languages.get(user_id, "ru")
+        toast = POINTS_ADDED_HABIT.get(lang, POINTS_ADDED_HABIT["ru"])
+        text  = HABIT_DONE_MESSAGES.get(lang, HABIT_DONE_MESSAGES["ru"]).format(habit=title)
+
+        # всплывашка
+        await query.answer(toast)
+        # редактируем исходное сообщение (в колбэк‑хендлере update.message == None)
+        await query.edit_message_text(text)
+        # Если хочешь не редактировать, а прислать новое сообщение — используй:
+        # await context.bot.send_message(chat_id=query.message.chat_id, text=text)
     else:
         await query.answer("Ошибка при обновлении.", show_alert=True)
-        
+
 async def goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global user_goal_count
     user_id = str(update.effective_user.id)
