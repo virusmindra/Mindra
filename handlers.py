@@ -4385,7 +4385,7 @@ async def handle_done_habit_callback(update: Update, context: ContextTypes.DEFAU
         title = habit_title(habits[index]) if 0 <= index < len(habits) else "Привычка"
         await query.answer("Готово! +2 поинта.")
         lang = user_languages.get(str(user_id), "ru")
-        message = GOAL_DONE_MESSAGES.get(lang, GOAL_DONE_MESSAGES["ru"]).format(goal=goal_text)
+        message = HABIT_DONE_MESSAGES.get(lang, GOAL_DONE_MESSAGES["ru"]).format(goal=goal_text)
         await update.message.reply_text(message)
     else:
         await query.answer("Ошибка при обновлении.", show_alert=True)
