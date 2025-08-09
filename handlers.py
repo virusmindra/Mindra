@@ -4308,7 +4308,11 @@ async def handle_mark_goal_done_choose(update: Update, context: CallbackContext)
         [InlineKeyboardButton(f"{n}. {goal_title(goals[i])}", callback_data=f"done_goal|{i}")]
         for n, i in enumerate(active_indices, start=1)
     ]
-    await query.edit_message_text("Выбери цель, которую выполнить:", reply_markup=InlineKeyboardMarkup(buttons))
+    lang = user_languages.get(user_id, "ru")
+    await query.edit_message_text(
+        GOAL_SELECT_MESSAGE.get(lang, GOAL_SELECT_MESSAGE["ru"]),
+        reply_markup=InlineKeyboardMarkup(buttons)
+    )
 
 POINTS_ADDED_HABIT = {
     "ru": "Готово! +2 поинта.",
