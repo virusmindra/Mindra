@@ -807,17 +807,21 @@ async def handle_done_goal_callback(update: Update, context: ContextTypes.DEFAUL
 
     if mark_goal_done(user_id, index):
         add_points(user_id, 5)
-        title = goal_title(goals[index])  # название цели
+        title = goal_title(goals[index])
+
         lang = user_languages.get(user_id, "ru")
         text = GOAL_DONE_MESSAGES.get(lang, GOAL_DONE_MESSAGES["ru"]).format(goal=title)
-        lang = user_languages.get(user_id, "ru")
-        points_msg = POINTS_ADDED_MESSAGES.get(lang, POINTS_ADDED_MESSAGES["ru"])
-        await query.answer(points_msg)
-        # В callback-хендлере используем query.edit_message_text
-        await query.edit_message_text(text)
+        toast = POINTS_ADDED_GOAL.get(lang, POINTS_ADDED_GOAL["ru"])  # +5 для целей
+
+        await query.answer(toast)
+        try:
+            await query.edit_message_text(text)
+        except Exception:
+            # fallback: отправим отдельным сообщением
+            await context.bot.send_message(chat_id=query.message.chat_id, text=text)
     else:
         await query.answer("Не смог отметить. Смотрю логи.", show_alert=True)
-        
+
 async def handle_goal_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     index = int(context.args[0]) - 1  # если пользователь вводит с 1, а не с 0
