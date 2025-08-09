@@ -791,7 +791,7 @@ def parse_goal_index(goals, goal_name):
 
 async def handle_done_goal_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    user_id = str(query.from_user.id)
+    user_id = str(query.from_user.id)  # важно: str, чтобы совпадало с user_languages
     data = query.data
 
     try:
@@ -807,17 +807,18 @@ async def handle_done_goal_callback(update: Update, context: ContextTypes.DEFAUL
 
     if mark_goal_done(user_id, index):
         add_points(user_id, 5)
-        title = goal_title(goals[index])
 
-        lang = user_languages.get(user_id, "ru")
+        title = goal_title(goals[index])
+        lang = user_languages.get(user_id, "ru")  # исправил на str(user_id)
+        
         text = GOAL_DONE_MESSAGES.get(lang, GOAL_DONE_MESSAGES["ru"]).format(goal=title)
-        toast = POINTS_ADDED_GOAL.get(lang, POINTS_ADDED_GOAL["ru"])  # +5 для целей
+        toast = POINTS_ADDED_GOAL.get(lang, POINTS_ADDED_GOAL["ru"])
 
         await query.answer(toast)
+
         try:
             await query.edit_message_text(text)
         except Exception:
-            # fallback: отправим отдельным сообщением
             await context.bot.send_message(chat_id=query.message.chat_id, text=text)
     else:
         await query.answer("Не смог отметить. Смотрю логи.", show_alert=True)
