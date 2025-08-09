@@ -745,7 +745,7 @@ GOAL_DONE_MESSAGES = {
     "ru": "✅ Цель «{goal}» выполнена! 🎉",
     "uk": "✅ Мета «{goal}» виконана! 🎉",
     "en": "✅ Goal “{goal}” completed! 🎉",
-    "ro": "✅ Obiectivul „{goal}” a fost îndeplinit! 🎉",
+    "md": "✅ Obiectivul „{goal}” a fost îndeplinit! 🎉",
     "kk": "✅ Мақсат «{goal}» орындалды! 🎉",
     "kg": "✅ Максат «{goal}» аткарылды! 🎉",
     "hy": "✅ Նպատակը «{goal}» կատարվել է։ 🎉",
