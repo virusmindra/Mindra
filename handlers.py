@@ -4270,6 +4270,20 @@ def habit_title(h):
         return text[:60]
     return str(h)[:60]
 
+# 🌐 Сообщения выбора привычки
+HABIT_SELECT_MESSAGE = {
+    "ru": "Выберите привычку, которую хотите отметить:",
+    "uk": "Виберіть звичку, яку хочете відзначити:",
+    "en": "Choose the habit you want to mark:",
+    "md": "Alegeți obiceiul pe care doriți să îl marcați:",
+    "be": "Абярыце звычку, якую хочаце адзначыць:",
+    "kk": "Белгілеуді қалаған әдетті таңдаңыз:",
+    "kg": "Белгилегиңиз келген адатты тандаңыз:",
+    "hy": "Ընտրեք սովորությունը, որը ցանկանում եք նշել:",
+    "ka": "აირჩიეთ ჩვევა, რომლის მონიშვნაც გსურთ:",
+    "ce": "ДӀайаккх а, кхузур тӀаьхьара а марк хийцам:"
+}
+
 async def handle_mark_habit_done_choose(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -4286,7 +4300,11 @@ async def handle_mark_habit_done_choose(update: Update, context: ContextTypes.DE
         [InlineKeyboardButton(f"{n}. {habit_title(habits[i])}", callback_data=f"done_habit|{i}")]
         for n, i in enumerate(active_indices, start=1)
     ]
-    await query.edit_message_text("Выбери привычку, которую выполнить:", reply_markup=InlineKeyboardMarkup(buttons))
+    lang = user_languages.get(str(user_id), "ru")
+    await query.edit_message_text(
+        HABIT_SELECT_MESSAGE.get(lang, HABIT_SELECT_MESSAGE["ru"]),
+        reply_markup=InlineKeyboardMarkup(buttons)
+    )
 
 async def handle_mark_goal_done_choose(update: Update, context: CallbackContext):
     query = update.callback_query
