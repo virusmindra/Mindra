@@ -12,6 +12,88 @@ VOICE_TEXTS_BY_LANG = {
     "en": {"you_said": "📝 You said:", "error": "❌ Error recognizing voice, please try again later."},
 }
 
+HABIT_BUTTON_TEXTS = {
+    "ru": {
+        "habit_done": "🎉 Привычка отмечена как выполненная!",
+        "not_found": "Не удалось найти привычку.",
+        "habit_deleted": "🗑️ Привычка удалена.",
+        "delete_error": "Не удалось удалить привычку.",
+        "no_goals": "У тебя пока нет целей, которые можно отметить выполненными 😔",
+        "choose_goal": "Выбери цель, которую ты выполнил(а):"
+    },
+    "uk": {
+        "habit_done": "🎉 Звичка позначена як виконана!",
+        "not_found": "Не вдалося знайти звичку.",
+        "habit_deleted": "🗑️ Звичка видалена.",
+        "delete_error": "Не вдалося видалити звичку.",
+        "no_goals": "У тебе поки немає цілей, які можна відмітити виконаними 😔",
+        "choose_goal": "Обери ціль, яку ти виконав(ла):"
+    },
+    "be": {
+        "habit_done": "🎉 Звычка адзначана як выкананая!",
+        "not_found": "Не атрымалася знайсці звычку.",
+        "habit_deleted": "🗑️ Звычка выдалена.",
+        "delete_error": "Не атрымалася выдаліць звычку.",
+        "no_goals": "У цябе пакуль няма мэт, якія можна адзначыць выкананымі 😔",
+        "choose_goal": "Абяры мэту, якую ты выканаў(ла):"
+    },
+    "kk": {
+        "habit_done": "🎉 Әдет орындалған деп белгіленді!",
+        "not_found": "Әдет табылмады.",
+        "habit_deleted": "🗑️ Әдет жойылды.",
+        "delete_error": "Әдетті жою мүмкін болмады.",
+        "no_goals": "Орындаған мақсаттарың әлі жоқ 😔",
+        "choose_goal": "Орындаған мақсатыңды таңда:"
+    },
+    "kg": {
+        "habit_done": "🎉 Көнүмүш аткарылды деп белгиленди!",
+        "not_found": "Көнүмүш табылган жок.",
+        "habit_deleted": "🗑️ Көнүмүш өчүрүлдү.",
+        "delete_error": "Көнүмүштү өчүрүү мүмкүн болгон жок.",
+        "no_goals": "Аткарган максаттар жок 😔",
+        "choose_goal": "Аткарган максатыңды танда:"
+    },
+    "hy": {
+        "habit_done": "🎉 Սովորությունը նշված է որպես կատարված!",
+        "not_found": "Չհաջողվեց գտնել սովորությունը։",
+        "habit_deleted": "🗑️ Սովորությունը ջնջված է։",
+        "delete_error": "Չհաջողվեց ջնջել սովորությունը։",
+        "no_goals": "Դեռ չունես նպատակներ, որոնք կարելի է նշել կատարված 😔",
+        "choose_goal": "Ընտրիր նպատակը, որը կատարել ես։"
+    },
+    "ce": {
+        "habit_done": "🎉 Привычка отмечена как выполненная!",
+        "not_found": "Привычку не удалось найти.",
+        "habit_deleted": "🗑️ Привычка удалена.",
+        "delete_error": "Привычку не удалось удалить.",
+        "no_goals": "У тебя пока нет целей для выполнения 😔",
+        "choose_goal": "Выбери цель, которую ты выполнил(а):"
+    },
+    "md": {
+        "habit_done": "🎉 Obiceiul a fost marcat ca realizat!",
+        "not_found": "Nu am putut găsi obiceiul.",
+        "habit_deleted": "🗑️ Obiceiul a fost șters.",
+        "delete_error": "Nu am putut șterge obiceiul.",
+        "no_goals": "Nu ai încă scopuri de bifat 😔",
+        "choose_goal": "Alege scopul pe care l-ai realizat:"
+    },
+    "ka": {
+        "habit_done": "🎉 ჩვევა შესრულებულად მოინიშნა!",
+        "not_found": "ჩვევა ვერ მოიძებნა.",
+        "habit_deleted": "🗑️ ჩვევა წაიშალა.",
+        "delete_error": "ჩვევის წაშლა ვერ მოხერხდა.",
+        "no_goals": "ჯერ არ გაქვს მიზნები, რომლებსაც შეასრულებდი 😔",
+        "choose_goal": "აირჩიე მიზანი, რომელიც შეასრულე:"
+    },
+    "en": {
+        "habit_done": "🎉 Habit marked as completed!",
+        "not_found": "Could not find the habit.",
+        "habit_deleted": "🗑️ Habit deleted.",
+        "delete_error": "Could not delete the habit.",
+        "no_goals": "You don't have any goals to mark as completed yet 😔",
+        "choose_goal": "Select the goal you’ve completed:"
+    }
+}
 
 HABITS_TEXTS = {
     "ru": {
