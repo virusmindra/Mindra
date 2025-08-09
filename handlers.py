@@ -1321,19 +1321,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_text = WELCOME_TEXTS.get(lang_code, WELCOME_TEXTS["ru"]).format(first_name=first_name)
     await update.message.reply_text(welcome_text, parse_mode="Markdown")   
 
-RESET_TEXTS = {
-    "ru": "История очищена. Начнём сначала ✨",
-    "uk": "Історію очищено. Почнемо спочатку ✨",
-    "be": "Гісторыя ачышчана. Пачнем спачатку ✨",
-    "kk": "Тарих тазаланды. Қайта бастайық ✨",
-    "kg": "Тарых тазаланды. Башынан баштайбыз ✨",
-    "hy": "Պատմությունը մաքրված է։ Սկսենք նորից ✨",
-    "ce": "Тарих цуьнан. Дика йойла кхеташ ✨",
-    "md": "Istoria a fost ștearsă. Să începem de la început ✨",
-    "ka": "ისტორია გასუფთავდა. დავიწყოთ თავიდან ✨",
-    "en": "History cleared. Let’s start again ✨",
-}
-
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
