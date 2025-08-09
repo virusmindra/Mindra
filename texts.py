@@ -341,3 +341,97 @@ HABIT_LANG_TEXTS = {
         "add": "➕ Add another"
     }
 }
+
+# --- Все тексты для 10 языков ---
+GOAL_LANG_TEXTS = {
+    "ru": {
+        "no_goals": "🎯 У тебя пока нет целей. Добавь первую с помощью /goal",
+        "your_goals": "📋 *Твои цели:*",
+        "done": "✅", "not_done": "🔸",
+        "delete": "🗑️ Удалить цель",
+        "add": "➕ Добавить ещё одну",
+        "deadline": "Дедлайн",
+        "remind": "🔔 Напоминание"
+    },
+    "uk": {
+        "no_goals": "🎯 У тебе поки немає цілей. Додай першу за допомогою /goal",
+        "your_goals": "📋 *Твої цілі:*",
+        "done": "✅", "not_done": "🔸",
+        "delete": "🗑️ Видалити ціль",
+        "add": "➕ Додати ще одну",
+        "deadline": "Дедлайн",
+        "remind": "🔔 Нагадування"
+    },
+    "be": {
+        "no_goals": "🎯 У цябе пакуль няма мэтаў. Дадай першую з дапамогай /goal",
+        "your_goals": "📋 *Твае мэты:*",
+        "done": "✅", "not_done": "🔸",
+        "delete": "🗑️ Выдаліць мэту",
+        "add": "➕ Дадаць яшчэ адну",
+        "deadline": "Дэдлайн",
+        "remind": "🔔 Напамін"
+    },
+    "kk": {
+        "no_goals": "🎯 Әзірге мақсатың жоқ. Алғашқыны /goal арқылы қоса аласың",
+        "your_goals": "📋 *Сенің мақсаттарың:*",
+        "done": "✅", "not_done": "🔸",
+        "delete": "🗑️ Мақсатты өшіру",
+        "add": "➕ Тағы біреуін қосу",
+        "deadline": "Дедлайн",
+        "remind": "🔔 Еске салу"
+    },
+    "kg": {
+        "no_goals": "🎯 Азырынча максатың жок. Биринчисин /goal аркылуу кош!",
+        "your_goals": "📋 *Сенин максаттарың:*",
+        "done": "✅", "not_done": "🔸",
+        "delete": "🗑️ Максатты өчүрүү",
+        "add": "➕ Дагы бирөөнү кошуу",
+        "deadline": "Дедлайн",
+        "remind": "🔔 Эскертүү"
+    },
+    "hy": {
+        "no_goals": "🎯 Դեռ նպատակ չունես։ Ավելացրու առաջինը /goal հրամանով",
+        "your_goals": "📋 *Քո նպատակները:*",
+        "done": "✅", "not_done": "🔸",
+        "delete": "🗑️ Ջնջել նպատակը",
+        "add": "➕ Ավելացնել ևս մեկը",
+        "deadline": "Վերջնաժամկետ",
+        "remind": "🔔 Հիշեցում"
+    },
+    "ce": {
+        "no_goals": "🎯 Хьоьш цуьнан мацахь цуьнан. /goal кхолларш ду!",
+        "your_goals": "📋 *Са мацахь:*",
+        "done": "✅", "not_done": "🔸",
+        "delete": "🗑️ Мацахь дӀелла",
+        "add": "➕ Цуьнан мацахь кхоллар",
+        "deadline": "Дэдлайн",
+        "remind": "🔔 ДӀадела"
+    },
+    "md": {
+        "no_goals": "🎯 Încă nu ai obiective. Adaugă primul cu /goal",
+        "your_goals": "📋 *Obiectivele tale:*",
+        "done": "✅", "not_done": "🔸",
+        "delete": "🗑️ Șterge obiectivul",
+        "add": "➕ Adaugă încă unul",
+        "deadline": "Termen limită",
+        "remind": "🔔 Memento"
+    },
+    "ka": {
+        "no_goals": "🎯 ჯერჯერობით არ გაქვს მიზანი. დაამატე პირველი /goal-ით",
+        "your_goals": "📋 *შენი მიზნები:*",
+        "done": "✅", "not_done": "🔸",
+        "delete": "🗑️ მიზნის წაშლა",
+        "add": "➕ კიდევ ერთი დამატება",
+        "deadline": "ბოლო ვადა",
+        "remind": "🔔 შეხსენება"
+    },
+    "en": {
+        "no_goals": "🎯 You don’t have any goals yet. Add your first with /goal",
+        "your_goals": "📋 *Your goals:*",
+        "done": "✅", "not_done": "🔸",
+        "delete": "🗑️ Delete goal",
+        "add": "➕ Add another",
+        "deadline": "Deadline",
+        "remind": "🔔 Reminder"
+    }
+}
