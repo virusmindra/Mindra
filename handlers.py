@@ -8832,7 +8832,6 @@ handlers = [
     CommandHandler("goals", show_goals),
     CommandHandler("habit", habit),
     CommandHandler("habits", habits_list),
-    CommandHandler("done", handle_goal_done),  # Убери дубль!
     CommandHandler("delete", delete_goal_command),
 
     # --- Кнопки целей/привычек
