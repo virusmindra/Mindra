@@ -1179,19 +1179,6 @@ async def handle_mark_goal_done_choose(update: Update, context: CallbackContext)
         reply_markup=InlineKeyboardMarkup(buttons)
     )
 
-POINTS_ADDED_HABIT = {
-    "ru": "Готово! +2 поинта.",
-    "uk": "Готово! +2 бали.",
-    "en": "Done! +2 points.",
-    "md": "Gata! +2 puncte.",
-    "be": "Гатова! +2 балы.",
-    "kk": "Дайын! +2 ұпай.",
-    "kg": "Даяр! +2 упай.",
-    "hy": "Պատրաստ է. +2 միավոր։",
-    "ka": "მზადაა! +2 ქულა.",
-    "ce": "Дайо! +2 балл."
-}
-
 async def handle_done_habit_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = str(query.from_user.id)
