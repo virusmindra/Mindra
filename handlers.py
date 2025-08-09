@@ -4292,6 +4292,12 @@ def goal_title(g):
         badge = " ⏳" + str(deadline) if deadline else ""
         return (text + badge)[:60]
     return str(g)[:60]
+
+def habit_title(h):
+    if isinstance(h, dict):
+        text = h.get("text") or h.get("name") or "Без названия"
+        return text[:60]
+    return str(h)[:60]
     
 async def handle_mark_goal_done_choose(update: Update, context: CallbackContext):
     query = update.callback_query
