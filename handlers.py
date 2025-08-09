@@ -757,22 +757,22 @@ async def handle_done_goal_callback(update: Update, context: CallbackContext):
     user_id = str(query.from_user.id)
     data = query.data
 
-    try:
-        index = int(data.split("|", 1)[1])
-    except Exception:
-        await query.answer("Некорректный выбор.", show_alert=True)
-        return
+    index = int(data.split("|", 1)[1])
+
+    goals_snapshot = get_goals(user_id)
+    print("DEBUG goals type:", type(goals_snapshot))
+    print("DEBUG goals len:", len(goals_snapshot))
+    print("DEBUG index:", index)
+    print("DEBUG goal_at_index:", goals_snapshot[index] if 0 <= index < len(goals_snapshot) else "OUT_OF_RANGE")
 
     if mark_goal_done(user_id, index):
-        add_points(user_id, 5)  # здесь начисляем поинты
+        add_points(user_id, 5)
+        title = goal_title(goals_snapshot[index]) if 0 <= index < len(goals_snapshot) else "Цель"
         await query.answer("Готово! +5 поинтов.")
-        # Можно показать название выполненной цели
-        goals = get_goals(user_id)
-        title = goal_title(goals[index]) if 0 <= index < len(goals) else "Цель"
         await query.edit_message_text(f"✅ Цель «{title}» выполнена! 🎉")
     else:
-        await query.answer("Ошибка при обновлении.", show_alert=True)
-            
+        await query.answer("Не смог отметить. Смотрю логи.", show_alert=True)
+
 async def handle_goal_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     index = int(context.args[0]) - 1  # если пользователь вводит с 1, а не с 0
