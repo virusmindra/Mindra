@@ -757,25 +757,19 @@ async def handle_done_goal_callback(update: Update, context: CallbackContext):
     user_id = str(query.from_user.id)
     data = query.data
 
-    if not data.startswith("done_goal|"):
+    try:
+        index = int(data.split("|", 1)[1])
+    except Exception:
         await query.answer("Некорректный выбор.", show_alert=True)
         return
 
-    try:
-        index = int(data.split("|", 1)[1])
-    except ValueError:
-        await query.answer("Ошибка индекса.", show_alert=True)
-        return
-
-    goals = get_goals(user_id)  # тот же источник!
-    if not (0 <= index < len(goals)):
-        await query.answer("Цель не найдена.", show_alert=True)
-        return
-
     if mark_goal_done(user_id, index):
-        add_points(user_id, 5)
+        add_points(user_id, 5)  # здесь начисляем поинты
         await query.answer("Готово! +5 поинтов.")
-        await query.edit_message_text(f"✅ Цель «{goal_title(goals[index])}» выполнена! 🎉")
+        # Можно показать название выполненной цели
+        goals = get_goals(user_id)
+        title = goal_title(goals[index]) if 0 <= index < len(goals) else "Цель"
+        await query.edit_message_text(f"✅ Цель «{title}» выполнена! 🎉")
     else:
         await query.answer("Ошибка при обновлении.", show_alert=True)
             
