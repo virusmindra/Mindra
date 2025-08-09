@@ -767,6 +767,18 @@ HABIT_DONE_MESSAGES = {
     "ce": "✅ Дин цхьалат „{habit}” хийцам еза! 🎉"
 }
 
+POINTS_ADDED_MESSAGES = {
+    "ru": "Готово! +5 поинтов.",
+    "uk": "Готово! +5 балів.",
+    "en": "Done! +5 points.",
+    "md": "Gata! +5 puncte.",
+    "be": "Гатова! +5 балаў.",
+    "kk": "Дайын! +5 ұпай.",
+    "kg": "Даяр! +5 упай.",
+    "hy": "Պատրաստ է։ +5 միավոր.",
+    "ka": "მზადაა! +5 ქულა.",
+    "ce": "Дайо! +5 балл."
+}
 def parse_goal_index(goals, goal_name):
     for idx, goal in enumerate(goals):
         # если твои цели — строки:
@@ -777,29 +789,35 @@ def parse_goal_index(goals, goal_name):
             return idx
     return None
 
-async def handle_done_goal_callback(update: Update, context: CallbackContext):
+async def handle_done_goal_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = str(query.from_user.id)
     data = query.data
 
-    index = int(data.split("|", 1)[1])
+    try:
+        index = int(data.split("|", 1)[1])
+    except Exception:
+        await query.answer("Некорректный индекс.", show_alert=True)
+        return
 
-    goals_snapshot = get_goals(user_id)
-    print("DEBUG goals type:", type(goals_snapshot))
-    print("DEBUG goals len:", len(goals_snapshot))
-    print("DEBUG index:", index)
-    print("DEBUG goal_at_index:", goals_snapshot[index] if 0 <= index < len(goals_snapshot) else "OUT_OF_RANGE")
+    goals = get_goals(user_id)
+    if not (0 <= index < len(goals)):
+        await query.answer("Цель не найдена.", show_alert=True)
+        return
 
     if mark_goal_done(user_id, index):
         add_points(user_id, 5)
-        title = goal_title(goals_snapshot[index]) if 0 <= index < len(goals_snapshot) else "Цель"
-        await query.answer("Готово! +5 поинтов.")
-        lang = user_languages.get(str(user_id), "ru")
-        message = GOAL_DONE_MESSAGES.get(lang, GOAL_DONE_MESSAGES["ru"]).format(goal=goal_text)
-        await update.message.reply_text(message)
+        title = goal_title(goals[index])  # название цели
+        lang = user_languages.get(user_id, "ru")
+        text = GOAL_DONE_MESSAGES.get(lang, GOAL_DONE_MESSAGES["ru"]).format(goal=title)
+        lang = user_languages.get(user_id, "ru")
+        points_msg = POINTS_ADDED_MESSAGES.get(lang, POINTS_ADDED_MESSAGES["ru"])
+        await query.answer(points_msg)
+        # В callback-хендлере используем query.edit_message_text
+        await query.edit_message_text(text)
     else:
         await query.answer("Не смог отметить. Смотрю логи.", show_alert=True)
-
+        
 async def handle_goal_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     index = int(context.args[0]) - 1  # если пользователь вводит с 1, а не с 0
