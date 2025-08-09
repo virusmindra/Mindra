@@ -4048,7 +4048,7 @@ async def habits_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "kg": "Аткаруу", "hy": "Կատարել", "ce": "Батта", "md": "Finalizează",
                     "ka": "შესრულება", "en": "Done"
                 }.get(lang, "Выполнить"),
-                callback_data="mark_habit_done"
+                callback_data="mark_habit_done_choose"
             ),
             InlineKeyboardButton(
                 "🗑️ " + {
