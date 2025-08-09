@@ -22,7 +22,7 @@ from history import load_history, save_history, trim_history
 from goals import  delete_goal, is_goal_like, goal_keywords_by_lang, REACTIONS_GOAL_DONE, DELETE_MESSAGES
 from pathlib import Path
 from apscheduler.schedulers.background import BackgroundScheduler
-from storage import load_goals, save_goals, add_goal, get_goals, mark_goal_done
+from storage import load_goals, save_goals, add_goal, get_goals, get_goals_for_user, mark_goal_done
 from random import randint, choice
 from stats import load_stats, save_stats, get_premium_until, set_premium_until, is_premium, got_trial, set_trial, add_referral, add_points, get_user_stats, get_user_title, load_json_file, get_stats, OWNER_ID, ADMIN_USER_IDS 
 from telegram.error import BadRequest
