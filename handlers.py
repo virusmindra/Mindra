@@ -490,21 +490,6 @@ async def mytask_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def check_custom_reminders(app):
     now = datetime.now()
-
-    # 🌐 Заголовки напоминаний для всех языков
-    reminder_headers = {
-        "ru": "⏰ Напоминание:",
-        "uk": "⏰ Нагадування:",
-        "be": "⏰ Напамін:",
-        "kk": "⏰ Еске салу:",
-        "kg": "⏰ Эскертүү:",
-        "hy": "⏰ Հիշեցում:",
-        "ce": "⏰ ДӀадела:",
-        "md": "⏰ Memento:",
-        "ka": "⏰ შეხსენება:",
-        "en": "⏰ Reminder:"
-    }
-
     print("[DEBUG] check_custom_reminders запускается!")
 
     for user_id, reminders in list(user_reminders.items()):
