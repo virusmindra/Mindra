@@ -12,6 +12,50 @@ VOICE_TEXTS_BY_LANG = {
     "en": {"you_said": "📝 You said:", "error": "❌ Error recognizing voice, please try again later."},
 }
 
+
+FEEDBACK_TEXTS = {
+    "ru": {
+        "thanks": "Спасибо за отзыв! 💜 Я уже его записала ✨",
+        "howto": "Напиши свой отзыв после команды.\nНапример:\n`/feedback Мне очень нравится бот, спасибо! 💜`"
+    },
+    "uk": {
+        "thanks": "Дякую за відгук! 💜 Я вже його записала ✨",
+        "howto": "Напиши свій відгук після команди.\nНаприклад:\n`/feedback Мені дуже подобається бот, дякую! 💜`"
+    },
+    "be": {
+        "thanks": "Дзякуй за водгук! 💜 Я ўжо яго запісала ✨",
+        "howto": "Напішы свой водгук пасля каманды.\nНапрыклад:\n`/feedback Мне вельмі падабаецца бот, дзякуй! 💜`"
+    },
+    "kk": {
+        "thanks": "Пікіріңізге рахмет! 💜 Мен оны жазып қойдым ✨",
+        "howto": "Пікіріңізді командадан кейін жазыңыз.\nМысалы:\n`/feedback Маған бот ұнайды, рахмет! 💜`"
+    },
+    "kg": {
+        "thanks": "Пикириңиз үчүн рахмат! 💜 Мен аны жазып койдум ✨",
+        "howto": "Пикириңизди команданын артынан жазыңыз.\nМисалы:\n`/feedback Мага бот жакты, рахмат! 💜`"
+    },
+    "hy": {
+        "thanks": "Շնորհակալություն արձագանքի համար! 💜 Ես արդեն գրանցել եմ այն ✨",
+        "howto": "Գրիր քո արձագանքը հրամանից հետո։\nՕրինակ՝\n`/feedback Ինձ շատ դուր է գալիս բոտը, շնորհակալություն! 💜`"
+    },
+    "ce": {
+        "thanks": "Баркалла тӀаьхьийна! 💜 Са йа цуьнан а ✨",
+        "howto": "Йа дӀайазде команда хийцам.\nМисал: `/feedback Бот цуьнан, баркалла! 💜`"
+    },
+    "md": {
+        "thanks": "Mulțumesc pentru feedback! 💜 L-am salvat deja ✨",
+        "howto": "Scrie feedback-ul după comandă.\nDe exemplu:\n`/feedback Îmi place mult botul, mulțumesc! 💜`"
+    },
+    "ka": {
+        "thanks": "მადლობა გამოხმაურებისთვის! 💜 უკვე ჩავწერე ✨",
+        "howto": "დაწერე შენი გამოხმაურება ბრძანების შემდეგ.\nმაგალითად:\n`/feedback ძალიან მომწონს ბოტი, მადლობა! 💜`"
+    },
+    "en": {
+        "thanks": "Thank you for your feedback! 💜 I've already saved it ✨",
+        "howto": "Write your feedback after the command.\nFor example:\n`/feedback I really like the bot, thank you! 💜`"
+    },
+}
+
 UNKNOWN_COMMAND_TEXTS = {
     "ru": "❓ Я не знаю такой команды. Напиши /help, чтобы увидеть, что я умею.",
     "uk": "❓ Я не знаю такої команди. Напиши /help, щоб побачити, що я вмію.",
