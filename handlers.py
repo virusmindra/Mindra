@@ -185,6 +185,25 @@ async def set_timezone(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="Markdown"
         )
 
+async def points_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    lang = user_languages.get(user_id, "ru")
+
+    points = get_user_points(user_id)
+    title = get_user_title(points, lang)
+    _, next_title, to_next = get_next_title_info(points, lang)
+    ladder = build_titles_ladder(lang)
+
+    text = POINTS_HELP_TEXTS.get(lang, POINTS_HELP_TEXTS["ru"]).format(
+        points=points,
+        title=title,
+        next_title=next_title,
+        to_next=to_next,
+        ladder=ladder
+    )
+
+    await update.message.reply_text(text, parse_mode="Markdown")
+    
 async def show_habits(update, context):
     # Универсальная поддержка и команды, и callback
     if hasattr(update, "callback_query") and update.callback_query is not None:
@@ -2625,6 +2644,7 @@ handlers = [
     CommandHandler("test_mood", test_mood),
     CallbackQueryHandler(handle_mark_goal_done_choose, pattern=r"^mark_goal_done_choose$"),
     CallbackQueryHandler(handle_done_goal_callback, pattern=r"^done_goal\|\d+$"),
+    CommandHandler("points", points_command),
     
     # --- Кнопки реакции и добавления цели
     CallbackQueryHandler(handle_reaction_button, pattern="^react_"),
