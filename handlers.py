@@ -1573,9 +1573,9 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
 
-    # базовый help + кнопки
     help_text = help_texts.get(lang, help_texts["ru"])
     b = buttons_text.get(lang, buttons_text["ru"])
+
     keyboard = [
         [InlineKeyboardButton(b[0], callback_data="create_goal")],
         [InlineKeyboardButton(b[1], callback_data="show_goals")],
@@ -1583,7 +1583,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton(b[3], callback_data="show_habits")],
         [InlineKeyboardButton(b[4], url="https://t.me/talktomindra_bot")],
     ]
-    await update.message.reply_text(text, reply_markup=reply_markup, parse_mode="Markdown")
+    await update.message.reply_text(help_text, reply_markup=InlineKeyboardMarkup(keyboard))
 
 async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
