@@ -191,7 +191,10 @@ async def points_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     points = get_user_points(user_id)
     title = get_user_title(points, lang)
-    _, next_title, to_next = get_next_title_info(points, lang)
+
+    # было: _, next_title, to_next = get_next_title_info(points, lang)
+    next_title, to_next = get_next_title_info(points, lang)  # ← так правильно
+
     ladder = build_titles_ladder(lang)
 
     text = POINTS_HELP_TEXTS.get(lang, POINTS_HELP_TEXTS["ru"]).format(
@@ -199,11 +202,10 @@ async def points_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         title=title,
         next_title=next_title,
         to_next=to_next,
-        ladder=ladder
+        ladder=ladder,
     )
-
     await update.message.reply_text(text, parse_mode="Markdown")
-    
+
 async def show_habits(update, context):
     # Универсальная поддержка и команды, и callback
     if hasattr(update, "callback_query") and update.callback_query is not None:
