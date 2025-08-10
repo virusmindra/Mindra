@@ -198,37 +198,41 @@ def load_json_file(filename):
 def get_stats(user_id: str):
     user_id = str(user_id)
 
-    goals_data = load_goals() or {}
-    user_goals = goals_data.get(user_id, [])
-
+    goals_data  = load_goals()  or {}
     habits_data = load_habits() or {}
+
+    user_goals  = goals_data.get(user_id, [])
     user_habits = habits_data.get(user_id, [])
 
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today = datetime.now(timezone.utc).date()
+    week_start = today - timedelta(days=6)
 
-    completed_goals = sum(1 for g in user_goals if isinstance(g, dict) and g.get("done"))
-    completed_habits = sum(1 for h in user_habits if isinstance(h, dict) and h.get("done"))
+    # выполнено (всего)
+    completed_goals   = sum(1 for g in user_goals  if isinstance(g, dict) and g.get("done"))
+    completed_habits  = sum(1 for h in user_habits if isinstance(h, dict) and h.get("done"))
 
-    completed_goals_today = sum(1 for g in user_goals if isinstance(g, dict) and g.get("done_at") == today)
-    completed_habits_today = sum(1 for h in user_habits if isinstance(h, dict) and h.get("done_at") == today)
-
-    # Активные дни считаем по done_at (если нет — можно добавить логику по "date")
-    days_active = len(
-        set(
-            [g.get("done_at") for g in user_goals if isinstance(g, dict) and g.get("done_at")]
-            + [h.get("done_at") for h in user_habits if isinstance(h, dict) and h.get("done_at")]
-        )
-    )
+    # активные дни
+    dates = _collect_activity_dates(user_goals, user_habits)
+    days_active_total = len(dates)
+    days_active_week  = sum(1 for d in dates if datetime.fromisoformat(d).date() >= week_start)
 
     return {
         "completed_goals": completed_goals,
         "completed_habits": completed_habits,
-        "completed_goals_today": completed_goals_today,
-        "completed_habits_today": completed_habits_today,
-        "days_active": days_active,
-        "mood_entries": 0,  # если будет mood.json — посчитаем
+        "days_active_total": days_active_total,  # все время
+        "days_active_week":  days_active_week,   # за 7 последних дней (включая сегодня)
+        "mood_entries": 0
     }
 
+def _collect_activity_dates(user_goals, user_habits):
+    dates = set()
+    for g in user_goals:
+        if isinstance(g, dict) and g.get("done_at"):
+            dates.add(g["done_at"])
+    for h in user_habits:
+        if isinstance(h, dict) and h.get("done_at"):
+            dates.add(h["done_at"])
+    return dates
 
 def get_user_stats(user_id: str):
     user_id = str(user_id)
