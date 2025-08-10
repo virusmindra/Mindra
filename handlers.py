@@ -1583,24 +1583,6 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton(b[3], callback_data="show_habits")],
         [InlineKeyboardButton(b[4], url="https://t.me/talktomindra_bot")],
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
-    # секция про поинты и звания
-    points = get_user_points(user_id)
-    title = get_user_title(points, lang)
-    _, next_title, to_next = get_next_title_info(points, lang)
-    ladder = build_titles_ladder(lang)
-
-    points_block = POINTS_HELP_TEXTS.get(lang, POINTS_HELP_TEXTS["ru"]).format(
-        points=points,
-        title=title,
-        next_title=next_title,
-        to_next=to_next,
-        ladder=ladder,
-    )
-
-    text = f"{help_text}\n\n{points_block}"
-
     await update.message.reply_text(text, reply_markup=reply_markup, parse_mode="Markdown")
 
 async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
