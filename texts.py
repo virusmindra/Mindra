@@ -12,7 +12,81 @@ VOICE_TEXTS_BY_LANG = {
     "en": {"you_said": "📝 You said:", "error": "❌ Error recognizing voice, please try again later."},
 }
 
-            
+
+# -------- Points & Titles (help) --------
+POINTS_HELP_TEXTS = {
+    "ru": (
+        "🏅 *Поинты и звания*\n"
+        "Ты копишь поинты за действия в боте: цели, привычки, отчёты.\n\n"
+        "Сейчас у тебя: *{points}* баллов — звание: *{title}*.\n"
+        "До следующего звания *{next_title}* осталось: *{to_next}*.\n\n"
+        "Лестница званий:\n{ladder}"
+    ),
+    "uk": (
+        "🏅 *Бали та звання*\n"
+        "Ти отримуєш бали за дії в боті: цілі, звички, звіти.\n\n"
+        "Зараз у тебе: *{points}* балів — звання: *{title}*.\n"
+        "До наступного звання *{next_title}* залишилось: *{to_next}*.\n\n"
+        "Сходи звань:\n{ladder}"
+    ),
+    "en": (
+        "🏅 *Points & Titles*\n"
+        "You earn points for actions in the bot: goals, habits, reports.\n\n"
+        "You now have *{points}* points — title: *{title}*.\n"
+        "To the next title *{next_title}*: *{to_next}* left.\n\n"
+        "Title ladder:\n{ladder}"
+    ),
+    "md": (
+        "🏅 *Puncte și titluri*\n"
+        "Primești puncte pentru acțiuni în bot: obiective, obiceiuri, rapoarte.\n\n"
+        "Acum ai *{points}* puncte — titlu: *{title}*.\n"
+        "Până la următorul titlu *{next_title}*: *{to_next}*.\n\n"
+        "Scara titlurilor:\n{ladder}"
+    ),
+    "be": (
+        "🏅 *Балы і званні*\n"
+        "Ты атрымліваеш балы за дзеянні ў боте: мэты, звычкі, справаздачы.\n\n"
+        "Зараз у цябе *{points}* балаў — званьне: *{title}*.\n"
+        "Да наступнага званьня *{next_title}* засталося: *{to_next}*.\n\n"
+        "Лесвіца званняў:\n{ladder}"
+    ),
+    "kk": (
+        "🏅 *Ұпайлар мен атақтар*\n"
+        "Боттағы әрекеттер үшін ұпай жинайсың: мақсаттар, әдеттер, есептер.\n\n"
+        "Қазір сенде *{points}* ұпай — атағың: *{title}*.\n"
+        "Келесі атаққа (*{next_title}*) дейін: *{to_next}*.\n\n"
+        "Атақ сатысы:\n{ladder}"
+    ),
+    "kg": (
+        "🏅 *Упайлар жана наамдар*\n"
+        "Боттогу аракеттер үчүн упай аласың: максаттар, адаттар, отчёттор.\n\n"
+        "Азыр сенде *{points}* упай — наам: *{title}*.\n"
+        "Кийинки наамга *{next_title}* чейин: *{to_next}*.\n\n"
+        "Наам баскычтары:\n{ladder}"
+    ),
+    "hy": (
+        "🏅 *Միավորներ և կոչումներ*\n"
+        "Դու միավորներ ես ստանում բոտում գործողությունների համար՝ նպատակներ, սովորություններ, զեկույցներ։\n\n"
+        "Այժմ ունես *{points}* միավոր — կոչում՝ *{title}*։\n"
+        "Մինչ հաջորդ կոչումը *{next_title}* մնացել է՝ *{to_next}*։\n\n"
+        "Կոչումների սանդուղք․\n{ladder}"
+    ),
+    "ka": (
+        "🏅 *ქულები და წოდებები*\n"
+        "ბოტში ქულებს იღებ მოქმედებებისთვის: მიზნები, ჩვევები, რეპორტები.\n\n"
+        "ახლა გაქვს *{points}* ქულა — წოდება: *{title}*.\n"
+        "შემდეგ წოდებამდე (*{next_title}*) დარჩა: *{to_next}*.\n\n"
+        "წოდებების კიბე:\n{ladder}"
+    ),
+    "ce": (
+        "🏅 *Баллаш а, цIеран-намахь*\n"
+        "Ботех ла цхьан йиш йиш йо бIалла баха: максат, дин цхьалат, отчёт.\n\n"
+        "Хьо ю *{points}* балл — цIеран: *{title}*.\n"
+        "Келчу цIеран *{next_title}* дехь: *{to_next}*.\n\n"
+        "ЦIераннаш латтахь:\n{ladder}"
+    ),
+}
+
 # Команда /remind — мультиязычный вариант
 
 REMIND_TEXTS = {
