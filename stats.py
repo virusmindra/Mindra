@@ -168,35 +168,30 @@ def build_titles_ladder(lang: str = "ru") -> str:
             lines.append(f"{title} — {int(threshold)}+")
     return "\n".join(lines)
     
+
 def get_stats(user_id: str):
     user_id = str(user_id)
 
-    goals_data  = load_goals()  or {}
+    goals_data = load_goals() or {}
+    user_goals = goals_data.get(user_id, [])
+    completed_goals = sum(1 for goal in user_goals if goal.get("done"))
+
     habits_data = load_habits() or {}
-
-    user_goals  = goals_data.get(user_id, [])
     user_habits = habits_data.get(user_id, [])
+    completed_habits = sum(1 for habit in user_habits if habit.get("done"))
 
-    today = datetime.now(timezone.utc).date()
-    week_start = today - timedelta(days=6)
+    # Если в целях хранится дата (например, created_at), можно считать активные дни
+    days_active = len({g.get("created_at")[:10] for g in user_goals if g.get("created_at")}) if user_goals else 0
 
-    # выполнено (всего)
-    completed_goals   = sum(1 for g in user_goals  if isinstance(g, dict) and g.get("done"))
-    completed_habits  = sum(1 for h in user_habits if isinstance(h, dict) and h.get("done"))
-
-    # активные дни
-    dates = _collect_activity_dates(user_goals, user_habits)
-    days_active_total = len(dates)
-    days_active_week  = sum(1 for d in dates if datetime.fromisoformat(d).date() >= week_start)
+    mood_entries = 0  # если добавишь учет настроений — посчитаем тут
 
     return {
         "completed_goals": completed_goals,
         "completed_habits": completed_habits,
-        "days_active_total": days_active_total,  # все время
-        "days_active_week":  days_active_week,   # за 7 последних дней (включая сегодня)
-        "mood_entries": 0
+        "days_active": days_active,
+        "mood_entries": mood_entries,
     }
-
+    
 def _collect_activity_dates(user_goals, user_habits):
     dates = set()
     for g in user_goals:
