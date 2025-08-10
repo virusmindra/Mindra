@@ -194,46 +194,74 @@ def load_json_file(filename):
             return json.load(f)
     return {}
 
-def get_stats(user_id):
-    goals_data = load_json_file(GOALS_FILE)
+def get_stats(user_id: str):
+    user_id = str(user_id)
+
+    goals_data = load_goals() or {}
     user_goals = goals_data.get(user_id, [])
-    completed_goals = sum(1 for goal in user_goals if goal.get("done"))
 
-    habits_data = load_json_file(HABITS_FILE)
+    habits_data = load_habits() or {}
     user_habits = habits_data.get(user_id, [])
-    completed_habits = sum(1 for habit in user_habits if habit.get("done"))
 
-    days_active = len(set(g.get("date") for g in user_goals if g.get("date"))) if user_goals else 0
-    mood_entries = 0  # если есть mood.json — добавь подсчёт
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    completed_goals = sum(1 for g in user_goals if isinstance(g, dict) and g.get("done"))
+    completed_habits = sum(1 for h in user_habits if isinstance(h, dict) and h.get("done"))
+
+    completed_goals_today = sum(1 for g in user_goals if isinstance(g, dict) and g.get("done_at") == today)
+    completed_habits_today = sum(1 for h in user_habits if isinstance(h, dict) and h.get("done_at") == today)
+
+    # Активные дни считаем по done_at (если нет — можно добавить логику по "date")
+    days_active = len(
+        set(
+            [g.get("done_at") for g in user_goals if isinstance(g, dict) and g.get("done_at")]
+            + [h.get("done_at") for h in user_habits if isinstance(h, dict) and h.get("done_at")]
+        )
+    )
 
     return {
         "completed_goals": completed_goals,
         "completed_habits": completed_habits,
+        "completed_goals_today": completed_goals_today,
+        "completed_habits_today": completed_habits_today,
         "days_active": days_active,
-        "mood_entries": mood_entries
+        "mood_entries": 0,  # если будет mood.json — посчитаем
     }
 
-# 📊 Получение статистики пользователя
+
 def get_user_stats(user_id: str):
-    from goals import get_goals  # если нужно
-    from habits import get_habits  # если нужно
-    from handlers import user_points  # или если user_points у тебя в stats.py, то не нужно импортировать
+    user_id = str(user_id)
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
     goals = get_goals(user_id)
-    total_goals = len(goals)
-    completed_goals = len([g for g in goals if g.get("done")])
-
     habits = get_habits(user_id)
-    total_habits = len(habits)
 
+    total_goals = len(goals)
+    completed_goals = sum(1 for g in goals if isinstance(g, dict) and g.get("done"))
+    completed_goals_today = sum(1 for g in goals if isinstance(g, dict) and g.get("done_at") == today)
+
+    total_habits = len(habits)
+    completed_habits = sum(1 for h in habits if isinstance(h, dict) and h.get("done"))
+    completed_habits_today = sum(1 for h in habits if isinstance(h, dict) and h.get("done_at") == today)
+
+    # Поинты: берём откуда есть, мягко
     points = 0
-    # если user_points хранится в stats.py, то:
-    global user_points
-    points = user_points.get(user_id, 0)
+    try:
+        from handlers import user_points  # если живёт там
+        points = user_points.get(user_id, 0)
+    except Exception:
+        try:
+            from stats import user_points  # если живёт тут
+            points = user_points.get(user_id, 0)
+        except Exception:
+            points = 0
 
     return {
         "points": points,
         "total_goals": total_goals,
         "completed_goals": completed_goals,
-        "habits": total_habits
+        "completed_goals_today": completed_goals_today,
+        "total_habits": total_habits,
+        "completed_habits": completed_habits,
+        "completed_habits_today": completed_habits_today,
     }
