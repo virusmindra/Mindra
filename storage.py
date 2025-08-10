@@ -1,6 +1,7 @@
 # storage.py — единый источник правды для целей (файл data/goals.json)
 from pathlib import Path
 import json
+from datetime import datetime, timezone
 
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(parents=True, exist_ok=True)
