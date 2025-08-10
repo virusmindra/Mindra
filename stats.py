@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from storage import get_goals, get_habits, load_goals, load_habits
 
 STATS_FILE = "data/stats.json"
