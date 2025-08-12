@@ -2,12 +2,13 @@
 from pathlib import Path
 import json
 from datetime import datetime, timezone
+from uuid import uuid4
 
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 GOALS_FILE = DATA_DIR / "goals.json"
-
+_voice_payloads = {} 
 ISO = "%Y-%m-%d"
 
 # ---------- low-level ----------
