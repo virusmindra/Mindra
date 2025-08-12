@@ -897,37 +897,35 @@ def insert_followup_question(reply: str, user_input: str, lang: str = "ru") -> s
     return reply
     
 async def send_daily_reminder(context: ContextTypes.DEFAULT_TYPE):
-    try:
-        now_kiev = datetime.now(pytz.timezone("Europe/Kiev"))
-        if not (DAILY_MIN_HOUR <= now_kiev.hour < DAILY_MAX_HOUR):
-            return  # Не утро — не отправляем
+    now_utc = _now_utc()
 
-        for user_id in user_last_seen.keys():
-            # Не отправлять если уже сегодня отправляли
-            if user_last_daily_sent.get(user_id) == now_kiev.date().isoformat():
-                continue
+    for user_id in list(user_last_seen.keys()):
+        uid = str(user_id)
+        local_now = _local_now_for(uid)
 
-            # Не отправлять если был активен последние 8 часов
-            last_active = user_last_seen.get(user_id)
-            if last_active:
-                try:
-                    last_active_dt = datetime.fromisoformat(last_active)
-                    if (now_kiev - last_active_dt).total_seconds() < 8 * 3600:
-                        continue
-                except Exception:
-                    pass
+        # Утреннее окно
+        if not (DAILY_MIN_HOUR <= local_now.hour < DAILY_MAX_HOUR):
+            continue
 
-            lang = user_languages.get(str(user_id), "ru")
-            greeting = choice(MORNING_MESSAGES_BY_LANG.get(lang, MORNING_MESSAGES_BY_LANG["ru"]))
-            task = choice(DAILY_TASKS_BY_LANG.get(lang, DAILY_TASKS_BY_LANG["ru"]))
+        # Уже отправляли сегодня?
+        if user_last_daily_sent.get(uid) == local_now.date().isoformat():
+            continue
 
+        # Не отправлять, если активен в последние 8 часов
+        if _hours_since(user_last_seen.get(uid), now_utc) < 8:
+            continue
+
+        try:
+            lang = user_languages.get(uid, "ru")
+            greeting = random.choice(MORNING_MESSAGES_BY_LANG.get(lang, MORNING_MESSAGES_BY_LANG["ru"]))
+            task = random.choice(DAILY_TASKS_BY_LANG.get(lang, DAILY_TASKS_BY_LANG["ru"]))
             text = f"{greeting}\n\n🎯 {task}"
-            await context.bot.send_message(chat_id=user_id, text=text)
-            logging.info(f"✅ Утреннее задание отправлено пользователю {user_id} на языке {lang}")
-            user_last_daily_sent[user_id] = now_kiev.date().isoformat()
 
-    except Exception as e:
-        logging.error(f"❌ Ошибка при отправке утреннего задания: {e}")
+            await context.bot.send_message(chat_id=int(uid), text=text)
+            user_last_daily_sent[uid] = local_now.date().isoformat()
+            logging.info(f"✅ Утреннее задание отправлено {uid} ({lang})")
+        except Exception as e:
+            logging.error(f"❌ Ошибка при отправке утреннего задания {uid}: {e}")
 
 # ✨ Функция определения реакции
 def detect_emotion_reaction(user_input: str, lang: str = "ru") -> str:
