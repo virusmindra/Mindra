@@ -144,28 +144,23 @@ SUPPORT_TIME_START = IDLE_TIME_START   # 10
 SUPPORT_TIME_END = IDLE_TIME_END       # 22
 
 def _now_utc() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(timezone.utc)  # aware
 
 def _get_user_tz(user_id: str) -> ZoneInfo:
-    # Берём из user_timezones, по умолчанию Europe/Kyiv (как ты и фильтруешь «по Киеву»)
+    # если у юзера нет таймзоны — по умолчанию Киев
     tz_name = user_timezones.get(user_id, "Europe/Kyiv")
     try:
         return ZoneInfo(tz_name)
     except Exception:
         return ZoneInfo("Europe/Kyiv")
 
-def _now_local_for(user_id: str) -> datetime:
+def _local_now_for(user_id: str) -> datetime:
     return _now_utc().astimezone(_get_user_tz(user_id))
-
-def _is_within_window(local_dt: datetime, start_hour: int, end_hour: int) -> bool:
-    # [start, end) по локальному времени
-    return start_hour <= local_dt.hour < end_hour
 
 def _hours_since(ts: datetime | None, now_utc: datetime) -> float:
     if not ts:
         return 1e9
     return (now_utc - ts).total_seconds() / 3600.0
-
 
 def get_mode_prompt(mode, lang):
     return MODES.get(mode, MODES["default"]).get(lang, MODES["default"]["ru"])
@@ -1754,40 +1749,63 @@ async def quote(update: Update, context: ContextTypes.DEFAULT_TYPE):
     selected_quote = random.choice(QUOTES_BY_LANG.get(lang, QUOTES_BY_LANG["ru"]))
     await update.message.reply_text(selected_quote, parse_mode="Markdown")
 
+
 async def support_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
     selected = random.choice(SUPPORT_MESSAGES_BY_LANG.get(lang, SUPPORT_MESSAGES_BY_LANG["ru"]))
     await update.message.reply_text(selected)
 
-# ✨ Сообщения поддержки
-async def send_random_support(context):
-    now_utc = datetime.utcnow()
-    now_kiev = datetime.now(pytz.timezone("Europe/Kiev"))
-    hour = now_kiev.hour
-    # Не писать ночью
-    if hour < 10 or hour >= 22:
-        return
+async def send_random_support(context: ContextTypes.DEFAULT_TYPE):
+    global user_last_support, user_support_daily_count, user_support_daily_date
+    global user_last_seen, user_languages, user_timezones
 
-    if user_last_seen:
-        for user_id in user_last_seen.keys():
-            # 1. Ограничение: максимум 2 раза в день, минимум 8 часов между сообщениями
-            last_support = user_last_support.get(user_id)
-            if last_support and (now_utc - last_support) < timedelta(hours=8):
-                continue  # Пропускаем, недавно было
+    now_utc = _now_utc()
 
-            # 2. Рандом: шанс получить поддержку 70%
-            if random.random() > 0.7:
-                continue
+    # Кого знаем — тем и шлём (подставь свой источник, если у тебя иначе)
+    candidate_user_ids = list(user_last_seen.keys())
 
-            try:
-                lang = user_languages.get(str(user_id), "ru")
-                msg = random.choice(SUPPORT_MESSAGES_BY_LANG.get(lang, SUPPORT_MESSAGES_BY_LANG["ru"]))
-                await context.bot.send_message(chat_id=user_id, text=msg)
-                logging.info(f"✅ Сообщение поддержки отправлено пользователю {user_id}")
-                user_last_support[user_id] = now_utc  # Запоминаем время
-            except Exception as e:
-                logging.error(f"❌ Ошибка отправки поддержки пользователю {user_id}: {e}")
+    for user_id in candidate_user_ids:
+        # 0) не трогаем, если был активен последние N часов
+        last_seen = user_last_seen.get(user_id)
+        if _hours_since(last_seen, now_utc) < MIN_HOURS_SINCE_ACTIVE:
+            continue
+
+        # 1) локальное окно времени
+        local_now = _local_now_for(user_id)
+        if not (SUPPORT_WINDOW_START <= local_now.hour < SUPPORT_WINDOW_END):
+            continue
+
+        # 2) дневной лимит по ЛОКАЛЬНОЙ дате пользователя
+        local_date_str = local_now.date().isoformat()
+        if user_support_daily_date.get(user_id) != local_date_str:
+            user_support_daily_date[user_id] = local_date_str
+            user_support_daily_count[user_id] = 0
+
+        if user_support_daily_count[user_id] >= SUPPORT_MAX_PER_DAY:
+            continue
+
+        # 3) пауза между сообщениями (UTC-aware)
+        last_support = user_last_support.get(user_id)
+        if _hours_since(last_support, now_utc) < SUPPORT_MIN_HOURS_BETWEEN:
+            continue
+
+        # 4) рандом (смягчаем частоту)
+        if random.random() > SUPPORT_RANDOM_CHANCE:
+            continue
+
+        # 5) отправка
+        try:
+            lang = user_languages.get(user_id, "ru")
+            msg = random.choice(SUPPORT_MESSAGES_BY_LANG.get(lang, SUPPORT_MESSAGES_BY_LANG["ru"]))
+            await context.bot.send_message(chat_id=int(user_id), text=msg)
+
+            user_last_support[user_id] = now_utc         # сохраняем aware UTC
+            user_support_daily_count[user_id] += 1
+
+            logging.info(f"✅ Support sent to {user_id} ({lang}) at {local_now.isoformat()}")
+        except Exception as e:
+            logging.exception(f"❌ Support send failed for {user_id}: {e}")
 
 async def send_random_poll(context):
     now = datetime.utcnow()
