@@ -1733,34 +1733,40 @@ async def feedback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text(t["howto"], parse_mode="Markdown")
 
-async def send_evening_checkin(context):
-    now_utc = datetime.utcnow()
+async def send_evening_checkin(context: ContextTypes.DEFAULT_TYPE):
+    now_utc = _now_utc()
 
-    for user_id in user_last_seen.keys():
-        # 1. Не писать тем, кто недавно общался (например, последние 2-3 часа)
-        last_active = user_last_seen.get(user_id)
-        if last_active:
-            # last_active должен быть datetime!
-            if (now_utc - last_active) < timedelta(hours=3):
-                continue
+    for user_id in list(user_last_seen.keys()):
+        uid = str(user_id)
+        local_now = _local_now_for(uid)
 
-        # 2. Ограничить: максимум одно сообщение в сутки
-        last_evening = user_last_evening.get(user_id)
-        if last_evening and last_evening.date() == now_utc.date():
+        # Окно «вечер»: например, 18–22 по локальному (можешь вынести в константы)
+        if not (18 <= local_now.hour < 22):
             continue
 
-        # 3. Рандомизация: 70% шанс получить вечернее напоминание
+        # Не писать тем, кто активен последние 3 часа
+        if _hours_since(user_last_seen.get(uid), now_utc) < 3:
+            continue
+
+        # Одно сообщение в сутки
+        last_evening = user_last_evening.get(uid)
+        if _hours_since(last_evening, now_utc) < 24 and last_evening and \
+           last_evening.astimezone(_get_user_tz(uid)).date() == local_now.date():
+            continue
+
+        # Рандомизация
         if random.random() > 0.7:
             continue
 
         try:
-            lang = user_languages.get(str(user_id), "ru")
+            lang = user_languages.get(uid, "ru")
             msg = random.choice(EVENING_MESSAGES_BY_LANG.get(lang, EVENING_MESSAGES_BY_LANG["ru"]))
-            await context.bot.send_message(chat_id=user_id, text=msg)
-            user_last_evening[user_id] = now_utc
+            await context.bot.send_message(chat_id=int(uid), text=msg)
+            user_last_evening[uid] = now_utc
         except Exception as e:
-            logging.error(f"❌ Не удалось отправить вечернее сообщение пользователю {user_id}: {e}")
-            
+            logging.error(f"❌ Не удалось отправить вечернее сообщение {uid}: {e}")
+
+
 async def quote(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
