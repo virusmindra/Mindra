@@ -143,11 +143,11 @@ SUPPORT_RANDOM_CHANCE = 0.7       # шанс отправить (как у POLL_
 SUPPORT_TIME_START = IDLE_TIME_START   # 10
 SUPPORT_TIME_END = IDLE_TIME_END       # 22
 
+
 def _now_utc() -> datetime:
-    return datetime.now(timezone.utc)  # aware
+    return datetime.now(timezone.utc)
 
 def _get_user_tz(user_id: str) -> ZoneInfo:
-    # если у юзера нет таймзоны — по умолчанию Киев
     tz_name = user_timezones.get(user_id, "Europe/Kyiv")
     try:
         return ZoneInfo(tz_name)
@@ -157,11 +157,31 @@ def _get_user_tz(user_id: str) -> ZoneInfo:
 def _local_now_for(user_id: str) -> datetime:
     return _now_utc().astimezone(_get_user_tz(user_id))
 
-def _hours_since(ts: datetime | None, now_utc: datetime) -> float:
+def _to_dt_aware_utc(val) -> datetime | None:
+    """Принимает datetime (наивный/aware) или ISO-строку — возвращает aware UTC datetime."""
+    if val is None:
+        return None
+    if isinstance(val, datetime):
+        if val.tzinfo is None:
+            # считаем, что это UTC-наивный
+            return val.replace(tzinfo=timezone.utc)
+        return val.astimezone(timezone.utc)
+    if isinstance(val, str):
+        try:
+            dt = datetime.fromisoformat(val)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            return dt.astimezone(timezone.utc)
+        except Exception:
+            return None
+    return None
+
+def _hours_since(ts_any, now_utc: datetime) -> float:
+    ts = _to_dt_aware_utc(ts_any)
     if not ts:
         return 1e9
     return (now_utc - ts).total_seconds() / 3600.0
-
+    
 def get_mode_prompt(mode, lang):
     return MODES.get(mode, MODES["default"]).get(lang, MODES["default"]["ru"])
 
