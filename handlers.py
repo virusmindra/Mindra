@@ -1861,38 +1861,38 @@ async def send_random_poll(context):
 
 
 async def send_daily_task(context: ContextTypes.DEFAULT_TYPE):
-    now = datetime.now(pytz.timezone("Europe/Kiev"))
+    now_utc = _now_utc()
 
-    for user_id in user_last_seen.keys():
-        # Проверяем, было ли уже утреннее задание
-        last_prompted = user_last_prompted.get(f"{user_id}_morning_task")
-        if last_prompted:
-            try:
-                last_prompted_dt = datetime.fromisoformat(last_prompted)
-                if (now - last_prompted_dt) < timedelta(hours=MIN_HOURS_SINCE_LAST_MORNING_TASK):
-                    continue  # Уже отправляли сегодня
-            except Exception:
-                pass
+    for user_id in list(user_last_seen.keys()):
+        uid = str(user_id)
+        local_now = _local_now_for(uid)
 
-        # Не отправлять если человек был активен последний час
-        last_seen = user_last_seen[user_id]
-        if (now - last_seen) < timedelta(hours=1):
+        # окно утром (используем существующие DAILY_MIN_HOUR/DAILY_MAX_HOUR)
+        if not (DAILY_MIN_HOUR <= local_now.hour < DAILY_MAX_HOUR):
+            continue
+
+        # Не чаще, чем раз в MIN_HOURS_SINCE_LAST_MORNING_TASK
+        last_prompted = user_last_prompted.get(f"{uid}_morning_task")
+        if _hours_since(last_prompted, now_utc) < MIN_HOURS_SINCE_LAST_MORNING_TASK:
+            continue
+
+        # Не отправлять, если был активен последний час
+        last_seen = user_last_seen.get(uid)
+        if _hours_since(last_seen, now_utc) < 1:
             continue
 
         try:
-            lang = user_languages.get(str(user_id), "ru")
+            lang = user_languages.get(uid, "ru")
             greetings = MORNING_MESSAGES_BY_LANG.get(lang, MORNING_MESSAGES_BY_LANG["ru"])
-            greeting = random.choice(greetings)
             tasks = DAILY_TASKS_BY_LANG.get(lang, DAILY_TASKS_BY_LANG["ru"])
-            task = random.choice(tasks)
+            text = f"{random.choice(greetings)}\n\n🎯 {random.choice(tasks)}"
 
-            text = f"{greeting}\n\n🎯 {task}"
-            await context.bot.send_message(chat_id=user_id, text=text)
-            user_last_prompted[f"{user_id}_morning_task"] = now.isoformat()  # фиксируем отправку
-            logging.info(f"✅ Утреннее задание отправлено пользователю {user_id} ({lang})")
+            await context.bot.send_message(chat_id=int(uid), text=text)
+            user_last_prompted[f"{uid}_morning_task"] = now_utc.isoformat()
+            logging.info(f"✅ Утреннее задание отправлено {uid} ({lang})")
         except Exception as e:
-            logging.error(f"❌ Ошибка при отправке утреннего задания пользователю {user_id}: {e}")
-                            
+            logging.error(f"❌ Ошибка при отправке утреннего задания {uid}: {e}")
+
 async def mypoints_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
