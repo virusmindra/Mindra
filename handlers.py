@@ -12,6 +12,7 @@ import traceback
 import asyncio
 import pytz
 import shutil
+from collections import defaultdict
 from texts import (
     VOICE_TEXTS_BY_LANG,
     REMIND_TEXTS,
@@ -96,6 +97,8 @@ from random import randint, choice
 from stats import load_stats, save_stats, get_premium_until, set_premium_until, is_premium, got_trial, set_trial, add_referral, add_points, get_user_stats, get_stats, OWNER_ID, ADMIN_USER_IDS, _collect_activity_dates, get_user_points, get_next_title_info, build_titles_ladder, get_user_title
 from telegram.error import BadRequest
 global user_timezones
+from zoneinfo import ZoneInfo
+from collections import defaultdict
 
 # Глобальные переменные
 user_last_seen = {}
@@ -126,6 +129,43 @@ IDLE_TIME_START = 10  # 10:00 утра по Киеву
 IDLE_TIME_END = 22    # 22:00 вечера по Киеву
 
 MIN_HOURS_SINCE_LAST_MORNING_TASK = 20  # Не отправлять чаще 1 раза в 20 часов
+
+# --- ДОБАВКА ДЛЯ SUPPORT ---
+user_last_support: dict[str, datetime] = {}
+user_support_daily_date: dict[str, str] = {}     # YYYY-MM-DD (UTC)
+user_support_daily_count: dict[str, int] = defaultdict(int)
+
+SUPPORT_MIN_HOURS_BETWEEN = 4     # не чаще 1 раза в 4 часа
+SUPPORT_MAX_PER_DAY = 2           # не более 2 раз в сутки
+SUPPORT_RANDOM_CHANCE = 0.7       # шанс отправить (как у POLL_RANDOM_CHANCE)
+
+# Окно времени для «поддерживающих» сообщений — используем твои idle‑границы по Киеву
+SUPPORT_TIME_START = IDLE_TIME_START   # 10
+SUPPORT_TIME_END = IDLE_TIME_END       # 22
+
+def _now_utc() -> datetime:
+    return datetime.now(timezone.utc)
+
+def _get_user_tz(user_id: str) -> ZoneInfo:
+    # Берём из user_timezones, по умолчанию Europe/Kyiv (как ты и фильтруешь «по Киеву»)
+    tz_name = user_timezones.get(user_id, "Europe/Kyiv")
+    try:
+        return ZoneInfo(tz_name)
+    except Exception:
+        return ZoneInfo("Europe/Kyiv")
+
+def _now_local_for(user_id: str) -> datetime:
+    return _now_utc().astimezone(_get_user_tz(user_id))
+
+def _is_within_window(local_dt: datetime, start_hour: int, end_hour: int) -> bool:
+    # [start, end) по локальному времени
+    return start_hour <= local_dt.hour < end_hour
+
+def _hours_since(ts: datetime | None, now_utc: datetime) -> float:
+    if not ts:
+        return 1e9
+    return (now_utc - ts).total_seconds() / 3600.0
+
 
 def get_mode_prompt(mode, lang):
     return MODES.get(mode, MODES["default"]).get(lang, MODES["default"]["ru"])
