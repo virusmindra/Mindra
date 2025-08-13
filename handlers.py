@@ -81,7 +81,10 @@ from texts import (
     HABIT_DONE_MESSAGES,
     GOAL_SELECT_MESSAGE,
     POINTS_ADDED_GOAL,
-    POINTS_HELP_TEXTS
+    POINTS_HELP_TEXTS,
+    TIMEZONE_ALIASES,
+    TZ_KEYBOARD_ROWS,
+    TZ_TEXTS
 )
 from datetime import datetime, timedelta, timezone, date
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
