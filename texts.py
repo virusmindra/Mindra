@@ -13,6 +13,112 @@ VOICE_TEXTS_BY_LANG = {
 }
 
 
+# Алиасы → IANA. Добавляй свои при желании.
+TIMEZONE_ALIASES = {
+    # UA/RU/СНГ
+    "kiev": "Europe/Kyiv", "kyiv": "Europe/Kyiv", "киев": "Europe/Kyiv", "київ": "Europe/Kyiv",
+    "moscow": "Europe/Moscow", "москва": "Europe/Moscow", "msk": "Europe/Moscow",
+    "minsk": "Europe/Minsk",
+    "chisinau": "Europe/Chisinau", "kishinev": "Europe/Chisinau", "кишинев": "Europe/Chisinau",
+    "tbilisi": "Asia/Tbilisi", "tbilisi": "Asia/Tbilisi",
+    "yerevan": "Asia/Yerevan", "erevan": "Asia/Yerevan",
+    "almaty": "Asia/Almaty", "алматы": "Asia/Almaty",
+    "bishkek": "Asia/Bishkek", "бишкек": "Asia/Bishkek",
+    "astana": "Asia/Almaty",  # упростим для Казахстана
+
+    # USA
+    "ny": "America/New_York", "nyc": "America/New_York", "newyork": "America/New_York", "new_york": "America/New_York",
+    "miami": "America/New_York",
+    "dc": "America/New_York", "boston": "America/New_York", "philadelphia": "America/New_York",
+    "chicago": "America/Chicago", "houston": "America/Chicago", "dallas": "America/Chicago", "austin": "America/Chicago",
+    "denver": "America/Denver", "phoenix": "America/Phoenix",
+    "la": "America/Los_Angeles", "losangeles": "America/Los_Angeles", "los_angeles": "America/Los_Angeles",
+    "seattle": "America/Los_Angeles", "sf": "America/Los_Angeles", "sanfrancisco": "America/Los_Angeles",
+
+    # EU misc
+    "warsaw": "Europe/Warsaw", "vilnius": "Europe/Vilnius", "riga": "Europe/Riga", "tallinn": "Europe/Tallinn",
+    "berlin": "Europe/Berlin", "paris": "Europe/Paris", "london": "Europe/London",
+
+    # generic
+    "utc": "UTC",
+}
+
+# Предустановленные кнопки (частые варианты)
+TZ_KEYBOARD_ROWS = [
+    [("🇺🇦 Kyiv", "Europe/Kyiv"), ("🇷🇺 Moscow", "Europe/Moscow"), ("🇧🇾 Minsk", "Europe/Minsk")],
+    [("🇺🇸 New York", "America/New_York"), ("🇺🇸 Chicago", "America/Chicago")],
+    [("🇺🇸 Denver", "America/Denver"), ("🇺🇸 Los Angeles", "America/Los_Angeles")],
+    [("🇺🇸 Phoenix", "America/Phoenix"), ("🇺🇸 Miami", "America/New_York")],
+    [("🇵🇱 Warsaw", "Europe/Warsaw"), ("🇱🇹 Vilnius", "Europe/Vilnius")],
+    [("🇬🇪 Tbilisi", "Asia/Tbilisi"), ("🇦🇲 Yerevan", "Asia/Yerevan")],
+    [("🇰🇿 Almaty", "Asia/Almaty"), ("🇰🇬 Bishkek", "Asia/Bishkek")],
+    [("🌐 UTC", "UTC")],
+]
+
+# Локализация подсказок (10 языков)
+TZ_TEXTS = {
+    "ru": {
+        "title": "🌍 Укажи свой часовой пояс для напоминаний.",
+        "hint": "Пример: `/timezone kyiv` или `/timezone ny`.\nТакже можешь нажать кнопку ниже.",
+        "saved": "✅ Часовой пояс установлен: *{tz}*. Локальное время: *{local_time}*.",
+        "unknown": "Не распознал часовой пояс. Введи город/алиас или выбери кнопкой.",
+    },
+    "uk": {
+        "title": "🌍 Вкажи свій часовий пояс для нагадувань.",
+        "hint": "Приклад: `/timezone kyiv` або `/timezone ny`.\nТакож можна натиснути кнопку нижче.",
+        "saved": "✅ Часовий пояс встановлено: *{tz}*. Локальний час: *{local_time}*.",
+        "unknown": "Не впізнав часовий пояс. Введи місто/аліас або обери кнопкою.",
+    },
+    "md": {
+        "title": "🌍 Alege fusul tău orar pentru notificări.",
+        "hint": "Ex.: `/timezone chisinau` sau `/timezone ny`.\nPoți folosi butoanele de mai jos.",
+        "saved": "✅ Fusul orar setat: *{tz}*. Ora locală: *{local_time}*.",
+        "unknown": "Nu am recunoscut fusul orar. Introdu un oraș/alias sau folosește butoanele.",
+    },
+    "be": {
+        "title": "🌍 Укажы свой часавы пояс для напамінаў.",
+        "hint": "Прыклад: `/timezone minsk` або `/timezone ny`.\nТаксама можна націснуць кнопку ніжэй.",
+        "saved": "✅ Часавы пояс усталяваны: *{tz}*. Мясцовы час: *{local_time}*.",
+        "unknown": "Не распазнаў часавы пояс. Увядзі горад/аліяс або выберы кнопку.",
+    },
+    "kk": {
+        "title": "🌍 Еске салғыштар үшін уақыт белдеуіңді таңда.",
+        "hint": "Мысалы: `/timezone almaty` немесе `/timezone ny`.\nТөмендегі батырмаларды да қолдана аласың.",
+        "saved": "✅ Уақыт белдеуі орнатылды: *{tz}*. Жергілікті уақыт: *{local_time}*.",
+        "unknown": "Уақыт белдеуі танылмады. Қала/алиас енгіз немесе батырманы таңда.",
+    },
+    "kg": {
+        "title": "🌍 Эскертмелер үчүн убакыт алкагыңды танда.",
+        "hint": "Мисалы: `/timezone bishkek` же `/timezone ny`.\nТөмөндөгү баскычтарды колдон.",
+        "saved": "✅ Убакыт алкагы коюлду: *{tz}*. Жергиликтүү убакыт: *{local_time}*.",
+        "unknown": "Убакыт алкагын тааный албай койдум. Шаар/алиас жаз же баскычты танда.",
+    },
+    "hy": {
+        "title": "🌍 Նշիր քո ժամային գոտին հիշեցումների համար.",
+        "hint": "Օրինակ՝ `/timezone yerevan` կամ `/timezone ny`։\nԿարող ես օգտվել նաև կոճակներից։",
+        "saved": "✅ Ժամային գոտին տեղադրված է՝ *{tz}*։ Տեղական ժամանակը՝ *{local_time}*.",
+        "unknown": "Չհաջողվեց ճանաչել ժամային գոտին։ Գրիր քաղաք/ալիանս կամ ընտրիր կոճակով։",
+    },
+    "ka": {
+        "title": "🌍 მიუთითე შენი საათობრივი სარტყელი შეხსენებებისთვის.",
+        "hint": "მაგ.: `/timezone tbilisi` ან `/timezone ny`.\nშეგიძლია ქვევით ღილაკებითაც აირჩიო.",
+        "saved": "✅ საათობრივი სარტყელი დაყენებულია: *{tz}*. ადგილობრივი დრო: *{local_time}*.",
+        "unknown": "საათობრივი სარტყელი ვერ ვიცანი. მიუთითე ქალაქი/ალისი ან აირჩიე ღილაკით.",
+    },
+    "ce": {
+        "title": "🌍 Хьажа тайм-зона аьттоьх дӀаскарийн.",
+        "hint": "Мисал: `/timezone moscow` йолу `/timezone ny`.\nКнопка ша дар нися хийца.",
+        "saved": "✅ Тайм-зона хийца: *{tz}*. Локал хьалхара: *{local_time}*.",
+        "unknown": "Тайм-зона тӀехь махча дац. Шаара/алиасын юхай или кнопка тӀехь хийца.",
+    },
+    "en": {
+        "title": "🌍 Set your time zone for reminders.",
+        "hint": "Example: `/timezone ny` or `/timezone kyiv`.\nYou can also use the buttons below.",
+        "saved": "✅ Time zone set: *{tz}*. Local time: *{local_time}*.",
+        "unknown": "Couldn't recognize the time zone. Type a city/alias or use the buttons.",
+    },
+}
+
 # -------- Points & Titles (help) --------
 POINTS_HELP_TEXTS = {
     "ru": (
