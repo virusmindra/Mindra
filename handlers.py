@@ -191,55 +191,88 @@ GOALS_FILE = Path("user_goals.json")
 
 YOUR_ID = "7775321566"  # твой ID
 
-async def set_timezone(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
-    lang = user_languages.get(user_id, "ru")  # Или как у тебя определяется язык
+def _tz_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton(text, callback_data=f"tz:{code}") for (text, code) in row]
+        for row in TZ_KEYBOARD_ROWS
+    ])
+    
+def _get_lang(uid: str) -> str:
+    return user_languages.get(uid, "ru")
 
+def _format_local_time_now(tz_name: str, lang: str) -> str:
+    now_local = datetime.now(ZoneInfo(tz_name))
+    # en → 12h, остальные → 24h
+    if lang == "en":
+        return now_local.strftime("%-I:%M %p, %Y-%m-%d")
+    return now_local.strftime("%H:%M, %Y-%m-%d")
+
+def _resolve_tz(arg: str) -> str | None:
+    s = arg.strip().lower().replace(" ", "").replace("-", "").replace(".", "")
+    if s in TIMEZONE_ALIASES:
+        return TIMEZONE_ALIASES[s]
+    # если пользователь ввёл уже IANA (Europe/Kyiv и т.п.)
+    try:
+        _ = ZoneInfo(arg)
+        return arg
+    except Exception:
+        return None
+
+async def set_timezone(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    lang = _get_lang(uid)
+    t = TZ_TEXTS.get(lang, TZ_TEXTS["ru"])
+
+    # без аргумента — показать клавиатуру + подсказку
     if not context.args:
         await update.message.reply_text(
-            TIMEZONE_TEXTS.get(lang, TIMEZONE_TEXTS["ru"]),
+            f"{t['title']}\n\n{t['hint']}",
+            reply_markup=_tz_keyboard(),
             parse_mode="Markdown"
         )
         return
 
-    arg = context.args[0].lower()
-    if arg in TIMEZONES:
-        tz = TIMEZONES[arg]
-        user_timezones[user_id] = tz
+    tz = _resolve_tz(context.args[0])
+    if not tz:
         await update.message.reply_text(
-            f"✅ {TIMEZONE_NAMES[tz]}\n"
-            + (
-                {
-                    "ru": "Теперь напоминания будут приходить по твоему времени!",
-                    "uk": "Тепер нагадування будуть надходити за вашим часом!",
-                    "be": "Цяпер напаміны будуць прыходзіць у ваш мясцовы час!",
-                    "kk": "Еске салулар жергілікті уақытыңызда келеді!",
-                    "kg": "Эскертмелер жергиликтүү убактыңызда келет!",
-                    "hy": "Հիշեցումները կգան քո տեղական ժամով!",
-                    "ce": "Цхьаьнан напоминаний чур дийцар локальнай хийцара!",
-                    "md": "Mementourile vor veni la ora locală!",
-                    "ka": "შეხსენებები მოვა თქვენს ადგილობრივ დროზე!",
-                    "en": "Reminders will now be sent in your local time!"
-                }.get(lang, "Теперь напоминания будут приходить по твоему времени!")
-            )
-        )
-    else:
-        await update.message.reply_text(
-            {
-                "ru": "❗ Неверная таймзона. Используй одну из: `kiev`, `moscow`, `ny`\nПример: `/timezone moscow`",
-                "uk": "❗ Невірна таймзона. Використовуйте одну з: `kiev`, `moscow`, `ny`\nПриклад: `/timezone moscow`",
-                "be": "❗ Няправільная таймзона. Выкарыстоўвайце адну з: `kiev`, `moscow`, `ny`\nПрыклад: `/timezone moscow`",
-                "kk": "❗ Қате белдеу. Осыны қолданыңыз: `kiev`, `moscow`, `ny`\nМысал: `/timezone moscow`",
-                "kg": "❗ Туура эмес зона. Булардын бирин колдонуңуз: `kiev`, `moscow`, `ny`\nМисал: `/timezone moscow`",
-                "hy": "❗ Սխալ ժամանակային գոտի։ Օգտագործեք՝ `kiev`, `moscow`, `ny`\nՕրինակ՝ `/timezone moscow`",
-                "ce": "❗ Нохчийн таймзона дукха. Цуьнан: `kiev`, `moscow`, `ny`\nМисал: `/timezone moscow`",
-                "md": "❗ Fus orar greșit. Folosește: `kiev`, `moscow`, `ny`\nExemplu: `/timezone moscow`",
-                "ka": "❗ არასწორი დროის სარტყელი. გამოიყენეთ: `kiev`, `moscow`, `ny`\nმაგალითი: `/timezone moscow`",
-                "en": "❗ Wrong timezone. Use one of: `kiev`, `moscow`, `ny`\nExample: `/timezone moscow`",
-            }.get(lang, "❗ Неверная таймзона. Используй одну из: `kiev`, `moscow`, `ny`\nПример: `/timezone moscow`"),
+            f"{t['unknown']}\n\n{t['hint']}",
+            reply_markup=_tz_keyboard(),
             parse_mode="Markdown"
         )
+        return
 
+    user_timezones[uid] = tz
+    local_str = _format_local_time_now(tz, lang)
+    await update.message.reply_text(
+        t["saved"].format(tz=tz, local_time=local_str),
+        parse_mode="Markdown"
+    )
+
+async def tz_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработчик нажатий на инлайн-кнопки tz:..."""
+    q = update.callback_query
+    if not q or not q.data or not q.data.startswith("tz:"):
+        return
+    await q.answer()
+
+    uid = str(q.from_user.id)
+    lang = _get_lang(uid)
+    t = TZ_TEXTS.get(lang, TZ_TEXTS["ru"])
+
+    tz = q.data.split(":", 1)[1]
+    try:
+        _ = ZoneInfo(tz)
+    except Exception:
+        await q.edit_message_text(t["unknown"])
+        return
+
+    user_timezones[uid] = tz
+    local_str = _format_local_time_now(tz, lang)
+    await q.edit_message_text(
+        t["saved"].format(tz=tz, local_time=local_str),
+        parse_mode="Markdown"
+    )
+    
 async def points_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
@@ -2677,6 +2710,7 @@ handlers = [
     CallbackQueryHandler(handle_mark_goal_done_choose, pattern=r"^mark_goal_done_choose$"),
     CallbackQueryHandler(handle_done_goal_callback, pattern=r"^done_goal\|\d+$"),
     CommandHandler("points", points_command),
+    CallbackQueryHandler(tz_callback, pattern=r"^tz:"),
     
     # --- Кнопки реакции и добавления цели
     CallbackQueryHandler(handle_reaction_button, pattern="^react_"),
