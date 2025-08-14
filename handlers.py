@@ -371,30 +371,64 @@ async def reminder_fire(context: ContextTypes.DEFAULT_TYPE):
         db.commit()
 
 # ========== Команды ==========
-async def remind_cmd(update, context: ContextTypes.DEFAULT_TYPE):
+async def remind_command(update, context: ContextTypes.DEFAULT_TYPE):
     ensure_remind_db()
     uid = str(update.effective_user.id)
     lang = user_languages.get(uid, "ru")
-    tdict = _i18n(uid)
+    t = REMIND_TEXTS.get(lang, REMIND_TEXTS["ru"])
     tz = _user_tz(uid)
 
+    # нет аргументов → подсказка (и старый usage тоже покажем)
     if not context.args:
-        await update.message.reply_text("⏰ " + tdict["create_help"])
+        msg = "⏰ " + t["create_help"] + "\n\n" + t["usage"]
+        await update.message.reply_text(msg, parse_mode="Markdown")
         return
 
-    raw = " ".join(context.args)
-    dt_local = parse_natural_time(raw, lang, tz)
+    raw = " ".join(context.args).strip()
+
+    # БЕСПЛАТНЫЙ ЛИМИТ: 1 активное напоминание
+    if not _is_premium(uid):
+        with remind_db() as db:
+            cnt = db.execute(
+                "SELECT COUNT(*) AS c FROM reminders WHERE user_id=? AND status='scheduled';",
+                (uid,)
+            ).fetchone()[0]
+        if cnt >= 1:
+            await update.message.reply_text(t["limit"] + "\n\n" + t["usage"], parse_mode="Markdown")
+            return
+
+    # 1) Сначала пробуем СТАРЫЙ формат: HH:MM(.|:) + пробел + текст
+    #    Поддержим и '19.30' на всякий.
+    m = re.match(r"^\s*(\d{1,2})[:.](\d{2})\s+(.+)$", raw)
+    dt_local = None
+    text = raw
+    now_local = datetime.now(tz)
+
+    if m:
+        h = int(m.group(1)); mnt = int(m.group(2))
+        text = m.group(3).strip()
+        dt_local = now_local.replace(hour=h, minute=mnt, second=0, microsecond=0)
+        # Если время уже прошло — переносим на завтра
+        if dt_local <= now_local:
+            dt_local += timedelta(days=1)
+    else:
+        # 2) Новый парсер естественного языка (ru/uk/en)
+        dt_local = parse_natural_time(raw, lang, tz)
+        text = re.sub(r"\s+", " ", raw).strip()
+
     if not dt_local:
-        await update.message.reply_text(tdict["not_understood"])
+        await update.message.reply_text(t["not_understood"] + "\n\n" + t["usage"], parse_mode="Markdown")
         return
 
+    # Тихие часы
     dt_local = _apply_quiet_hours(dt_local)
     dt_utc = dt_local.astimezone(timezone.utc)
-    text = re.sub(r"\s+", " ", raw).strip()
 
+    # Сохраняем в БД и планируем
     with remind_db() as db:
         cur = db.execute(
-            "INSERT INTO reminders (user_id, text, due_utc, tz, status, created_at) VALUES (?, ?, ?, ?, 'scheduled', ?)",
+            "INSERT INTO reminders (user_id, text, due_utc, tz, status, created_at) "
+            "VALUES (?, ?, ?, ?, 'scheduled', ?)",
             (uid, text, _to_epoch(dt_utc), str(tz.key), _to_epoch(_utcnow()))
         )
         rem_id = cur.lastrowid
@@ -402,9 +436,13 @@ async def remind_cmd(update, context: ContextTypes.DEFAULT_TYPE):
         row = db.execute("SELECT * FROM reminders WHERE id=?;", (rem_id,)).fetchone()
 
     await _schedule_job_for_reminder(context, row)
+
+    # Ответ пользователю
     local_str = _fmt_local(dt_local, lang)
-    await update.message.reply_text(tdict["created"].format(time=local_str, text=text),
-                                    reply_markup=remind_keyboard(rem_id, uid))
+    await update.message.reply_text(
+        t["created"].format(time=local_str, text=text),
+        reply_markup=remind_keyboard(rem_id, uid)
+    )
 
 async def reminders_list(update, context: ContextTypes.DEFAULT_TYPE):
     ensure_remind_db()
