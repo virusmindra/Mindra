@@ -546,69 +546,24 @@ async def language_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    user_id = str(query.from_user.id)
-    lang_code = query.data.replace("lang_", "")
-    user_languages[user_id] = lang_code
-    logging.info(f"🌐 Пользователь {user_id} выбрал язык: {lang_code}")
     await query.answer()
 
-    first_name = query.from_user.first_name or "друг"
-    welcome_text = WELCOME_TEXTS.get(lang_code, WELCOME_TEXTS["ru"]).format(first_name=first_name)
+    user_id = str(query.from_user.id)
+    lang_code = query.data.replace("lang_", "")
+    valid = {"ru","uk","md","be","kk","kg","hy","ka","ce","en"}
+    if lang_code not in valid:
+        lang_code = "ru"
 
-    # -- ВАЖНО: Выдаём бонусы только при первом выборе языка! --
-    ref_bonus_given = False
-    trial_given = False
+    user_languages[user_id] = lang_code
+    logging.info(f"🌐 Пользователь {user_id} выбрал язык: {lang_code}")
 
-    # Только если пользователь впервые выбирает язык (нет got_trial)
-    if not got_trial(user_id):
-        # -- Если был реферал, обрабатываем
-        ref_code = None
-        if user_id in user_ref_args:
-            ref_code = user_ref_args.pop(user_id)
-        if ref_code:
-            referrer_id = ref_code[3:]
-            if user_id != referrer_id:
-                ref_bonus_given = handle_referral(user_id, referrer_id)
-                if ref_bonus_given:
-                    bonus_text = REFERRAL_BONUS_TEXT.get(lang_code, REFERRAL_BONUS_TEXT["ru"])
-                    await context.bot.send_message(query.message.chat_id, bonus_text, parse_mode="Markdown")
-                    try:
-                        await context.bot.send_message(
-                            chat_id=int(referrer_id),
-                            text="🎉 Твой друг зарегистрировался по твоей ссылке! Вам обоим начислено +7 дней Mindra+ 🎉"
-                        )
-                    except Exception as e:
-                        logging.warning(f"Не удалось отправить сообщение пригласившему: {e}")
-
-        # -- Если не было реферала — триал
-        if not ref_bonus_given:
-            trial_given = give_trial_if_needed(user_id)
-        # -- После бонуса — статус (опционально)
-        if trial_given:
-            trial_info = TRIAL_INFO_TEXT.get(lang_code, TRIAL_INFO_TEXT["ru"])
-            await context.bot.send_message(query.message.chat_id, trial_info, parse_mode="Markdown")
-
-    # Настрой стартовый режим и историю
-    mode = "support"
-    lang_prompt = LANG_PROMPTS.get(lang_code, LANG_PROMPTS["ru"])
-    mode_prompt = MODES[mode].get(lang_code, MODES[mode]['ru'])
-    system_prompt = f"{lang_prompt}\n\n{mode_prompt}"
-    conversation_history[user_id] = [{"role": "system", "content": system_prompt}]
-    save_history(conversation_history)
-
-    # Приветствие
+    # Показываем выбор таймзоны (тексты берём из TZ_TEXTS)
+    t = TZ_TEXTS.get(lang_code, TZ_TEXTS["ru"])
+    prompt = f"{t['title']}\n\n{t['hint']}"
     try:
-        await query.edit_message_text(
-            text=welcome_text,
-            parse_mode="Markdown"
-        )
-    except Exception as e:
-        logging.warning(f"Не удалось отредактировать сообщение, отправляем новое. Ошибка: {e}")
-        await context.bot.send_message(
-            chat_id=query.message.chat_id,
-            text=welcome_text,
-            parse_mode="Markdown"
-        )
+        await query.edit_message_text(prompt, reply_markup=_tz_keyboard(), parse_mode="Markdown")
+    except Exception:
+        await context.bot.send_message(chat_id=int(user_id), text=prompt, reply_markup=_tz_keyboard(), parse_mode="Markdown")
 
 # ✨ Сначала редактируем старое сообщение
 async def habit_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
