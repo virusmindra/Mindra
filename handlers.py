@@ -1,4 +1,5 @@
 import os
+import sqlite3
 import json
 import random
 import re
@@ -134,6 +135,7 @@ IDLE_TIME_END = 22    # 22:00 вечера по Киеву
 
 MIN_HOURS_SINCE_LAST_MORNING_TASK = 20  # Не отправлять чаще 1 раза в 20 часов
 
+REMIND_I18N = REMIND_TEXTS
 # --- ДОБАВКА ДЛЯ SUPPORT ---
 user_last_support: dict[str, datetime] = {}
 user_support_daily_date: dict[str, str] = {}     # YYYY-MM-DD (UTC)
@@ -147,8 +149,350 @@ SUPPORT_RANDOM_CHANCE = 0.7       # шанс отправить (как у POLL_
 SUPPORT_TIME_START = IDLE_TIME_START   # 10
 SUPPORT_TIME_END = IDLE_TIME_END       # 22
 
+# Храним всё в sqlite
+REMIND_DB_PATH = os.getenv("REMIND_DB_PATH", "reminders.sqlite3")
 
+# Тихие часы по локальному времени пользователя
+QUIET_START = 22  # не тревожить с 22:00
+QUIET_END   = 9   # до 09:00
 
+def _i18n(uid: str) -> dict:
+    return REMIND_TEXTS.get(user_languages.get(uid, "ru"), REMIND_TEXTS["ru"])
+
+# ========== DB ==========
+def remind_db() -> sqlite3.Connection:
+    conn = sqlite3.connect(REMIND_DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def ensure_remind_db():
+    with remind_db() as db:
+        db.execute("""
+        CREATE TABLE IF NOT EXISTS reminders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            text TEXT NOT NULL,
+            due_utc INTEGER NOT NULL,   -- epoch seconds (UTC)
+            tz TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'scheduled', -- scheduled|fired|canceled
+            created_at INTEGER NOT NULL
+        );
+        """)
+        db.commit()
+
+# ========== Time helpers ==========
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+def _user_tz(uid: str) -> ZoneInfo:
+    tz = user_timezones.get(uid, "Europe/Kyiv")
+    try:
+        return ZoneInfo(tz)
+    except Exception:
+        return ZoneInfo("Europe/Kyiv")
+
+def _to_epoch(dt_aware: datetime) -> int:
+    return int(dt_aware.timestamp())
+
+def _from_epoch(sec: int) -> datetime:
+    return datetime.fromtimestamp(sec, tz=timezone.utc)
+
+def _apply_quiet_hours(local_dt: datetime) -> datetime:
+    """Если внутри тихих часов — переносим на ближайшие 09:00 локально."""
+    hour = local_dt.hour
+    if QUIET_START <= hour or hour < QUIET_END:
+        if hour >= QUIET_START:
+            return (local_dt + timedelta(days=1)).replace(hour=QUIET_END, minute=0, second=0, microsecond=0)
+        return local_dt.replace(hour=QUIET_END, minute=0, second=0, microsecond=0)
+    return local_dt
+
+def _fmt_local(dt_local: datetime, lang: str) -> str:
+    if lang == "en":
+        return dt_local.strftime("%-I:%M %p, %Y-%m-%d")
+    return dt_local.strftime("%H:%M, %Y-%m-%d")
+
+# ========== Natural language parsing (ru/uk/en) ==========
+WEEKDAYS_RU = {"пн":0,"пон":0,"понедельник":0,"вт":1,"ср":2,"чт":3,"чтврг":3,"пт":4,"птн":4,"пятница":4,"сб":5,"суббота":5,"вс":6,"вск":6}
+WEEKDAYS_UK = {"пн":0,"вт":1,"ср":2,"чт":3,"пт":4,"сб":5,"нд":6,"нед":6}
+WEEKDAYS_EN = {"mon":0,"monday":0,"tue":1,"tues":1,"tuesday":1,"wed":2,"wednesday":2,"thu":3,"thurs":3,"fr":4,"fri":4,"friday":4,"sat":5,"saturday":5,"sun":6,"sunday":6}
+
+def _next_weekday(base_local: datetime, target_wd: int) -> datetime:
+    delta = (target_wd - base_local.weekday()) % 7
+    if delta == 0:
+        delta = 7
+    return base_local + timedelta(days=delta)
+
+def parse_natural_time(text: str, lang: str, user_tz: ZoneInfo) -> datetime | None:
+    """
+    Возвращает AWARE local datetime (в таймзоне пользователя) или None.
+    Поддержка:
+      RU/UK: «через 15 мин/час/день», «сегодня в 18:30», «завтра в 9», «в пт в 19»
+      EN:    “in 30 min/hour/day”, “today at 6:30pm”, “tomorrow at 9”, “on fri at 7”
+    """
+    s = re.sub(r"\s+", " ", text.lower().strip())
+    now_local = datetime.now(user_tz)
+
+    # EN: in X ...
+    m = re.search(r"\bin\s+(\d+)\s*(min|mins|minutes|hour|hours|day|days)\b", s)
+    if m:
+        n = int(m.group(1)); unit = m.group(2)
+        if "min" in unit:  return now_local + timedelta(minutes=n)
+        if "hour" in unit: return now_local + timedelta(hours=n)
+        if "day" in unit:  return now_local + timedelta(days=n)
+
+    # RU/UK: через X ...
+    m = re.search(r"через\s+(\d+)\s*(мин|минут|хв|хвилин|час|часа|часов|годин|день|дня|дней|дн)\b", s)
+    if m:
+        n = int(m.group(1)); unit = m.group(2)
+        if unit.startswith(("мин","хв")): return now_local + timedelta(minutes=n)
+        if unit.startswith(("час","годин")): return now_local + timedelta(hours=n)
+        if unit.startswith(("д","дн")): return now_local + timedelta(days=n)
+
+    # today / сегодня / сьогодні
+    if "today" in s or "сегодня" in s or "сьогодні" in s:
+        base = now_local
+        tm = re.search(r"\bв\s*(\d{1,2})(?::(\d{2}))?|\bat\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?", s)
+        if tm:
+            h = int(tm.group(1) or tm.group(3)); mnt = int((tm.group(2) or tm.group(4) or "0"))
+            ampm = (tm.group(5) or "").lower()
+            if ampm == "pm" and h < 12: h += 12
+            return base.replace(hour=h, minute=mnt, second=0, microsecond=0)
+        return now_local + timedelta(hours=1)
+
+    # tomorrow / завтра
+    if "tomorrow" in s or "завтра" in s:
+        base = now_local + timedelta(days=1)
+        tm = re.search(r"\bв\s*(\d{1,2})(?::(\d{2}))?|\bat\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?", s)
+        if tm:
+            h = int(tm.group(1) or tm.group(3)); mnt = int((tm.group(2) or tm.group(4) or "0"))
+            ampm = (tm.group(5) or "").lower()
+            if ampm == "pm" and h < 12: h += 12
+            return base.replace(hour=h, minute=mnt, second=0, microsecond=0)
+        return base.replace(hour=9, minute=0, second=0, microsecond=0)
+
+    # weekday (ru/uk/en) [+ time]
+    wd_map = WEEKDAYS_EN | WEEKDAYS_RU | WEEKDAYS_UK
+    for name, idx in wd_map.items():
+        if re.search(rf"\b(в|на|on)\s*{name}\b", s):
+            base = _next_weekday(now_local, idx)
+            tm = re.search(r"\bв\s*(\d{1,2})(?::(\d{2}))?|\bat\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?", s)
+            if tm:
+                h = int(tm.group(1) or tm.group(3)); mnt = int((tm.group(2) or tm.group(4) or "0"))
+                ampm = (tm.group(5) or "").lower()
+                if ampm == "pm" and h < 12: h += 12
+                return base.replace(hour=h, minute=mnt, second=0, microsecond=0)
+            return base.replace(hour=9, minute=0, second=0, microsecond=0)
+
+    # bare "в 18:30" / "at 6:30pm"
+    tm = re.search(r"\bв\s*(\d{1,2})(?::(\d{2}))?|\bat\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?", s)
+    if tm:
+        h = int(tm.group(1) or tm.group(3)); mnt = int((tm.group(2) or tm.group(4) or "0"))
+        ampm = (tm.group(5) or "").lower()
+        if ampm == "pm" and h < 12: h += 12
+        cand = now_local.replace(hour=h, minute=mnt, second=0, microsecond=0)
+        if cand <= now_local:
+            cand += timedelta(days=1)
+        return cand
+
+    return None
+
+# ========== UI (кнопки) ==========
+def _btn_labels(uid: str) -> dict:
+    t = _i18n(uid)
+    return {
+        "plus15": t["btn_plus15"],
+        "plus1h":  t["btn_plus1h"],
+        "tomorrow":t["btn_tomorrow"],
+        "delete":  t["btn_delete"],
+    }
+
+def remind_keyboard(rem_id: int, uid: str) -> InlineKeyboardMarkup:
+    b = _btn_labels(uid)
+    return InlineKeyboardMarkup([[
+        InlineKeyboardButton(b["plus15"], callback_data=f"rem:snooze:{rem_id}:15m"),
+        InlineKeyboardButton(b["plus1h"],  callback_data=f"rem:snooze:{rem_id}:1h"),
+        InlineKeyboardButton(b["tomorrow"], callback_data=f"rem:snooze:{rem_id}:tomorrow"),
+        InlineKeyboardButton(b["delete"],   callback_data=f"rem:del:{rem_id}"),
+    ]])
+
+# ========== Планирование ==========
+async def _schedule_job_on(job_queue, row: sqlite3.Row):
+    """Создаёт JobQueue-задачу для напоминания."""
+    if row["status"] != "scheduled":
+        return
+    due_dt_utc = _from_epoch(row["due_utc"])  # aware UTC
+    when = due_dt_utc if due_dt_utc > _utcnow() else _utcnow() + timedelta(seconds=3)
+    jname = f"rem#{row['id']}"
+    for j in job_queue.get_jobs_by_name(jname):
+        j.schedule_removal()
+    job_queue.run_once(reminder_fire, when=when, name=jname, data={"id": row["id"]})
+
+async def _schedule_job_for_reminder(context: ContextTypes.DEFAULT_TYPE, row: sqlite3.Row):
+    await _schedule_job_on(context.job_queue, row)
+
+# ========== Джоба: срабатывание ==========
+async def reminder_fire(context: ContextTypes.DEFAULT_TYPE):
+    rem_id = context.job.data["id"]
+    with remind_db() as db:
+        row = db.execute("SELECT * FROM reminders WHERE id=?;", (rem_id,)).fetchone()
+        if not row or row["status"] != "scheduled":
+            return
+
+        uid = row["user_id"]
+        lang = user_languages.get(uid, "ru")
+        tdict = _i18n(uid)
+        tz = ZoneInfo(row["tz"])
+        now_local = datetime.now(tz)
+
+        # Тихие часы → переносим
+        if QUIET_START <= now_local.hour or now_local.hour < QUIET_END:
+            new_local = _apply_quiet_hours(now_local)
+            new_utc = new_local.astimezone(timezone.utc)
+            db.execute("UPDATE reminders SET due_utc=? WHERE id=?;", (_to_epoch(new_utc), rem_id))
+            db.commit()
+            row = db.execute("SELECT * FROM reminders WHERE id=?;", (rem_id,)).fetchone()
+            await _schedule_job_for_reminder(context, row)
+            return
+
+        # Отправляем
+        local_dt = _from_epoch(row["due_utc"]).astimezone(tz)
+        time_str = _fmt_local(local_dt, lang)
+        text = row["text"]
+        try:
+            await context.bot.send_message(
+                chat_id=int(uid),
+                text=tdict["fired"].format(text=text, time=time_str),
+                reply_markup=remind_keyboard(rem_id, uid)
+            )
+        except Exception:
+            pass
+
+        db.execute("UPDATE reminders SET status='fired' WHERE id=?;", (rem_id,))
+        db.commit()
+
+# ========== Команды ==========
+async def remind_cmd(update, context: ContextTypes.DEFAULT_TYPE):
+    ensure_remind_db()
+    uid = str(update.effective_user.id)
+    lang = user_languages.get(uid, "ru")
+    tdict = _i18n(uid)
+    tz = _user_tz(uid)
+
+    if not context.args:
+        await update.message.reply_text("⏰ " + tdict["create_help"])
+        return
+
+    raw = " ".join(context.args)
+    dt_local = parse_natural_time(raw, lang, tz)
+    if not dt_local:
+        await update.message.reply_text(tdict["not_understood"])
+        return
+
+    dt_local = _apply_quiet_hours(dt_local)
+    dt_utc = dt_local.astimezone(timezone.utc)
+    text = re.sub(r"\s+", " ", raw).strip()
+
+    with remind_db() as db:
+        cur = db.execute(
+            "INSERT INTO reminders (user_id, text, due_utc, tz, status, created_at) VALUES (?, ?, ?, ?, 'scheduled', ?)",
+            (uid, text, _to_epoch(dt_utc), str(tz.key), _to_epoch(_utcnow()))
+        )
+        rem_id = cur.lastrowid
+        db.commit()
+        row = db.execute("SELECT * FROM reminders WHERE id=?;", (rem_id,)).fetchone()
+
+    await _schedule_job_for_reminder(context, row)
+    local_str = _fmt_local(dt_local, lang)
+    await update.message.reply_text(tdict["created"].format(time=local_str, text=text),
+                                    reply_markup=remind_keyboard(rem_id, uid))
+
+async def reminders_list(update, context: ContextTypes.DEFAULT_TYPE):
+    ensure_remind_db()
+    uid = str(update.effective_user.id)
+    tdict = _i18n(uid)
+    tz = _user_tz(uid)
+    with remind_db() as db:
+        rows = db.execute("SELECT * FROM reminders WHERE user_id=? AND status='scheduled' ORDER BY due_utc ASC LIMIT 50;", (uid,)).fetchall()
+    if not rows:
+        await update.message.reply_text(tdict["list_empty"])
+        return
+    lines = []
+    for r in rows:
+        local = _from_epoch(r["due_utc"]).astimezone(tz)
+        lines.append(f"• #{r['id']} — {_fmt_local(local, user_languages.get(uid,'ru'))} — {r['text']}")
+    await update.message.reply_text(tdict["list_title"] + "\n\n" + "\n".join(lines))
+
+# ========== Callbacks (snooze / delete) ==========
+async def remind_callback(update, context: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    if not q or not q.data.startswith("rem:"):
+        return
+    await q.answer()
+    parts = q.data.split(":")
+    action = parts[1]
+    rem_id = int(parts[2])
+
+    with remind_db() as db:
+        row = db.execute("SELECT * FROM reminders WHERE id=?;", (rem_id,)).fetchone()
+        if not row:
+            try:
+                await q.edit_message_text("⚠️ Reminder not found.")
+            except Exception:
+                pass
+            return
+
+        uid = row["user_id"]
+        tz = ZoneInfo(row["tz"])
+        tdict = _i18n(uid)
+
+        if action == "del":
+            db.execute("UPDATE reminders SET status='canceled' WHERE id=?;", (rem_id,))
+            db.commit()
+            try:
+                await q.edit_message_text(tdict["deleted"])
+            except Exception:
+                await context.bot.send_message(chat_id=int(uid), text=tdict["deleted"])
+            return
+
+        if action == "snooze":
+            kind = parts[3]
+            base_local = datetime.now(tz)
+            if kind == "15m":
+                new_local = base_local + timedelta(minutes=15)
+            elif kind == "1h":
+                new_local = base_local + timedelta(hours=1)
+            elif kind == "tomorrow":
+                due_local = _from_epoch(row["due_utc"]).astimezone(tz)
+                hh, mm = due_local.hour, due_local.minute
+                new_local = (base_local + timedelta(days=1)).replace(hour=hh or 9, minute=mm or 0, second=0, microsecond=0)
+            else:
+                new_local = base_local + timedelta(minutes=15)
+
+            new_local = _apply_quiet_hours(new_local)
+            new_utc = new_local.astimezone(timezone.utc)
+            db.execute("UPDATE reminders SET due_utc=?, status='scheduled' WHERE id=?;", (_to_epoch(new_utc), rem_id))
+            db.commit()
+            row = db.execute("SELECT * FROM reminders WHERE id=?;", (rem_id,)).fetchone()
+
+    # пересоздаём джобу
+    await _schedule_job_for_reminder(context, row)
+    loc_str = _fmt_local(_from_epoch(row["due_utc"]).astimezone(ZoneInfo(row["tz"])), user_languages.get(uid,"ru"))
+    try:
+        await q.edit_message_text(REMIND_TEXTS.get(user_languages.get(uid,"ru"), REMIND_TEXTS["ru"])["snoozed"].format(time=loc_str, text=row["text"]),
+                                  reply_markup=remind_keyboard(rem_id, uid))
+    except Exception:
+        await context.bot.send_message(chat_id=int(uid),
+                                       text=_i18n(uid)["snoozed"].format(time=loc_str, text=row["text"]),
+                                       reply_markup=remind_keyboard(rem_id, uid))
+
+# ========== Восстановление задач при старте ==========
+async def restore_reminder_jobs(job_queue):
+    ensure_remind_db()
+    with remind_db() as db:
+        rows = db.execute("SELECT * FROM reminders WHERE status='scheduled';").fetchall()
+    for r in rows:
+        await _schedule_job_on(job_queue, r)
+        
 def _settings_lang_keyboard() -> InlineKeyboardMarkup:
     rows = [
         [("Русский 🇷🇺","setlang_ru"),("Українська 🇺🇦","setlang_uk"),("English 🇬🇧","setlang_en")],
@@ -2806,7 +3150,8 @@ handlers = [
     CommandHandler("task", task),
     CommandHandler("premium_task", premium_task),
     CommandHandler("remind", remind_command),
-
+    CommandHandler("reminders", reminders_list),
+    CallbackQueryHandler(remind_callback, pattern=r"^rem:"),
     # --- Статистика и очки
     CommandHandler("stats", stats_command),
     CommandHandler("mypoints", mypoints_command),
