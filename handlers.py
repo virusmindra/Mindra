@@ -251,6 +251,13 @@ async def set_timezone(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="Markdown"
     )
 
+def _parse_referrer_id(ref_code: str | None) -> str | None:
+    if not ref_code:
+        return None
+    # Поддержим 'ref123', 'ref_123', 'ref-123' и т.п. — просто достанем цифры
+    digits = "".join(ch for ch in ref_code if ch.isdigit())
+    return digits or None
+
 async def tz_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработчик нажатий на инлайн-кнопки tz:..."""
     q = update.callback_query
@@ -271,11 +278,71 @@ async def tz_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_timezones[uid] = tz
     local_str = _format_local_time_now(tz, lang)
-    await q.edit_message_text(
-        t["saved"].format(tz=tz, local_time=local_str),
-        parse_mode="Markdown"
-    )
-    
+    try:
+        await q.edit_message_text(
+            t["saved"].format(tz=tz, local_time=local_str),
+            parse_mode="Markdown"
+        )
+    except Exception:
+        await context.bot.send_message(
+            chat_id=int(uid),
+            text=t["saved"].format(tz=tz, local_time=local_str),
+            parse_mode="Markdown"
+        )
+
+    # === ФИНАЛ ОНБОРДИНГА: делаем только если ещё НЕ выдавали триал ===
+    try:
+        if not got_trial(uid):
+            # 1) Реферал (если в /start был payload)
+            ref_bonus_given = False
+            ref_code = user_ref_args.pop(uid, None)   # ты сохраняешь это в /start
+            referrer_id = _parse_referrer_id(ref_code)
+            if referrer_id and referrer_id != uid:
+                try:
+                    ref_bonus_given = handle_referral(uid, referrer_id)  # твоя функция
+                except Exception as e:
+                    logging.warning(f"handle_referral error: {e}")
+                if ref_bonus_given:
+                    bonus_text = REFERRAL_BONUS_TEXT.get(lang, REFERRAL_BONUS_TEXT["ru"])
+                    await context.bot.send_message(chat_id=int(uid), text=bonus_text, parse_mode="Markdown")
+                    # уведомим пригласившего
+                    try:
+                        await context.bot.send_message(
+                            chat_id=int(referrer_id),
+                            text="🎉 Твой друг зарегистрировался по твоей ссылке! Вам обоим начислено +7 дней Mindra+ 🎉"
+                        )
+                    except Exception as e:
+                        logging.warning(f"referrer notify failed: {e}")
+
+            # 2) Если не реферал — выдаём триал
+            if not ref_bonus_given:
+                try:
+                    trial_given = give_trial_if_needed(uid)  # твоя функция
+                except Exception as e:
+                    logging.warning(f"trial error: {e}")
+                    trial_given = False
+                if trial_given:
+                    trial_info = TRIAL_INFO_TEXT.get(lang, TRIAL_INFO_TEXT["ru"])
+                    await context.bot.send_message(chat_id=int(uid), text=trial_info, parse_mode="Markdown")
+
+            # 3) Инициализируем системный промпт/историю (как у тебя было в language_callback)
+            try:
+                mode = "support"
+                lang_prompt = LANG_PROMPTS.get(lang, LANG_PROMPTS["ru"])
+                mode_prompt = MODES[mode].get(lang, MODES[mode]['ru'])
+                system_prompt = f"{lang_prompt}\n\n{mode_prompt}"
+                conversation_history[uid] = [{"role": "system", "content": system_prompt}]
+                save_history(conversation_history)
+            except Exception as e:
+                logging.warning(f"history init failed: {e}")
+
+            # 4) Welcome в самом конце
+            first_name = q.from_user.first_name or {"ru":"друг","uk":"друже","en":"friend"}.get(lang, "друг")
+            welcome_text = WELCOME_TEXTS.get(lang, WELCOME_TEXTS["ru"]).format(first_name=first_name)
+            await context.bot.send_message(chat_id=int(uid), text=welcome_text, parse_mode="Markdown")
+    except Exception as e:
+        logging.exception(f"onboarding finalize error: {e}")
+
 async def points_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
