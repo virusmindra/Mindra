@@ -55,15 +55,32 @@ def set_premium_until(user_id, until_dt, add_days=False):
     save_stats(stats)
     
 def is_premium(user_id):
+    # админы — всегда премиум
     if str(user_id) in ADMIN_USER_IDS:
         return True
+
     until = get_premium_until(user_id)
-    if until:
+    if not until:
+        return False
+
+    try:
+        u = until.strip()
+        # поддержка ISO с Z: 2025-08-12T10:00:00Z
+        if u.endswith("Z"):
+            u = u[:-1] + "+00:00"
+        dt = datetime.fromisoformat(u)
+        # если без таймзоны — считаем UTC
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt > datetime.now(timezone.utc)
+    except Exception:
+        # запасной план: epoch-секунды строкой
         try:
-            return datetime.fromisoformat(until) > datetime.utcnow()
-        except:
+            ts = int(until)
+            return datetime.fromtimestamp(ts, tz=timezone.utc) > datetime.now(timezone.utc)
+        except Exception:
+            logging.warning("Bad premium_until for %s: %r", user_id, until)
             return False
-    return False
 
 def got_trial(user_id):
     stats = load_stats()
