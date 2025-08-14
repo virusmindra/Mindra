@@ -387,7 +387,7 @@ async def remind_command(update, context: ContextTypes.DEFAULT_TYPE):
     raw = " ".join(context.args).strip()
 
     # БЕСПЛАТНЫЙ ЛИМИТ: 1 активное напоминание
-    if not _is_premium(uid):
+    if not is_premium(uid):
         with remind_db() as db:
             cnt = db.execute(
                 "SELECT COUNT(*) AS c FROM reminders WHERE user_id=? AND status='scheduled';",
