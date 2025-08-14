@@ -147,6 +147,100 @@ SUPPORT_TIME_START = IDLE_TIME_START   # 10
 SUPPORT_TIME_END = IDLE_TIME_END       # 22
 
 
+
+def _settings_lang_keyboard() -> InlineKeyboardMarkup:
+    rows = [
+        [("Русский 🇷🇺","setlang_ru"),("Українська 🇺🇦","setlang_uk"),("English 🇬🇧","setlang_en")],
+        [("Moldovenească 🇲🇩","setlang_md"),("Беларуская 🇧🇾","setlang_be"),("Қазақша 🇰🇿","setlang_kk")],
+        [("Кыргызча 🇰🇬","setlang_kg"),("Հայերեն 🇦🇲","setlang_hy"),("ქართული 🇬🇪","setlang_ka")],
+        [("Нохчийн мотт 🇷🇺","setlang_ce")],
+    ]
+    return InlineKeyboardMarkup([[InlineKeyboardButton(t, callback_data=cb) for t, cb in row] for row in rows])
+
+# Если у тебя уже есть TZ_KEYBOARD_ROWS и _tz_keyboard(), лучше сделать префиксную версию,
+# чтобы не пересекаться с твоим онбордингом (где используется "tz:")
+def _tz_keyboard_with_prefix(prefix: str = "settz") -> InlineKeyboardMarkup:
+    # Требуются твои TZ_KEYBOARD_ROWS: [[("🇺🇦 Kyiv","Europe/Kyiv"), ...], ...]
+    try:
+        rows = [
+            [InlineKeyboardButton(text, callback_data=f"{prefix}:{code}") for (text, code) in row]
+            for row in TZ_KEYBOARD_ROWS
+        ]
+        return InlineKeyboardMarkup(rows)
+    except NameError:
+        # fallback: простая клавиатура
+        fallback = [
+            [("🇺🇦 Kyiv","Europe/Kyiv"),("🇷🇺 Moscow","Europe/Moscow")],
+            [("🇺🇸 New York","America/New_York"),("🇺🇸 Los Angeles","America/Los_Angeles")],
+            [("🌐 UTC","UTC")],
+        ]
+        return InlineKeyboardMarkup([[InlineKeyboardButton(t, callback_data=f"{prefix}:{c}") for t,c in r] for r in fallback])
+
+def _get_lang(uid: str) -> str:
+    return user_languages.get(uid, "ru")
+
+def _format_local_time_now(tz_name: str, lang: str) -> str:
+    now_local = datetime.now(ZoneInfo(tz_name))
+    return now_local.strftime("%-I:%M %p, %Y-%m-%d") if lang == "en" else now_local.strftime("%H:%M, %Y-%m-%d")
+
+# /settings — шаг 1: выбрать язык
+async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    lang = _get_lang(uid)
+    t = SETTINGS_TEXTS.get(lang, SETTINGS_TEXTS["ru"])
+    await update.message.reply_text(t["choose_lang"], reply_markup=_settings_lang_keyboard())
+
+# settings: язык выбран → шаг 2: показать клавиатуру TZ с другим префиксом
+async def settings_language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    if not q or not q.data.startswith("setlang_"):
+        return
+    await q.answer()
+
+    uid = str(q.from_user.id)
+    lang = q.data.split("_", 1)[1]
+    valid = {"ru","uk","md","be","kk","kg","hy","ka","ce","en"}
+    if lang not in valid:
+        lang = "ru"
+    user_languages[uid] = lang
+    logging.info(f"⚙️ /settings: set language {uid} -> {lang}")
+
+    t = SETTINGS_TEXTS.get(lang, SETTINGS_TEXTS["ru"])
+    # Переходим к выбору TZ (префикс settz)
+    try:
+        await q.edit_message_text(t["choose_tz"], reply_markup=_tz_keyboard_with_prefix("settz"))
+    except Exception:
+        await context.bot.send_message(chat_id=int(uid), text=t["choose_tz"], reply_markup=_tz_keyboard_with_prefix("settz"))
+
+# settings: выбран TZ → применяем и показываем «готово»
+async def settings_tz_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    if not q or not q.data.startswith("settz:"):
+        return
+    await q.answer()
+
+    uid = str(q.from_user.id)
+    lang = _get_lang(uid)
+    t = SETTINGS_TEXTS.get(lang, SETTINGS_TEXTS["ru"])
+
+    tz = q.data.split(":", 1)[1]
+    try:
+        _ = ZoneInfo(tz)
+    except Exception:
+        # если пришло что-то странное — оставим прежний или дефолт
+        tz = user_timezones.get(uid, "Europe/Kyiv")
+
+    user_timezones[uid] = tz
+
+    # Резюме
+    lang_name = t["lang_name"].get(lang, "Русский")
+    local_str = _format_local_time_now(tz, lang)
+    text_done = t["done"].format(lang_name=lang_name, tz=tz, local_time=local_str)
+
+    try:
+        await q.edit_message_text(text_done, parse_mode="Markdown")
+    except Exception:
+        await context.bot.send_message(chat_id=int(uid), text=text_done, parse_mode="Markdown")
 def _now_utc() -> datetime:
     return datetime.now(timezone.utc)
 
@@ -2686,7 +2780,10 @@ handlers = [
     # --- Язык
     CommandHandler("language", language_command),
     CallbackQueryHandler(language_callback, pattern="^lang_"),
-
+    CommandHandler("settings", settings_command),
+    CallbackQueryHandler(settings_language_callback, pattern=r"^setlang_"),
+    CallbackQueryHandler(settings_tz_callback, pattern=r"^settz:"),
+    
     # --- Цели и привычки
     CommandHandler("goal", goal),
     CommandHandler("goals", show_goals),
