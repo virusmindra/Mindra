@@ -3088,7 +3088,6 @@ handlers = [
     CallbackQueryHandler(delete_habit_confirm_handler, pattern="^delete_habit_\\d+$"),
     # --- Работа с задачами
     CommandHandler("task", task),
-    CommandHandler("premium_task", premium_task),
     CommandHandler("remind", remind_command),
     CommandHandler("reminders", reminders_list),
     CallbackQueryHandler(remind_callback, pattern=r"^rem:"),
@@ -3097,14 +3096,10 @@ handlers = [
     CommandHandler("stats", stats_command),
     CommandHandler("mypoints", mypoints_command),
     CommandHandler("mystats", my_stats_command),
-    CommandHandler("premium_stats", premium_stats),
+    
 
     # --- Премиум и челленджи
-    CommandHandler("premium_report", premium_report),
-    CommandHandler("premium_challenge", premium_challenge),
-    CommandHandler("premium_mode", premium_mode),
-    CallbackQueryHandler(premium_mode_callback, pattern="^premium_mode_"),
-    CommandHandler("premium_days", premium_days),
+    
 
     # --- Разное
     CommandHandler("timezone", set_timezone),
