@@ -81,6 +81,9 @@ async def error_handler(update, context):
 async def main():
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
+    # ✅ гарантируем схему БД напоминаний до старта
+    ensure_remind_db()
+
     # 👉 Сначала текст
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
 
@@ -117,20 +120,20 @@ async def main():
     app.job_queue.run_repeating(
         send_random_support,
         interval=timedelta(hours=4),
-        first=timedelta(minutes=5),  # начнём через 5 минут после запуска
+        first=timedelta(minutes=5),
         name="support_messages"
     )
 
     app.job_queue.run_repeating(
         send_random_poll,
-        interval=timedelta(days=2),  # каждые 2 дня
+        interval=timedelta(days=2),
         first=datetime.now(pytz.timezone("Europe/Kiev")).replace(hour=12, minute=0, second=0, microsecond=0).astimezone(pytz.utc)
     )
 
     app.job_queue.run_daily(
         send_weekly_report,
         time=time(hour=14, minute=0, tzinfo=pytz.timezone("Europe/Kiev")),
-        days=(6,),  # 6 = воскресенье (0 = понедельник)
+        days=(6,),  # 6 = воскресенье
         name="weekly_report"
     )
 
@@ -145,8 +148,12 @@ async def main():
         name="daily_reminder"
     )
 
+    # 🔁 восстановить все отложенные напоминания из БД
+    await restore_reminder_jobs(app.job_queue)
+
     logging.info("🤖 Бот запущен!")
     await app.run_polling()
+
 
 if __name__ == "__main__":
     import nest_asyncio
