@@ -307,6 +307,7 @@ REMIND_TEXTS = {
         "btn_plus1h":  "🕐 +1ч",
         "btn_tomorrow":"🌅 Завтра",
         "btn_delete":  "🗑 Удалить",
+        "btn_new": "➕ Добавить",
     },
     "uk": {
         "limit": "🔔 У безкоштовній версії можна встановити лише 1 активне нагадування.\n\n✨ Оформи Mindra+, щоб мати необмежені нагадування 💜",
@@ -325,6 +326,7 @@ REMIND_TEXTS = {
         "btn_plus1h":  "🕐 +1год",
         "btn_tomorrow":"🌅 Завтра",
         "btn_delete":  "🗑 Видалити",
+        "btn_new": "➕ Додати",
     },
     "md": {
         "limit": "🔔 În versiunea gratuită poți seta doar 1 memento activ.\n\n✨ Activează Mindra+ pentru mementouri nelimitate 💜",
@@ -343,6 +345,7 @@ REMIND_TEXTS = {
         "btn_plus1h":  "🕐 +1h",
         "btn_tomorrow":"🌅 Mâine",
         "btn_delete":  "🗑 Șterge",
+        "btn_new": "➕ Nou",
     },
     "be": {
         "limit": "🔔 У бясплатнай версіі можна ўсталяваць толькі 1 актыўнае напамінанне.\n\n✨ Аформі Mindra+, каб мець неабмежаваную колькасць напамінанняў 💜",
@@ -361,6 +364,7 @@ REMIND_TEXTS = {
         "btn_plus1h":  "🕐 +1г",
         "btn_tomorrow":"🌅 Заўтра",
         "btn_delete":  "🗑 Выдаліць",
+        "btn_new": "➕ Дадаць",
     },
     "kk": {
         "limit": "🔔 Тегін нұсқада тек 1 белсенді еске салу орнатуға болады.\n\n✨ Mindra+ арқылы шексіз еске салулар орнатыңыз 💜",
@@ -379,6 +383,7 @@ REMIND_TEXTS = {
         "btn_plus1h":  "🕐 +1с",
         "btn_tomorrow":"🌅 Ертең",
         "btn_delete":  "🗑 Өшіру",
+        "btn_new": "➕ Қосу",
     },
     "kg": {
         "limit": "🔔 Акысыз версияда бир эле эскертме коюуга болот.\n\n✨ Mindra+ менен чексиз эскертмелерди коюңуз 💜",
@@ -397,6 +402,7 @@ REMIND_TEXTS = {
         "btn_plus1h":  "🕐 +1с",
         "btn_tomorrow":"🌅 Эртең",
         "btn_delete":  "🗑 Өчүрүү",
+        "btn_new": "➕ Кошуу",
     },
     "hy": {
         "limit": "🔔 Անվճար տարբերակում կարելի է ավելացնել միայն 1 ակտիվ հիշեցում։\n\n✨ Միացրու Mindra+, որ ունենաս անսահման հիշեցումներ 💜",
@@ -415,6 +421,7 @@ REMIND_TEXTS = {
         "btn_plus1h":  "🕐 +1ժ",
         "btn_tomorrow":"🌅 Վաղը",
         "btn_delete":  "🗑 Ջնջել",
+        "btn_new": "➕ Նոր հիշեցում",
     },
     "ka": {
         "limit": "🔔 უფასო ვერსიაში შეგიძლიათ დააყენოთ მხოლოდ 1 აქტიური შეხსენება.\n\n✨ გაააქტიურეთ Mindra+ ულიმიტო შეხსენებისთვის 💜",
@@ -433,6 +440,7 @@ REMIND_TEXTS = {
         "btn_plus1h":  "🕐 +1სთ",
         "btn_tomorrow":"🌅 ხვალ",
         "btn_delete":  "🗑 წაშლა",
+        "btn_new": "➕ დამატება",
     },
     "ce": {
         "limit": "🔔 Аьтто версия хийцна, цхьаьнан 1 активан напоминание ца хилла цуьнан.\n\n✨ Mindra+ хийцар, цуьнан цуьнан цхьаьнан напоминаний хилла 💜",
@@ -451,6 +459,7 @@ REMIND_TEXTS = {
         "btn_plus1h":  "🕐 +1с",
         "btn_tomorrow":"🌅 Кхеза",
         "btn_delete":  "🗑 ДIадайе",
+        "btn_new": "➕ Керла",
     },
     "en": {
         "limit": "🔔 In the free version, you can set only 1 active reminder.\n\n✨ Get Mindra+ for unlimited reminders 💜",
@@ -469,6 +478,7 @@ REMIND_TEXTS = {
         "btn_plus1h":  "🕐 +1h",
         "btn_tomorrow":"🌅 Tomorrow",
         "btn_delete":  "🗑 Delete",
+        "btn_new": "➕ New",
     },
 }
 
