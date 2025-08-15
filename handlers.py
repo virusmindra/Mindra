@@ -160,6 +160,17 @@ def _i18n(uid: str) -> dict:
     return REMIND_TEXTS.get(user_languages.get(uid, "ru"), REMIND_TEXTS["ru"])
 
 # ========== DB ==========
+
+async def reminders_menu_cmd(update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    t = _i18n(uid)
+    kb = InlineKeyboardMarkup([
+        [InlineKeyboardButton(t["btn_add_rem"],  callback_data="rem:new")],
+        [InlineKeyboardButton(t["btn_list_rem"], callback_data="rem:list")],
+    ])
+    # Покажем компактный заголовок-меню
+    await update.message.reply_text(t["menu_title"], reply_markup=kb)
+    
 def remind_db() -> sqlite3.Connection:
     conn = sqlite3.connect(REMIND_DB_PATH)
     conn.row_factory = sqlite3.Row
