@@ -516,6 +516,38 @@ async def remind_callback(update, context: ContextTypes.DEFAULT_TYPE):
             pass
         return
 
+    if action == "list":
+        uid = str(q.from_user.id)
+        tdict = _i18n(uid)
+        tz_user = _user_tz(uid)
+
+        with remind_db() as db:
+            rows = db.execute(
+                "SELECT * FROM reminders WHERE user_id=? AND status='scheduled' ORDER BY due_utc ASC LIMIT 50;",
+                (uid,)
+            ).fetchall()
+
+        if not rows:
+            kb = InlineKeyboardMarkup([[InlineKeyboardButton(tdict["btn_add_rem"], callback_data="rem:new")]])
+            await q.edit_message_text(tdict["list_empty"], reply_markup=kb)
+            return
+
+        # Сформируем текст и кнопки удаления
+        lines, kb_rows = [], []
+        u_lang = user_languages.get(uid, "ru")
+        for r in rows:
+            local = _from_epoch(r["due_utc"]).astimezone(tz_user)
+            lines.append(f"• #{r['id']} — {_fmt_local(local, u_lang)} — {r['text']}")
+            kb_rows.append([InlineKeyboardButton(f"{tdict['btn_delete']} #{r['id']}", callback_data=f"rem:del:{r['id']}")])
+        # Внизу – кнопка «Добавить»
+        kb_rows.append([InlineKeyboardButton(tdict["btn_add_rem"], callback_data="rem:new")])
+
+        await q.edit_message_text(
+            tdict["list_title"] + "\n\n" + "\n".join(lines),
+            reply_markup=InlineKeyboardMarkup(kb_rows)
+        )
+        return
+
     # дальше нужны rem_id
     if len(parts) < 3 or not parts[2].isdigit():
         return
