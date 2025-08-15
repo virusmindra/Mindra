@@ -2710,35 +2710,6 @@ async def mypoints_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="Markdown"
     )
 
-def get_premium_stats(user_id: str):
-    stats = get_user_stats(user_id)
-    return {
-        "completed_goals": stats.get("completed_goals", stats.get("goals_completed", 0)),  # поддержка старых и новых ключей
-        "habits_tracked": stats.get("habits", stats.get("total_habits", 0)),              # поддержка старых и новых ключей
-        "days_active": stats.get("days_active", 0),
-        "mood_entries": stats.get("mood_entries", 0)
-    }
-
-
-
-async def premium_mode_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    user_id = str(query.from_user.id)
-
-    lang = user_languages.get(user_id, "ru")
-    # Ограничение по подписке
-    if not (is_premium(user_id) or user_id == OWNER_ID):
-        await query.edit_message_text(LOCKED_MSGS.get(lang, LOCKED_MSGS["ru"]))
-        return
-    
-    data = query.data
-    if data == "premium_mode_coach":
-        user_modes[user_id] = "coach"
-        await query.edit_message_text(MSGS["coach"].get(lang, MSGS["coach"]["ru"]), parse_mode="Markdown")
-    elif data == "premium_mode_flirt":
-        user_modes[user_id] = "flirt"
-        await query.edit_message_text(MSGS["flirt"].get(lang, MSGS["flirt"]["ru"]), parse_mode="Markdown")
 
 async def send_weekly_report(context: ContextTypes.DEFAULT_TYPE):
     # фильтр по Киеву
