@@ -84,6 +84,9 @@ async def main():
     # ✅ гарантируем схему БД напоминаний до старта
     ensure_remind_db()
 
+    # после сборки app:
+    ensure_premium_db()
+
     # 👉 Сначала текст
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
 
