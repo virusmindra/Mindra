@@ -64,6 +64,8 @@ from handlers import (
     DAILY_TASKS_BY_LANG,
     IDLE_MESSAGES,
     POLL_MESSAGES_BY_LANG,
+    ensure_remind_db, 
+    restore_reminder_jobs
 )
 from config import TELEGRAM_BOT_TOKEN
 
