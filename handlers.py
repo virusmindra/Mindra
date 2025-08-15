@@ -219,6 +219,154 @@ async def tracker_menu_cmd(update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=_gh_menu_keyboard(t)
     )
 
+# /premium — апселл/статус
+async def premium_cmd(update, context):
+    uid = str(update.effective_user.id)
+    t = _p_i18n(uid)
+    if is_premium(uid):
+        # посчитаем дни
+        until = get_premium_until(uid)
+        days = 0
+        if until:
+            try:
+                u = until.strip()
+                if u.endswith("Z"): u = u[:-1] + "+00:00"
+                dt = datetime.fromisoformat(u)
+                if dt.tzinfo is None: dt = dt.replace(tzinfo=timezone.utc)
+                days = max(0, (dt - datetime.now(timezone.utc)).days)
+            except Exception:
+                pass
+        await update.message.reply_text(t["days_left"].format(days=days), parse_mode="Markdown")
+    else:
+        await update.message.reply_text(f"*{t['upsell_title']}*\n\n{t['upsell_body']}",
+                                        reply_markup=_premium_kb(uid), parse_mode="Markdown")
+
+# /premium_report — отчёт 7д
+@require_premium
+async def premium_report_cmd(update, context):
+    uid = str(update.effective_user.id)
+    t = _p_i18n(uid)
+    # цели: просто считаем done
+    try:
+        goals = get_goals(uid)
+        goals_done = sum(1 for g in goals if isinstance(g, dict) and g.get("done"))
+    except Exception:
+        goals_done = 0
+    # привычки: сколько отметок (если нет дат — берём количество записей)
+    try:
+        habits = get_habits(uid)
+        habits_marked = len(habits)
+    except Exception:
+        habits_marked = 0
+    # напоминания: fired за 7д (если нет статусов — 0)
+    rems_7 = 0
+    try:
+        with remind_db() as db:
+            since = _to_epoch(datetime.now(timezone.utc) - timedelta(days=7))
+            rems_7 = db.execute(
+                "SELECT COUNT(*) FROM reminders WHERE user_id=? AND status='fired' AND due_utc>=?;",
+                (uid, since)
+            ).fetchone()[0]
+    except Exception:
+        pass
+    # активные дни — грубая метрика: дни с любой активностью (по last_seen логике не считаем, просто ~мин)
+    active_30 = 0
+    try:
+        # если есть user_message_count или логи — подставь. Иначе ноль.
+        active_30 = 0
+    except Exception:
+        pass
+
+    text = (
+        f"*{t['report_title']}*\n\n"
+        f"{t['report_goals'].format(n=goals_done)}\n"
+        f"{t['report_habits'].format(n=habits_marked)}\n"
+        f"{t['report_rems'].format(n=rems_7)}\n"
+        f"{t['report_streak'].format(n=active_30)}"
+    )
+    await update.message.reply_text(text, parse_mode="Markdown")
+
+# /premium_challenge — показать/создать челлендж недели
+@require_premium
+async def premium_challenge_cmd(update, context):
+    ensure_premium_db()
+    uid = str(update.effective_user.id)
+    lang = user_languages.get(uid, "ru")
+    t = _p_i18n(uid)
+
+    # неделя по локальному времени пользователя
+    tz = _user_tz(uid)
+    week_iso = _week_start_iso(datetime.now(tz))
+
+    with sqlite3.connect("mindra.db") as db:
+        db.row_factory = sqlite3.Row
+        row = db.execute("SELECT * FROM premium_challenges WHERE user_id=? AND week_start=?;",
+                         (uid, week_iso)).fetchone()
+        if not row:
+            # создаём челлендж
+            text = random.choice(CHALLENGE_BANK.get(lang, CHALLENGE_BANK["ru"]))
+            db.execute("INSERT INTO premium_challenges (user_id, week_start, text, done, created_at) "
+                       "VALUES (?, ?, ?, 0, ?);",
+                       (uid, week_iso, text, _to_epoch(_utcnow())))
+            db.commit()
+            row = db.execute("SELECT * FROM premium_challenges WHERE user_id=? AND week_start=?;",
+                             (uid, week_iso)).fetchone()
+
+    kb = InlineKeyboardMarkup([
+        [InlineKeyboardButton(t["btn_done"], callback_data=f"pch:done:{row['id']}")],
+        [InlineKeyboardButton(t["btn_new"],  callback_data="pch:new")],
+    ])
+    await update.message.reply_text(
+        f"*{t['challenge_title']}*\n\n{t['challenge_cta'].format(text=row['text'])}",
+        parse_mode="Markdown", reply_markup=kb
+    )
+
+# /premium_mode — включает эксклюзивный промпт
+@require_premium
+async def premium_mode_cmd(update, context):
+    uid = str(update.effective_user.id)
+    t = _p_i18n(uid)
+    lang_code = user_languages.get(uid, "ru")
+
+    # минимальный системный промпт для премиум-коуча
+    coach_prompt = {
+        "ru": "Ты — Mindra+ коуч. Кратко, по делу, с поддержкой, с фокусом на прогресс и привычки.",
+        "uk": "Ти — Mindra+ коуч. Коротко, по суті, з підтримкою та фокусом на прогрес.",
+        "en": "You are a Mindra+ coach. Be concise, supportive, progress-oriented.",
+    }.get(lang_code, "Ты — Mindra+ коуч.")
+    conversation_history[uid] = [{"role": "system", "content": coach_prompt}]
+    save_history(conversation_history)
+
+    await update.message.reply_text(f"*{t['mode_title']}*\n\n{t['mode_set']}", parse_mode="Markdown")
+
+# /premium_stats — расширенная статистика
+@require_premium
+async def premium_stats_cmd(update, context):
+    uid = str(update.effective_user.id)
+    t = _p_i18n(uid)
+
+    # простые агрегаты
+    try:
+        goals = get_goals(uid)
+        total_goals_done = sum(1 for g in goals if isinstance(g, dict) and g.get("done"))
+    except Exception:
+        total_goals_done = 0
+    try:
+        habits = get_habits(uid)
+        habit_days = len(habits)
+    except Exception:
+        habit_days = 0
+
+    active_30 = 0  # при желании сюда можно подвести real metric
+
+    text = (
+        f"*{t['stats_title']}*\n\n"
+        f"{t['stats_goals_done'].format(n=total_goals_done)}\n"
+        f"{t['stats_habit_days'].format(n=habit_days)}\n"
+        f"{t['stats_active_days'].format(n=active_30)}"
+    )
+    await update.message.reply_text(text, parse_mode="Markdown")
+
 async def gh_callback(update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     if not q or not q.data or not q.data.startswith("gh:"):
