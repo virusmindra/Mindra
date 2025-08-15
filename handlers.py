@@ -165,6 +165,58 @@ def _gh_i18n(uid: str) -> dict:
 def _p_i18n(uid: str) -> dict:
     return P_TEXTS.get(user_languages.get(uid, "ru"), P_TEXTS["ru"])
 
+async def plus_callback(update, context):
+    q = update.callback_query
+    if not q or not q.data.startswith("plus:"):
+        return
+    await q.answer()
+    uid = str(q.from_user.id)
+    t = _p_i18n(uid)
+    action = q.data.split(":",1)[1]
+    if action == "buy":
+        await q.edit_message_text(f"*{t['upsell_title']}*\n\n{t['upsell_body']}\n\n(Покупка через Telegram Payments — скоро)",
+                                  parse_mode="Markdown")
+    elif action == "code":
+        await q.edit_message_text("🔑 Введи код в формате: `/redeem ABCDEF`", parse_mode="Markdown")
+
+async def premium_challenge_callback(update, context):
+    q = update.callback_query
+    if not q or not q.data.startswith("pch:"):
+        return
+    await q.answer()
+    uid = str(q.from_user.id)
+    t = _p_i18n(uid)
+    parts = q.data.split(":")
+    action = parts[1]
+
+    ensure_premium_db()
+
+    if action == "new":
+        # принудительно выдаём новый текст на текущую неделю (переписываем)
+        tz = _user_tz(uid)
+        week_iso = _week_start_iso(datetime.now(tz))
+        lang = user_languages.get(uid, "ru")
+        new_text = random.choice(CHALLENGE_BANK.get(lang, CHALLENGE_BANK["ru"]))
+        with sqlite3.connect("mindra.db") as db:
+            db.execute("UPDATE premium_challenges SET text=?, done=0 WHERE user_id=? AND week_start=?;",
+                       (new_text, uid, week_iso))
+            db.commit()
+        await q.edit_message_text(f"*{t['challenge_title']}*\n\n{t['challenge_cta'].format(text=new_text)}",
+                                  parse_mode="Markdown",
+                                  reply_markup=InlineKeyboardMarkup([
+                                      [InlineKeyboardButton(t["btn_done"], callback_data=f"pch:done:0")],
+                                      [InlineKeyboardButton(t["btn_new"],  callback_data="pch:new")],
+                                  ]))
+        return
+
+    if action == "done" and len(parts) >= 3:
+        # отметим выполненным любую текущую запись пользователя
+        with sqlite3.connect("mindra.db") as db:
+            db.execute("UPDATE premium_challenges SET done=1 WHERE user_id=?;",
+                       (uid,))
+            db.commit()
+        await q.edit_message_text(t["challenge_done"])
+        return
 
 def ensure_premium_db():
     with sqlite3.connect("mindra.db") as db:
