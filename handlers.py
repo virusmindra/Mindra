@@ -447,19 +447,40 @@ async def remind_command(update, context: ContextTypes.DEFAULT_TYPE):
 async def reminders_list(update, context: ContextTypes.DEFAULT_TYPE):
     ensure_remind_db()
     uid = str(update.effective_user.id)
-    tdict = _i18n(uid)
+    t = _i18n(uid)
     tz = _user_tz(uid)
+
     with remind_db() as db:
-        rows = db.execute("SELECT * FROM reminders WHERE user_id=? AND status='scheduled' ORDER BY due_utc ASC LIMIT 50;", (uid,)).fetchall()
+        rows = db.execute(
+            "SELECT * FROM reminders WHERE user_id=? AND status='scheduled' ORDER BY due_utc ASC LIMIT 50;",
+            (uid,)
+        ).fetchall()
+
+    # Если нет напоминаний — покажем кнопку "Добавить"
     if not rows:
-        await update.message.reply_text(tdict["list_empty"])
+        kb = InlineKeyboardMarkup([[InlineKeyboardButton(t["btn_new"], callback_data="rem:new")]])
+        await update.message.reply_text(t["list_empty"], reply_markup=kb)
         return
+
+    # Текст-список
     lines = []
     for r in rows:
         local = _from_epoch(r["due_utc"]).astimezone(tz)
         lines.append(f"• #{r['id']} — {_fmt_local(local, user_languages.get(uid,'ru'))} — {r['text']}")
-    await update.message.reply_text(tdict["list_title"] + "\n\n" + "\n".join(lines))
 
+    # Клавиатура: по строке «Удалить #id» на каждый пункт + внизу «Добавить»
+    kb_rows = []
+    for r in rows:
+        kb_rows.append([
+            InlineKeyboardButton(f"{t['btn_delete']} #{r['id']}", callback_data=f"rem:del:{r['id']}")
+        ])
+    kb_rows.append([InlineKeyboardButton(t["btn_new"], callback_data="rem:new")])
+
+    await update.message.reply_text(
+        t["list_title"] + "\n\n" + "\n".join(lines),
+        reply_markup=InlineKeyboardMarkup(kb_rows)
+    )
+    
 # ========== Callbacks (snooze / delete) ==========
 async def remind_callback(update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
