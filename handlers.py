@@ -87,7 +87,8 @@ from texts import (
     POINTS_HELP_TEXTS,
     TIMEZONE_ALIASES,
     TZ_KEYBOARD_ROWS,
-    TZ_TEXTS
+    TZ_TEXTS,
+    P_TEXTS
 )
 from datetime import datetime, timedelta, timezone, date
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
@@ -160,6 +161,9 @@ QUIET_END   = 9   # до 09:00
 def _gh_i18n(uid: str) -> dict:
     return GH_TEXTS.get(user_languages.get(uid, "ru"), GH_TEXTS["ru"])
 
+def _p_i18n(uid: str) -> dict:
+    return P_TEXTS.get(user_languages.get(uid, "ru"), P_TEXTS["ru"])
+    
 def _gh_menu_keyboard(t: dict) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup([
         [InlineKeyboardButton(t["btn_add_goal"],   callback_data="gh:new_goal")],
