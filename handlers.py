@@ -3099,8 +3099,14 @@ handlers = [
     
 
     # --- Премиум и челленджи
+    CallbackQueryHandler(premium_challenge_callback, pattern=r"^pch:"),
+    CallbackQueryHandler(plus_callback, pattern=r"^plus:"),
+    CommandHandler("premium_stats", premium_stats_cmd),
+    CommandHandler("premium_mode", premium_mode_cmd),
+    CommandHandler("premium", premium_cmd),
+    CommandHandler("premium_report", premium_report_cmd),
+    CommandHandler("premium_challenge", premium_challenge_cmd),
     
-
     # --- Разное
     CommandHandler("timezone", set_timezone),
     CommandHandler("feedback", feedback),
