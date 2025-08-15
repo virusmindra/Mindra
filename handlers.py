@@ -16,6 +16,7 @@ import shutil
 from collections import defaultdict
 from texts import (
     VOICE_TEXTS_BY_LANG,
+    GH_TEXTS,
     SETTINGS_TEXTS,
     REMIND_TEXTS,
     LOCKED_MSGS,
@@ -155,6 +156,106 @@ REMIND_DB_PATH = os.getenv("REMIND_DB_PATH", "reminders.sqlite3")
 # Тихие часы по локальному времени пользователя
 QUIET_START = 22  # не тревожить с 22:00
 QUIET_END   = 9   # до 09:00
+
+def _gh_i18n(uid: str) -> dict:
+    return GH_TEXTS.get(user_languages.get(uid, "ru"), GH_TEXTS["ru"])
+
+def _gh_menu_keyboard(t: dict) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton(t["btn_add_goal"],   callback_data="gh:new_goal")],
+        [InlineKeyboardButton(t["btn_list_goals"], callback_data="gh:list_goals")],
+        [InlineKeyboardButton(t["btn_add_habit"],  callback_data="gh:new_habit")],
+        [InlineKeyboardButton(t["btn_list_habits"],callback_data="gh:list_habits")],
+    ])
+
+async def tracker_menu_cmd(update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    t = _gh_i18n(uid)
+    await update.message.reply_text(
+        t["menu_title"],
+        reply_markup=_gh_menu_keyboard(t)
+    )
+
+async def gh_callback(update, context: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    if not q or not q.data or not q.data.startswith("gh:"):
+        return
+    await q.answer()
+
+    uid = str(q.from_user.id)
+    t = _gh_i18n(uid)
+    action = q.data.split(":", 1)[1]
+
+    # Вернуть меню
+    if action == "menu":
+        try:
+            await q.edit_message_text(t["menu_title"], reply_markup=_gh_menu_keyboard(t))
+        except Exception:
+            await context.bot.send_message(chat_id=int(uid), text=t["menu_title"], reply_markup=_gh_menu_keyboard(t))
+        return
+
+    # Создание: просто показываем подсказку (как мы делали для reminders)
+    if action == "new_goal":
+        await context.bot.send_message(chat_id=int(uid), text=t["goal_usage"], parse_mode="Markdown")
+        return
+    if action == "new_habit":
+        await context.bot.send_message(chat_id=int(uid), text=t["habit_usage"], parse_mode="Markdown")
+        return
+
+    # Списки: берём данные напрямую
+    if action == "list_goals":
+        try:
+            goals = get_goals(uid)  # уже есть в твоём коде
+        except Exception:
+            goals = []
+        if not goals:
+            kb = InlineKeyboardMarkup([[InlineKeyboardButton(t["btn_add_goal"], callback_data="gh:new_goal")],
+                                       [InlineKeyboardButton(t["back"], callback_data="gh:menu")]])
+            await q.edit_message_text(t["goals_empty"], reply_markup=kb)
+            return
+
+        lines = []
+        # аккуратно достаём поля
+        for i, g in enumerate(goals, 1):
+            title = g.get("title") or g.get("name") or g.get("text") or str(g)
+            title = str(title).strip()
+            done = g.get("done")
+            mark = "✅" if done else "▫️"
+            lines.append(f"{mark} {i}. {title}")
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton(t["btn_add_goal"], callback_data="gh:new_goal")],
+            [InlineKeyboardButton(t["back"], callback_data="gh:menu")],
+        ])
+        await q.edit_message_text(t["goals_title"] + "\n\n" + "\n".join(lines), reply_markup=kb)
+        return
+
+    if action == "list_habits":
+        try:
+            habits = get_habits(uid)  # уже есть в твоём коде
+        except Exception:
+            habits = []
+        if not habits:
+            kb = InlineKeyboardMarkup([[InlineKeyboardButton(t["btn_add_habit"], callback_data="gh:new_habit")],
+                                       [InlineKeyboardButton(t["back"], callback_data="gh:menu")]])
+            await q.edit_message_text(t["habits_empty"], reply_markup=kb)
+            return
+
+        lines = []
+        for i, h in enumerate(habits, 1):
+            name = (isinstance(h, dict) and (h.get("name") or h.get("title") or h.get("text"))) or str(h)
+            name = str(name).strip()
+            # если у привычки есть «done» за сегодня — поставим галочку
+            done = isinstance(h, dict) and h.get("done")
+            mark = "✅" if done else "▫️"
+            lines.append(f"{mark} {i}. {name}")
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton(t["btn_add_habit"], callback_data="gh:new_habit")],
+            [InlineKeyboardButton(t["back"], callback_data="gh:menu")],
+        ])
+        await q.edit_message_text(t["habits_title"] + "\n\n" + "\n".join(lines), reply_markup=kb)
+        return
+
+
 
 def _i18n(uid: str) -> dict:
     return REMIND_TEXTS.get(user_languages.get(uid, "ru"), REMIND_TEXTS["ru"])
@@ -3250,8 +3351,9 @@ handlers = [
     CommandHandler("habit", habit),
     CommandHandler("habits", habits_list),
     CommandHandler("delete", delete_goal_command),
+    CommandHandler("tracker_menu", tracker_menu_cmd),
+    CallbackQueryHandler(gh_callback, pattern=r"^gh:"),
 
-    # --- Кнопки целей/привычек
     # Для показа списка целей и кнопок "Добавить/Удалить"
     CallbackQueryHandler(show_goals, pattern="^show_goals$"),
     CallbackQueryHandler(goal, pattern="^create_goal$"),
