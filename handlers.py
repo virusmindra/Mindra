@@ -493,7 +493,11 @@ async def reminders_list(update, context: ContextTypes.DEFAULT_TYPE):
     )
     
 # ========== Callbacks (snooze / delete) ==========
+
 async def remind_callback(update, context: ContextTypes.DEFAULT_TYPE):
+    # ✅ гарантируем схему БД перед любыми SELECT/UPDATE
+    ensure_remind_db()
+
     q = update.callback_query
     if not q or not q.data or not q.data.startswith("rem:"):
         return
@@ -502,44 +506,50 @@ async def remind_callback(update, context: ContextTypes.DEFAULT_TYPE):
     parts = q.data.split(":")
     action = parts[1] if len(parts) > 1 else None
 
-    # 👉 Новый кейс: попросить пользователя создать напоминание
+    # ---- Меню: Создать новое напоминание
     if action == "new":
         uid = str(q.from_user.id)
         t = _i18n(uid)
-        try:
-            await context.bot.send_message(
-                chat_id=int(uid),
-                text="⏰ " + t["create_help"] + "\n\n" + t["usage"],
-                parse_mode="Markdown"
-            )
-        except Exception:
-            pass
+        await context.bot.send_message(
+            chat_id=int(uid),
+            text="⏰ " + t["create_help"] + "\n\n" + t["usage"],
+            parse_mode="Markdown",
+        )
         return
 
+    # ---- Меню: Показать список
     if action == "list":
         uid = str(q.from_user.id)
         tdict = _i18n(uid)
         tz_user = _user_tz(uid)
-
-        with remind_db() as db:
-            rows = db.execute(
-                "SELECT * FROM reminders WHERE user_id=? AND status='scheduled' ORDER BY due_utc ASC LIMIT 50;",
-                (uid,)
-            ).fetchall()
+        try:
+            with remind_db() as db:
+                rows = db.execute(
+                    "SELECT * FROM reminders WHERE user_id=? AND status='scheduled' "
+                    "ORDER BY due_utc ASC LIMIT 50;",
+                    (uid,)
+                ).fetchall()
+        except sqlite3.OperationalError:
+            # на всякий случай пересоздадим схему и повторим запрос
+            ensure_remind_db()
+            with remind_db() as db:
+                rows = db.execute(
+                    "SELECT * FROM reminders WHERE user_id=? AND status='scheduled' "
+                    "ORDER BY due_utc ASC LIMIT 50;",
+                    (uid,)
+                ).fetchall()
 
         if not rows:
             kb = InlineKeyboardMarkup([[InlineKeyboardButton(tdict["btn_add_rem"], callback_data="rem:new")]])
             await q.edit_message_text(tdict["list_empty"], reply_markup=kb)
             return
 
-        # Сформируем текст и кнопки удаления
-        lines, kb_rows = [], []
         u_lang = user_languages.get(uid, "ru")
+        lines, kb_rows = [], []
         for r in rows:
             local = _from_epoch(r["due_utc"]).astimezone(tz_user)
             lines.append(f"• #{r['id']} — {_fmt_local(local, u_lang)} — {r['text']}")
             kb_rows.append([InlineKeyboardButton(f"{tdict['btn_delete']} #{r['id']}", callback_data=f"rem:del:{r['id']}")])
-        # Внизу – кнопка «Добавить»
         kb_rows.append([InlineKeyboardButton(tdict["btn_add_rem"], callback_data="rem:new")])
 
         await q.edit_message_text(
@@ -548,11 +558,12 @@ async def remind_callback(update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    # дальше нужны rem_id
+    # ---- Ниже нужны rem_id (для del/snooze)
     if len(parts) < 3 or not parts[2].isdigit():
         return
     rem_id = int(parts[2])
 
+    # --- Работаем с конкретным напоминанием
     with remind_db() as db:
         row = db.execute("SELECT * FROM reminders WHERE id=?;", (rem_id,)).fetchone()
         if not row:
@@ -567,11 +578,10 @@ async def remind_callback(update, context: ContextTypes.DEFAULT_TYPE):
         tdict = _i18n(uid)
 
         if action == "del":
-            # помечаем отменённым
             db.execute("UPDATE reminders SET status='canceled' WHERE id=?;", (rem_id,))
             db.commit()
 
-            # после удаления — обновим список прямо в том же сообщении (если это был список)
+            # Перерисуем список после удаления
             rows = db.execute(
                 "SELECT * FROM reminders WHERE user_id=? AND status='scheduled' ORDER BY due_utc ASC LIMIT 50;",
                 (uid,)
@@ -579,30 +589,22 @@ async def remind_callback(update, context: ContextTypes.DEFAULT_TYPE):
 
             try:
                 if rows:
-                    # перерисуем список + кнопки «Удалить #id» и «➕ Добавить»
                     tz_user = _user_tz(uid)
                     u_lang = user_languages.get(uid, "ru")
-
-                    lines = []
-                    kb_rows = []
+                    lines, kb_rows = [], []
                     for r in rows:
                         local = _from_epoch(r["due_utc"]).astimezone(tz_user)
                         lines.append(f"• #{r['id']} — {_fmt_local(local, u_lang)} — {r['text']}")
-                        kb_rows.append([
-                            InlineKeyboardButton(f"{tdict['btn_delete']} #{r['id']}", callback_data=f"rem:del:{r['id']}")
-                        ])
-                    kb_rows.append([InlineKeyboardButton(tdict["btn_new"], callback_data="rem:new")])
-
+                        kb_rows.append([InlineKeyboardButton(f"{tdict['btn_delete']} #{r['id']}", callback_data=f"rem:del:{r['id']}")])
+                    kb_rows.append([InlineKeyboardButton(tdict["btn_add_rem"], callback_data="rem:new")])
                     await q.edit_message_text(
                         tdict["list_title"] + "\n\n" + "\n".join(lines),
                         reply_markup=InlineKeyboardMarkup(kb_rows)
                     )
                 else:
-                    # больше нет напоминаний — покажем пустое состояние с «Добавить»
-                    kb = InlineKeyboardMarkup([[InlineKeyboardButton(tdict["btn_new"], callback_data="rem:new")]])
+                    kb = InlineKeyboardMarkup([[InlineKeyboardButton(tdict["btn_add_rem"], callback_data="rem:new")]])
                     await q.edit_message_text(tdict["list_empty"], reply_markup=kb)
             except Exception:
-                # если редактирование списка не получилось — просто отправим отдельным сообщением
                 await context.bot.send_message(chat_id=int(uid), text=tdict["deleted"])
             return
 
@@ -626,13 +628,13 @@ async def remind_callback(update, context: ContextTypes.DEFAULT_TYPE):
             db.commit()
             row = db.execute("SELECT * FROM reminders WHERE id=?;", (rem_id,)).fetchone()
 
-    # пересоздаём джобу (для snooze)
+    # Пересоздаём джобу и отвечаем (для snooze)
     if action == "snooze":
         await _schedule_job_for_reminder(context, row)
         loc_str = _fmt_local(_from_epoch(row["due_utc"]).astimezone(ZoneInfo(row["tz"])), user_languages.get(uid, "ru"))
         try:
             await q.edit_message_text(
-                REMIND_TEXTS.get(user_languages.get(uid, "ru"), REMIND_TEXTS["ru"])["snoozed"].format(time=loc_str, text=row["text"]),
+                _i18n(uid)["snoozed"].format(time=loc_str, text=row["text"]),
                 reply_markup=remind_keyboard(rem_id, uid)
             )
         except Exception:
@@ -641,6 +643,7 @@ async def remind_callback(update, context: ContextTypes.DEFAULT_TYPE):
                 text=_i18n(uid)["snoozed"].format(time=loc_str, text=row["text"]),
                 reply_markup=remind_keyboard(rem_id, uid)
             )
+            
 # ========== Восстановление задач при старте ==========
 async def restore_reminder_jobs(job_queue):
     ensure_remind_db()
