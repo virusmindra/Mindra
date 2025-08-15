@@ -308,6 +308,9 @@ REMIND_TEXTS = {
         "btn_tomorrow":"🌅 Завтра",
         "btn_delete":  "🗑 Удалить",
         "btn_new": "➕ Добавить",
+        "menu_title": "🔔 Напоминания",
+        "btn_add_rem": "➕ Добавить напоминание",
+        "btn_list_rem": "📋 Список напоминаний",
     },
     "uk": {
         "limit": "🔔 У безкоштовній версії можна встановити лише 1 активне нагадування.\n\n✨ Оформи Mindra+, щоб мати необмежені нагадування 💜",
@@ -327,6 +330,9 @@ REMIND_TEXTS = {
         "btn_tomorrow":"🌅 Завтра",
         "btn_delete":  "🗑 Видалити",
         "btn_new": "➕ Додати",
+        "menu_title": "🔔 Нагадування",
+        "btn_add_rem": "➕ Додати нагадування",
+        "btn_list_rem": "📋 Список нагадувань",
     },
     "md": {
         "limit": "🔔 În versiunea gratuită poți seta doar 1 memento activ.\n\n✨ Activează Mindra+ pentru mementouri nelimitate 💜",
@@ -346,6 +352,9 @@ REMIND_TEXTS = {
         "btn_tomorrow":"🌅 Mâine",
         "btn_delete":  "🗑 Șterge",
         "btn_new": "➕ Nou",
+        "menu_title": "🔔 Mementouri",
+        "btn_add_rem": "➕ Adaugă memento",
+        "btn_list_rem": "📋 Lista mementourilor",
     },
     "be": {
         "limit": "🔔 У бясплатнай версіі можна ўсталяваць толькі 1 актыўнае напамінанне.\n\n✨ Аформі Mindra+, каб мець неабмежаваную колькасць напамінанняў 💜",
@@ -365,6 +374,9 @@ REMIND_TEXTS = {
         "btn_tomorrow":"🌅 Заўтра",
         "btn_delete":  "🗑 Выдаліць",
         "btn_new": "➕ Дадаць",
+        "menu_title": "🔔 Напаміны",
+        "btn_add_rem": "➕ Дадаць напамін",
+        "btn_list_rem": "📋 Спіс напамінаў",
     },
     "kk": {
         "limit": "🔔 Тегін нұсқада тек 1 белсенді еске салу орнатуға болады.\n\n✨ Mindra+ арқылы шексіз еске салулар орнатыңыз 💜",
@@ -384,6 +396,9 @@ REMIND_TEXTS = {
         "btn_tomorrow":"🌅 Ертең",
         "btn_delete":  "🗑 Өшіру",
         "btn_new": "➕ Қосу",
+        "menu_title": "🔔 Еске салулар",
+        "btn_add_rem": "➕ Еске салу қосу",
+        "btn_list_rem": "📋 Еске салулар тізімі",
     },
     "kg": {
         "limit": "🔔 Акысыз версияда бир эле эскертме коюуга болот.\n\n✨ Mindra+ менен чексиз эскертмелерди коюңуз 💜",
@@ -403,6 +418,9 @@ REMIND_TEXTS = {
         "btn_tomorrow":"🌅 Эртең",
         "btn_delete":  "🗑 Өчүрүү",
         "btn_new": "➕ Кошуу",
+        "menu_title": "🔔 Эскертмелер",
+        "btn_add_rem": "➕ Эскертме кошуу",
+        "btn_list_rem": "📋 Эскертмелер тизмеси",
     },
     "hy": {
         "limit": "🔔 Անվճար տարբերակում կարելի է ավելացնել միայն 1 ակտիվ հիշեցում։\n\n✨ Միացրու Mindra+, որ ունենաս անսահման հիշեցումներ 💜",
@@ -422,6 +440,9 @@ REMIND_TEXTS = {
         "btn_tomorrow":"🌅 Վաղը",
         "btn_delete":  "🗑 Ջնջել",
         "btn_new": "➕ Նոր հիշեցում",
+        "menu_title": "🔔 Հիշեցումներ",
+        "btn_add_rem": "➕ Ավելացնել հիշեցում",
+        "btn_list_rem": "📋 Հիշեցումների ցանկ",
     },
     "ka": {
         "limit": "🔔 უფასო ვერსიაში შეგიძლიათ დააყენოთ მხოლოდ 1 აქტიური შეხსენება.\n\n✨ გაააქტიურეთ Mindra+ ულიმიტო შეხსენებისთვის 💜",
@@ -441,6 +462,9 @@ REMIND_TEXTS = {
         "btn_tomorrow":"🌅 ხვალ",
         "btn_delete":  "🗑 წაშლა",
         "btn_new": "➕ დამატება",
+        "menu_title": "🔔 შეხსენებები",
+        "btn_add_rem": "➕ შეხსენების დამატება",
+        "btn_list_rem": "📋 შეხსენებების სია",
     },
     "ce": {
         "limit": "🔔 Аьтто версия хийцна, цхьаьнан 1 активан напоминание ца хилла цуьнан.\n\n✨ Mindra+ хийцар, цуьнан цуьнан цхьаьнан напоминаний хилла 💜",
@@ -460,6 +484,9 @@ REMIND_TEXTS = {
         "btn_tomorrow":"🌅 Кхеза",
         "btn_delete":  "🗑 ДIадайе",
         "btn_new": "➕ Керла",
+        "menu_title": "🔔 ДӀай бар",
+        "btn_add_rem": "➕ ДӀай бар хийца",
+        "btn_list_rem": "📋 ДӀай бар тIед",
     },
     "en": {
         "limit": "🔔 In the free version, you can set only 1 active reminder.\n\n✨ Get Mindra+ for unlimited reminders 💜",
@@ -479,6 +506,9 @@ REMIND_TEXTS = {
         "btn_tomorrow":"🌅 Tomorrow",
         "btn_delete":  "🗑 Delete",
         "btn_new": "➕ New",
+        "menu_title": "🔔 Reminders",
+        "btn_add_rem": "➕ Add reminder",
+        "btn_list_rem": "📋 Reminder list",
     },
 }
 
