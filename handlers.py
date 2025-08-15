@@ -164,6 +164,44 @@ def _gh_i18n(uid: str) -> dict:
 
 def _p_i18n(uid: str) -> dict:
     return P_TEXTS.get(user_languages.get(uid, "ru"), P_TEXTS["ru"])
+
+
+def ensure_premium_db():
+    with sqlite3.connect("mindra.db") as db:
+        db.execute("""
+        CREATE TABLE IF NOT EXISTS premium_challenges (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            week_start TEXT NOT NULL,   -- ISO date (YYYY-MM-DD) понедельник
+            text TEXT NOT NULL,
+            done INTEGER NOT NULL DEFAULT 0,
+            created_at INTEGER NOT NULL
+        );
+        """)
+        db.commit()
+
+def _week_start_iso(dt: datetime) -> str:
+    # понедельник этой недели в локальном времени пользователя
+    monday = dt - timedelta(days=dt.weekday())
+    return monday.date().isoformat()
+
+def _premium_kb(uid: str) -> InlineKeyboardMarkup:
+    t = _p_i18n(uid)
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton(t["btn_get"],  callback_data="plus:buy")],
+        [InlineKeyboardButton(t["btn_code"], callback_data="plus:code")],
+    ])
+
+def require_premium(func):
+    async def wrapper(update, context, *args, **kwargs):
+        uid = str(update.effective_user.id)
+        if not is_premium(uid):
+            t = _p_i18n(uid)
+            msg = f"*{t['upsell_title']}*\n\n{t['upsell_body']}"
+            await update.message.reply_text(msg, reply_markup=_premium_kb(uid), parse_mode="Markdown")
+            return
+        return await func(update, context, *args, **kwargs)
+    return wrapper
     
 def _gh_menu_keyboard(t: dict) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup([
