@@ -3232,6 +3232,7 @@ handlers = [
     CommandHandler("remind", remind_command),
     CommandHandler("reminders", reminders_list),
     CallbackQueryHandler(remind_callback, pattern=r"^rem:"),
+    CommandHandler("reminders_menu", reminders_menu_cmd),
     # --- Статистика и очки
     CommandHandler("stats", stats_command),
     CommandHandler("mypoints", mypoints_command),
