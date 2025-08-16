@@ -170,7 +170,9 @@ def _gh_i18n(uid: str) -> dict:
 def _p_i18n(uid: str) -> dict:
     return P_TEXTS.get(user_languages.get(uid, "ru"), P_TEXTS["ru"])
 
-
+def _tts_lang(lang: str) -> str:
+    return LANG_TO_TTS.get(lang, "ru")
+    
 def _tts_synthesize_to_ogg(text:str, lang:str="ru", voice:str|None=None) -> str:
     """
     Возвращает путь к .ogg (Opus) для Telegram sendVoice.
