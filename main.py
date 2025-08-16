@@ -24,7 +24,7 @@ from handlers import (
     test_mood,
     give_trial_if_needed,
     handle_referral,
-    premium_report,
+    premium_report_cmd,
     premium_challenge,
     premium_mode,
     premium_mode_callback,
