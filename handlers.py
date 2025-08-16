@@ -176,26 +176,39 @@ def _tts_lang(lang: str) -> str:
     return LANG_TO_TTS.get(lang, "ru")
     
 def _tts_synthesize_to_ogg(text: str, lang: str) -> str:
-    safe_text = textwrap.shorten(text, width=4000, placeholder="…")
+    """Возвращает путь к .ogg (opus) для sendVoice. Требует gTTS + ffmpeg."""
+    try:
+        from gtts import gTTS  # ленивый импорт, чтобы без пакета не падал весь модуль
+    except Exception as e:
+        raise RuntimeError("gTTS not installed") from e
+
     mp3_path = f"/tmp/{uuid.uuid4().hex}.mp3"
     ogg_path = f"/tmp/{uuid.uuid4().hex}.ogg"
+
+    safe_text = textwrap.shorten(text, width=4000, placeholder="…")
     gTTS(text=safe_text, lang=_tts_lang(lang)).save(mp3_path)
-    subprocess.run(["ffmpeg","-y","-i", mp3_path, "-ac","1","-ar","48000","-c:a","libopus", ogg_path],
-                   check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    # mp3 -> ogg(opus) 48k mono
+    subprocess.run(
+        ["ffmpeg","-y","-i", mp3_path, "-ac","1","-ar","48000","-c:a","libopus", ogg_path],
+        check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+    )
+
     try: os.remove(mp3_path)
-    except: pass
+    except Exception: pass
     return ogg_path
 
 async def send_voice_response(context, chat_id: int, text: str, lang: str):
     try:
-        ogg_path = _tts_synthesize_to_ogg(text, lang)  # должен существовать и работать
+        ogg_path = _tts_synthesize_to_ogg(text, lang)
         with open(ogg_path, "rb") as f:
             await context.bot.send_voice(chat_id=chat_id, voice=f)
+        try: os.remove(ogg_path)
+        except Exception: pass
     except Exception as e:
         logging.exception(f"TTS failed for chat_id={chat_id}: {e}")
-        # ничего не отправляем повторно, чтобы не дублировать текст
-        # (он уже отправлен как обычное сообщение выше)
-        
+        # не дублируем текст — он уже отправлен как обычное сообщение выше
+
 def require_premium_message(update, context, uid):
     t = _p_i18n(uid)
     return update.message.reply_text(
