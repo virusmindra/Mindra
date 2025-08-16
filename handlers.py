@@ -200,14 +200,15 @@ def _tts_synthesize_to_ogg(text:str, lang:str="ru", voice:str|None=None) -> str:
     except: pass
     return ogg_path
 
-async def send_voice_response(context, chat_id:int, text:str, lang:str):
+async def send_voice_response(context, chat_id: int, text: str, lang: str):
     try:
-        ogg_path = _tts_synthesize_to_ogg(text, lang)
+        ogg_path = _tts_synthesize_to_ogg(text, lang)  # должен существовать и работать
         with open(ogg_path, "rb") as f:
             await context.bot.send_voice(chat_id=chat_id, voice=f)
     except Exception as e:
-        # fallback — просто текстом
-        await context.bot.send_message(chat_id=chat_id, text=text)
+        logging.exception(f"TTS failed for chat_id={chat_id}: {e}")
+        # ничего не отправляем повторно, чтобы не дублировать текст
+        # (он уже отправлен как обычное сообщение выше)
         
 def require_premium_message(update, context, uid):
     t = _p_i18n(uid)
