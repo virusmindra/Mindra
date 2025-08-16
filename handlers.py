@@ -18,6 +18,7 @@ import shutil
 from collections import defaultdict
 from texts import (
     VOICE_TEXTS_BY_LANG,
+    LANG_TO_TTS,
     VOICE_TEXTS,
     CHALLENGE_BANK,
     GH_TEXTS,
