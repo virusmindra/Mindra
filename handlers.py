@@ -19,6 +19,7 @@ import shutil
 from collections import defaultdict
 from texts import (
     VOICE_TEXTS_BY_LANG,
+    STORY_TEXTS,
     LANG_TO_TTS,
     VOICE_TEXTS,
     CHALLENGE_BANK,
@@ -174,6 +175,9 @@ def _p_i18n(uid: str) -> dict:
 
 def _tts_lang(lang: str) -> str:
     return LANG_TO_TTS.get(lang, "ru")
+
+def _s_i18n(uid: str) -> dict:
+    return STORY_TEXTS.get(user_languages.get(uid, "ru"), STORY_TEXTS["ru"])
     
 def _tts_synthesize_to_ogg(text: str, lang: str) -> str:
     """Возвращает путь к .ogg (opus) для sendVoice. Требует gTTS + ffmpeg."""
