@@ -176,26 +176,13 @@ def _p_i18n(uid: str) -> dict:
 def _tts_lang(lang: str) -> str:
     return LANG_TO_TTS.get(lang, "ru")
     
-def _tts_synthesize_to_ogg(text:str, lang:str="ru", voice:str|None=None) -> str:
-    """
-    Возвращает путь к .ogg (Opus) для Telegram sendVoice.
-    Вставь свой движок TTS внутри. Ниже — пример через gTTS(mp3)+ffmpeg.
-    Требует доступного `ffmpeg` в PATH.
-    """
-    # 1) text → mp3 (пример: gTTS; можно заменить на любой движок)
-    try:
-        from gtts import gTTS  # pip install gTTS
-    except Exception:
-        raise RuntimeError("gTTS не установлен. Подключи свой TTS провайдер.")
-
+def _tts_synthesize_to_ogg(text: str, lang: str) -> str:
+    safe_text = textwrap.shorten(text, width=4000, placeholder="…")
     mp3_path = f"/tmp/{uuid.uuid4().hex}.mp3"
     ogg_path = f"/tmp/{uuid.uuid4().hex}.ogg"
-    gTTS(text=textwrap.shorten(text, width=4000, placeholder="…"), lang=("ru" if lang not in ("uk","en","ru") else lang)).save(mp3_path)
-
-    # 2) mp3 → ogg (opus) для voice
-    # 48k mono opus – максимально совместимо с Telegram
-    cmd = ["ffmpeg","-y","-i", mp3_path, "-ac","1","-ar","48000","-c:a","libopus", ogg_path]
-    subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    gTTS(text=safe_text, lang=_tts_lang(lang)).save(mp3_path)
+    subprocess.run(["ffmpeg","-y","-i", mp3_path, "-ac","1","-ar","48000","-c:a","libopus", ogg_path],
+                   check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try: os.remove(mp3_path)
     except: pass
     return ogg_path
