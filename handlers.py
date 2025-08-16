@@ -10,6 +10,8 @@ import aiohttp
 import subprocess
 import ffmpeg
 import traceback
+import textwrap
+import uuid
 import asyncio
 import pytz
 import shutil
@@ -169,6 +171,39 @@ def _p_i18n(uid: str) -> dict:
     return P_TEXTS.get(user_languages.get(uid, "ru"), P_TEXTS["ru"])
 
 
+def _tts_synthesize_to_ogg(text:str, lang:str="ru", voice:str|None=None) -> str:
+    """
+    Возвращает путь к .ogg (Opus) для Telegram sendVoice.
+    Вставь свой движок TTS внутри. Ниже — пример через gTTS(mp3)+ffmpeg.
+    Требует доступного `ffmpeg` в PATH.
+    """
+    # 1) text → mp3 (пример: gTTS; можно заменить на любой движок)
+    try:
+        from gtts import gTTS  # pip install gTTS
+    except Exception:
+        raise RuntimeError("gTTS не установлен. Подключи свой TTS провайдер.")
+
+    mp3_path = f"/tmp/{uuid.uuid4().hex}.mp3"
+    ogg_path = f"/tmp/{uuid.uuid4().hex}.ogg"
+    gTTS(text=textwrap.shorten(text, width=4000, placeholder="…"), lang=("ru" if lang not in ("uk","en","ru") else lang)).save(mp3_path)
+
+    # 2) mp3 → ogg (opus) для voice
+    # 48k mono opus – максимально совместимо с Telegram
+    cmd = ["ffmpeg","-y","-i", mp3_path, "-ac","1","-ar","48000","-c:a","libopus", ogg_path]
+    subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try: os.remove(mp3_path)
+    except: pass
+    return ogg_path
+
+async def send_voice_response(context, chat_id:int, text:str, lang:str):
+    try:
+        ogg_path = _tts_synthesize_to_ogg(text, lang)
+        with open(ogg_path, "rb") as f:
+            await context.bot.send_voice(chat_id=chat_id, voice=f)
+    except Exception as e:
+        # fallback — просто текстом
+        await context.bot.send_message(chat_id=chat_id, text=text)
+        
 def require_premium_message(update, context, uid):
     t = _p_i18n(uid)
     return update.message.reply_text(
