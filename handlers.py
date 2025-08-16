@@ -168,6 +168,28 @@ def _gh_i18n(uid: str) -> dict:
 def _p_i18n(uid: str) -> dict:
     return P_TEXTS.get(user_languages.get(uid, "ru"), P_TEXTS["ru"])
 
+
+def require_premium_message(update, context, uid):
+    t = _p_i18n(uid)
+    return update.message.reply_text(
+        f"*{t['upsell_title']}*\n\n{t['upsell_body']}",
+        parse_mode="Markdown",
+        reply_markup=_premium_kb(uid)
+    )
+
+async def voice_mode_cmd(update, context):
+    uid = str(update.effective_user.id)
+    t = _v_i18n(uid)
+    if not is_premium(uid):
+        return await require_premium_message(update, context, uid)
+    if not context.args:
+        return await update.message.reply_text(t["help"])
+    arg = context.args[0].lower()
+    if arg not in ("on","off"):
+        return await update.message.reply_text(t["err"])
+    user_voice_mode[uid] = (arg=="on")
+    await update.message.reply_text(t["on"] if user_voice_mode[uid] else t["off"])
+
 async def plus_callback(update, context):
     q = update.callback_query
     if not q or not q.data.startswith("plus:"):
