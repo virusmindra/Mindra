@@ -2606,7 +2606,8 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if user_message_count[user_id]["date"] != today:
             user_message_count[user_id] = {"date": today, "count": 0}
 
-    if user_id_int not in ADMIN_USER_IDS and OWNER_ID != OWNER_ID:
+    # ✅ фикс: исключаем владельца и админов из лимита
+    if (user_id_int not in ADMIN_USER_IDS) and (user_id_int != OWNER_ID):
         if user_message_count[user_id]["count"] >= 10:
             lang = user_languages.get(user_id, "ru")
             lock_msg = LOCK_MESSAGES_BY_LANG.get(lang, LOCK_MESSAGES_BY_LANG["ru"])
@@ -2632,14 +2633,9 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # 💾 Создаём/обновляем историю
     if user_id not in conversation_history:
-        conversation_history[user_id] = [
-            {"role": "system", "content": system_prompt}
-        ]
+        conversation_history[user_id] = [{"role": "system", "content": system_prompt}]
     else:
-        conversation_history[user_id][0] = {
-            "role": "system",
-            "content": system_prompt
-        }
+        conversation_history[user_id][0] = {"role": "system", "content": system_prompt}
 
     # Добавляем сообщение пользователя
     conversation_history[user_id].append({"role": "user", "content": user_input})
@@ -2647,10 +2643,7 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         # ✨ "печатает..."
-        await context.bot.send_chat_action(
-            chat_id=update.effective_chat.id,
-            action=ChatAction.TYPING
-        )
+        await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
 
         # 🤖 Запрос к OpenAI
         response = client.chat.completions.create(
@@ -2667,10 +2660,12 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reaction = detect_emotion_reaction(user_input, lang_code) + detect_topic_and_react(user_input, lang_code)
         reply = reaction + reply
 
-        await update.message.reply_text(
-            reply,
-            reply_markup=generate_post_response_buttons()
-        )
+        # 📝 Текстом
+        await update.message.reply_text(reply, reply_markup=generate_post_response_buttons())
+
+        # 🔊 Дополнительно — голосом для Mindra+ при включённом voice mode
+        if is_premium(user_id) and user_voice_mode.get(user_id, False):
+            await send_voice_response(context, user_id_int, reply, lang_code)
 
     except Exception as e:
         logging.error(f"❌ Ошибка в chat(): {e}")
