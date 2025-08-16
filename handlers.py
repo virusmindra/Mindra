@@ -16,6 +16,7 @@ import shutil
 from collections import defaultdict
 from texts import (
     VOICE_TEXTS_BY_LANG,
+    VOICE_TEXTS,
     CHALLENGE_BANK,
     GH_TEXTS,
     SETTINGS_TEXTS,
