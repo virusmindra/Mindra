@@ -13,6 +13,7 @@ from handlers import (
     start,
     language_callback,
     chat,
+    voice_mode_cmd,
     handle_voice,
     my_stats_command,
     mypoints_command,
