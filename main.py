@@ -27,7 +27,7 @@ from handlers import (
     premium_report_cmd,
     premium_challenge_cmd,
     premium_mode_cmd,
-    premium_mode_callback,
+    premium_challenge_callback,
     premium_stats_cmd,
     send_weekly_report,
     send_idle_reminders_compatible,
