@@ -5,3 +5,4 @@ apscheduler
 aiohttp
 pytz
 nest_asyncio
+gTTS==2.5.1
