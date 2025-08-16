@@ -12,6 +12,11 @@ VOICE_TEXTS_BY_LANG = {
     "en": {"you_said": "📝 You said:", "error": "❌ Error recognizing voice, please try again later."},
 }
 
+LANG_TO_TTS = {
+    "ru":"ru", "uk":"uk", "md":"ro", "be":"be", "kk":"kk",
+    "kg":"ky", "hy":"hy", "ka":"ka", "ce":"ru", "en":"en"
+}
+
 VOICE_TEXTS = {
     "ru":{"on":"🔊 Голосовой режим включён. Я буду присылать ответы голосом.",
           "off":"🔇 Голосовой режим выключен.",
