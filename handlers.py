@@ -119,6 +119,7 @@ user_last_polled = {}
 user_last_report_sent = {}  # user_id: date (ISO)
 user_last_daily_sent = {}  # user_id: date (iso)
 user_timezones = {}
+user_voice_mode = {}  # {user_id: bool}
 
 MIN_HOURS_SINCE_LAST_POLL = 96  # минимум 4 дня между опросами для одного юзера
 MIN_HOURS_SINCE_ACTIVE = 8      # не отправлять, если был онлайн последние 8 часов
