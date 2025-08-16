@@ -3427,9 +3427,12 @@ handlers = [
     CallbackQueryHandler(handle_done_habit_callback,    pattern=r"^done_habit\|\d+$"),
     
     # --- Чаты и голос
+    CommandHandler("voice_mode", voice_mode_cmd),
+    
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
     MessageHandler(filters.COMMAND, unknown_command),  # Unknown в самом конце!
+    
 ]
 
 __all__ = [
