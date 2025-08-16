@@ -19,6 +19,7 @@ import shutil
 from collections import defaultdict
 from texts import (
     VOICE_TEXTS_BY_LANG,
+    STORY_INTENT,
     STORY_TEXTS,
     LANG_TO_TTS,
     VOICE_TEXTS,
