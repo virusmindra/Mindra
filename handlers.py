@@ -3,7 +3,6 @@ import sqlite3
 import json
 import random
 import re
-
 import logging
 import openai
 import tempfile
@@ -179,6 +178,11 @@ def _tts_lang(lang: str) -> str:
 
 def _s_i18n(uid: str) -> dict:
     return STORY_TEXTS.get(user_languages.get(uid, "ru"), STORY_TEXTS["ru"])
+
+def _looks_like_story_intent(text: str, lang: str) -> bool:
+    pats = STORY_INTENT.get(lang, STORY_INTENT["ru"])
+    low = text.lower()
+    return any(re.search(p, low) for p in pats)
     
 def _tts_synthesize_to_ogg(text: str, lang: str) -> str:
     """Возвращает путь к .ogg (opus) для sendVoice. Требует gTTS + ffmpeg."""
