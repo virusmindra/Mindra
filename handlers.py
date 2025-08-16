@@ -110,7 +110,6 @@ from telegram.error import BadRequest
 global user_timezones
 from zoneinfo import ZoneInfo
 from collections import defaultdict
-from gtts import gTTS
 
 # Глобальные переменные
 user_last_seen = {}
