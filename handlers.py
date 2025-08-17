@@ -356,14 +356,12 @@ def _parse_story_args(raw: str) -> dict:
 async def story_cmd(update, context):
     uid = str(update.effective_user.id)
     if not is_premium(uid):
-        # красивый апселл
         tpay = _p_i18n(uid)
         return await update.message.reply_text(f"*{tpay['upsell_title']}*\n\n{tpay['upsell_body']}",
                                                parse_mode="Markdown", reply_markup=_premium_kb(uid))
     t = _s_i18n(uid)
     lang = user_languages.get(uid, "ru")
 
-    # без аргументов — показать usage
     if not context.args:
         return await update.message.reply_text(f"{t['title']}\n\n{t['usage']}", parse_mode="Markdown")
 
@@ -372,12 +370,8 @@ async def story_cmd(update, context):
 
     await update.message.reply_text(t["making"])
     text = await generate_story_text(uid, lang, args["topic"], args["name"], args["length"])
-    # после генерации истории:
-    context.chat_data[f"story_last_{uid}"] = {
-        "text": text,
-        "lang": lang,
-        "topic": args["topic"]  # сохраняем тему для 'ещё одну'
-    }
+
+    context.chat_data[f"story_last_{uid}"] = {"text": text, "lang": lang, "topic": args["topic"]}
 
     kb = InlineKeyboardMarkup([
         [InlineKeyboardButton(t["btn_more"],  callback_data="st:new")],
@@ -386,9 +380,19 @@ async def story_cmd(update, context):
     ])
     await update.message.reply_text(f"*{t['title']}*\n\n{text}", parse_mode="Markdown", reply_markup=kb)
 
+    # 🔊 Авто-озвучка для премиума (если пользователь не просил voice в аргументах)
+    if not args.get("voice") and is_premium(uid) and _vp(uid).get("auto_story_voice", True):
+        bg_override = None
+        prefs = _vp(uid)
+        if prefs.get("auto_bgm_for_stories", True) and prefs.get("bgm_kind", "off") == "off":
+            bg_override = "ocean"  # мягкий фон по умолчанию
+        try:
+            await send_voice_response(context, int(uid), text, lang, bgm_kind_override=bg_override)
+        except Exception:
+            logging.exception("Auto story TTS failed in story_cmd")
 
-    # если просили голосом — сразу озвучим
-    if args["voice"]:
+    # Если просили голосом явно — озвучим
+    if args.get("voice"):
         await send_voice_response(context, int(uid), text, lang)
 
 async def story_callback(update, context):
@@ -408,13 +412,27 @@ async def story_callback(update, context):
         await q.edit_message_text(t["making"])
         text = await generate_story_text(uid, lang, topic, None, "short")
         context.chat_data[f"story_last_{uid}"] = {"text": text, "lang": lang, "topic": topic}
+
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton(t["btn_more"],  callback_data="st:new")],
             [InlineKeyboardButton(t["btn_voice"], callback_data="st:voice")],
             [InlineKeyboardButton(t["btn_close"], callback_data="st:close")],
         ])
-        await context.bot.send_message(chat_id=int(uid), text=f"*{t['title']}*\n\n{text}",
-                                       parse_mode="Markdown", reply_markup=kb)
+        await context.bot.send_message(chat_id=int(uid),
+                                       text=f"*{t['title']}*\n\n{text}",
+                                       parse_mode="Markdown",
+                                       reply_markup=kb)
+
+        # 🔊 Авто-озвучка для премиума
+        if is_premium(uid) and _vp(uid).get("auto_story_voice", True):
+            bg_override = None
+            prefs = _vp(uid)
+            if prefs.get("auto_bgm_for_stories", True) and prefs.get("bgm_kind","off") == "off":
+                bg_override = "ocean"
+            try:
+                await send_voice_response(context, int(uid), text, lang, bgm_kind_override=bg_override)
+            except Exception:
+                logging.exception("Auto story TTS failed in story_callback:confirm")
         return
 
     if action == "new":
@@ -422,16 +440,30 @@ async def story_callback(update, context):
         topic = last["topic"] if last else ""
         text = await generate_story_text(uid, lang, topic, None, "short")
         context.chat_data[f"story_last_{uid}"] = {"text": text, "lang": lang, "topic": topic}
+
         try:
-            await q.edit_message_text(f"*{t['title']}*\n\n{text}", parse_mode="Markdown",
+            await q.edit_message_text(f"*{t['title']}*\n\n{text}",
+                                      parse_mode="Markdown",
                                       reply_markup=InlineKeyboardMarkup([
                                           [InlineKeyboardButton(t["btn_more"],  callback_data="st:new")],
                                           [InlineKeyboardButton(t["btn_voice"], callback_data="st:voice")],
                                           [InlineKeyboardButton(t["btn_close"], callback_data="st:close")],
                                       ]))
         except:
-            await context.bot.send_message(chat_id=int(uid), text=f"*{t['title']}*\n\n{text}",
+            await context.bot.send_message(chat_id=int(uid),
+                                           text=f"*{t['title']}*\n\n{text}",
                                            parse_mode="Markdown")
+
+        # 🔊 Авто-озвучка для премиума
+        if is_premium(uid) and _vp(uid).get("auto_story_voice", True):
+            bg_override = None
+            prefs = _vp(uid)
+            if prefs.get("auto_bgm_for_stories", True) and prefs.get("bgm_kind","off") == "off":
+                bg_override = "ocean"
+            try:
+                await send_voice_response(context, int(uid), text, lang, bgm_kind_override=bg_override)
+            except Exception:
+                logging.exception("Auto story TTS failed in story_callback:new")
         return
 
     if action == "voice":
