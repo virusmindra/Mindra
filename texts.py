@@ -17,6 +17,15 @@ LANG_TO_TTS = {
     "kg":"ky", "hy":"hy", "ka":"ka", "ce":"ru", "en":"en"
 }
 
+# --- Фоновые лупы (опционально) ---
+BGM_PRESETS = {
+    "off":   {"label": "🚫 Без фона", "path": None},
+    "rain":  {"label": "🌧 Дождь",    "path": "assets/bgm/rain_loop.mp3"},
+    "fire":  {"label": "🔥 Камин",    "path": "assets/bgm/fireplace_loop.mp3"},
+    "ocean": {"label": "🌊 Океан",    "path": "assets/bgm/ocean_loop.mp3"},
+    "lofi":  {"label": "🎵 Lo-fi",    "path": "assets/bgm/lofi_loop.mp3"},
+}
+
 STORY_INTENT = {
     "ru": [r"\bсказк", r"\bрассказ", r"\bпридумай .*истор", r"\bсочини"],
     "uk": [r"\bказк", r"\bістор", r"\bпридумай.*казк"],
