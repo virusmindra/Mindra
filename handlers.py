@@ -128,6 +128,7 @@ user_last_report_sent = {}  # user_id: date (ISO)
 user_last_daily_sent = {}  # user_id: date (iso)
 user_timezones = {}
 user_voice_mode = {}  # {user_id: bool}
+user_voice_prefs = {}
 
 MIN_HOURS_SINCE_LAST_POLL = 96  # минимум 4 дня между опросами для одного юзера
 MIN_HOURS_SINCE_ACTIVE = 8      # не отправлять, если был онлайн последние 8 часов
@@ -185,6 +186,130 @@ def _looks_like_story_intent(text: str, lang: str) -> bool:
     pats = STORY_INTENT.get(lang, STORY_INTENT["ru"])
     low = text.lower()
     return any(re.search(p, low) for p in pats)
+
+def _vp(uid: str):
+    """Профиль голосовых настроек пользователя с дефолтами."""
+    if uid not in user_voice_prefs:
+        user_voice_prefs[uid] = {
+            "engine": "eleven" if os.getenv("ELEVEN_API_KEY") else "gtts",  # дефолт: Eleven, если ключ есть
+            "voice_id": "",           # для Eleven/Azure
+            "speed": 1.0,
+            "voice_only": False,      # слать только гс без текста
+            "auto_story_voice": True, # авто-озвучка сказок
+            "style": "gentle",        # зарезервировано (Azure)
+            "accent": "com",          # gTTS tld
+            "bgm_kind": "off",        # ключ из BGM_PRESETS
+            "bgm_gain_db": -20,       # громкость фона (дБ)
+            "auto_bgm_for_stories": True,  # если фон "off" — подмешать океан к сказке
+        }
+    return user_voice_prefs[uid]
+
+def _expressive(text: str, lang: str) -> str:
+    s = text.replace("...", "…")
+    # [sigh] / (вздох)
+    if lang in ("ru","uk","md","be","kk","kg","hy","ka","ce"):
+        s = re.sub(r"\[(sigh|вздох)\]", "эх… ", s, flags=re.I)
+        s = re.sub(r"\((вздох)\)", "эх… ", s, flags=re.I)
+    else:
+        s = re.sub(r"\[(sigh)\]", "ugh… ", s, flags=re.I)
+    # Паузы: [pause300], [pause1000]
+    def _pause(m):
+        ms = int(m.group(1))
+        dots = "…" * (1 if ms<=600 else 2 if ms<=1200 else 3)
+        return f"{dots} "
+    s = re.sub(r"\[pause(\d{2,4})\]", _pause, s, flags=re.I)
+    # Whisper
+    if lang in ("ru","uk","md","be","kk","kg","hy","ka","ce"):
+        s = re.sub(r"\[whisper:(.+?)\]", r"(шёпотом) \1", s, flags=re.I)
+    else:
+        s = re.sub(r"\[whisper:(.+?)\]", r"(whispering) \1", s, flags=re.I)
+    return s
+
+def _to_ogg_from_mp3(mp3_path: str, speed: float=1.0) -> str:
+    if not shutil.which("ffmpeg"):
+        raise RuntimeError("ffmpeg not found")
+    atempo = max(0.5, min(2.0, speed))
+    out_path = f"/tmp/{uuid.uuid4().hex}.ogg"
+    cmd = [
+        "ffmpeg","-y","-i", mp3_path,
+        "-filter:a", f"atempo={atempo}",
+        "-c:a","libopus","-b:a","48k","-ar","48000","-ac","1",
+        out_path
+    ]
+    subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try: os.remove(mp3_path)
+    except: pass
+    return out_path
+
+def _mix_with_bgm(voice_ogg: str, bg_path: str, bg_gain_db: int=-20) -> str:
+    if not bg_path or not os.path.exists(bg_path) or not shutil.which("ffmpeg"):
+        return voice_ogg
+    out_path = f"/tmp/{uuid.uuid4().hex}.ogg"
+    cmd = [
+        "ffmpeg","-y",
+        "-i", voice_ogg,
+        "-stream_loop","-1","-i", bg_path,
+        "-filter_complex",
+        f"[1:a]volume={bg_gain_db}dB[a1];"
+        f"[0:a][a1]amix=inputs=2:duration=first:dropout_transition=0,"
+        f"loudnorm=I=-19:LRA=7:TP=-1.5",
+        "-c:a","libopus","-b:a","48k","-ar","48000","-ac","1",
+        out_path
+    ]
+    try:
+        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try: os.remove(voice_ogg)
+        except: pass
+        return out_path
+    except Exception as e:
+        logging.exception(f"ffmpeg mix failed: {e}")
+        return voice_ogg
+
+def _tts_elevenlabs_to_ogg(text: str, voice_id: str, speed: float=1.0) -> str:
+    api_key = os.getenv("ELEVEN_API_KEY")
+    if not api_key:
+        raise RuntimeError("ELEVEN_API_KEY not set")
+    client = ElevenLabs(api_key=api_key)
+
+    voice_settings = {
+        "stability": 0.35,
+        "similarity_boost": 0.7,
+        "style": 0.6,
+        "use_speaker_boost": True,
+    }
+
+    mp3_path = f"/tmp/{uuid.uuid4().hex}.mp3"
+    audio_stream = client.text_to_speech.convert(
+        voice_id=voice_id or "21m00Tcm4TlvDq8ikWAM",  # любой дефолт
+        model_id="eleven_multilingual_v2",
+        output_format="mp3_44100_128",
+        text=text,
+        voice_settings=voice_settings,
+    )
+    with open(mp3_path, "wb") as f:
+        for chunk in audio_stream:
+            if chunk:
+                f.write(chunk)
+    return _to_ogg_from_mp3(mp3_path, speed)
+
+def _tts_gtts_to_ogg(text: str, lang: str, tld: str="com", speed: float=1.0) -> str:
+    from gtts import gTTS
+    mp3_path = f"/tmp/{uuid.uuid4().hex}.mp3"
+    gTTS(text=text, lang=lang if lang in ("ru","uk","en") else "ru", tld=tld).save(mp3_path)
+    return _to_ogg_from_mp3(mp3_path, speed)
+
+def synthesize_to_ogg(text: str, lang: str, uid: str) -> str:
+    p = _vp(uid)
+    text = _expressive(text, lang)
+    try:
+        if p.get("engine") == "eleven" and p.get("voice_id") and os.getenv("ELEVEN_API_KEY"):
+            return _tts_elevenlabs_to_ogg(text, p["voice_id"], p.get("speed",1.0))
+        # можно добавить Azure при необходимости
+        return _tts_gtts_to_ogg(text, lang, tld=p.get("accent","com"), speed=p.get("speed",1.0))
+    except Exception as e:
+        logging.exception(f"TTS primary failed ({p.get('engine')}), fallback to gTTS: {e}")
+        return _tts_gtts_to_ogg(text, lang, tld=p.get("accent","com"), speed=p.get("speed",1.0))
+
 
 async def generate_story_text(uid: str, lang: str, topic: str, name: str|None, length: str="short") -> str:
     # длина → ориентир по абзацам
