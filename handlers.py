@@ -213,20 +213,22 @@ def _current_voice_name(uid: str) -> str:
     return "—"
 
 def _vp(uid: str):
+    """Профиль голосовых настроек пользователя с дефолтами."""
     if uid not in user_voice_prefs:
         user_voice_prefs[uid] = {
             "engine": "eleven" if _has_eleven() else "gTTS",
+            # если есть Eleven и задан fem.voice — возьмём её как дефолт
             "voice_id": DEFAULT_ELEVEN_FEMALE if _has_eleven() else "",
             "speed": 1.0,
-            "voice_only": False,
-            "auto_story_voice": True,
-            "accent": "com",
-            "bgm_kind": "off",
-            "bgm_gain_db": -20,
-            "auto_bgm_for_stories": True,
+            "voice_only": False,      # только гс (без текста)
+            "auto_story_voice": True, # авто-озвучка сказок
+            "accent": "com",          # gTTS tld
+            "bgm_kind": "off",        # ключ из BGM_PRESETS
+            "bgm_gain_db": -20,       # громкость фона (дБ)
+            "auto_bgm_for_stories": True,  # если фон "off" — подмешать океан к сказке
         }
     return user_voice_prefs[uid]
-
+    
 def _looks_like_story_intent(text: str, lang: str) -> bool:
     pats = STORY_INTENT.get(lang, STORY_INTENT["ru"])
     low = text.lower()
