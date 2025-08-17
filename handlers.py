@@ -342,62 +342,47 @@ async def voice_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=_voice_kb(uid, "engine")
     )
 
-
 # === Callback ===
 async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     if not q or not q.data.startswith("v:"):
         return
     await q.answer()
-
     uid = str(q.from_user.id)
     p = _vp(uid)
-    t = _v_ui_i18n(uid)  # i18n для подсказок
+
     parts = q.data.split(":")
     kind = parts[1]
 
-    # Переход между вкладками — просто рендерим нужную
+    current_tab = "engine"  # по умолчанию возвращаемся на вкладку "Движок"
+
     if kind == "tab":
         tab = parts[2]
         return await _voice_refresh(q, uid, tab)
 
-    # по умолчанию: какая вкладка «активна» после действия
-    current_tab_map = {"engine": "engine", "voice": "voice", "speed": "speed", "beh": "beh", "bg": "bg"}
-    current_tab = current_tab_map.get(kind, "engine")
-
     if kind == "engine":
-        new_engine = parts[2]   # "eleven" | "gTTS"
-        if new_engine == "eleven" and not _has_eleven():
-            await q.answer(t["no_eleven_key"], show_alert=True)
-        else:
-            if p["engine"] != new_engine:
-                p["engine"] = new_engine
-                if p["engine"] == "gTTS":
-                    # у gTTS нет voice_id — сбросим
-                    p["voice_id"] = ""
+        p["engine"] = parts[2]
+        current_tab = "engine"
 
     elif kind == "voice":
-        # выбор пресета голоса
-        try:
-            idx = int(parts[2])
-        except:
-            idx = -1
-        presets = VOICE_PRESETS.get(user_languages.get(uid, "ru"), VOICE_PRESETS["ru"])
+        idx = int(parts[2])
+        presets = VOICE_PRESETS.get(user_languages.get(uid,"ru"), VOICE_PRESETS["ru"])
         if 0 <= idx < len(presets):
             name, eng_k, vid = presets[idx]
-            if eng_k.lower() == "eleven" and not _has_eleven():
-                await q.answer(t["no_eleven_key"], show_alert=True)
+            if eng_k.lower()=="eleven" and not _has_eleven():
+                # нет ключа — игнор
+                pass
             else:
-                p["engine"] = "eleven" if eng_k.lower() == "eleven" else "gTTS"
-                p["voice_id"] = vid or ""
-                if p["engine"] == "gTTS":
-                    p["voice_id"] = ""
+                p["engine"] = eng_k
+                p["voice_id"] = vid or p.get("voice_id","")
+        current_tab = "engine"
 
     elif kind == "speed":
         try:
             p["speed"] = float(parts[2])
         except:
             pass
+        current_tab = "speed"
 
     elif kind == "beh":
         sub = parts[2]
@@ -405,20 +390,19 @@ async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
             p["voice_only"] = not p["voice_only"]
         elif sub == "autostory":
             p["auto_story_voice"] = not p["auto_story_voice"]
+        current_tab = "beh"
 
     elif kind == "bg":
         sub = parts[2]
         if sub == "set":
             p["bgm_kind"] = parts[3]
         elif sub == "gain":
-            try:
-                p["bgm_gain_db"] = int(parts[3])
-            except:
-                pass
+            try: p["bgm_gain_db"] = int(parts[3])
+            except: pass
+        current_tab = "bg"
 
-    # безопасно перерисуем текущую вкладку
     await _voice_refresh(q, uid, current_tab)
-    
+
 def _expressive(text: str, lang: str) -> str:
     s = text.replace("...", "…")
     # [sigh] / (вздох)
