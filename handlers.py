@@ -245,15 +245,20 @@ async def story_cmd(update, context):
 
     await update.message.reply_text(t["making"])
     text = await generate_story_text(uid, lang, args["topic"], args["name"], args["length"])
-    # сохраним последнюю сказку для озвучки
-    context.chat_data[f"story_last_{uid}"] = {"text": text, "lang": lang}
+    # после генерации истории:
+    context.chat_data[f"story_last_{uid}"] = {
+        "text": text,
+        "lang": lang,
+        "topic": args["topic"]  # сохраняем тему для 'ещё одну'
+    }
 
     kb = InlineKeyboardMarkup([
-        [InlineKeyboardButton(t["btn_more"],  callback_data=f"st:new:{args['topic'] or ''}")],
+        [InlineKeyboardButton(t["btn_more"],  callback_data="st:new")],
         [InlineKeyboardButton(t["btn_voice"], callback_data="st:voice")],
         [InlineKeyboardButton(t["btn_close"], callback_data="st:close")],
     ])
     await update.message.reply_text(f"*{t['title']}*\n\n{text}", parse_mode="Markdown", reply_markup=kb)
+
 
     # если просили голосом — сразу озвучим
     if args["voice"]:
