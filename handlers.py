@@ -191,6 +191,20 @@ def _s_i18n(uid: str) -> dict:
 def _has_eleven(): 
     return bool(os.getenv("ELEVEN_API_KEY"))
 
+def _current_voice_name(uid: str) -> str:
+    lang = user_languages.get(uid, "ru")
+    p = _vp(uid)
+    presets = VOICE_PRESETS.get(lang, VOICE_PRESETS["ru"])
+    for name, eng, vid in presets:
+        if p.get("engine","").lower() == eng.lower() and p.get("voice_id","") == vid:
+            return name
+    # если кастомный/пустой
+    if p.get("engine","").lower() == "eleven" and p.get("voice_id"):
+        return "Eleven (custom)"
+    if p.get("engine","").lower() == "gTTS":
+        return "gTTS"
+    return "—"
+
 def _vp(uid: str):
     if uid not in user_voice_prefs:
         user_voice_prefs[uid] = {
