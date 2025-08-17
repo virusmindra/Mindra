@@ -317,7 +317,7 @@ async def voice_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         _voice_menu_text(uid),
         parse_mode="Markdown",
-        reply_markup=_voice_kb(uid, "engine")
+        reply_markup=_voice_kb(uid, "engine"),
     )
 
 # === Callback ===
@@ -326,48 +326,52 @@ async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not q or not q.data.startswith("v:"):
         return
     await q.answer()
+
     uid = str(q.from_user.id)
     p = _vp(uid)
 
     parts = q.data.split(":")
     kind = parts[1]
-
-    current_tab = "engine"  # по умолчанию возвращаемся на вкладку "Движок"
+    current_tab = "engine"  # вкладка, которую освежаем после изменений
 
     if kind == "tab":
         tab = parts[2]
         return await _voice_refresh(q, uid, tab)
 
     if kind == "engine":
-        p["engine"] = parts[2]
+        new_engine = parts[2]
+        # ✅ не даём включить Eleven без ключа
+        if new_engine.lower() == "eleven" and not _has_eleven():
+            return await _voice_refresh(q, uid, "engine")
+        p["engine"] = new_engine
         current_tab = "engine"
 
     elif kind == "voice":
         idx = int(parts[2])
-        presets = VOICE_PRESETS.get(user_languages.get(uid,"ru"), VOICE_PRESETS["ru"])
+        presets = VOICE_PRESETS.get(user_languages.get(uid, "ru"), VOICE_PRESETS["ru"])
         if 0 <= idx < len(presets):
             name, eng_k, vid = presets[idx]
-            if eng_k.lower()=="eleven" and not _has_eleven():
-                # нет ключа — игнор
-                pass
-            else:
-                p["engine"] = eng_k
-                p["voice_id"] = vid or p.get("voice_id","")
+            if eng_k.lower() == "eleven" and not _has_eleven():
+                # нет ключа — просто перерисуем меню
+                return await _voice_refresh(q, uid, "engine")
+            p["engine"] = eng_k
+            p["voice_id"] = vid or p.get("voice_id", "")
+            p["voice_name"] = name           # 👈 добавили для красивого отображения
         current_tab = "engine"
 
     elif kind == "speed":
         try:
             p["speed"] = float(parts[2])
-        except:
+        except Exception:
             pass
         current_tab = "speed"
 
     elif kind == "beh":
         sub = parts[2]
         if sub == "voiceonly":
-            p["voice_only"] = not p["voice_only"]
+            p["voice_only"] = not p.get("voice_only", False)
         elif sub == "autostory":
-            p["auto_story_voice"] = not p["auto_story_voice"]
+            p["auto_story_voice"] = not p.get("auto_story_voice", True)
         current_tab = "beh"
 
     elif kind == "bg":
@@ -375,10 +379,13 @@ async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if sub == "set":
             p["bgm_kind"] = parts[3]
         elif sub == "gain":
-            try: p["bgm_gain_db"] = int(parts[3])
-            except: pass
+            try:
+                p["bgm_gain_db"] = int(parts[3])
+            except Exception:
+                pass
         current_tab = "bg"
 
+    # единый рефреш (с защитой от "Message is not modified")
     await _voice_refresh(q, uid, current_tab)
 
 def _expressive(text: str, lang: str) -> str:
