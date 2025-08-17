@@ -161,6 +161,7 @@ SUPPORT_RANDOM_CHANCE = 0.7       # шанс отправить (как у POLL_
 # Окно времени для «поддерживающих» сообщений — используем твои idle‑границы по Киеву
 SUPPORT_TIME_START = IDLE_TIME_START   # 10
 SUPPORT_TIME_END = IDLE_TIME_END       # 22
+VOICE_TEXTS = VOICE_UI_TEXTS 
 
 # Храним всё в sqlite
 REMIND_DB_PATH = os.getenv("REMIND_DB_PATH", "reminders.sqlite3")
