@@ -103,7 +103,7 @@ from datetime import datetime, timedelta, timezone, date
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, CommandHandler, MessageHandler, CallbackQueryHandler, filters, CallbackContext
 from telegram.constants import ChatAction, ParseMode
-from config import client, TELEGRAM_BOT_TOKEN
+from config import client, TELEGRAM_BOT_TOKEN, ELEVEN_API_KEY
 from history import load_history, save_history, trim_history
 from goals import  is_goal_like, goal_keywords_by_lang, REACTIONS_GOAL_DONE, DELETE_MESSAGES
 from pathlib import Path
