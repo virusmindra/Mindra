@@ -93,7 +93,7 @@ STORY_TEXTS = {
            "suggest":"Want me to craft a story about this and read it to you?"},
 }
 
-VOICE_TEXTS = {
+VOICE_MODE_TEXTS = {
     "ru":{"on":"🔊 Голосовой режим включён. Я буду присылать ответы голосом.",
           "off":"🔇 Голосовой режим выключен.",
           "help":"Использование: /voice_mode on|off",
