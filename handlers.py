@@ -226,21 +226,43 @@ def _looks_like_story_intent(text: str, lang: str) -> bool:
     return any(re.search(p, low) for p in pats)
 
 # утилита безопасного обновления текста/клавы
-async def _voice_refresh(q, uid: str, tab: str):
-    text = _voice_menu_text(uid)
-    kb = _voice_kb(uid, tab)
+
+async def _voice_refresh(q: telegram.CallbackQuery, uid: str, tab: str):
     try:
-        await q.edit_message_text(text, parse_mode="Markdown", reply_markup=kb)
+        await q.edit_message_text(
+            _voice_menu_text(uid),
+            parse_mode="Markdown",
+            reply_markup=_voice_kb(uid, tab)
+        )
     except BadRequest as e:
-        if "Message is not modified" in str(e):
-            # если ничего не изменилось — просто обновим клаву
+        # если "Message is not modified" или странный 400 — просто обновим только клавиатуру,
+        # а если и она не меняется — молча игнорируем
+        msg = str(e)
+        if "Message is not modified" in msg:
             try:
-                await q.edit_message_reply_markup(reply_markup=kb)
-            except BadRequest:
+                await q.edit_message_reply_markup(reply_markup=_voice_kb(uid, tab))
+            except Exception:
+                pass
+        elif "message text is empty" in msg.lower():
+            try:
+                await q.edit_message_text(
+                    _voice_menu_text(uid) or "🎙",
+                    parse_mode="Markdown",
+                    reply_markup=_voice_kb(uid, tab)
+                )
+            except Exception:
                 pass
         else:
-            raise
-
+            # на край — отправим новое сообщение
+            try:
+                await q.message.reply_text(
+                    _voice_menu_text(uid),
+                    parse_mode="Markdown",
+                    reply_markup=_voice_kb(uid, tab)
+                )
+            except Exception:
+                pass
+                
 def _voice_menu_text(uid: str) -> str:
     t = _vm_i18n(uid); p = _vp(uid)
     engine_name = t["engine_eleven"] if p.get("engine")=="eleven" else t["engine_gtts"]
