@@ -242,31 +242,29 @@ async def _voice_refresh(q, uid: str, tab: str):
             raise
 
 def _voice_menu_text(uid: str) -> str:
-    t = _v_ui_i18n(uid)
-    p = _vp(uid)
-    eng = t["engine_eleven"] if p["engine"].lower().startswith("eleven") else t["engine_gtts"]
+    t = _vm_i18n(uid); p = _vp(uid)
+    engine_name = t["engine_eleven"] if p.get("engine")=="eleven" else t["engine_gtts"]
+    voice_name  = _current_voice_name(uid)
+    speed = p.get("speed", 1.0)
+    vonly = t["on"] if p.get("voice_only") else t["off"]
+    a_st  = t["on"] if p.get("auto_story_voice", True) else t["off"]
 
-    voice = "—"
-    presets = VOICE_PRESETS.get(user_languages.get(uid, "ru"), VOICE_PRESETS["ru"])
-    for name, eng_k, vid in presets:
-        if vid and vid == p.get("voice_id") and eng_k.lower() == p["engine"].lower():
-            voice = name
-            break
-    if voice == "—" and p.get("voice_id"):
-        voice = p["voice_id"]
+    bg_key = p.get("bgm_kind","off")
+    bg_lab = BGM_PRESETS.get(bg_key, {"label":"—"}).get("label","—")
+    bg_db  = int(p.get("bgm_gain_db",-20))
 
-    bg = BGM_PRESETS.get(p["bgm_kind"], {"label": "—"})["label"]
-    return (
+    text = (
         f"*{t['title']}*\n\n"
-        f"{t['engine'].format(engine=eng)}\n"
-        f"{t['voice'].format(voice=voice)}\n"
-        f"{t['speed'].format(speed=p['speed'])}\n"
-        f"{t['voice_only'].format(v=t['on'] if p['voice_only'] else t['off'])}\n"
-        f"{t['auto_story'].format(v=t['on'] if p['auto_story_voice'] else t['off'])}\n"
-        f"{t['bgm'].format(bg=bg, db=p['bgm_gain_db'])}\n"
-        + (f"\n{t['no_eleven_key']}" if not _has_eleven() else "")
+        f"{t['engine'].format(engine=engine_name)}\n"
+        f"{t['voice'].format(voice=voice_name)}\n"
+        f"{t['speed'].format(speed=speed)}\n"
+        f"{t['voice_only'].format(v=vonly)}\n"
+        f"{t['auto_story'].format(v=a_st)}\n"
+        f"{t['bgm'].format(bg=bg_lab, db=bg_db)}"
     )
-    
+    # страховка от пустоты
+    return text or f"*{t['title']}*"
+
 def _voice_kb(uid: str, tab: str = "engine") -> InlineKeyboardMarkup:
     t = _v_ui_i18n(uid)
     p = _vp(uid)
