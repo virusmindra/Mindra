@@ -2763,6 +2763,27 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # 🌐 Определяем язык
     lang_code = user_languages.get(user_id, "ru")
+
+    # ——— Story intent suggest ———
+    if _looks_like_story_intent(user_input, lang_code):
+        if not is_premium(user_id):
+            # апселл
+            tpay = _p_i18n(user_id)
+            await update.message.reply_text(
+                f"*{tpay['upsell_title']}*\n\n{tpay['upsell_body']}",
+                parse_mode="Markdown",
+                reply_markup=_premium_kb(user_id)
+            )
+            return
+        t = _s_i18n(user_id)
+        topic_guess = user_input  # простая эвристика: вся фраза — тема
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("✅ OK",  callback_data=f"st:confirm:{topic_guess[:120]}"),
+             InlineKeyboardButton("❌ Нет", callback_data="st:close")]
+        ])
+        await update.message.reply_text(t["suggest"], reply_markup=kb)
+        return
+
     lang_prompt = LANG_PROMPTS.get(lang_code, LANG_PROMPTS["ru"])
 
     # 📋 Определяем режим
