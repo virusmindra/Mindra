@@ -168,7 +168,7 @@ QUIET_START = 22  # не тревожить с 22:00
 QUIET_END   = 9   # до 09:00
 
 def _vm_i18n(uid:str)->dict:
-    return VOICE_TEXTS.get(user_languages.get(uid,"ru"), VOICE_TEXTS["ru"])
+    return VOICE_MODE_TEXTS.get(user_languages.get(uid,"ru"), VOICE_TEXTS["ru"])
     
 def _gh_i18n(uid: str) -> dict:
     return GH_TEXTS.get(user_languages.get(uid, "ru"), GH_TEXTS["ru"])
