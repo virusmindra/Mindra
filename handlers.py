@@ -190,6 +190,21 @@ def _s_i18n(uid: str) -> dict:
 
 def _has_eleven(): 
     return bool(os.getenv("ELEVEN_API_KEY"))
+
+def _vp(uid: str):
+    if uid not in user_voice_prefs:
+        user_voice_prefs[uid] = {
+            "engine": "eleven" if _has_eleven() else "gTTS",
+            "voice_id": "",
+            "speed": 1.0,
+            "voice_only": False,
+            "auto_story_voice": True,
+            "accent": "com",
+            "bgm_kind": "off",
+            "bgm_gain_db": -20,
+            "auto_bgm_for_stories": True,
+        }
+    return user_voice_prefs[uid]
     
 def _looks_like_story_intent(text: str, lang: str) -> bool:
     pats = STORY_INTENT.get(lang, STORY_INTENT["ru"])
