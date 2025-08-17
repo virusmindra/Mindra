@@ -533,16 +533,20 @@ def _parse_story_args(raw: str) -> dict:
     d["topic"] = re.sub(r"(имя|name|длина|length|голос|voice)\s*=\s*[^\|\n]+","", d["topic"], flags=re.I).replace("|"," ").strip()
     return d
 
-
 async def story_cmd(update, context):
     uid = str(update.effective_user.id)
     if not is_premium(uid):
         tpay = _p_i18n(uid)
-        return await update.message.reply_text(f"*{tpay['upsell_title']}*\n\n{tpay['upsell_body']}",
-                                               parse_mode="Markdown", reply_markup=_premium_kb(uid))
+        return await update.message.reply_text(
+            f"*{tpay['upsell_title']}*\n\n{tpay['upsell_body']}",
+            parse_mode="Markdown",
+            reply_markup=_premium_kb(uid)
+        )
+
     t = _s_i18n(uid)
     lang = user_languages.get(uid, "ru")
 
+    # без аргументов — показать usage
     if not context.args:
         return await update.message.reply_text(f"{t['title']}\n\n{t['usage']}", parse_mode="Markdown")
 
@@ -552,8 +556,10 @@ async def story_cmd(update, context):
     await update.message.reply_text(t["making"])
     text = await generate_story_text(uid, lang, args["topic"], args["name"], args["length"])
 
+    # запомним последнюю историю
     context.chat_data[f"story_last_{uid}"] = {"text": text, "lang": lang, "topic": args["topic"]}
 
+    # показать текст + кнопки
     kb = InlineKeyboardMarkup([
         [InlineKeyboardButton(t["btn_more"],  callback_data="st:new")],
         [InlineKeyboardButton(t["btn_voice"], callback_data="st:voice")],
@@ -561,18 +567,19 @@ async def story_cmd(update, context):
     ])
     await update.message.reply_text(f"*{t['title']}*\n\n{text}", parse_mode="Markdown", reply_markup=kb)
 
-    # 🔊 Авто-озвучка для премиума (если пользователь не просил voice в аргументах)
-    if not args.get("voice") and is_premium(uid) and _vp(uid).get("auto_story_voice", True):
-        bg_override = None
+    # 👉 авто-озвучка для премиума, если пользователь не просил /story ... voice
+    if not args.get("voice"):
         prefs = _vp(uid)
-        if prefs.get("auto_bgm_for_stories", True) and prefs.get("bgm_kind", "off") == "off":
-            bg_override = "ocean"  # мягкий фон по умолчанию
-        try:
-            await send_voice_response(context, int(uid), text, lang, bgm_kind_override=bg_override)
-        except Exception:
-            logging.exception("Auto story TTS failed in story_cmd")
+        if is_premium(uid) and prefs.get("auto_story_voice", True):
+            bg_override = None
+            if prefs.get("auto_bgm_for_stories", True) and prefs.get("bgm_kind", "off") == "off":
+                bg_override = "ocean"  # мягкий фон по умолчанию
+            try:
+                await send_voice_response(context, int(uid), text, lang, bgm_kind_override=bg_override)
+            except Exception:
+                logging.exception("Auto story TTS failed in story_cmd")
 
-    # Если просили голосом явно — озвучим
+    # явный запрос голосом — озвучиваем один раз
     if args.get("voice"):
         await send_voice_response(context, int(uid), text, lang)
 
