@@ -228,18 +228,16 @@ def _looks_like_story_intent(text: str, lang: str) -> bool:
     return any(re.search(p, low) for p in pats)
 
 # утилита безопасного обновления текста/клавы
-async def _voice_refresh(q: CallbackQuery, uid: str, tab: str):
+async def _voice_refresh(q, uid: str, tab: str):
+    text = _voice_menu_text(uid)
+    kb = _voice_kb(uid, tab)
     try:
-        await q.edit_message_text(
-            _voice_menu_text(uid),
-            parse_mode="Markdown",
-            reply_markup=_voice_kb(uid, tab),
-        )
+        await q.edit_message_text(text, parse_mode="Markdown", reply_markup=kb)
     except BadRequest as e:
-        if "Message is not modified" in str(e):
-            # просто обновим только клавиатуру
+        # если текст и разметка те же — просто обновим только клавиатуру
+        if "message is not modified" in str(e).lower():
             try:
-                await q.edit_message_reply_markup(reply_markup=_voice_kb(uid, tab))
+                await q.edit_message_reply_markup(reply_markup=kb)
             except Exception:
                 pass
         else:
