@@ -197,18 +197,20 @@ def _looks_like_story_intent(text: str, lang: str) -> bool:
     return any(re.search(p, low) for p in pats)
 
 def _voice_menu_text(uid: str) -> str:
-    t = _v_i18n(uid); p = _vp(uid)
+    t = _v_ui_i18n(uid)
+    p = _vp(uid)
     eng = t["engine_eleven"] if p["engine"].lower().startswith("eleven") else t["engine_gtts"]
+
     voice = "—"
-    # подцепим подпись из пресетов, если совпал id
-    presets = VOICE_PRESETS.get(user_languages.get(uid,"ru"), VOICE_PRESETS["ru"])
+    presets = VOICE_PRESETS.get(user_languages.get(uid, "ru"), VOICE_PRESETS["ru"])
     for name, eng_k, vid in presets:
         if vid and vid == p.get("voice_id") and eng_k.lower() == p["engine"].lower():
             voice = name
             break
     if voice == "—" and p.get("voice_id"):
         voice = p["voice_id"]
-    bg = BGM_PRESETS.get(p["bgm_kind"], {"label":"—"})["label"]
+
+    bg = BGM_PRESETS.get(p["bgm_kind"], {"label": "—"})["label"]
     return (
         f"*{t['title']}*\n\n"
         f"{t['engine'].format(engine=eng)}\n"
@@ -219,8 +221,7 @@ def _voice_menu_text(uid: str) -> str:
         f"{t['bgm'].format(bg=bg, db=p['bgm_gain_db'])}\n"
         + (f"\n{t['no_eleven_key']}" if not _has_eleven() else "")
     )
-
-
+    
 def _voice_kb(uid: str, tab: str = "engine") -> InlineKeyboardMarkup:
     t = _v_ui_i18n(uid)
     p = _vp(uid)
