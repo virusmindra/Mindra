@@ -2767,7 +2767,6 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # ——— Story intent suggest ———
     if _looks_like_story_intent(user_input, lang_code):
         if not is_premium(user_id):
-            # апселл
             tpay = _p_i18n(user_id)
             await update.message.reply_text(
                 f"*{tpay['upsell_title']}*\n\n{tpay['upsell_body']}",
@@ -2775,14 +2774,19 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=_premium_kb(user_id)
             )
             return
-        t = _s_i18n(user_id)
-        topic_guess = user_input  # простая эвристика: вся фраза — тема
-        kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("✅ OK",  callback_data=f"st:confirm:{topic_guess[:120]}"),
-             InlineKeyboardButton("❌ Нет", callback_data="st:close")]
-        ])
-        await update.message.reply_text(t["suggest"], reply_markup=kb)
-        return
+    t = _s_i18n(user_id)
+    topic_guess = user_input
+
+    # Сохраняем тему в chat_data, НЕ в callback_data
+    context.chat_data[f"story_pending_{user_id}"] = topic_guess
+
+    kb = InlineKeyboardMarkup([
+        [InlineKeyboardButton("✅ OK",  callback_data="st:confirm"),
+         InlineKeyboardButton("❌ Нет", callback_data="st:close")]
+    ])
+    await update.message.reply_text(t["suggest"], reply_markup=kb)
+    return
+
 
     lang_prompt = LANG_PROMPTS.get(lang_code, LANG_PROMPTS["ru"])
 
