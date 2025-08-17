@@ -183,7 +183,134 @@ def _looks_like_story_intent(text: str, lang: str) -> bool:
     pats = STORY_INTENT.get(lang, STORY_INTENT["ru"])
     low = text.lower()
     return any(re.search(p, low) for p in pats)
-    
+
+async def generate_story_text(uid: str, lang: str, topic: str, name: str|None, length: str="short") -> str:
+    # длина → ориентир по абзацам
+    target_paras = {"short": 5, "medium": 8, "long": 12}.get(length, 5)
+    system = {
+        "ru": "Ты пишешь тёплые короткие сказки для детей. Простой язык, добрый тон, 3–6 предложений в абзаце.",
+        "uk": "Ти пишеш теплі короткі казки для дітей. Проста мова, добрий тон.",
+        "en": "You write warm, short children’s bedtime stories. Simple language, kind tone."
+    }.get(lang, "Ты пишешь тёплые короткие сказки для детей.")
+    user = f"Тема: {topic or 'любая'}.\nИмя героя: {name or 'нет'}.\nАбзацев: {target_paras}.\nЗаверши на позитивной ноте."
+    try:
+        resp = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role":"system","content":system},
+                      {"role":"user","content":user}]
+        )
+        text = resp.choices[0].message.content.strip()
+        return text
+    except Exception as e:
+        logging.warning(f"Story LLM failed: {e}")
+        # запасной простой шаблон
+        base = f"Сказка про {'героя ' + name if name else 'маленького героя'} на тему «{topic or 'добро'}». "
+        return (base + "Однажды герой отправился навстречу чуду. "
+                "Дорога была добра и светла, и каждый шаг учил его смелости и дружбе. "
+                "В конце пути герой понял: главное чудо — в его сердце. И с этой теплотой он вернулся домой.")
+
+def _parse_story_args(raw: str) -> dict:
+    d = {"topic": "", "name": None, "length": "short", "voice": False}
+    d["topic"] = raw
+    # name=
+    m = re.search(r"(имя|name)\s*=\s*([^\|\n]+)", raw, flags=re.I)
+    if m: d["name"] = m.group(2).strip()
+    # length=
+    if re.search(r"(длинн|long)", raw, flags=re.I): d["length"]="long"
+    elif re.search(r"(средн|medium)", raw, flags=re.I): d["length"]="medium"
+    elif re.search(r"(корот|short)", raw, flags=re.I): d["length"]="short"
+    # voice=
+    if re.search(r"(голос|voice)\s*=\s*(on|да|yes)", raw, flags=re.I): d["voice"]=True
+    # topic cleanup
+    d["topic"] = re.sub(r"(имя|name|длина|length|голос|voice)\s*=\s*[^\|\n]+","", d["topic"], flags=re.I).replace("|"," ").strip()
+    return d
+
+
+async def story_cmd(update, context):
+    uid = str(update.effective_user.id)
+    if not is_premium(uid):
+        # красивый апселл
+        tpay = _p_i18n(uid)
+        return await update.message.reply_text(f"*{tpay['upsell_title']}*\n\n{tpay['upsell_body']}",
+                                               parse_mode="Markdown", reply_markup=_premium_kb(uid))
+    t = _s_i18n(uid)
+    lang = user_languages.get(uid, "ru")
+
+    # без аргументов — показать usage
+    if not context.args:
+        return await update.message.reply_text(f"{t['title']}\n\n{t['usage']}", parse_mode="Markdown")
+
+    raw = " ".join(context.args)
+    args = _parse_story_args(raw)
+
+    await update.message.reply_text(t["making"])
+    text = await generate_story_text(uid, lang, args["topic"], args["name"], args["length"])
+    # сохраним последнюю сказку для озвучки
+    context.chat_data[f"story_last_{uid}"] = {"text": text, "lang": lang}
+
+    kb = InlineKeyboardMarkup([
+        [InlineKeyboardButton(t["btn_more"],  callback_data=f"st:new:{args['topic'] or ''}")],
+        [InlineKeyboardButton(t["btn_voice"], callback_data="st:voice")],
+        [InlineKeyboardButton(t["btn_close"], callback_data="st:close")],
+    ])
+    await update.message.reply_text(f"*{t['title']}*\n\n{text}", parse_mode="Markdown", reply_markup=kb)
+
+    # если просили голосом — сразу озвучим
+    if args["voice"]:
+        await send_voice_response(context, int(uid), text, lang)
+
+async def story_callback(update, context):
+    q = update.callback_query
+    if not q or not q.data.startswith("st:"):
+        return
+    await q.answer()
+    uid = str(q.from_user.id)
+    lang = user_languages.get(uid, "ru")
+    t = _s_i18n(uid)
+
+    parts = q.data.split(":", 2)
+    action = parts[1]
+
+    if action == "confirm":  # из авто-предложения
+        topic = parts[2] if len(parts)>=3 else ""
+        await q.edit_message_text(t["making"])
+        text = await generate_story_text(uid, lang, topic, None, "short")
+        context.chat_data[f"story_last_{uid}"] = {"text": text, "lang": lang}
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton(t["btn_more"],  callback_data=f"st:new:{topic}")],
+            [InlineKeyboardButton(t["btn_voice"], callback_data="st:voice")],
+            [InlineKeyboardButton(t["btn_close"], callback_data="st:close")],
+        ])
+        await context.bot.send_message(chat_id=int(uid), text=f"*{t['title']}*\n\n{text}", parse_mode="Markdown", reply_markup=kb)
+        return
+
+    if action == "new":
+        topic = parts[2] if len(parts)>=3 else ""
+        text = await generate_story_text(uid, lang, topic, None, "short")
+        context.chat_data[f"story_last_{uid}"] = {"text": text, "lang": lang}
+        try:
+            await q.edit_message_text(f"*{t['title']}*\n\n{text}", parse_mode="Markdown",
+                                      reply_markup=InlineKeyboardMarkup([
+                                          [InlineKeyboardButton(t["btn_more"],  callback_data=f"st:new:{topic}")],
+                                          [InlineKeyboardButton(t["btn_voice"], callback_data="st:voice")],
+                                          [InlineKeyboardButton(t["btn_close"], callback_data="st:close")],
+                                      ]))
+        except:
+            await context.bot.send_message(chat_id=int(uid), text=f"*{t['title']}*\n\n{text}", parse_mode="Markdown")
+        return
+
+    if action == "voice":
+        last = context.chat_data.get(f"story_last_{uid}")
+        if last:
+            await send_voice_response(context, int(uid), last["text"], last["lang"])
+        return
+
+    if action == "close":
+        try: await q.edit_message_text(t["ready"])
+        except: pass
+        return
+
+
 def _tts_synthesize_to_ogg(text: str, lang: str) -> str:
     """Возвращает путь к .ogg (opus) для sendVoice. Требует gTTS + ffmpeg."""
     try:
