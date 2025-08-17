@@ -273,35 +273,38 @@ async def story_callback(update, context):
     lang = user_languages.get(uid, "ru")
     t = _s_i18n(uid)
 
-    parts = q.data.split(":", 2)
+    parts = q.data.split(":")
     action = parts[1]
 
-    if action == "confirm":  # из авто-предложения
-        topic = parts[2] if len(parts)>=3 else ""
+    if action == "confirm":
+        topic = context.chat_data.get(f"story_pending_{uid}", "")
         await q.edit_message_text(t["making"])
         text = await generate_story_text(uid, lang, topic, None, "short")
-        context.chat_data[f"story_last_{uid}"] = {"text": text, "lang": lang}
+        context.chat_data[f"story_last_{uid}"] = {"text": text, "lang": lang, "topic": topic}
         kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton(t["btn_more"],  callback_data=f"st:new:{topic}")],
+            [InlineKeyboardButton(t["btn_more"],  callback_data="st:new")],
             [InlineKeyboardButton(t["btn_voice"], callback_data="st:voice")],
             [InlineKeyboardButton(t["btn_close"], callback_data="st:close")],
         ])
-        await context.bot.send_message(chat_id=int(uid), text=f"*{t['title']}*\n\n{text}", parse_mode="Markdown", reply_markup=kb)
+        await context.bot.send_message(chat_id=int(uid), text=f"*{t['title']}*\n\n{text}",
+                                       parse_mode="Markdown", reply_markup=kb)
         return
 
     if action == "new":
-        topic = parts[2] if len(parts)>=3 else ""
+        last = context.chat_data.get(f"story_last_{uid}")
+        topic = last["topic"] if last else ""
         text = await generate_story_text(uid, lang, topic, None, "short")
-        context.chat_data[f"story_last_{uid}"] = {"text": text, "lang": lang}
+        context.chat_data[f"story_last_{uid}"] = {"text": text, "lang": lang, "topic": topic}
         try:
             await q.edit_message_text(f"*{t['title']}*\n\n{text}", parse_mode="Markdown",
                                       reply_markup=InlineKeyboardMarkup([
-                                          [InlineKeyboardButton(t["btn_more"],  callback_data=f"st:new:{topic}")],
+                                          [InlineKeyboardButton(t["btn_more"],  callback_data="st:new")],
                                           [InlineKeyboardButton(t["btn_voice"], callback_data="st:voice")],
                                           [InlineKeyboardButton(t["btn_close"], callback_data="st:close")],
                                       ]))
         except:
-            await context.bot.send_message(chat_id=int(uid), text=f"*{t['title']}*\n\n{text}", parse_mode="Markdown")
+            await context.bot.send_message(chat_id=int(uid), text=f"*{t['title']}*\n\n{text}",
+                                           parse_mode="Markdown")
         return
 
     if action == "voice":
@@ -314,7 +317,6 @@ async def story_callback(update, context):
         try: await q.edit_message_text(t["ready"])
         except: pass
         return
-
 
 def _tts_synthesize_to_ogg(text: str, lang: str) -> str:
     """Возвращает путь к .ogg (opus) для sendVoice. Требует gTTS + ffmpeg."""
