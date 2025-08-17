@@ -264,30 +264,26 @@ async def _voice_refresh(q, uid: str, tab: str):
                 )
             except Exception:
                 pass
-                
+
 def _voice_menu_text(uid: str) -> str:
-    t = _vm_i18n(uid); p = _vp(uid)
-    engine_name = t["engine_eleven"] if p.get("engine")=="eleven" else t["engine_gtts"]
-    voice_name  = _current_voice_name(uid)
-    speed = p.get("speed", 1.0)
-    vonly = t["on"] if p.get("voice_only") else t["off"]
-    a_st  = t["on"] if p.get("auto_story_voice", True) else t["off"]
+    t = _vs_i18n(uid)          
+    p = _vp(uid)
 
-    bg_key = p.get("bgm_kind","off")
-    bg_lab = BGM_PRESETS.get(bg_key, {"label":"—"}).get("label","—")
-    bg_db  = int(p.get("bgm_gain_db",-20))
+    engine_label = t["engine_eleven"] if p.get("engine","gTTS").lower() == "eleven" else t["engine_gtts"]
+    voice_label  = p.get("voice_name") or (t["engine_eleven"] if p.get("engine","gTTS").lower()=="eleven" else "gTTS")
+    bg_meta      = BGM_PRESETS.get(p.get("bgm_kind","off"), {"label": "Off"})
+    bg_label     = bg_meta.get("label", "Off")
+    gain_db      = p.get("bgm_gain_db", -20)
 
-    text = (
+    return (
         f"*{t['title']}*\n\n"
-        f"{t['engine'].format(engine=engine_name)}\n"
-        f"{t['voice'].format(voice=voice_name)}\n"
-        f"{t['speed'].format(speed=speed)}\n"
-        f"{t['voice_only'].format(v=vonly)}\n"
-        f"{t['auto_story'].format(v=a_st)}\n"
-        f"{t['bgm'].format(bg=bg_lab, db=bg_db)}"
+        f"{t['engine'].format(engine=engine_label)}\n"
+        f"{t['voice'].format(voice=voice_label)}\n"
+        f"{t['speed'].format(speed=p.get('speed', 1.0))}\n"
+        f"{t['voice_only'].format(v=t['on'] if p.get('voice_only') else t['off'])}\n"
+        f"{t['auto_story'].format(v=t['on'] if p.get('auto_story_voice', True) else t['off'])}\n"
+        f"{t['bgm'].format(bg=bg_label, db=gain_db)}"
     )
-    # страховка от пустоты
-    return text or f"*{t['title']}*"
 
 def _voice_kb(uid: str, tab: str = "engine") -> InlineKeyboardMarkup:
     t = _v_ui_i18n(uid)
