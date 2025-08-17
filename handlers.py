@@ -20,10 +20,12 @@ from collections import defaultdict
 from texts import (
     VOICE_TEXTS_BY_LANG,
     STORY_INTENT,
+    VOICE_PRESETS,
+    VOICE_UI_TEXTS,
     BGM_PRESETS,
     STORY_TEXTS,
     LANG_TO_TTS,
-    VOICE_TEXTS,
+    VOICE_MODE_TEXTS,
     CHALLENGE_BANK,
     GH_TEXTS,
     SETTINGS_TEXTS,
@@ -169,6 +171,10 @@ QUIET_END   = 9   # до 09:00
 
 def _vm_i18n(uid:str)->dict:
     return VOICE_MODE_TEXTS.get(user_languages.get(uid,"ru"), VOICE_TEXTS["ru"])
+
+def _v_ui_i18n(uid: str) -> dict:
+    lang = user_languages.get(uid, "ru")
+    return VOICE_UI_TEXTS.get(lang, VOICE_UI_TEXTS["ru"])
     
 def _gh_i18n(uid: str) -> dict:
     return GH_TEXTS.get(user_languages.get(uid, "ru"), GH_TEXTS["ru"])
