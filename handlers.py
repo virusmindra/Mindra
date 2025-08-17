@@ -20,6 +20,7 @@ from collections import defaultdict
 from texts import (
     VOICE_TEXTS_BY_LANG,
     STORY_INTENT,
+    BGM_PRESETS,
     STORY_TEXTS,
     LANG_TO_TTS,
     VOICE_TEXTS,
