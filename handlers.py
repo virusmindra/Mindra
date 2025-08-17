@@ -196,22 +196,6 @@ def _looks_like_story_intent(text: str, lang: str) -> bool:
     low = text.lower()
     return any(re.search(p, low) for p in pats)
 
-
-def _vp(uid: str):
-    if uid not in user_voice_prefs:
-        user_voice_prefs[uid] = {
-            "engine": "eleven" if _has_eleven() else "gTTS",
-            "voice_id": "",
-            "speed": 1.0,
-            "voice_only": False,
-            "auto_story_voice": True,
-            "accent": "com",
-            "bgm_kind": "off",
-            "bgm_gain_db": -20,
-            "auto_bgm_for_stories": True,
-        }
-    return user_voice_prefs[uid]
-
 def _voice_menu_text(uid: str) -> str:
     t = _v_i18n(uid); p = _vp(uid)
     eng = t["engine_eleven"] if p["engine"].lower().startswith("eleven") else t["engine_gtts"]
@@ -345,16 +329,16 @@ def _vp(uid: str):
     """Профиль голосовых настроек пользователя с дефолтами."""
     if uid not in user_voice_prefs:
         user_voice_prefs[uid] = {
-            "engine": "eleven" if os.getenv("ELEVEN_API_KEY") else "gtts",  # дефолт: Eleven, если ключ есть
-            "voice_id": "",           # для Eleven/Azure
+            "engine": "eleven" if _has_eleven() else "gTTS",  # согласовано с меню/сравнениями
+            "voice_id": "",            # voice id для Eleven (или др. движков в будущем)
             "speed": 1.0,
-            "voice_only": False,      # слать только гс без текста
-            "auto_story_voice": True, # авто-озвучка сказок
-            "style": "gentle",        # зарезервировано (Azure)
-            "accent": "com",          # gTTS tld
-            "bgm_kind": "off",        # ключ из BGM_PRESETS
-            "bgm_gain_db": -20,       # громкость фона (дБ)
-            "auto_bgm_for_stories": True,  # если фон "off" — подмешать океан к сказке
+            "voice_only": False,       # отправлять только голос без текста
+            "auto_story_voice": True,  # авто-озвучка сказок
+            "style": "gentle",         # зарезервировано (на будущее, напр. Azure)
+            "accent": "com",           # gTTS: tld (.com/.ru и т.п.)
+            "bgm_kind": "off",         # ключ из BGM_PRESETS
+            "bgm_gain_db": -20,        # громкость фона (дБ)
+            "auto_bgm_for_stories": True,  # если фон off — подмешивать океан к сказкам
         }
     return user_voice_prefs[uid]
 
