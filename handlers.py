@@ -217,11 +217,16 @@ def _current_voice_name(uid: str) -> str:
         return "gTTS"
     return "—"
 
+ENGINE_ELEVEN = "eleven"
+ENGINE_GTTS   = "gtts"
+
+# профайл пользователя
 def _vp(uid: str):
     if uid not in user_voice_prefs:
         user_voice_prefs[uid] = {
-            "engine": "eleven" if _has_eleven() else "gTTS",
+            "engine": ENGINE_ELEVEN if _has_eleven() else ENGINE_GTTS,
             "voice_id": DEFAULT_ELEVEN_FEMALE if _has_eleven() else "",
+            "voice_name": "Female (Eleven)" if _has_eleven() else "gTTS",
             "speed": 1.0,
             "voice_only": False,
             "auto_story_voice": True,
@@ -231,7 +236,7 @@ def _vp(uid: str):
             "auto_bgm_for_stories": True,
         }
     return user_voice_prefs[uid]
-
+    
 def _looks_like_story_intent(text: str, lang: str) -> bool:
     pats = STORY_INTENT.get(lang, STORY_INTENT["ru"])
     low = text.lower()
