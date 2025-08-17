@@ -228,43 +228,23 @@ def _looks_like_story_intent(text: str, lang: str) -> bool:
     return any(re.search(p, low) for p in pats)
 
 # утилита безопасного обновления текста/клавы
-
-async def _voice_refresh(q, uid: str, tab: str):
+async def _voice_refresh(q: CallbackQuery, uid: str, tab: str):
     try:
         await q.edit_message_text(
             _voice_menu_text(uid),
             parse_mode="Markdown",
-            reply_markup=_voice_kb(uid, tab)
+            reply_markup=_voice_kb(uid, tab),
         )
     except BadRequest as e:
-        # если "Message is not modified" или странный 400 — просто обновим только клавиатуру,
-        # а если и она не меняется — молча игнорируем
-        msg = str(e)
-        if "Message is not modified" in msg:
+        if "Message is not modified" in str(e):
+            # просто обновим только клавиатуру
             try:
                 await q.edit_message_reply_markup(reply_markup=_voice_kb(uid, tab))
             except Exception:
                 pass
-        elif "message text is empty" in msg.lower():
-            try:
-                await q.edit_message_text(
-                    _voice_menu_text(uid) or "🎙",
-                    parse_mode="Markdown",
-                    reply_markup=_voice_kb(uid, tab)
-                )
-            except Exception:
-                pass
         else:
-            # на край — отправим новое сообщение
-            try:
-                await q.message.reply_text(
-                    _voice_menu_text(uid),
-                    parse_mode="Markdown",
-                    reply_markup=_voice_kb(uid, tab)
-                )
-            except Exception:
-                pass
-
+            raise
+            
 def _voice_menu_text(uid: str) -> str:
     t = _vs_i18n(uid)          
     p = _vp(uid)
