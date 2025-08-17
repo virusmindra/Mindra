@@ -188,11 +188,159 @@ def _tts_lang(lang: str) -> str:
 def _s_i18n(uid: str) -> dict:
     return STORY_TEXTS.get(user_languages.get(uid, "ru"), STORY_TEXTS["ru"])
 
+def _has_eleven():
+    return bool(os.getenv("ELEVEN_API_KEY"))
+    
 def _looks_like_story_intent(text: str, lang: str) -> bool:
     pats = STORY_INTENT.get(lang, STORY_INTENT["ru"])
     low = text.lower()
     return any(re.search(p, low) for p in pats)
 
+
+def _vp(uid: str):
+    if uid not in user_voice_prefs:
+        user_voice_prefs[uid] = {
+            "engine": "eleven" if _has_eleven() else "gTTS",
+            "voice_id": "",
+            "speed": 1.0,
+            "voice_only": False,
+            "auto_story_voice": True,
+            "accent": "com",
+            "bgm_kind": "off",
+            "bgm_gain_db": -20,
+            "auto_bgm_for_stories": True,
+        }
+    return user_voice_prefs[uid]
+
+def _voice_menu_text(uid: str) -> str:
+    t = _v_i18n(uid); p = _vp(uid)
+    eng = t["engine_eleven"] if p["engine"].lower().startswith("eleven") else t["engine_gtts"]
+    voice = "—"
+    # подцепим подпись из пресетов, если совпал id
+    presets = VOICE_PRESETS.get(user_languages.get(uid,"ru"), VOICE_PRESETS["ru"])
+    for name, eng_k, vid in presets:
+        if vid and vid == p.get("voice_id") and eng_k.lower() == p["engine"].lower():
+            voice = name
+            break
+    if voice == "—" and p.get("voice_id"):
+        voice = p["voice_id"]
+    bg = BGM_PRESETS.get(p["bgm_kind"], {"label":"—"})["label"]
+    return (
+        f"*{t['title']}*\n\n"
+        f"{t['engine'].format(engine=eng)}\n"
+        f"{t['voice'].format(voice=voice)}\n"
+        f"{t['speed'].format(speed=p['speed'])}\n"
+        f"{t['voice_only'].format(v=t['on'] if p['voice_only'] else t['off'])}\n"
+        f"{t['auto_story'].format(v=t['on'] if p['auto_story_voice'] else t['off'])}\n"
+        f"{t['bgm'].format(bg=bg, db=p['bgm_gain_db'])}\n"
+        + (f"\n{t['no_eleven_key']}" if not _has_eleven() else "")
+    )
+
+def _voice_kb(uid: str, tab: str="engine") -> InlineKeyboardMarkup:
+    t = _v_i18n(uid); p = _vp(uid); rows = []
+
+    if tab == "engine":
+        rows.append([
+            InlineKeyboardButton(("✅ " if p["engine"]=="eleven" else "") + t["engine_eleven"], callback_data="v:engine:eleven"),
+            InlineKeyboardButton(("✅ " if p["engine"]=="gTTS"   else "") + t["engine_gtts"],   callback_data="v:engine:gTTS"),
+        ])
+    elif tab == "voice":
+        presets = VOICE_PRESETS.get(user_languages.get(uid,"ru"), VOICE_PRESETS["ru"])
+        for i,(name, eng_k, vid) in enumerate(presets):
+            # скрываем Eleven-варианты при отсутствии ключа
+            if eng_k.lower()=="eleven" and not _has_eleven():
+                continue
+            rows.append([InlineKeyboardButton(name, callback_data=f"v:voice:{i}")])
+    elif tab == "speed":
+        rows.append([
+            InlineKeyboardButton("➖ 0.9x", callback_data="v:speed:0.9"),
+            InlineKeyboardButton("1.0x",    callback_data="v:speed:1.0"),
+            InlineKeyboardButton("➕ 1.1x", callback_data="v:speed:1.1"),
+        ])
+    elif tab == "beh":
+        rows.append([InlineKeyboardButton(("✅ " if p["voice_only"] else "❌ ") + "Voice only", callback_data="v:beh:voiceonly")])
+        rows.append([InlineKeyboardButton(("✅ " if p["auto_story_voice"] else "❌ ") + "Auto story voice", callback_data="v:beh:autostory")])
+    elif tab == "bg":
+        # выбор фона
+        for key, meta in BGM_PRESETS.items():
+            mark = "✅ " if p["bgm_kind"] == key else ""
+            rows.append([InlineKeyboardButton(mark + meta["label"], callback_data=f"v:bg:set:{key}")])
+        rows.append([
+            InlineKeyboardButton("-30dB", callback_data="v:bg:gain:-30"),
+            InlineKeyboardButton("-25",   callback_data="v:bg:gain:-25"),
+            InlineKeyboardButton("-22",   callback_data="v:bg:gain:-22"),
+            InlineKeyboardButton("-20",   callback_data="v:bg:gain:-20"),
+            InlineKeyboardButton("-18",   callback_data="v:bg:gain:-18"),
+        ])
+
+    # Вкладки
+    rows.append([
+        InlineKeyboardButton(t["btn_engine"], callback_data="v:tab:engine"),
+        InlineKeyboardButton(t["btn_voice"],  callback_data="v:tab:voice"),
+        InlineKeyboardButton(t["btn_speed"],  callback_data="v:tab:speed"),
+        InlineKeyboardButton(t["btn_beh"],    callback_data="v:tab:beh"),
+        InlineKeyboardButton(t["btn_bg"],     callback_data="v:tab:bg"),
+    ])
+    return InlineKeyboardMarkup(rows)
+
+# === /voice_settings ===
+async def voice_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    await update.message.reply_text(
+        _voice_menu_text(uid),
+        parse_mode="Markdown",
+        reply_markup=_voice_kb(uid, "engine")
+    )
+
+# === Callback ===
+async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    if not q or not q.data.startswith("v:"):
+        return
+    await q.answer()
+    uid = str(q.from_user.id)
+    p = _vp(uid)
+
+    parts = q.data.split(":")
+    kind = parts[1]
+
+    if kind == "tab":
+        tab = parts[2]
+        return await q.edit_message_text(_voice_menu_text(uid), parse_mode="Markdown", reply_markup=_voice_kb(uid, tab))
+
+    if kind == "engine":
+        p["engine"] = parts[2]
+    elif kind == "voice":
+        idx = int(parts[2])
+        presets = VOICE_PRESETS.get(user_languages.get(uid,"ru"), VOICE_PRESETS["ru"])
+        if 0 <= idx < len(presets):
+            name, eng_k, vid = presets[idx]
+            if eng_k.lower()=="eleven" and not _has_eleven():
+                pass
+            else:
+                p["engine"] = eng_k
+                p["voice_id"] = vid or p.get("voice_id","")
+    elif kind == "speed":
+        try:
+            p["speed"] = float(parts[2])
+        except:
+            pass
+    elif kind == "beh":
+        sub = parts[2]
+        if sub == "voiceonly":
+            p["voice_only"] = not p["voice_only"]
+        elif sub == "autostory":
+            p["auto_story_voice"] = not p["auto_story_voice"]
+    elif kind == "bg":
+        sub = parts[2]
+        if sub == "set":
+            p["bgm_kind"] = parts[3]
+        elif sub == "gain":
+            try: p["bgm_gain_db"] = int(parts[3])
+            except: pass
+
+    await q.edit_message_text(_voice_menu_text(uid), parse_mode="Markdown", reply_markup=_voice_kb(uid, "engine"))
+    
 def _vp(uid: str):
     """Профиль голосовых настроек пользователя с дефолтами."""
     if uid not in user_voice_prefs:
@@ -3774,6 +3922,9 @@ handlers = [
     CommandHandler("voice_mode", voice_mode_cmd),
     CommandHandler("story", story_cmd),
     CallbackQueryHandler(story_callback, pattern=r"^st:"),
+    CommandHandler("voice_settings", voice_settings),
+    CallbackQueryHandler(voice_settings_cb, pattern=r"^v:"),
+
     
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
