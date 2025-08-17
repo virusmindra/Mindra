@@ -243,40 +243,46 @@ def _looks_like_story_intent(text: str, lang: str) -> bool:
     return any(re.search(p, low) for p in pats)
 
 # Универсальное обновление текста/клавиатуры меню
-async def _voice_refresh(q: CallbackQuery, uid: str, tab: str):
-    text = _voice_menu_text(uid)
-    kb = _voice_kb(uid, tab)
-    try:
-        await q.edit_message_text(text, parse_mode="Markdown", reply_markup=kb)
-    except BadRequest as e:
-        if "message is not modified" in str(e).lower():
-            # попробуем хотя бы разметку обновить
-            try:
-                await q.edit_message_reply_markup(reply_markup=kb)
-            except Exception:
-                pass
-        else:
-            raise
 
+async def _voice_refresh(q, uid: str, tab: str):
+    new_text = _voice_menu_text(uid) or "🎙"
+    new_kb = _voice_kb(uid, tab)
+
+    cur = q.message
+    same_text = (cur.text or "") == (new_text or "")
+    same_kb = (cur.reply_markup and cur.reply_markup.to_dict()) == (new_kb and new_kb.to_dict())
+
+    if same_text and same_kb:
+        # нечего менять — просто выходим
+        return
+
+    try:
+        await q.edit_message_text(new_text, parse_mode="Markdown", reply_markup=new_kb)
+    except BadRequest as e:
+        # на всякий случай перехватим edge-кейс
+        if "message is not modified" in str(e).lower():
+            return
+        # если вдруг был другой баг — пробуем хотя бы разнести на новое сообщение
+        try:
+            await q.message.reply_text(new_text, parse_mode="Markdown", reply_markup=new_kb)
+        except Exception:
+            raise
             
 def _voice_menu_text(uid: str) -> str:
-    t = _vs_i18n(uid)          
-    p = _vp(uid)
-
-    engine_label = t["engine_eleven"] if p.get("engine","gTTS").lower() == "eleven" else t["engine_gtts"]
-    voice_label  = p.get("voice_name") or (t["engine_eleven"] if p.get("engine","gTTS").lower()=="eleven" else "gTTS")
-    bg_meta      = BGM_PRESETS.get(p.get("bgm_kind","off"), {"label": "Off"})
-    bg_label     = bg_meta.get("label", "Off")
-    gain_db      = p.get("bgm_gain_db", -20)
+    t = _vm_i18n(uid); p = _vp(uid)
+    eng_label = t["engine_eleven"] if p.get("engine")==ENGINE_ELEVEN else t["engine_gtts"]
+    vname = p.get("voice_name") or ("Eleven default" if p.get("engine")==ENGINE_ELEVEN else "gTTS")
+    speed = p.get("speed", 1.0)
+    bg_cfg = BGM_PRESETS.get(p.get("bgm_kind","off"), {"label":"Off"})
+    bg_label = bg_cfg["label"]
+    bg_db = p.get("bgm_gain_db", -20)
 
     return (
         f"*{t['title']}*\n\n"
-        f"{t['engine'].format(engine=engine_label)}\n"
-        f"{t['voice'].format(voice=voice_label)}\n"
-        f"{t['speed'].format(speed=p.get('speed', 1.0))}\n"
-        f"{t['voice_only'].format(v=t['on'] if p.get('voice_only') else t['off'])}\n"
-        f"{t['auto_story'].format(v=t['on'] if p.get('auto_story_voice', True) else t['off'])}\n"
-        f"{t['bgm'].format(bg=bg_label, db=gain_db)}"
+        f"{t['engine'].format(engine=eng_label)}\n"
+        f"{t['voice'].format(voice=vname)}\n"
+        f"{t['speed'].format(speed=speed)}\n"
+        f"{t['bgm'].format(bg=bg_label, db=bg_db)}"
     )
 
 def _voice_kb(uid: str, tab: str = "engine") -> InlineKeyboardMarkup:
