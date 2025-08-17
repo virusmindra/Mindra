@@ -169,10 +169,12 @@ REMIND_DB_PATH = os.getenv("REMIND_DB_PATH", "reminders.sqlite3")
 QUIET_START = 22  # не тревожить с 22:00
 QUIET_END   = 9   # до 09:00
 
-def _vm_i18n(uid:str)->dict:
-    return VOICE_MODE_TEXTS.get(user_languages.get(uid,"ru"), VOICE_TEXTS["ru"])
-
-def _v_ui_i18n(uid: str) -> dict:
+def _vm_i18n(uid: str) -> dict:
+    lang = user_languages.get(uid, "ru")
+    return VOICE_MODE_TEXTS.get(lang, VOICE_MODE_TEXTS["ru"])
+    
+# ✅ для экрана настроек /voice_settings
+def _vs_i18n(uid: str) -> dict:
     lang = user_languages.get(uid, "ru")
     return VOICE_UI_TEXTS.get(lang, VOICE_UI_TEXTS["ru"])
     
