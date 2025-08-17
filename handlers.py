@@ -227,7 +227,7 @@ def _looks_like_story_intent(text: str, lang: str) -> bool:
 
 # утилита безопасного обновления текста/клавы
 
-async def _voice_refresh(q: telegram.CallbackQuery, uid: str, tab: str):
+async def _voice_refresh(q, uid: str, tab: str):
     try:
         await q.edit_message_text(
             _voice_menu_text(uid),
