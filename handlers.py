@@ -188,7 +188,7 @@ def _tts_lang(lang: str) -> str:
 def _s_i18n(uid: str) -> dict:
     return STORY_TEXTS.get(user_languages.get(uid, "ru"), STORY_TEXTS["ru"])
 
-def _has_eleven():
+def _has_eleven(): 
     return bool(os.getenv("ELEVEN_API_KEY"))
     
 def _looks_like_story_intent(text: str, lang: str) -> bool:
