@@ -196,6 +196,7 @@ def _looks_like_story_intent(text: str, lang: str) -> bool:
     low = text.lower()
     return any(re.search(p, low) for p in pats)
 
+# утилита безопасного обновления текста/клавы
 async def _voice_refresh(q, uid: str, tab: str):
     text = _voice_menu_text(uid)
     kb = _voice_kb(uid, tab)
@@ -203,14 +204,14 @@ async def _voice_refresh(q, uid: str, tab: str):
         await q.edit_message_text(text, parse_mode="Markdown", reply_markup=kb)
     except BadRequest as e:
         if "Message is not modified" in str(e):
-            # если текст тот же, попробуем обновить только клавиатуру
+            # если ничего не изменилось — просто обновим клаву
             try:
                 await q.edit_message_reply_markup(reply_markup=kb)
             except BadRequest:
                 pass
         else:
             raise
-            
+
 def _voice_menu_text(uid: str) -> str:
     t = _v_ui_i18n(uid)
     p = _vp(uid)
