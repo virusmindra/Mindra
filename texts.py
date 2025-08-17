@@ -211,56 +211,58 @@ VOICE_UI_TEXTS = {
     },
 }
 
+DEFAULT_ELEVEN_FEMALE = "21m00Tcm4TlvDq8ikWAM"
+DEFAULT_ELEVEN_MALE = "JBFqnCBsd6RMkjVDRZzb" 
 # === Пресеты голосов (10 языков; подставь voice_id где нужно) ===
 VOICE_PRESETS = {
     "ru": [
-        ("Женский (Eleven)", "eleven", ""), 
-        ("Мужской (Eleven)", "eleven", ""),
+        ("Женский (Eleven)", "eleven", DEFAULT_ELEVEN_FEMALE),
+        ("Мужской (Eleven)", "eleven", DEFAULT_ELEVEN_MALE),
         ("Женский (gTTS)",   "gTTS",   ""),
     ],
     "uk": [
-        ("Жіночий (Eleven)",  "eleven", ""),
-        ("Чоловічий (Eleven)","eleven", ""),
+        ("Жіночий (Eleven)", "eleven", DEFAULT_ELEVEN_FEMALE),
+        ("Чоловічий (Eleven)","eleven", DEFAULT_ELEVEN_MALE),
         ("Жіночий (gTTS)",    "gTTS",   ""),
     ],
     "md": [
-        ("Feminin (Eleven)",  "eleven", ""),
-        ("Masculin (Eleven)", "eleven", ""),
+        ("Feminin (Eleven)",  "eleven", DEFAULT_ELEVEN_FEMALE),
+        ("Masculin (Eleven)", "eleven", DEFAULT_ELEVEN_MALE),
         ("Feminin (gTTS)",    "gTTS",   ""),
     ],
     "be": [
-        ("Жаночы (Eleven)",   "eleven", ""),
-        ("Мужчынскі (Eleven)","eleven", ""),
+        ("Жаночы (Eleven)",   "eleven", DEFAULT_ELEVEN_FEMALE),
+        ("Мужчынскі (Eleven)","eleven", DEFAULT_ELEVEN_MALE),
         ("Жаночы (gTTS)",     "gTTS",   ""),
     ],
     "kk": [
-        ("Әйел (Eleven)",     "eleven", ""),
-        ("Ер (Eleven)",       "eleven", ""),
+        ("Әйел (Eleven)",     "eleven", DEFAULT_ELEVEN_FEMALE),
+        ("Ер (Eleven)",       "eleven", DEFAULT_ELEVEN_MALE),
         ("Әйел (gTTS)",       "gTTS",   ""),
     ],
     "kg": [
-        ("Аял (Eleven)",      "eleven", ""),
-        ("Эркек (Eleven)",    "eleven", ""),
+        ("Аял (Eleven)",      "eleven", DEFAULT_ELEVEN_FEMALE),
+        ("Эркек (Eleven)",    "eleven", DEFAULT_ELEVEN_MALE),
         ("Аял (gTTS)",        "gTTS",   ""),
     ],
     "hy": [
-        ("Իգական (Eleven)",   "eleven", ""),
-        ("Արական (Eleven)",   "eleven", ""),
+        ("Իգական (Eleven)",   "eleven", DEFAULT_ELEVEN_FEMALE),
+        ("Արական (Eleven)",   "eleven", DEFAULT_ELEVEN_MALE),
         ("Իգական (gTTS)",     "gTTS",   ""),
     ],
     "ka": [
-        ("ქალი (Eleven)",     "eleven", ""),
-        ("კაცი (Eleven)",     "eleven", ""),
+        ("ქალი (Eleven)",     "eleven", DEFAULT_ELEVEN_FEMALE),
+        ("კაცი (Eleven)",     "eleven", DEFAULT_ELEVEN_MALE),
         ("ქალი (gTTS)",       "gTTS",   ""),
     ],
     "ce": [
-        ("Женский (Eleven)",  "eleven", ""),
-        ("Мужской (Eleven)",  "eleven", ""),
-        ("Женский (gTTS)",    "gTTS",   ""),
+        ("Юхург (Eleven)",    "eleven", DEFAULT_ELEVEN_FEMALE),
+        ("Дош (Eleven)",      "eleven", DEFAULT_ELEVEN_MALE),
+        ("Юхург (gTTS)",      "gTTS",   ""),
     ],
     "en": [
-        ("Female (Eleven)",   "eleven", ""),
-        ("Male (Eleven)",     "eleven", ""),
+        ("Female (Eleven)",   "eleven", DEFAULT_ELEVEN_FEMALE),
+        ("Male (Eleven)",     "eleven", DEFAULT_ELEVEN_MALE),
         ("Female (gTTS)",     "gTTS",   ""),
     ],
 }
