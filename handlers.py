@@ -194,8 +194,8 @@ def _tts_lang(lang: str) -> str:
 def _s_i18n(uid: str) -> dict:
     return STORY_TEXTS.get(user_languages.get(uid, "ru"), STORY_TEXTS["ru"])
 
-def _has_eleven(): 
-    return bool(os.getenv("ELEVEN_API_KEY"))
+def _has_eleven() -> bool:
+    return bool(ELEVEN_API_KEY)
 
 def _current_voice_name(uid: str) -> str:
     lang = user_languages.get(uid, "ru")
