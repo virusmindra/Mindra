@@ -9,6 +9,7 @@ from telegram.ext import (
     ContextTypes,
     filters
 )
+from telegram.request import HTTPXRequest
 from handlers import (
     start,
     language_callback,
@@ -81,20 +82,24 @@ async def error_handler(update, context):
         await update.effective_message.reply_text("😵 Ой, что-то пошло не так. Я уже разбираюсь с этим.")
 
 async def main():
-    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
+    # 👇 кастомные таймауты Telegram-клиента (фикс таймаута при отправке голосовых и т.п.)
+    request = HTTPXRequest(
+        connect_timeout=30,
+        read_timeout=60,
+        write_timeout=60,
+        pool_timeout=60,
+    )
+    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).request(request).build()
 
     # ✅ гарантируем схему БД напоминаний до старта
     ensure_remind_db()
-
-    # после сборки app:
+    # БД премиума
     ensure_premium_db()
 
     # 👉 Сначала текст
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
-
     # 👉 Голос
     app.add_handler(MessageHandler(filters.VOICE, handle_voice))
-
     # 👉 Остальные хендлеры
     for handler in handlers:
         app.add_handler(handler)
@@ -132,7 +137,9 @@ async def main():
     app.job_queue.run_repeating(
         send_random_poll,
         interval=timedelta(days=2),
-        first=datetime.now(pytz.timezone("Europe/Kiev")).replace(hour=12, minute=0, second=0, microsecond=0).astimezone(pytz.utc)
+        first=datetime.now(pytz.timezone("Europe/Kiev")).replace(
+            hour=12, minute=0, second=0, microsecond=0
+        ).astimezone(pytz.utc)
     )
 
     app.job_queue.run_daily(
