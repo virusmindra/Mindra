@@ -468,16 +468,27 @@ def _tts_synthesize_to_ogg(text: str, lang: str) -> str:
     except Exception: pass
     return ogg_path
 
-async def send_voice_response(context, chat_id: int, text: str, lang: str):
+async def send_voice_response(context, chat_id: int, text: str, lang: str, bgm_kind_override: str | None = None):
+    uid = str(chat_id)
     try:
-        ogg_path = _tts_synthesize_to_ogg(text, lang)
+        ogg_path = synthesize_to_ogg(text, lang, uid)  # ElevenLabs → gTTS (фолбэк) внутри
+        # 🎧 Подмешиваем фон, если выбран
+        p = _vp(uid)
+        kind = bgm_kind_override if bgm_kind_override is not None else p.get("bgm_kind", "off")
+        if kind != "off":
+            bg = BGM_PRESETS.get(kind, {}).get("path")
+            ogg_path = _mix_with_bgm(ogg_path, bg, p.get("bgm_gain_db", -20))
+
         with open(ogg_path, "rb") as f:
             await context.bot.send_voice(chat_id=chat_id, voice=f)
-        try: os.remove(ogg_path)
-        except Exception: pass
     except Exception as e:
         logging.exception(f"TTS failed for chat_id={chat_id}: {e}")
-        # не дублируем текст — он уже отправлен как обычное сообщение выше
+        # ничего не шлём текстом, чтобы не дублировать уже отправленный ответ
+    finally:
+        try:
+            os.remove(ogg_path)  # почистим временный файл, если был
+        except Exception:
+            pass
 
 def require_premium_message(update, context, uid):
     t = _p_i18n(uid)
