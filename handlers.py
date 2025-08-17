@@ -174,14 +174,19 @@ QUIET_END   = 9   # до 09:00
 DEFAULT_ELEVEN_FEMALE = "21m00Tcm4TlvDq8ikWAM"
 DEFAULT_ELEVEN_MALE = "JBFqnCBsd6RMkjVDRZzb" 
 
-def _vm_i18n(uid: str) -> dict:
+def _v_i18n(uid: str) -> dict:
+    """Короткие тексты для /voice_mode (on/off/help)."""
     lang = user_languages.get(uid, "ru")
     return VOICE_MODE_TEXTS.get(lang, VOICE_MODE_TEXTS["ru"])
-    
-# ✅ для экрана настроек /voice_settings
-def _vs_i18n(uid: str) -> dict:
+
+def _vm_i18n(uid: str) -> dict:
+    """Полное меню для /voice_settings."""
     lang = user_languages.get(uid, "ru")
     return VOICE_UI_TEXTS.get(lang, VOICE_UI_TEXTS["ru"])
+
+# Обратная совместимость: где-то могли звать _v_ui_i18n
+def _v_ui_i18n(uid: str) -> dict:
+    return _vm_i18n(uid)
     
 def _gh_i18n(uid: str) -> dict:
     return GH_TEXTS.get(user_languages.get(uid, "ru"), GH_TEXTS["ru"])
