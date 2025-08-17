@@ -15,6 +15,7 @@ import uuid
 import asyncio
 import pytz
 import shutil
+from elevenlabs import ElevenLabs 
 from collections import defaultdict
 from texts import (
     VOICE_TEXTS_BY_LANG,
