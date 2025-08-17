@@ -3564,6 +3564,8 @@ handlers = [
     
     # --- Чаты и голос
     CommandHandler("voice_mode", voice_mode_cmd),
+    CommandHandler("story", story_cmd),
+    CallbackQueryHandler(story_callback, pattern=r"^st:"),
     
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
