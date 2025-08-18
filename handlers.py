@@ -170,6 +170,9 @@ REMIND_DB_PATH = os.getenv("REMIND_DB_PATH", "reminders.sqlite3")
 QUIET_START = 22  # не тревожить с 22:00
 QUIET_END   = 9   # до 09:00
 
+STORY_COOLDOWN_HOURS = 12
+_story_last_suggest: dict[str, datetime] = {}   # uid -> utc time
+_story_optout_until: dict[str, datetime] = {}   # uid -> utc time
 
 DEFAULT_ELEVEN_FEMALE = "21m00Tcm4TlvDq8ikWAM"
 DEFAULT_ELEVEN_MALE = "JBFqnCBsd6RMkjVDRZzb" 
