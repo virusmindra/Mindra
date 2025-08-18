@@ -240,13 +240,26 @@ def _vp(uid: str):
         }
     return user_voice_prefs[uid]
     
-def _looks_like_story_intent(text: str, lang: str) -> bool:
-    pats = STORY_INTENT.get(lang, STORY_INTENT["ru"])
-    low = text.lower()
-    return any(re.search(p, low) for p in pats)
-
-# Универсальное обновление текста/клавиатуры меню
-
+def _looks_like_story_intent(text: str, lang: str, uid: str) -> bool:
+    t = text.lower().strip()
+    # короткая фраза с явным ключевым словом
+    kws = _STORY_KEYWORDS.get(lang, _STORY_KEYWORDS["ru"])
+    hit = any(k in t for k in kws)
+    if not hit:
+        return False
+    # «не сейчас»: если пользователь отказался недавно
+    now = datetime.now(timezone.utc)
+    if uid in _story_optout_until and now < _story_optout_until[uid]:
+        return False
+    # кулдаун
+    last = _story_last_suggest.get(uid)
+    if last and (now - last) < timedelta(hours=STORY_COOLDOWN_HOURS):
+        return False
+    # не слишком длинный запрос (иначе это обычный вопрос)
+    if len(t.split()) > 16:
+        return False
+    return True
+    
 async def _voice_refresh(q, uid: str, tab: str):
     new_text = _voice_menu_text(uid) or "🎙"
     new_kb = _voice_kb(uid, tab)
