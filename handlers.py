@@ -243,7 +243,7 @@ def _vp(uid: str):
 def _looks_like_story_intent(text: str, lang: str, uid: str) -> bool:
     t = text.lower().strip()
     # короткая фраза с явным ключевым словом
-    kws = _STORY_KEYWORDS.get(lang, _STORY_KEYWORDS["ru"])
+    kws = STORY_INTEN.get(lang, STORY_INTEN["ru"])
     hit = any(k in t for k in kws)
     if not hit:
         return False
