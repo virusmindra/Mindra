@@ -462,30 +462,32 @@ def _to_ogg_from_mp3(mp3_path: str, speed: float=1.0) -> str:
     except: pass
     return out_path
 
-def _mix_with_bgm(voice_ogg: str, bg_path: str, bg_gain_db: int=-20) -> str:
-    if not bg_path or not os.path.exists(bg_path) or not shutil.which("ffmpeg"):
-        return voice_ogg
-    out_path = f"/tmp/{uuid.uuid4().hex}.ogg"
-    cmd = [
-        "ffmpeg","-y",
-        "-i", voice_ogg,
-        "-stream_loop","-1","-i", bg_path,
-        "-filter_complex",
-        f"[1:a]volume={bg_gain_db}dB[a1];"
-        f"[0:a][a1]amix=inputs=2:duration=first:dropout_transition=0,"
-        f"loudnorm=I=-19:LRA=7:TP=-1.5",
-        "-c:a","libopus","-b:a","48k","-ar","48000","-ac","1",
-        out_path
-    ]
+def _mix_with_bgm(voice_ogg_path: str, bg_path: str | None, gain_db: int = -20) -> str:
     try:
-        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        try: os.remove(voice_ogg)
-        except: pass
-        return out_path
-    except Exception as e:
-        logging.exception(f"ffmpeg mix failed: {e}")
-        return voice_ogg
+        if not bg_path or not os.path.exists(bg_path):
+            logging.warning(f"BGM: file not found: {bg_path}")
+            return voice_ogg_path
+        if shutil.which("ffmpeg") is None:
+            logging.warning("BGM: ffmpeg not found, skip mix")
+            return voice_ogg_path
 
+        vol = 10 ** (gain_db / 20.0)  # dB -> linear
+        out = voice_ogg_path.replace(".ogg", "_bg.ogg")
+        # loop bg endlessly, mix с голосом, отрезать по кратчайшему (голосу)
+        cmd = [
+            "ffmpeg","-y",
+            "-stream_loop","-1","-i", bg_path,
+            "-i", voice_ogg_path,
+            "-filter_complex", f"[0:a]volume={vol}[bg];[bg][1:a]amix=inputs=2:duration=shortest:dropout_transition=0[a]",
+            "-map","[a]","-c:a","libopus","-b:a","48k","-shortest",
+            out
+        ]
+        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return out
+    except Exception as e:
+        logging.exception(f"BGM mix failed: {e}")
+        return voice_ogg_path
+        
 def _tts_elevenlabs_to_ogg(text: str, voice_id: str, speed: float=1.0) -> str:
     api_key = os.getenv("ELEVEN_API_KEY")
     if not api_key:
