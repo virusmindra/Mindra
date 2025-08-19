@@ -3169,28 +3169,31 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lang_code = user_languages.get(user_id, "ru")
 
     # ——— Story intent suggest ———
-    if _looks_like_story_intent(user_input, lang_code):
-        if not is_premium(user_id):
-            tpay = _p_i18n(user_id)
-            await update.message.reply_text(
-                f"*{tpay['upsell_title']}*\n\n{tpay['upsell_body']}",
-                parse_mode="Markdown",
-                reply_markup=_premium_kb(user_id)
-            )
-            return
-    t = _s_i18n(user_id)
-    topic_guess = user_input
+    try:
+    if _looks_like_story_intent(user_input, lang_code, user_id):
+        _story_last_suggest[user_id] = datetime.now(timezone.utc)
+        if is_premium(user_id):
+            t = _s_i18n(user_id)
+            topic_guess = user_input.strip()
+# сохраняем «на потом», чтобы не класть длинные данные в callback_data
+context.chat_data[f"story_pending_{user_id}"] = topic_guess[:200]
 
-    # Сохраняем тему в chat_data, НЕ в callback_data
-    context.chat_data[f"story_pending_{user_id}"] = topic_guess
+t = _s_i18n(user_id)
+kb = InlineKeyboardMarkup([
+    [InlineKeyboardButton(t["btn_ok"], callback_data="st:confirm"),
+     InlineKeyboardButton(t["btn_no"], callback_data="st:close")],
+])
 
-    kb = InlineKeyboardMarkup([
-        [InlineKeyboardButton("✅ OK",  callback_data="st:confirm"),
-         InlineKeyboardButton("❌ Нет", callback_data="st:close")]
-    ])
-    await update.message.reply_text(t["suggest"], reply_markup=kb)
-    return
-
+await context.bot.send_message(
+    chat_id=update.effective_chat.id,
+    text=t["suggest"],
+    reply_markup=kb
+)
+            await context.bot.send_message(chat_id=update.effective_chat.id,
+                                           text=t["suggest"], reply_markup=kb)
+        # для не-премиум ничего не навязываем тут, апселл уже есть через /story
+except Exception:
+    pass
 
     lang_prompt = LANG_PROMPTS.get(lang_code, LANG_PROMPTS["ru"])
 
