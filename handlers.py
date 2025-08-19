@@ -3140,19 +3140,17 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id_int = update.effective_user.id
     user_id = str(user_id_int)
 
-    # 🕒 Обновляем активность
+    # 🕒 активность
     user_last_seen[user_id_int] = datetime.now(timezone.utc)
     logging.info(f"✅ user_last_seen обновлён в chat для {user_id_int}")
 
-    # 🔥 Лимит сообщений
+    # 🔥 дневной лимит сообщений (кроме владельца/админов)
     today = str(date.today())
     if user_id not in user_message_count:
         user_message_count[user_id] = {"date": today, "count": 0}
-    else:
-        if user_message_count[user_id]["date"] != today:
-            user_message_count[user_id] = {"date": today, "count": 0}
+    elif user_message_count[user_id]["date"] != today:
+        user_message_count[user_id] = {"date": today, "count": 0}
 
-    # ✅ фикс: исключаем владельца и админов из лимита
     if (user_id_int not in ADMIN_USER_IDS) and (user_id_int != OWNER_ID):
         if user_message_count[user_id]["count"] >= 10:
             lang = user_languages.get(user_id, "ru")
@@ -3160,90 +3158,99 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(lock_msg)
             return
 
-    # Увеличиваем счётчик
+    # +1 к счётчику
     user_message_count[user_id]["count"] += 1
 
-    # 📌 Получаем сообщение
-    user_input = update.message.text
+    # 📌 текст пользователя
+    user_input = (update.message.text or "").strip()
+    if not user_input:
+        return  # на всякий случай
 
-    # 🌐 Определяем язык
+    # 🌐 язык и режим
     lang_code = user_languages.get(user_id, "ru")
-
-    # ——— Story intent suggest ———
-    try:
-    if _looks_like_story_intent(user_input, lang_code, user_id):
-        _story_last_suggest[user_id] = datetime.now(timezone.utc)
-        if is_premium(user_id):
-            t = _s_i18n(user_id)
-            topic_guess = user_input.strip()
-# сохраняем «на потом», чтобы не класть длинные данные в callback_data
-context.chat_data[f"story_pending_{user_id}"] = topic_guess[:200]
-
-t = _s_i18n(user_id)
-kb = InlineKeyboardMarkup([
-    [InlineKeyboardButton(t["btn_ok"], callback_data="st:confirm"),
-     InlineKeyboardButton(t["btn_no"], callback_data="st:close")],
-])
-
-await context.bot.send_message(
-    chat_id=update.effective_chat.id,
-    text=t["suggest"],
-    reply_markup=kb
-)
-            await context.bot.send_message(chat_id=update.effective_chat.id,
-                                           text=t["suggest"], reply_markup=kb)
-        # для не-премиум ничего не навязываем тут, апселл уже есть через /story
-except Exception:
-    pass
-
     lang_prompt = LANG_PROMPTS.get(lang_code, LANG_PROMPTS["ru"])
-
-    # 📋 Определяем режим
     mode = user_modes.get(user_id, "support")
-    # ВАЖНО: режим теперь словарь, берём под язык
     mode_prompt = MODES.get(mode, MODES["support"]).get(lang_code, MODES["support"]["ru"])
-
     system_prompt = f"{lang_prompt}\n\n{mode_prompt}"
 
-    # 💾 Создаём/обновляем историю
+    # 💾 история
     if user_id not in conversation_history:
         conversation_history[user_id] = [{"role": "system", "content": system_prompt}]
     else:
         conversation_history[user_id][0] = {"role": "system", "content": system_prompt}
 
-    # Добавляем сообщение пользователя
     conversation_history[user_id].append({"role": "user", "content": user_input})
     trimmed_history = trim_history(conversation_history[user_id])
 
     try:
-        # ✨ "печатает..."
-        await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
+        # ✨ “печатает…”
+        await context.bot.send_chat_action(
+            chat_id=update.effective_chat.id,
+            action=ChatAction.TYPING
+        )
 
-        # 🤖 Запрос к OpenAI
-        response = client.chat.completions.create(
+        # 🤖 LLM-ответ
+        resp = client.chat.completions.create(
             model="gpt-4o",
             messages=trimmed_history
         )
-        reply = response.choices[0].message.content
+        reply = (resp.choices[0].message.content or "").strip()
+        if not reply:
+            reply = "…"
 
-        # Сохраняем ответ
+        # сохранить в историю
         conversation_history[user_id].append({"role": "assistant", "content": reply})
         save_history(conversation_history)
 
-        # 💜 Эмпатичная реакция + отсылка
+        # 💜 эмпатичный префикс
         reaction = detect_emotion_reaction(user_input, lang_code) + detect_topic_and_react(user_input, lang_code)
-        reply = reaction + reply
+        final_text = reaction + reply
 
-        # 📝 Текстом
-        await update.message.reply_text(reply, reply_markup=generate_post_response_buttons())
+        # 📝 ответ текстом
+        await update.message.reply_text(
+            final_text,
+            reply_markup=generate_post_response_buttons()
+        )
 
-        # 🔊 Дополнительно — голосом для Mindra+ при включённом voice mode
+        # 🔊 при необходимости — озвучка (premium + включён voice_mode)
         if is_premium(user_id) and user_voice_mode.get(user_id, False):
-            await send_voice_response(context, user_id_int, reply, lang_code)
+            await send_voice_response(context, user_id_int, final_text, lang_code)
+
+        # ——— мягкая подсказка «сказка?» ПОСЛЕ ответа ———
+        try:
+            if _looks_like_story_intent(user_input, lang_code, user_id):
+                # анти-спам: максимум 1 подсказка раз в 4 часа
+                last = _story_last_suggest.get(user_id)
+                if (not last) or ((datetime.now(timezone.utc) - last).total_seconds() > 4 * 3600):
+                    _story_last_suggest[user_id] = datetime.now(timezone.utc)
+
+                    if is_premium(user_id):
+                        t = _s_i18n(user_id)
+                        topic_guess = user_input  # простая эвристика
+
+                        # сохраняем тему в chat_data (не кладём в callback_data во избежание лимитов)
+                        context.chat_data[f"story_pending_{user_id}"] = topic_guess[:200]
+
+                        kb = InlineKeyboardMarkup([
+                            [
+                                InlineKeyboardButton(t["btn_ok"],  callback_data="st:confirm"),
+                                InlineKeyboardButton(t["btn_no"],  callback_data="st:close"),
+                            ]
+                        ])
+                        await context.bot.send_message(
+                            chat_id=update.effective_chat.id,
+                            text=t["suggest"],
+                            reply_markup=kb
+                        )
+                    # для не-премиум тут молчим (апселл делаем в /story)
+        except Exception as e:
+            logging.warning(f"Story suggest failed: {e}")
 
     except Exception as e:
         logging.error(f"❌ Ошибка в chat(): {e}")
-        await update.message.reply_text(ERROR_MESSAGES_BY_LANG.get(lang_code, ERROR_MESSAGES_BY_LANG["ru"]))
+        await update.message.reply_text(
+            ERROR_MESSAGES_BY_LANG.get(lang_code, ERROR_MESSAGES_BY_LANG["ru"])
+        )
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
