@@ -268,12 +268,15 @@ VOICE_PRESETS = {
 }
 
 # --- Фоновые лупы (опционально) ---
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 BGM_PRESETS = {
-    "off":   {"label": "🚫 Без фона", "path": None},
-    "rain":  {"label": "🌧 Дождь",    "path": "assets/bgm/rain_loop.mp3"},
-    "fire":  {"label": "🔥 Камин",    "path": "assets/bgm/fireplace_loop.mp3"},
-    "ocean": {"label": "🌊 Океан",    "path": "assets/bgm/ocean_loop.mp3"},
-    "lofi":  {"label": "🎵 Lo-fi",    "path": "assets/bgm/lofi_loop.mp3"},
+    "off":   {"label": "🚫 Off",        "path": None},
+    "rain":  {"label": "🌧 Rain",       "path": os.path.join(BASE_DIR, "assets", "bgm", "rain_loop.mp3")},
+    "fire":  {"label": "🔥 Fireplace",  "path": os.path.join(BASE_DIR, "assets", "bgm", "fireplace_loop.mp3")},
+    "ocean": {"label": "🌊 Ocean",      "path": os.path.join(BASE_DIR, "assets", "bgm", "ocean_loop.mp3")},
+    "lofi":  {"label": "🎵 Lo-fi",      "path": os.path.join(BASE_DIR, "assets", "bgm", "lofi_loop.mp3")},
 }
 
 STORY_INTENT = {
