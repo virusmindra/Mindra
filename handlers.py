@@ -700,6 +700,7 @@ async def story_callback(update, context):
         return
 
     if action == "close":
+        _story_optout_until[uid] = datetime.now(timezone.utc) + timedelta(hours=24)
         try: await q.edit_message_text(t["ready"])
         except: pass
         return
