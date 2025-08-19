@@ -3,6 +3,7 @@ import sqlite3
 import json
 import random
 import re
+import math
 import logging
 import openai
 import tempfile
