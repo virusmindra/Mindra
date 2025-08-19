@@ -733,26 +733,49 @@ def _tts_synthesize_to_ogg(text: str, lang: str) -> str:
 
 async def send_voice_response(context, chat_id: int, text: str, lang: str, bgm_kind_override: str | None = None):
     uid = str(chat_id)
+    ogg_path = None
+    mixed_path = None
     try:
-        ogg_path = synthesize_to_ogg(text, lang, uid)  # ElevenLabs → gTTS (фолбэк) внутри
-        # 🎧 Подмешиваем фон, если выбран
+        # синтез (внутри synthesize_to_ogg можно читать speed/voice из _vp(uid))
+        ogg_path = synthesize_to_ogg(text, lang, uid)  # ElevenLabs → gTTS фолбэк внутри
+        path_to_send = ogg_path
+
+        # 🎧 фон (если выбран)
         p = _vp(uid)
-        kind = bgm_kind_override if bgm_kind_override is not None else p.get("bgm_kind", "off")
+        kind = (bgm_kind_override if bgm_kind_override is not None else p.get("bgm_kind", "off")) or "off"
         if kind != "off":
             bg = BGM_PRESETS.get(kind, {}).get("path")
-            ogg_path = _mix_with_bgm(ogg_path, bg, p.get("bgm_gain_db", -20))
+            if bg and os.path.exists(bg):
+                try:
+                    mixed_path = _mix_with_bgm(ogg_path, bg, p.get("bgm_gain_db", -20))
+                    if mixed_path:
+                        path_to_send = mixed_path
+                except Exception as mix_e:
+                    # не роняем ответ, просто шлём без фона
+                    logging.warning(f"BGM mix failed ({kind}): {mix_e}")
 
-        with open(ogg_path, "rb") as f:
-            await context.bot.send_voice(chat_id=chat_id, voice=f)
+        # отправка с 1 ретраем на таймаут
+        try:
+            with open(path_to_send, "rb") as f:
+                await context.bot.send_voice(chat_id=chat_id, voice=f)
+        except TimedOut:
+            await asyncio.sleep(1.5)
+            with open(path_to_send, "rb") as f:
+                await context.bot.send_voice(chat_id=chat_id, voice=f)
+
     except Exception as e:
         logging.exception(f"TTS failed for chat_id={chat_id}: {e}")
-        # ничего не шлём текстом, чтобы не дублировать уже отправленный ответ
-    finally:
-        try:
-            os.remove(ogg_path)  # почистим временный файл, если был
-        except Exception:
-            pass
+        # Ничего не дублируем текстом: текст уже отправлен выше в chat()
 
+    finally:
+        # чистим оба файла (если второй был создан)
+        for pth in (mixed_path, ogg_path):
+            try:
+                if pth and os.path.exists(pth):
+                    os.remove(pth)
+            except Exception:
+                pass
+                
 def require_premium_message(update, context, uid):
     t = _p_i18n(uid)
     return update.message.reply_text(
