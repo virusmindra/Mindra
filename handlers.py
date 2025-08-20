@@ -378,7 +378,7 @@ def _voice_kb(uid: str, tab: str = "engine") -> InlineKeyboardMarkup:
         rows.append(row)
 
         # 2) уровни громкости в dB (по 4 в ряд)
-       gains = globals().get("BGM_GAIN_CHOICES", [-25, -20, -15, -10, -5, 0, 5])
+        gains = globals().get("BGM_GAIN_CHOICES", [-25, -20, -15, -10, -5, 0, 5])
         cur_gain = int(p.get("bgm_gain_db", -20))
         for i in range(0, len(gains), 4):
             chunk = gains[i:i+4]
