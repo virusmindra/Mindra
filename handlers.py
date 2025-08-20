@@ -307,40 +307,90 @@ def _voice_menu_text(uid: str) -> str:
 def _voice_kb(uid: str, tab: str = "engine") -> InlineKeyboardMarkup:
     t = _v_ui_i18n(uid)
     p = _vp(uid)
-    rows = []
+    rows: list[list[InlineKeyboardButton]] = []
+
+    def _check(mark: bool) -> str:
+        return "✅ " if mark else ""
 
     if tab == "engine":
         rows.append([
-            InlineKeyboardButton(("✅ " if p["engine"] == "eleven" else "") + t["engine_eleven"], callback_data="v:engine:eleven"),
-            InlineKeyboardButton(("✅ " if p["engine"] == "gTTS"   else "") + t["engine_gtts"],   callback_data="v:engine:gTTS"),
+            InlineKeyboardButton(
+                _check(p.get("engine") == "eleven") + t["engine_eleven"],
+                callback_data="v:engine:eleven" if _has_eleven() else "v:tab:engine"
+            ),
+            InlineKeyboardButton(
+                _check(p.get("engine") == "gTTS") + t["engine_gtts"],
+                callback_data="v:engine:gTTS"
+            ),
         ])
+
     elif tab == "voice":
         presets = VOICE_PRESETS.get(user_languages.get(uid, "ru"), VOICE_PRESETS["ru"])
+        cur_engine = p.get("engine")
+        cur_voice  = p.get("voice_id", "")
         for i, (name, eng_k, vid) in enumerate(presets):
             if eng_k.lower() == "eleven" and not _has_eleven():
                 continue
-            rows.append([InlineKeyboardButton(name, callback_data=f"v:voice:{i}")])
+            selected = (eng_k == cur_engine) and ((vid == cur_voice) or (eng_k.lower() == "gTTS"))
+            rows.append([
+                InlineKeyboardButton(_check(selected) + name, callback_data=f"v:voice:{i}")
+            ])
+
     elif tab == "speed":
-        rows.append([
-            InlineKeyboardButton("➖ 0.9x", callback_data="v:speed:0.9"),
-            InlineKeyboardButton("1.0x",    callback_data="v:speed:1.0"),
-            InlineKeyboardButton("➕ 1.1x", callback_data="v:speed:1.1"),
-        ])
+        speeds = [0.8, 0.9, 1.0, 1.1, 1.2]
+        row: list[InlineKeyboardButton] = []
+        for s in speeds:
+            sel = abs(p.get("speed", 1.0) - s) < 1e-6
+            label = f"{'➖ ' if s < 1.0 else ('➕ ' if s > 1.0 else '')}{s:.1f}x"
+            row.append(InlineKeyboardButton(_check(sel) + label, callback_data=f"v:speed:{s:.1f}"))
+        rows.append(row)
+
     elif tab == "beh":
-        rows.append([InlineKeyboardButton(("✅ " if p["voice_only"] else "❌ ") + "Voice only", callback_data="v:beh:voiceonly")])
-        rows.append([InlineKeyboardButton(("✅ " if p["auto_story_voice"] else "❌ ") + "Auto story voice", callback_data="v:beh:autostory")])
-    elif tab == "bg":
-        for key, meta in BGM_PRESETS.items():
-            mark = "✅ " if p["bgm_kind"] == key else ""
-            rows.append([InlineKeyboardButton(mark + meta["label"], callback_data=f"v:bg:set:{key}")])
+        # Если нет локализованных подписей — используем дефолт
+        voice_only_label = t.get("label_voice_only", "Voice only")
+        auto_story_label = t.get("label_auto_story", "Auto story voice")
         rows.append([
-            InlineKeyboardButton("-30dB", callback_data="v:bg:gain:-30"),
-            InlineKeyboardButton("-25",   callback_data="v:bg:gain:-25"),
-            InlineKeyboardButton("-22",   callback_data="v:bg:gain:-22"),
-            InlineKeyboardButton("-20",   callback_data="v:bg:gain:-20"),
-            InlineKeyboardButton("-18",   callback_data="v:bg:gain:-18"),
+            InlineKeyboardButton(
+                (_check(p.get("voice_only", False)) + voice_only_label),
+                callback_data="v:beh:voiceonly"
+            )
+        ])
+        rows.append([
+            InlineKeyboardButton(
+                (_check(p.get("auto_story_voice", True)) + auto_story_label),
+                callback_data="v:beh:autostory"
+            )
         ])
 
+    elif tab == "bg":
+        # 1) выбор фонового звука
+        kinds_order = ["off", "rain", "fire", "ocean", "lofi"]
+        present = [k for k in kinds_order if k in BGM_PRESETS]
+        if not present:  # fallback — вдруг пресеты другие
+            present = list(BGM_PRESETS.keys())
+
+        row: list[InlineKeyboardButton] = []
+        for k in present:
+            meta = BGM_PRESETS.get(k, {})
+            label = meta.get("label", k)
+            row.append(InlineKeyboardButton(_check(p.get("bgm_kind") == k) + label,
+                                            callback_data=f"v:bg:set:{k}"))
+        rows.append(row)
+
+        # 2) уровни громкости в dB (по 4 в ряд)
+       gains = globals().get("BGM_GAIN_CHOICES", [-25, -20, -15, -10, -5, 0, 5])
+        cur_gain = int(p.get("bgm_gain_db", -20))
+        for i in range(0, len(gains), 4):
+            chunk = gains[i:i+4]
+            rows.append([
+                InlineKeyboardButton(
+                    ("✅ " if g == cur_gain else "") + f"{g:+} dB",
+                    callback_data=f"v:bg:gain:{g}"
+                ) for g in chunk
+            ])
+
+
+    # нижняя навигация по вкладкам
     rows.append([
         InlineKeyboardButton(t["btn_engine"], callback_data="v:tab:engine"),
         InlineKeyboardButton(t["btn_voice"],  callback_data="v:tab:voice"),
@@ -349,7 +399,7 @@ def _voice_kb(uid: str, tab: str = "engine") -> InlineKeyboardMarkup:
         InlineKeyboardButton(t["btn_bg"],     callback_data="v:tab:bg"),
     ])
     return InlineKeyboardMarkup(rows)
-    
+ 
 # === /voice_settings ===
 async def voice_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
