@@ -463,28 +463,42 @@ def _to_ogg_from_mp3(mp3_path: str, speed: float=1.0) -> str:
     except: pass
     return out_path
 
+
 def _mix_with_bgm(voice_ogg_path: str, bg_path: str | None, gain_db: int = -20) -> str:
+    """
+    Миксуем голос (OGG/Opus) + фон (MP3/WAV) с нормализацией.
+    Возвращаем путь к новому OGG. При сбое — исходный путь.
+    """
     try:
         if not bg_path or not os.path.exists(bg_path):
             logging.warning(f"BGM: file not found: {bg_path}")
             return voice_ogg_path
+
         if shutil.which("ffmpeg") is None:
             logging.warning("BGM: ffmpeg not found, skip mix")
             return voice_ogg_path
 
-        vol = 10 ** (gain_db / 20.0)  # dB -> linear
-        out = voice_ogg_path.replace(".ogg", "_bg.ogg")
-        # loop bg endlessly, mix с голосом, отрезать по кратчайшему (голосу)
+        out_path = os.path.join(tempfile.gettempdir(), f"voice_mix_{uuid.uuid4().hex}.ogg")
+
+        # Голос первым входом → длительность берём у него (duration=first).
+        # Фон лупим бесконечно и делаем тише в dB. Чуть выравниваем уровни dynaudnorm.
         cmd = [
-            "ffmpeg","-y",
-            "-stream_loop","-1","-i", bg_path,
+            "ffmpeg", "-y",
             "-i", voice_ogg_path,
-            "-filter_complex", f"[0:a]volume={vol}[bg];[bg][1:a]amix=inputs=2:duration=shortest:dropout_transition=0[a]",
-            "-map","[a]","-c:a","libopus","-b:a","48k","-shortest",
-            out
+            "-stream_loop", "-1", "-i", bg_path,
+            "-filter_complex",
+            f"[1:a]volume={gain_db}dB[bg];"
+            f"[0:a][bg]amix=inputs=2:duration=first:dropout_transition=0, dynaudnorm",
+            "-c:a", "libopus", "-b:a", "48k", "-ar", "48000",
+            out_path,
         ]
-        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        return out
+        res = subprocess.run(cmd, capture_output=True, text=True)
+        if res.returncode != 0:
+            logging.error(f"FFmpeg mix failed: {res.stderr[:500]}")
+            return voice_ogg_path
+
+        return out_path
+
     except Exception as e:
         logging.exception(f"BGM mix failed: {e}")
         return voice_ogg_path
