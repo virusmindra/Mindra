@@ -24,6 +24,7 @@ from texts import (
     VOICE_PRESETS,
     VOICE_UI_TEXTS,
     BGM_PRESETS,
+    BGM_GAIN_CHOICES,
     STORY_TEXTS,
     LANG_TO_TTS,
     VOICE_MODE_TEXTS,
