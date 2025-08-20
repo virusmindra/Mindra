@@ -273,6 +273,9 @@ VOICE_PRESETS = {
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# какие варианты громкости показывать в меню фона, в децибелах
+BGM_GAIN_CHOICES = [-30, -25, -22, -20, -18, -15, -12, -10, -8, -6, -3, 0]  # можно ещё +3
+
 BGM_PRESETS = {
     "off":   {"label": "🚫 Off",        "path": None},
     "rain":  {"label": "🌧 Rain",       "path": os.path.join(BASE_DIR, "assets", "bgm", "rain_loop.mp3")},
