@@ -271,6 +271,8 @@ VOICE_PRESETS = {
 
 # --- Фоновые лупы (опционально) ---
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 BGM_PRESETS = {
     "off":   {"label": "🚫 Off",        "path": None},
     "rain":  {"label": "🌧 Rain",       "path": os.path.join(BASE_DIR, "assets", "bgm", "rain_loop.mp3")},
