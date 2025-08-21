@@ -172,8 +172,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Тихие часы по локальному времени пользователя
 QUIET_START = 22  # не тревожить с 22:00
 QUIET_END   = 9   # до 09:00
+STORY_COOLDOWN_HOURS = 4 
 
-STORY_COOLDOWN_HOURS = 12
 _story_last_suggest: dict[str, datetime] = {}   # uid -> utc time
 _story_optout_until: dict[str, datetime] = {}   # uid -> utc time
 
