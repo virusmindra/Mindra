@@ -789,10 +789,14 @@ async def story_callback(update, context):
             await send_voice_response(context, int(uid), last["text"], last["lang"])
         return
 
-    if action == "close":
-        _story_optout_until[uid] = datetime.now(timezone.utc) + timedelta(hours=24)
-        try: await q.edit_message_text(t["ready"])
-        except: pass
+    elif action == "close":
+    # не предлагать сказки этому пользователю ближайшие STORY_COOLDOWN_HOURS часов
+        _story_optout_until[uid] = datetime.now(timezone.utc) + timedelta(hours=STORY_COOLDOWN_HOURS)
+        try:
+            await q.edit_message_text(t["ready"])
+        except Exception:
+            # если редактирование не удалось (удалено/старое сообщение) — просто отправим новое
+            await context.bot.send_message(chat_id=int(uid), text=t["ready"])
         return
 
 def _tts_synthesize_to_ogg(text: str, lang: str) -> str:
