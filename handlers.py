@@ -259,7 +259,7 @@ def _build_story_patterns(words_dict: dict[str, list[str]]) -> dict[str, re.Patt
         patterns[lang] = re.compile("|".join(alts), re.I) if alts else re.compile(r"$a")
     return patterns
 
-STORY_INTENT = _build_story_patterns(STORY_INTENT_WORDS)
+STORY_INTENT = _build_story_patterns(STORY_INTENT)
 
 def _looks_like_story_intent(text: str, lang: str, uid: str) -> bool:
     if not text:
