@@ -3332,30 +3332,29 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # ——— мягкая подсказка «сказка?» ПОСЛЕ ответа ———
         try:
             if _looks_like_story_intent(user_input, lang_code, user_id):
-                # анти-спам: максимум 1 подсказка раз в 4 часа
-                last = _story_last_suggest.get(user_id)
-                if (not last) or ((datetime.now(timezone.utc) - last).total_seconds() > 4 * 3600):
-                    _story_last_suggest[user_id] = datetime.now(timezone.utc)
+                # помечаем время последнего предложения
+                _story_last_suggest[user_id] = datetime.now(timezone.utc)
 
-                    if is_premium(user_id):
-                        t = _s_i18n(user_id)
-                        topic_guess = user_input  # простая эвристика
+                if is_premium(user_id):
+                    # сохраняем тему в chat_data (чтобы не класть длинные данные в callback_data)
+                    topic_guess = user_input.strip()
+                    context.chat_data[f"story_pending_{user_id}"] = topic_guess[:200]
 
-                        # сохраняем тему в chat_data (не кладём в callback_data во избежание лимитов)
-                        context.chat_data[f"story_pending_{user_id}"] = topic_guess[:200]
+                    # локализованные кнопки OK/Нет
+                    t = _s_i18n(user_id)
+                    kb = InlineKeyboardMarkup([
+                        [
+                            InlineKeyboardButton(t["btn_ok"], callback_data="st:confirm"),
+                            InlineKeyboardButton(t["btn_no"], callback_data="st:close"),
+                        ]
+                    ])
 
-                        kb = InlineKeyboardMarkup([
-                            [
-                                InlineKeyboardButton(t["btn_ok"],  callback_data="st:confirm"),
-                                InlineKeyboardButton(t["btn_no"],  callback_data="st:close"),
-                            ]
-                        ])
-                        await context.bot.send_message(
-                            chat_id=update.effective_chat.id,
-                            text=t["suggest"],
-                            reply_markup=kb
-                        )
-                    # для не-премиум тут молчим (апселл делаем в /story)
+                    await context.bot.send_message(
+                        chat_id=update.effective_chat.id,
+                        text=t["suggest"],
+                        reply_markup=kb
+                    )
+                # для не-премиум — ничего не предлагаем здесь
         except Exception as e:
             logging.warning(f"Story suggest failed: {e}")
 
