@@ -243,25 +243,46 @@ def _vp(uid: str):
         }
     return user_voice_prefs[uid]
     
+
+def _build_story_patterns(words_dict: dict[str, list[str]]) -> dict[str, re.Pattern]:
+    patterns: dict[str, re.Pattern] = {}
+    for lang, items in words_dict.items():
+        alts = []
+        for kw in items:
+            kw = kw.strip()
+            if not kw:
+                continue
+            # экранируем + позволяем любые пробелы внутри фразы
+            escaped = re.escape(kw).replace(r"\ ", r"\s+")
+            # границы, чтобы не ловить куски внутри слов
+            alts.append(rf"(?<!\w){escaped}(?!\w)")
+        patterns[lang] = re.compile("|".join(alts), re.I) if alts else re.compile(r"$a")
+    return patterns
+
+STORY_INTENT = _build_story_patterns(STORY_INTENT_WORDS)
+
 def _looks_like_story_intent(text: str, lang: str, uid: str) -> bool:
-    t = text.lower().strip()
-    # короткая фраза с явным ключевым словом
-    kws = STORY_INTEN.get(lang, STORY_INTEN["ru"])
-    hit = any(k in t for k in kws)
-    if not hit:
+    if not text:
         return False
-    # «не сейчас»: если пользователь отказался недавно
+
     now = datetime.now(timezone.utc)
-    if uid in _story_optout_until and now < _story_optout_until[uid]:
+
+    # «Попросил не предлагать» недавно
+    until = _story_optout_until.get(uid)
+    if until and now < until:
         return False
-    # кулдаун
+
+    # Кулдаун, чтобы не спамить
     last = _story_last_suggest.get(uid)
     if last and (now - last) < timedelta(hours=STORY_COOLDOWN_HOURS):
         return False
-    # не слишком длинный запрос (иначе это обычный вопрос)
-    if len(t.split()) > 16:
+
+    # Слишком длинные сообщения считаем обычным чатом
+    if len(text.split()) > 20:
         return False
-    return True
+
+    patt = STORY_INTENT.get(lang, STORY_INTENT["ru"])
+    return bool(patt.search(text))
     
 async def _voice_refresh(q, uid: str, tab: str):
     new_text = _voice_menu_text(uid) or "🎙"
