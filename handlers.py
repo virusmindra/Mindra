@@ -225,6 +225,181 @@ def _s_i18n(uid: str) -> dict:
 def _has_eleven() -> bool:
     return bool(ELEVEN_API_KEY)
 
+def _sleep_menu_text(uid: str) -> str:
+    t = _sleep_i18n(uid)
+    p = _sp(uid)
+    label = BGM_PRESETS.get(p["kind"], {}).get("label", p["kind"])
+    return (
+        f"*{t['title']}*\n\n"
+        f"{t['sound'].format(sound=label)}\n"
+        f"{t['duration'].format(min=p['duration_min'])}\n"
+        f"{t['gain'].format(db=p['gain_db'])}"
+    )
+
+def _sleep_kb(uid: str) -> InlineKeyboardMarkup:
+    t = _sleep_i18n(uid)
+    p = _sp(uid)
+    rows = []
+
+    # звуки (кроме off)
+    rows.append([InlineKeyboardButton(t["pick_sound"], callback_data="sl:none")])
+    for key, meta in BGM_PRESETS.items():
+        if key == "off": 
+            continue
+        mark = "✅ " if p["kind"] == key else ""
+        rows.append([InlineKeyboardButton(mark + meta["label"], callback_data=f"sl:snd:{key}")])
+
+    # длительность
+    rows.append([InlineKeyboardButton(t["pick_duration"], callback_data="sl:none")])
+    for chunk in [(5,10,15),(20,30,45),(60,90,120)]:
+        btns = [InlineKeyboardButton(
+            ("✅ " if p["duration_min"]==m else "") + f"{m}",
+            callback_data=f"sl:dur:{m}"
+        ) for m in chunk]
+        rows.append(btns)
+
+    # громкость
+    rows.append([InlineKeyboardButton(t["pick_gain"], callback_data="sl:none")])
+    for chunk in [(-25,-20,-15),(-10,-5,0),(5,)]:
+        btns = [InlineKeyboardButton(
+            ("✅ " if p["gain_db"]==g else "") + (f"{g} dB"),
+            callback_data=f"sl:gain:{g}"
+        ) for g in chunk]
+        rows.append(btns)
+
+    # старт/стоп
+    rows.append([
+        InlineKeyboardButton(t["start"], callback_data="sl:start"),
+        InlineKeyboardButton(t["stop"],  callback_data="sl:stop"),
+    ])
+    return InlineKeyboardMarkup(rows)
+
+def _sleep_menu_text(uid: str) -> str:
+    t = _sleep_i18n(uid)
+    p = _sp(uid)
+    label = BGM_PRESETS.get(p["kind"], {}).get("label", p["kind"])
+    return (
+        f"*{t['title']}*\n\n"
+        f"{t['sound'].format(sound=label)}\n"
+        f"{t['duration'].format(min=p['duration_min'])}\n"
+        f"{t['gain'].format(db=p['gain_db'])}"
+    )
+
+def _sleep_kb(uid: str) -> InlineKeyboardMarkup:
+    t = _sleep_i18n(uid)
+    p = _sp(uid)
+    rows = []
+
+    # звуки (кроме off)
+    rows.append([InlineKeyboardButton(t["pick_sound"], callback_data="sl:none")])
+    for key, meta in BGM_PRESETS.items():
+        if key == "off": 
+            continue
+        mark = "✅ " if p["kind"] == key else ""
+        rows.append([InlineKeyboardButton(mark + meta["label"], callback_data=f"sl:snd:{key}")])
+
+    # длительность
+    rows.append([InlineKeyboardButton(t["pick_duration"], callback_data="sl:none")])
+    for chunk in [(5,10,15),(20,30,45),(60,90,120)]:
+        btns = [InlineKeyboardButton(
+            ("✅ " if p["duration_min"]==m else "") + f"{m}",
+            callback_data=f"sl:dur:{m}"
+        ) for m in chunk]
+        rows.append(btns)
+
+    # громкость
+    rows.append([InlineKeyboardButton(t["pick_gain"], callback_data="sl:none")])
+    for chunk in [(-25,-20,-15),(-10,-5,0),(5,)]:
+        btns = [InlineKeyboardButton(
+            ("✅ " if p["gain_db"]==g else "") + (f"{g} dB"),
+            callback_data=f"sl:gain:{g}"
+        ) for g in chunk]
+        rows.append(btns)
+
+    # старт/стоп
+    rows.append([
+        InlineKeyboardButton(t["start"], callback_data="sl:start"),
+        InlineKeyboardButton(t["stop"],  callback_data="sl:stop"),
+    ])
+    return InlineKeyboardMarkup(rows)
+
+# /sleep — открыть меню
+async def sleep_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    await update.message.reply_text(
+        _sleep_menu_text(uid),
+        parse_mode="Markdown",
+        reply_markup=_sleep_kb(uid)
+    )
+
+# Колбэк "sl:*"
+async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    if not q or not q.data.startswith("sl:"):
+        return
+    uid = str(q.from_user.id)
+    p = _sp(uid)
+    t = _sleep_i18n(uid)
+
+    parts = q.data.split(":")
+    action = parts[1]
+
+    try:
+        if action == "snd":
+            p["kind"] = parts[2]
+            await q.edit_message_text(_sleep_menu_text(uid), parse_mode="Markdown", reply_markup=_sleep_kb(uid))
+            return
+        if action == "dur":
+            p["duration_min"] = int(parts[2])
+            await q.edit_message_text(_sleep_menu_text(uid), parse_mode="Markdown", reply_markup=_sleep_kb(uid))
+            return
+        if action == "gain":
+            p["gain_db"] = int(parts[2])
+            await q.edit_message_text(_sleep_menu_text(uid), parse_mode="Markdown", reply_markup=_sleep_kb(uid))
+            return
+        if action == "start":
+            # рендерим файл и отправляем как аудио (не voice), чтобы удобно слушать
+            try:
+                ogg_path = _render_sleep_ogg(p["kind"], p["duration_min"], p["gain_db"])
+            except RuntimeError:
+                await q.answer(t["err_ffmpeg"], show_alert=True)
+                return
+            except FileNotFoundError:
+                await q.answer(t["err_missing"], show_alert=True)
+                return
+
+            label = BGM_PRESETS.get(p["kind"], {}).get("label", p["kind"])
+            await q.edit_message_text(_sleep_menu_text(uid), parse_mode="Markdown", reply_markup=_sleep_kb(uid))
+            await context.bot.send_message(chat_id=q.message.chat_id, text=t["started"].format(sound=label, min=p["duration_min"]))
+            try:
+                with open(ogg_path, "rb") as f:
+                    # send_audio даёт удобный плеер; filename важен, чтобы был «музыкой», не voice
+                    await context.bot.send_audio(
+                        chat_id=q.message.chat_id,
+                        audio=f,
+                        title=label,
+                        performer="Mindra",
+                        file_name=f"{p['kind']}_{p['duration_min']}min.ogg"
+                    )
+            finally:
+                try: os.remove(ogg_path)
+                except: pass
+            return
+
+        if action == "stop":
+            # мы отправляем один длинный файл, поэтому «стоп» — просто уведомление
+            await q.answer(t["stopped"], show_alert=False)
+            return
+
+        # игнор "sl:none"
+        await q.answer()
+    except Exception as e:
+        logging.exception(f"sleep_cb failed: {e}")
+        try:
+            await q.answer("Error", show_alert=False)
+        except:
+            pass
+
 def _current_voice_name(uid: str) -> str:
     lang = user_languages.get(uid, "ru")
     p = _vp(uid)
@@ -4152,7 +4327,8 @@ handlers = [
     CallbackQueryHandler(story_callback, pattern=r"^st:"),
     CommandHandler("voice_settings", voice_settings),
     CallbackQueryHandler(voice_settings_cb, pattern=r"^v:"),
-
+    CommandHandler("sleep", sleep_cmd),
+    CallbackQueryHandler(sleep_cb, pattern=r"^sl:"),
     
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
