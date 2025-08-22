@@ -358,40 +358,50 @@ async def _sleep_refresh(update: Update, context: ContextTypes.DEFAULT_TYPE, uid
 def _sleep_kb(uid: str) -> InlineKeyboardMarkup:
     t = _sleep_i18n(uid)
     p = _sp(uid)
-    rows = []
+    rows: list[list[InlineKeyboardButton]] = []
 
-    # звуки (кроме off)
+    # ——— звуки (кроме off), в удобном порядке ———
     rows.append([InlineKeyboardButton(t["pick_sound"], callback_data="sl:none")])
-    for key, meta in BGM_PRESETS.items():
-        if key == "off": 
+    sound_order = ["rain", "fireplace", "ocean", "lofi"]  # покажем в таком порядке, если есть
+    for key in sound_order:
+        meta = BGM_PRESETS.get(key)
+        if not meta:
             continue
-        mark = "✅ " if p["kind"] == key else ""
+        mark = "✅ " if p.get("kind") == key else ""
         rows.append([InlineKeyboardButton(mark + meta["label"], callback_data=f"sl:snd:{key}")])
 
-    # длительность
+    # ——— длительность ———
     rows.append([InlineKeyboardButton(t["pick_duration"], callback_data="sl:none")])
-    for chunk in [(5,10,15),(20,30,45),(60,90,120)]:
-        btns = [InlineKeyboardButton(
-            ("✅ " if p["duration_min"]==m else "") + f"{m}",
-            callback_data=f"sl:dur:{m}"
-        ) for m in chunk]
+    for chunk in [(5, 10, 15), (20, 30, 45), (60, 90, 120)]:
+        btns = [
+            InlineKeyboardButton(
+                ("✅ " if p.get("duration_min") == m else "") + f"{m}",
+                callback_data=f"sl:dur:{m}"
+            )
+            for m in chunk
+        ]
         rows.append(btns)
 
-    # громкость
+    # ——— громкость ———
     rows.append([InlineKeyboardButton(t["pick_gain"], callback_data="sl:none")])
-    for chunk in [(-25,-20,-15),(-10,-5,0),(5,)]:
-        btns = [InlineKeyboardButton(
-            ("✅ " if p["gain_db"]==g else "") + (f"{g} dB"),
-            callback_data=f"sl:gain:{g}"
-        ) for g in chunk]
+    for chunk in [(-25, -20, -15), (-10, -5, 0), (5,)]:
+        btns = [
+            InlineKeyboardButton(
+                ("✅ " if p.get("gain_db") == g else "") + (f"{g} dB"),
+                callback_data=f"sl:gain:{g}"
+            )
+            for g in chunk
+        ]
         rows.append(btns)
 
-    # старт/стоп
+    # ——— старт / стоп ———
     rows.append([
         InlineKeyboardButton(t["start"], callback_data="sl:start"),
         InlineKeyboardButton(t["stop"],  callback_data="sl:stop"),
     ])
+
     return InlineKeyboardMarkup(rows)
+
 
 def _sleep_menu_text(uid: str) -> str:
     t = _sleep_i18n(uid)
@@ -403,44 +413,6 @@ def _sleep_menu_text(uid: str) -> str:
         f"{t['duration'].format(min=p['duration_min'])}\n"
         f"{t['gain'].format(db=p['gain_db'])}"
     )
-
-def _sleep_kb(uid: str) -> InlineKeyboardMarkup:
-    t = _sleep_i18n(uid)
-    p = _sp(uid)
-    rows = []
-
-    # звуки (кроме off)
-    rows.append([InlineKeyboardButton(t["pick_sound"], callback_data="sl:none")])
-    for key, meta in BGM_PRESETS.items():
-        if key == "off": 
-            continue
-        mark = "✅ " if p["kind"] == key else ""
-        rows.append([InlineKeyboardButton(mark + meta["label"], callback_data=f"sl:snd:{key}")])
-
-    # длительность
-    rows.append([InlineKeyboardButton(t["pick_duration"], callback_data="sl:none")])
-    for chunk in [(5,10,15),(20,30,45),(60,90,120)]:
-        btns = [InlineKeyboardButton(
-            ("✅ " if p["duration_min"]==m else "") + f"{m}",
-            callback_data=f"sl:dur:{m}"
-        ) for m in chunk]
-        rows.append(btns)
-
-    # громкость
-    rows.append([InlineKeyboardButton(t["pick_gain"], callback_data="sl:none")])
-    for chunk in [(-25,-20,-15),(-10,-5,0),(5,)]:
-        btns = [InlineKeyboardButton(
-            ("✅ " if p["gain_db"]==g else "") + (f"{g} dB"),
-            callback_data=f"sl:gain:{g}"
-        ) for g in chunk]
-        rows.append(btns)
-
-    # старт/стоп
-    rows.append([
-        InlineKeyboardButton(t["start"], callback_data="sl:start"),
-        InlineKeyboardButton(t["stop"],  callback_data="sl:stop"),
-    ])
-    return InlineKeyboardMarkup(rows)
 
 # /sleep — открыть меню
 async def sleep_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
