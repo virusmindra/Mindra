@@ -401,14 +401,20 @@ async def sleep_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 # Колбэк "sl:*"
-# Колбэк "sl:*"
 async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     if not q or not q.data.startswith("sl:"):
         return
+
+    # По возможности сразу отвечаем на callback, чтобы не «протух»
+    try:
+        await q.answer()
+    except Exception:
+        pass
+
     uid = str(q.from_user.id)
-    p = _sp(uid)                 # профиль настроек сна: kind, duration_min, gain_db
-    t = _sleep_i18n(uid)         # i18n тексты
+    p = _sp(uid)          # профиль сна: kind, duration_min, gain_db
+    t = _sleep_i18n(uid)  # i18n
 
     parts = q.data.split(":")
     action = parts[1]
@@ -416,21 +422,21 @@ async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         if action == "snd":
             p["kind"] = parts[2]
-            await q.edit_message_text(_sleep_menu_text(uid), parse_mode="Markdown", reply_markup=_sleep_kb(uid))
+            await _sleep_refresh(update, context, uid)
             return
 
         if action == "dur":
             p["duration_min"] = int(parts[2])
-            await q.edit_message_text(_sleep_menu_text(uid), parse_mode="Markdown", reply_markup=_sleep_kb(uid))
+            await _sleep_refresh(update, context, uid)
             return
 
         if action == "gain":
             p["gain_db"] = int(parts[2])
-            await q.edit_message_text(_sleep_menu_text(uid), parse_mode="Markdown", reply_markup=_sleep_kb(uid))
+            await _sleep_refresh(update, context, uid)
             return
 
         if action == "start":
-            # рендерим файл и отправляем как аудио (не voice), чтобы удобно слушать
+            # рендерим длинный ogg-файл
             try:
                 ogg_path = _render_sleep_ogg(p["kind"], p["duration_min"], p["gain_db"])
             except RuntimeError:
@@ -441,35 +447,26 @@ async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 return
 
             label = BGM_PRESETS.get(p["kind"], {}).get("label", p["kind"])
-            # обновим экран меню (чтобы кнопки остались под рукой)
-            await q.edit_message_text(_sleep_menu_text(uid), parse_mode="Markdown", reply_markup=_sleep_kb(uid))
-            # уведомим о старте
+
+            # обновляем экран (если надо)
+            await _sleep_refresh(update, context, uid)
+
+            # сообщение «стартуем»
             await context.bot.send_message(
                 chat_id=q.message.chat_id,
                 text=t["started"].format(sound=label, min=p["duration_min"])
             )
 
-            # ▶️ Отправляем как audio — удобный встроенный плеер
+            # отправляем как audio — удобный плеер
             try:
                 with open(ogg_path, "rb") as f:
-                    # Вариант 1 — минимальный (твой фрагмент):
                     await context.bot.send_audio(
                         chat_id=q.message.chat_id,
                         audio=f,
                         title=f"{label} — {p['duration_min']} min",
                         caption=None
                     )
-
-                    # Вариант 2 (если хочешь красиво с исполнителем и именем файла):
-                    # await context.bot.send_audio(
-                    #     chat_id=q.message.chat_id,
-                    #     audio=f,
-                    #     title=f"{label} — {p['duration_min']} min",
-                    #     performer="Mindra",
-                    #     file_name=f"{p['kind']}_{p['duration_min']}min.ogg",
-                    # )
             finally:
-                # 🔥 Чистим временный файл в любом случае
                 try:
                     os.remove(ogg_path)
                 except Exception:
@@ -477,19 +474,25 @@ async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         if action == "stop":
-            # мы отправляем один длинный файл, поэтому «стоп» — просто уведомление
+            # у нас один длинный файл — «стоп» здесь лишь уведомление
             await q.answer(t["stopped"], show_alert=False)
             return
 
         # игнор "sl:none"
         await q.answer()
 
+    except BadRequest as e:
+        # чтобы не падать в логах лишний раз
+        if "Message is not modified" in str(e):
+            return
+        logging.exception(f"sleep_cb BadRequest: {e}")
     except Exception as e:
         logging.exception(f"sleep_cb failed: {e}")
         try:
             await q.answer("Error", show_alert=False)
         except:
             pass
+
 
 def _current_voice_name(uid: str) -> str:
     lang = user_languages.get(uid, "ru")
