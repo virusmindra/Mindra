@@ -226,6 +226,73 @@ def _s_i18n(uid: str) -> dict:
 def _has_eleven() -> bool:
     return bool(ELEVEN_API_KEY)
 
+
+
+def _resolve_asset_path(rel_path: str | None) -> str | None:
+    """Преобразует относительный путь из BGM_PRESETS в абсолютный (на всякий)."""
+    if not rel_path:
+        return None
+    # пробуем относительно текущего файла
+    base = os.path.dirname(os.path.abspath(__file__))
+    p1 = os.path.normpath(os.path.join(base, rel_path))
+    if os.path.exists(p1):
+        return p1
+    # и относительно CWD (если запускается из корня проекта)
+    p2 = os.path.normpath(os.path.join(os.getcwd(), rel_path))
+    if os.path.exists(p2):
+        return p2
+    return rel_path  # вернём как есть — дальше всё равно проверим exists
+
+def _render_sleep_ogg(kind: str, minutes: int, gain_db: int = -20) -> str:
+    """
+    Генерит одиночный OGG/Opus файл с зацикленным фоном для сна.
+    - kind: ключ из BGM_PRESETS, например "rain", "fireplace", "ocean", "lofi"
+    - minutes: длительность в минутах
+    - gain_db: громкость фона в децибелах (отрицательные — тише)
+    Возвращает путь к временной .ogg. В случае проблем кидает исключение.
+    """
+    if kind == "off":
+        raise ValueError("Sleep sound 'off' — нечего играть")
+
+    meta = BGM_PRESETS.get(kind, {})
+    src_rel = meta.get("path")
+    src = _resolve_asset_path(src_rel)
+
+    if not src or not os.path.exists(src):
+        raise FileNotFoundError(f"Sleep BGM not found: {src_rel}")
+
+    if shutil.which("ffmpeg") is None:
+        raise RuntimeError("ffmpeg not found")
+
+    # ограничим разумные границы
+    minutes = max(1, min(int(minutes or 1), 240))  # 1..240 мин
+    duration_sec = minutes * 60
+
+    out_path = os.path.join(
+        tempfile.gettempdir(),
+        f"sleep_{kind}_{next(tempfile._get_candidate_names())}.ogg"
+    )
+
+    # -stream_loop -1: бесконечный луп исходника
+    # -t <sec>: итоговая длительность
+    # -filter_complex: громкость в dB + лёгкая нормализация
+    # libopus 48кбит/с — 60 минут ≈ 21–22 МБ (в пределах лимита Telegram)
+    cmd = [
+        "ffmpeg", "-y",
+        "-stream_loop", "-1", "-i", src,
+        "-t", str(duration_sec),
+        "-filter:a", f"volume={gain_db}dB,dynaudnorm",
+        "-c:a", "libopus", "-b:a", "48k", "-ar", "48000",
+        out_path
+    ]
+    try:
+        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return out_path
+    except Exception as e:
+        logging.exception(f"Sleep render ffmpeg failed: {e}")
+        # если нужно — можно фолбэкнуть в исходный mp3, но лучше бросить исключение:
+        raise
+        
 def _sleep_menu_text(uid: str) -> str:
     t = _sleep_i18n(uid)
     p = _sp(uid)
