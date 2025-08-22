@@ -304,6 +304,48 @@ def _sleep_menu_text(uid: str) -> str:
         f"{t['gain'].format(db=p['gain_db'])}"
     )
 
+def _kb_equal(a, b) -> bool:
+    try:
+        return (a or InlineKeyboardMarkup([])).to_dict() == (b or InlineKeyboardMarkup([])).to_dict()
+    except Exception:
+        return False
+
+async def _sleep_refresh(update: Update, context: ContextTypes.DEFAULT_TYPE, uid: str):
+    """Безопасно обновляет экран Sleep-меню: правит текст/клавиатуру только если есть изменения."""
+    q = update.callback_query
+    new_text = _sleep_menu_text(uid)
+    new_kb = _sleep_kb(uid)
+
+    curr_text = getattr(q.message, "text", "")
+    curr_kb = getattr(q.message, "reply_markup", None)
+
+    # Нечего менять — выходим
+    if curr_text == new_text and _kb_equal(curr_kb, new_kb):
+        return
+
+    try:
+        if curr_text != new_text:
+            await q.edit_message_text(new_text, parse_mode="Markdown", reply_markup=new_kb)
+        else:
+            # текст тот же — меняем только клавиатуру
+            await q.edit_message_reply_markup(reply_markup=new_kb)
+    except BadRequest as e:
+        msg = str(e)
+        # просто игнорим этот кейс
+        if "Message is not modified" in msg:
+            return
+        # callback протух — шлём новое сообщение
+        if "Query is too old" in msg or "query id is invalid" in msg:
+            await context.bot.send_message(
+                chat_id=q.message.chat_id,
+                text=new_text,
+                parse_mode="Markdown",
+                reply_markup=new_kb
+            )
+            return
+        # пробрасываем другие ошибки
+        raise
+
 def _sleep_kb(uid: str) -> InlineKeyboardMarkup:
     t = _sleep_i18n(uid)
     p = _sp(uid)
