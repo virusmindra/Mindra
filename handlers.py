@@ -3252,6 +3252,7 @@ async def handle_reaction_button(update: Update, context: ContextTypes.DEFAULT_T
     await query.message.reply_text(text)
 
 # Обработчик текстовых сообщений
+# Обработчик текстовых сообщений
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global user_last_seen, user_message_count
     user_id_int = update.effective_user.id
@@ -3281,14 +3282,56 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # 📌 текст пользователя
     user_input = (update.message.text or "").strip()
     if not user_input:
-        return  # на всякий случай
+        return
 
     # 🌐 язык и режим
     lang_code = user_languages.get(user_id, "ru")
+
+    # ——— РАННИЙ ПЕРЕХВАТ ЗАПРОСА СКАЗКИ ———
+    try:
+        if _looks_like_story_intent(user_input, lang_code, user_id):
+            # уважаем «молчи N часов», кулдаун внутри _looks_like_story_intent
+            if is_premium(user_id):
+                # сохраняем тему в chat_data, а не в callback_data
+                topic_guess = user_input
+                context.chat_data[f"story_pending_{user_id}"] = topic_guess[:200]
+
+                t = _s_i18n(user_id)
+                kb = InlineKeyboardMarkup([
+                    [
+                        InlineKeyboardButton(t["btn_ok"], callback_data="st:confirm"),
+                        InlineKeyboardButton(t["btn_no"], callback_data="st:close"),
+                    ]
+                ])
+                await context.bot.send_message(
+                    chat_id=update.effective_chat.id,
+                    text=t["suggest"],
+                    reply_markup=kb
+                )
+            else:
+                # апселл для не-премиума
+                tpay = _p_i18n(user_id)
+                await update.message.reply_text(
+                    f"*{tpay['upsell_title']}*\n\n{tpay['upsell_body']}",
+                    parse_mode="Markdown",
+                    reply_markup=_premium_kb(user_id)
+                )
+            return  # 👈 важное: НЕ идём в LLM, чтобы он сам не написал сказку
+    except Exception as e:
+        logging.warning(f"Story intercept failed: {e}")
+
+    # ——— Обычный ответ ассистента ———
     lang_prompt = LANG_PROMPTS.get(lang_code, LANG_PROMPTS["ru"])
     mode = user_modes.get(user_id, "support")
     mode_prompt = MODES.get(mode, MODES["support"]).get(lang_code, MODES["support"]["ru"])
-    system_prompt = f"{lang_prompt}\n\n{mode_prompt}"
+
+    # На всякий случай доп. гвардrail в системку (чтобы LLM не расписывал сказки в чате)
+    guard = {
+        "ru": "Если пользователь просит сказку/историю на ночь — не пиши сам рассказ в этом режиме. Ответь коротко и предложи кнопки «Сказка».",
+        "uk": "Якщо користувач просить казку — не пиши сам текст у цьому режимі. Коротко відповідай і запропонуй кнопку «Казка».",
+        "en": "If the user asks for a bedtime story, do not write the full story here. Reply briefly and suggest the Story button."
+    }.get(lang_code, "Если пользователь просит сказку — не пиши её здесь; предложи кнопки «Сказка».")
+    system_prompt = f"{lang_prompt}\n\n{mode_prompt}\n\n{guard}"
 
     # 💾 история
     if user_id not in conversation_history:
@@ -3311,9 +3354,7 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
             model="gpt-4o",
             messages=trimmed_history
         )
-        reply = (resp.choices[0].message.content or "").strip()
-        if not reply:
-            reply = "…"
+        reply = (resp.choices[0].message.content or "").strip() or "…"
 
         # сохранить в историю
         conversation_history[user_id].append({"role": "assistant", "content": reply})
@@ -3329,38 +3370,9 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=generate_post_response_buttons()
         )
 
-        # 🔊 при необходимости — озвучка (premium + включён voice_mode)
+        # 🔊 озвучка (premium + включён voice_mode)
         if is_premium(user_id) and user_voice_mode.get(user_id, False):
             await send_voice_response(context, user_id_int, final_text, lang_code)
-
-        # ——— мягкая подсказка «сказка?» ПОСЛЕ ответа ———
-        try:
-            if _looks_like_story_intent(user_input, lang_code, user_id):
-                # помечаем время последнего предложения
-                _story_last_suggest[user_id] = datetime.now(timezone.utc)
-
-                if is_premium(user_id):
-                    # сохраняем тему в chat_data (чтобы не класть длинные данные в callback_data)
-                    topic_guess = user_input.strip()
-                    context.chat_data[f"story_pending_{user_id}"] = topic_guess[:200]
-
-                    # локализованные кнопки OK/Нет
-                    t = _s_i18n(user_id)
-                    kb = InlineKeyboardMarkup([
-                        [
-                            InlineKeyboardButton(t["btn_ok"], callback_data="st:confirm"),
-                            InlineKeyboardButton(t["btn_no"], callback_data="st:close"),
-                        ]
-                    ])
-
-                    await context.bot.send_message(
-                        chat_id=update.effective_chat.id,
-                        text=t["suggest"],
-                        reply_markup=kb
-                    )
-                # для не-премиум — ничего не предлагаем здесь
-        except Exception as e:
-            logging.warning(f"Story suggest failed: {e}")
 
     except Exception as e:
         logging.error(f"❌ Ошибка в chat(): {e}")
