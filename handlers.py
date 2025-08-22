@@ -305,13 +305,19 @@ def _render_sleep_ogg(kind: str, minutes: int, gain_db: int = -20) -> str:
 def _sleep_menu_text(uid: str) -> str:
     t = _sleep_i18n(uid)
     p = _sp(uid)
-    label = BGM_PRESETS.get(p["kind"], {}).get("label", p["kind"])
+
+    kind = p.get("kind", "rain")
+    label = BGM_PRESETS.get(kind, {}).get("label", kind)
+    dur = p.get("duration_min", 15)
+    gain = p.get("gain_db", -20)
+
     return (
         f"*{t['title']}*\n\n"
         f"{t['sound'].format(sound=label)}\n"
-        f"{t['duration'].format(min=p['duration_min'])}\n"
-        f"{t['gain'].format(db=p['gain_db'])}"
+        f"{t['duration'].format(min=dur)}\n"
+        f"{t['gain'].format(db=gain)}"
     )
+
 
 def _kb_equal(a, b) -> bool:
     try:
@@ -401,18 +407,6 @@ def _sleep_kb(uid: str) -> InlineKeyboardMarkup:
     ])
 
     return InlineKeyboardMarkup(rows)
-
-
-def _sleep_menu_text(uid: str) -> str:
-    t = _sleep_i18n(uid)
-    p = _sp(uid)
-    label = BGM_PRESETS.get(p["kind"], {}).get("label", p["kind"])
-    return (
-        f"*{t['title']}*\n\n"
-        f"{t['sound'].format(sound=label)}\n"
-        f"{t['duration'].format(min=p['duration_min'])}\n"
-        f"{t['gain'].format(db=p['gain_db'])}"
-    )
 
 # /sleep — открыть меню
 async def sleep_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
