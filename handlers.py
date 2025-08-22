@@ -450,14 +450,13 @@ async def sleep_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="Markdown",
         reply_markup=_sleep_kb(uid)
     )
-
 # Колбэк "sl:*"
 async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     if not q or not q.data.startswith("sl:"):
         return
 
-    # По возможности сразу отвечаем на callback, чтобы не «протух»
+    # быстрый ответ, чтобы callback не протух
     try:
         await q.answer()
     except Exception:
@@ -473,21 +472,33 @@ async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         if action == "snd":
             p["kind"] = parts[2]
-            await _sleep_refresh(update, context, uid)
+            try:
+                await _sleep_refresh(update, context, uid)
+            except BadRequest as e:
+                if "Message is not modified" not in str(e):
+                    raise
             return
 
         if action == "dur":
             p["duration_min"] = int(parts[2])
-            await _sleep_refresh(update, context, uid)
+            try:
+                await _sleep_refresh(update, context, uid)
+            except BadRequest as e:
+                if "Message is not modified" not in str(e):
+                    raise
             return
 
         if action == "gain":
             p["gain_db"] = int(parts[2])
-            await _sleep_refresh(update, context, uid)
+            try:
+                await _sleep_refresh(update, context, uid)
+            except BadRequest as e:
+                if "Message is not modified" not in str(e):
+                    raise
             return
 
         if action == "start":
-            # рендерим длинный ogg-файл
+            # рендерим/берём из кэша длинный ogg-файл
             try:
                 ogg_path = _render_sleep_ogg(p["kind"], p["duration_min"], p["gain_db"])
             except RuntimeError:
@@ -499,8 +510,12 @@ async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             label = BGM_PRESETS.get(p["kind"], {}).get("label", p["kind"])
 
-            # обновляем экран (если надо)
-            await _sleep_refresh(update, context, uid)
+            # обновляем экран (может вернуть "Message is not modified" — не критично)
+            try:
+                await _sleep_refresh(update, context, uid)
+            except BadRequest as e:
+                if "Message is not modified" not in str(e):
+                    raise
 
             # сообщение «стартуем»
             await context.bot.send_message(
@@ -508,24 +523,18 @@ async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 text=t["started"].format(sound=label, min=p["duration_min"])
             )
 
-            # отправляем как audio — удобный плеер
-            try:
-                with open(ogg_path, "rb") as f:
-                    await context.bot.send_audio(
-                        chat_id=q.message.chat_id,
-                        audio=f,
-                        title=f"{label} — {p['duration_min']} min",
-                        caption=None
-                    )
-            finally:
-                try:
-                    os.remove(ogg_path)
-                except Exception:
-                    pass
+            # отправляем как audio — удобный плеер; файл из кэша НЕ удаляем
+            with open(ogg_path, "rb") as f:
+                await context.bot.send_audio(
+                    chat_id=q.message.chat_id,
+                    audio=f,
+                    title=f"{label} — {p['duration_min']} min",
+                    caption=None
+                )
             return
 
         if action == "stop":
-            # у нас один длинный файл — «стоп» здесь лишь уведомление
+            # один длинный файл — «стоп» просто уведомление
             await q.answer(t["stopped"], show_alert=False)
             return
 
@@ -533,7 +542,6 @@ async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await q.answer()
 
     except BadRequest as e:
-        # чтобы не падать в логах лишний раз
         if "Message is not modified" in str(e):
             return
         logging.exception(f"sleep_cb BadRequest: {e}")
@@ -541,9 +549,8 @@ async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logging.exception(f"sleep_cb failed: {e}")
         try:
             await q.answer("Error", show_alert=False)
-        except:
+        except Exception:
             pass
-
 
 def _current_voice_name(uid: str) -> str:
     lang = user_languages.get(uid, "ru")
