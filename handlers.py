@@ -180,6 +180,22 @@ _story_optout_until: dict[str, datetime] = {}   # uid -> utc time
 DEFAULT_ELEVEN_FEMALE = "21m00Tcm4TlvDq8ikWAM"
 DEFAULT_ELEVEN_MALE = "JBFqnCBsd6RMkjVDRZzb" 
 
+# ==== Sleep (ambient only) ====
+sleep_prefs: dict[str, dict] = {}
+
+def _sp(uid: str) -> dict:
+    if uid not in sleep_prefs:
+        sleep_prefs[uid] = {
+            "kind": "rain",       # ключ из BGM_PRESETS
+            "gain_db": -20,       # громкость фона (дБ)
+            "duration_min": 20,   # длительность в минутах
+        }
+    return sleep_prefs[uid]
+
+def _sleep_i18n(uid: str) -> dict:
+    lang = user_languages.get(uid, "ru")
+    return SLEEP_UI_TEXTS.get(lang, SLEEP_UI_TEXTS["ru"])
+    
 def _v_i18n(uid: str) -> dict:
     """Короткие тексты для /voice_mode (on/off/help)."""
     lang = user_languages.get(uid, "ru")
