@@ -242,13 +242,11 @@ def _resolve_asset_path(rel_path: str | None) -> str | None:
     if os.path.exists(p2):
         return p2
     return rel_path  # вернём как есть — дальше всё равно проверим exists
+    
 def _render_sleep_ogg(kind: str, minutes: int, gain_db: int = -20) -> str:
     """
-    Генерит одиночный OGG/Opus файл с зацикленным фоном для сна.
-    - kind: ключ из BGM_PRESETS, например "rain", "fireplace", "ocean", "lofi"
-    - minutes: длительность в минутах (1..240)
-    - gain_db: громкость фона в dB (отрицательные — тише)
-    Возвращает путь к временной .ogg. В случае проблем кидает исключение.
+    Рендерит/кэширует OGG/Opus с лупом звука для сна.
+    Кэш-ключ: <kind>_<minutes>_<gain_db> в temp/sleep_cache.
     """
     if kind == "off":
         raise ValueError("Sleep sound 'off' — нечего играть")
@@ -256,35 +254,38 @@ def _render_sleep_ogg(kind: str, minutes: int, gain_db: int = -20) -> str:
     meta = BGM_PRESETS.get(kind, {})
     src_rel = meta.get("path")
     src = _resolve_asset_path(src_rel)
-
     if not src or not os.path.exists(src):
         raise FileNotFoundError(f"Sleep BGM not found: {src_rel}")
 
     if shutil.which("ffmpeg") is None:
         raise RuntimeError("ffmpeg not found")
 
-    # границы длительности
     minutes = max(1, min(int(minutes or 1), 240))
     total = minutes * 60
 
-    # плавные вход/выход
+    # ⛳️ путь кэша
+    cache_dir = os.path.join(tempfile.gettempdir(), "sleep_cache")
+    os.makedirs(cache_dir, exist_ok=True)
+    gain_tag = str(gain_db).replace("-", "m").replace("+", "p")
+    key = f"{kind}_{minutes}_{gain_tag}"
+    out_path = os.path.join(cache_dir, f"{key}.ogg")
+
+    # ✅ если уже есть — используем
+    if os.path.exists(out_path):
+        return out_path
+
+    # Плавные вход/выход
     fade_in = 3   # сек
     fade_out = 5  # сек
 
-    out_path = os.path.join(
-        tempfile.gettempdir(),
-        f"sleep_{kind}_{next(tempfile._get_candidate_names())}.ogg"
-    )
-
-    # Делаем бесконечный луп источника, даём хвост для fade-out,
-    # затем: громкость → (опц.) нормализация → fade-in → обрезка по total → fade-out
+    # Рендерим прямо в кэш-файл
     ff_cmd = [
         "ffmpeg", "-y",
         "-stream_loop", "-1", "-t", str(total + fade_out + 1), "-i", src,
         "-filter_complex",
         (
             f"[0:a]volume={gain_db}dB,"
-            f"dynaudnorm,"                          # можно убрать, если не нужно
+            f"dynaudnorm,"
             f"afade=t=in:st=0:d={fade_in},"
             f"atrim=duration={total},"
             f"afade=t=out:st={max(0, total - fade_out)}:d={fade_out}[a]"
@@ -293,12 +294,12 @@ def _render_sleep_ogg(kind: str, minutes: int, gain_db: int = -20) -> str:
         "-c:a", "libopus", "-b:a", "48k", "-ar", "48000",
         out_path
     ]
-
     try:
         subprocess.run(ff_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return out_path
     except Exception as e:
         logging.exception(f"Sleep render ffmpeg failed: {e}")
+        # если хотим «атомарность», можно рендерить во временный файл и затем os.replace(...)
         raise
 
 def _sleep_menu_text(uid: str) -> str:
