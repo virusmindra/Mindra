@@ -366,39 +366,49 @@ def _sleep_kb(uid: str) -> InlineKeyboardMarkup:
     p = _sp(uid)
     rows: list[list[InlineKeyboardButton]] = []
 
-    # ——— звуки (кроме off), в удобном порядке ———
+    # ——— звуки (кроме off) — сначала в удобном порядке, затем все остальные ———
     rows.append([InlineKeyboardButton(t["pick_sound"], callback_data="sl:none")])
-    sound_order = ["rain", "fireplace", "ocean", "lofi"]  # покажем в таком порядке, если есть
-    for key in sound_order:
+
+    desired_order = ["rain", "fireplace", "ocean", "lofi"]
+    seen = set()
+
+    # 1) желаемый порядок
+    for key in desired_order:
         meta = BGM_PRESETS.get(key)
-        if not meta:
+        if not meta or key == "off":
             continue
         mark = "✅ " if p.get("kind") == key else ""
-        rows.append([InlineKeyboardButton(mark + meta["label"], callback_data=f"sl:snd:{key}")])
+        rows.append([InlineKeyboardButton(mark + meta.get("label", key), callback_data=f"sl:snd:{key}")])
+        seen.add(key)
+
+    # 2) все остальные, если добавите новые пресеты
+    for key, meta in BGM_PRESETS.items():
+        if key == "off" or key in seen:
+            continue
+        mark = "✅ " if p.get("kind") == key else ""
+        rows.append([InlineKeyboardButton(mark + meta.get("label", key), callback_data=f"sl:snd:{key}")])
 
     # ——— длительность ———
     rows.append([InlineKeyboardButton(t["pick_duration"], callback_data="sl:none")])
     for chunk in [(5, 10, 15), (20, 30, 45), (60, 90, 120)]:
-        btns = [
+        rows.append([
             InlineKeyboardButton(
                 ("✅ " if p.get("duration_min") == m else "") + f"{m}",
                 callback_data=f"sl:dur:{m}"
             )
             for m in chunk
-        ]
-        rows.append(btns)
+        ])
 
     # ——— громкость ———
     rows.append([InlineKeyboardButton(t["pick_gain"], callback_data="sl:none")])
     for chunk in [(-25, -20, -15), (-10, -5, 0), (5,)]:
-        btns = [
+        rows.append([
             InlineKeyboardButton(
-                ("✅ " if p.get("gain_db") == g else "") + (f"{g} dB"),
+                ("✅ " if p.get("gain_db") == g else "") + f"{g} dB",
                 callback_data=f"sl:gain:{g}"
             )
             for g in chunk
-        ]
-        rows.append(btns)
+        ])
 
     # ——— старт / стоп ———
     rows.append([
