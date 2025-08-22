@@ -401,13 +401,14 @@ async def sleep_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 # Колбэк "sl:*"
+# Колбэк "sl:*"
 async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     if not q or not q.data.startswith("sl:"):
         return
     uid = str(q.from_user.id)
-    p = _sp(uid)
-    t = _sleep_i18n(uid)
+    p = _sp(uid)                 # профиль настроек сна: kind, duration_min, gain_db
+    t = _sleep_i18n(uid)         # i18n тексты
 
     parts = q.data.split(":")
     action = parts[1]
@@ -417,14 +418,17 @@ async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
             p["kind"] = parts[2]
             await q.edit_message_text(_sleep_menu_text(uid), parse_mode="Markdown", reply_markup=_sleep_kb(uid))
             return
+
         if action == "dur":
             p["duration_min"] = int(parts[2])
             await q.edit_message_text(_sleep_menu_text(uid), parse_mode="Markdown", reply_markup=_sleep_kb(uid))
             return
+
         if action == "gain":
             p["gain_db"] = int(parts[2])
             await q.edit_message_text(_sleep_menu_text(uid), parse_mode="Markdown", reply_markup=_sleep_kb(uid))
             return
+
         if action == "start":
             # рендерим файл и отправляем как аудио (не voice), чтобы удобно слушать
             try:
@@ -437,21 +441,39 @@ async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 return
 
             label = BGM_PRESETS.get(p["kind"], {}).get("label", p["kind"])
+            # обновим экран меню (чтобы кнопки остались под рукой)
             await q.edit_message_text(_sleep_menu_text(uid), parse_mode="Markdown", reply_markup=_sleep_kb(uid))
-            await context.bot.send_message(chat_id=q.message.chat_id, text=t["started"].format(sound=label, min=p["duration_min"]))
+            # уведомим о старте
+            await context.bot.send_message(
+                chat_id=q.message.chat_id,
+                text=t["started"].format(sound=label, min=p["duration_min"])
+            )
+
+            # ▶️ Отправляем как audio — удобный встроенный плеер
             try:
                 with open(ogg_path, "rb") as f:
-                    # send_audio даёт удобный плеер; filename важен, чтобы был «музыкой», не voice
+                    # Вариант 1 — минимальный (твой фрагмент):
                     await context.bot.send_audio(
                         chat_id=q.message.chat_id,
                         audio=f,
-                        title=label,
-                        performer="Mindra",
-                        file_name=f"{p['kind']}_{p['duration_min']}min.ogg"
+                        title=f"{label} — {p['duration_min']} min",
+                        caption=None
                     )
+
+                    # Вариант 2 (если хочешь красиво с исполнителем и именем файла):
+                    # await context.bot.send_audio(
+                    #     chat_id=q.message.chat_id,
+                    #     audio=f,
+                    #     title=f"{label} — {p['duration_min']} min",
+                    #     performer="Mindra",
+                    #     file_name=f"{p['kind']}_{p['duration_min']}min.ogg",
+                    # )
             finally:
-                try: os.remove(ogg_path)
-                except: pass
+                # 🔥 Чистим временный файл в любом случае
+                try:
+                    os.remove(ogg_path)
+                except Exception:
+                    pass
             return
 
         if action == "stop":
@@ -461,6 +483,7 @@ async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # игнор "sl:none"
         await q.answer()
+
     except Exception as e:
         logging.exception(f"sleep_cb failed: {e}")
         try:
