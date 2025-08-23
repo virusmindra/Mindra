@@ -73,23 +73,6 @@ def extend_premium_days(user_id: str | int, days: int) -> str:
     new_until = base + timedelta(days=int(days))
     set_premium_until_dt(user_id, new_until)
     return new_until.isoformat()
-
-def _parse_any_dt(val: str) -> datetime:
-    """Понимает ISO, ISO с Z, а также epoch(строкой/числом). Возвращает UTC-aware datetime."""
-    v = str(val).strip()
-    # epoch?
-    if v.isdigit():
-        return datetime.fromtimestamp(int(v), tz=timezone.utc)
-    # ISO с Z?
-    if v.endswith("Z"):
-        v = v[:-1] + "+00:00"
-    dt = datetime.fromisoformat(v)
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    else:
-        dt = dt.astimezone(timezone.utc)
-    return dt
-
     
 def is_premium(user_id) -> bool:
     # админы — всегда премиум
