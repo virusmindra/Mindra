@@ -1102,16 +1102,48 @@ def _tts_gtts_to_ogg(text: str, lang: str, tld: str="com", speed: float=1.0) -> 
     return _to_ogg_from_mp3(mp3_path, speed)
 
 def synthesize_to_ogg(text: str, lang: str, uid: str) -> str:
+    """
+    Синтезирует речь в OGG (opus).
+    - Если выбран Eleven и он доступен (ключ, voice_id, фича), используем ElevenLabs.
+    - Иначе — gTTS.
+    В любом фейле падаем в gTTS.
+    """
     p = _vp(uid)
     text = _expressive(text, lang)
+
     try:
-        if p.get("engine") == "eleven" and p.get("voice_id") and os.getenv("ELEVEN_API_KEY"):
-            return _tts_elevenlabs_to_ogg(text, p["voice_id"], p.get("speed",1.0))
-        # можно добавить Azure при необходимости
-        return _tts_gtts_to_ogg(text, lang, tld=p.get("accent","com"), speed=p.get("speed",1.0))
+        use_eleven = (
+            str(p.get("engine", "gTTS")).lower() == "eleven"
+            and _has_eleven()                      # есть ELEVEN_API_KEY
+            and bool(p.get("voice_id"))            # выбран голос
+            and has_feature(uid, "eleven_tts")     # у тарифа есть право на Eleven
+        )
+
+        if use_eleven:
+            # speed из профиля: 0.8..1.2 ок; твоя реализация _tts_elevenlabs_to_ogg уже есть
+            return _tts_elevenlabs_to_ogg(
+                text,
+                p["voice_id"],
+                p.get("speed", 1.0)
+            )
+
+        # gTTS (акцент по tld, скорость если поддержана в твоей _tts_gtts_to_ogg)
+        return _tts_gtts_to_ogg(
+            text,
+            lang,
+            tld=p.get("accent", "com"),
+            speed=p.get("speed", 1.0),
+        )
+
     except Exception as e:
         logging.exception(f"TTS primary failed ({p.get('engine')}), fallback to gTTS: {e}")
-        return _tts_gtts_to_ogg(text, lang, tld=p.get("accent","com"), speed=p.get("speed",1.0))
+        # надёжный фолбэк
+        return _tts_gtts_to_ogg(
+            text,
+            lang,
+            tld=p.get("accent", "com"),
+            speed=p.get("speed", 1.0),
+        )
 
 
 async def generate_story_text(uid: str, lang: str, topic: str, name: str|None, length: str="short") -> str:
