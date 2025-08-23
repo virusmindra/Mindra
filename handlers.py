@@ -1315,18 +1315,18 @@ async def premium_challenge_callback(update, context):
         return
 
 def ensure_premium_db():
-    with sqlite3.connect("mindra.db") as db:
-        db.execute("""
-        CREATE TABLE IF NOT EXISTS premium_challenges (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id TEXT NOT NULL,
-            week_start TEXT NOT NULL,   -- ISO date (YYYY-MM-DD) понедельник
-            text TEXT NOT NULL,
-            done INTEGER NOT NULL DEFAULT 0,
-            created_at INTEGER NOT NULL
-        );
-        """)
-        db.commit()
+    # простая SQLite миграция: создаём таблицу подписок (если нет)
+    db = sqlite3.connect(DB_PATH)
+    db.execute("""
+    CREATE TABLE IF NOT EXISTS subscriptions(
+        user_id TEXT PRIMARY KEY,
+        plan TEXT NOT NULL,
+        expires_utc TEXT,            -- NULL = бессрочно или free
+        updated_at TEXT NOT NULL
+    );
+    """)
+    db.commit()
+    db.close()
 
 def _week_start_iso(dt: datetime) -> str:
     # понедельник этой недели в локальном времени пользователя
