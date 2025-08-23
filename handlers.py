@@ -3643,7 +3643,6 @@ async def handle_reaction_button(update: Update, context: ContextTypes.DEFAULT_T
     await query.message.reply_text(text)
 
 # Обработчик текстовых сообщений
-# Обработчик текстовых сообщений
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global user_last_seen, user_message_count
     user_id_int = update.effective_user.id
@@ -3653,21 +3652,36 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_last_seen[user_id_int] = datetime.now(timezone.utc)
     logging.info(f"✅ user_last_seen обновлён в chat для {user_id_int}")
 
-    # 🔥 дневной лимит сообщений (кроме владельца/админов)
+    # 🔥 дневной учёт сообщений (сброс по дню)
     today = str(date.today())
     if user_id not in user_message_count:
         user_message_count[user_id] = {"date": today, "count": 0}
     elif user_message_count[user_id]["date"] != today:
         user_message_count[user_id] = {"date": today, "count": 0}
 
+    # 📈 динамический лимит по тарифу
+    try:
+        cap = quota(user_id, "daily_messages")
+    except Exception:
+        cap = 10  # безопасный дефолт
+
+    # ⛔ блок, если не владелец/админ и лимит достигнут
     if (user_id_int not in ADMIN_USER_IDS) and (user_id_int != OWNER_ID):
-        if user_message_count[user_id]["count"] >= 10:
-            lang = user_languages.get(user_id, "ru")
-            lock_msg = LOCK_MESSAGES_BY_LANG.get(lang, LOCK_MESSAGES_BY_LANG["ru"])
-            await update.message.reply_text(lock_msg)
+        if user_message_count[user_id]["count"] >= cap:
+            try:
+                title, body = upsell_for(user_id, "feature_quota_msg", {"n": cap})
+                await update.message.reply_text(f"*{title}*\n\n{body}", parse_mode="Markdown")
+            except Exception:
+                # фолбэк, если upsell_for ещё не подключён
+                lang = user_languages.get(user_id, "ru")
+                lock_msg = LOCK_MESSAGES_BY_LANG.get(lang, LOCK_MESSAGES_BY_LANG["ru"])
+                try:
+                    await update.message.reply_text(lock_msg.format(n=cap))
+                except Exception:
+                    await update.message.reply_text(lock_msg)
             return
 
-    # +1 к счётчику
+    # +1 к счётчику (после проверки лимита)
     user_message_count[user_id]["count"] += 1
 
     # 📌 текст пользователя
@@ -3681,33 +3695,27 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # ——— РАННИЙ ПЕРЕХВАТ ЗАПРОСА СКАЗКИ ———
     try:
         if _looks_like_story_intent(user_input, lang_code, user_id):
-            # уважаем «молчи N часов», кулдаун внутри _looks_like_story_intent
             if is_premium(user_id):
-                # сохраняем тему в chat_data, а не в callback_data
                 topic_guess = user_input
                 context.chat_data[f"story_pending_{user_id}"] = topic_guess[:200]
-
                 t = _s_i18n(user_id)
-                kb = InlineKeyboardMarkup([
-                    [
-                        InlineKeyboardButton(t["btn_ok"], callback_data="st:confirm"),
-                        InlineKeyboardButton(t["btn_no"], callback_data="st:close"),
-                    ]
-                ])
+                kb = InlineKeyboardMarkup([[
+                    InlineKeyboardButton(t["btn_ok"],  callback_data="st:confirm"),
+                    InlineKeyboardButton(t["btn_no"],  callback_data="st:close"),
+                ]])
                 await context.bot.send_message(
                     chat_id=update.effective_chat.id,
                     text=t["suggest"],
                     reply_markup=kb
                 )
             else:
-                # апселл для не-премиума
                 tpay = _p_i18n(user_id)
                 await update.message.reply_text(
                     f"*{tpay['upsell_title']}*\n\n{tpay['upsell_body']}",
                     parse_mode="Markdown",
                     reply_markup=_premium_kb(user_id)
                 )
-            return  # 👈 важное: НЕ идём в LLM, чтобы он сам не написал сказку
+            return  # 👈 не уходим в LLM, чтобы он не написал сказку сам
     except Exception as e:
         logging.warning(f"Story intercept failed: {e}")
 
@@ -3716,7 +3724,6 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     mode = user_modes.get(user_id, "support")
     mode_prompt = MODES.get(mode, MODES["support"]).get(lang_code, MODES["support"]["ru"])
 
-    # На всякий случай доп. гвардrail в системку (чтобы LLM не расписывал сказки в чате)
     guard = {
         "ru": "Если пользователь просит сказку/историю на ночь — не пиши сам рассказ в этом режиме. Ответь коротко и предложи кнопки «Сказка».",
         "uk": "Якщо користувач просить казку — не пиши сам текст у цьому режимі. Коротко відповідай і запропонуй кнопку «Казка».",
