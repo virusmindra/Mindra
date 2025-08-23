@@ -240,6 +240,24 @@ def upsell_fmt(uid_lang: str, key: str, **kw) -> str:
     s = t.get(key, "")
     return s.format(plus=PLAN_LABEL["plus"], pro=PLAN_LABEL["pro"], **kw)
 
+def _plan_lang(uid: str):
+    return user_languages.get(uid, "ru")
+
+def _plan_label(uid: str, plan: str) -> str:
+    return PLAN_LABELS.get(_plan_lang(uid), PLAN_LABELS["ru"]).get(plan, plan)
+
+def upsell_for(uid: str, feature_key: str, extra: dict | None = None) -> tuple[str, str]:
+    """Возвращает (title, body) локализованно для конкретной фичи."""
+    lang = _plan_lang(uid)
+    t = UPSELL_TEXTS.get(lang, UPSELL_TEXTS["ru"])
+    plus = _plan_label(uid, PLAN_PLUS)
+    pro  = _plan_label(uid, PLAN_PRO)
+    e = {"plus": plus, "pro": pro}
+    if extra:
+        e.update(extra)
+    body = t.get(feature_key, t["feature_quota_msg"]).format(**e)
+    return (t["title"], body + f"\n\n{t['cta']}")
+
 
 def current_plan(uid: str) -> str:
     try:
