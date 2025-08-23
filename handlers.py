@@ -498,6 +498,7 @@ async def sleep_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="Markdown",
         reply_markup=_sleep_kb(uid)
     )
+    
 # Колбэк "sl:*"
 async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
@@ -519,7 +520,23 @@ async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         if action == "snd":
-            p["kind"] = parts[2]
+            picked = parts[2]
+
+            # ⛔ ограничение по пресетам для FREE
+            if not has_feature(uid, "sleep_all_sounds"):
+                allowed = {"rain"}  # например, только дождь на free
+                if picked not in allowed:
+                    p["kind"] = "rain"
+                    # перерисуем и покажем апселл
+                    try:
+                        await _sleep_refresh(update, context, uid)
+                    except BadRequest as e:
+                        if "Message is not modified" not in str(e):
+                            raise
+                    title, body = upsell_for(uid, "feature_bgm")
+                    return await q.answer(title, show_alert=True)
+
+            p["kind"] = picked
             try:
                 await _sleep_refresh(update, context, uid)
             except BadRequest as e:
@@ -528,7 +545,19 @@ async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         if action == "dur":
-            p["duration_min"] = int(parts[2])
+            want = int(parts[2])
+            max_min = quota(uid, "sleep_max_minutes")
+            if want > max_min:
+                p["duration_min"] = max_min  # мягко урезаем
+                try:
+                    await _sleep_refresh(update, context, uid)
+                except BadRequest as e:
+                    if "Message is not modified" not in str(e):
+                        raise
+                title, body = upsell_for(uid, "feature_sleep_long", {"min": max_min})
+                return await q.answer(title, show_alert=True)
+
+            p["duration_min"] = want
             try:
                 await _sleep_refresh(update, context, uid)
             except BadRequest as e:
@@ -546,7 +575,37 @@ async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         if action == "start":
-            # рендерим/берём из кэша длинный ogg-файл
+            # 🔐 глобальный гейт на саму функцию «звуки сна»
+            if not has_feature(uid, "sleep_sounds"):
+                title, body = upsell_for(uid, "feature_sleep_long", {"min": quota(uid, "sleep_max_minutes")})
+                return await q.answer(title, show_alert=True)
+
+            # ⛔ проверка длительности перед стартом
+            max_min = quota(uid, "sleep_max_minutes")
+            if p["duration_min"] > max_min:
+                p["duration_min"] = max_min
+                try:
+                    await _sleep_refresh(update, context, uid)
+                except BadRequest as e:
+                    if "Message is not modified" not in str(e):
+                        raise
+                title, body = upsell_for(uid, "feature_sleep_long", {"min": max_min})
+                return await q.answer(title, show_alert=True)
+
+            # ⛔ проверка допустимого пресета на free
+            if not has_feature(uid, "sleep_all_sounds"):
+                allowed = {"rain"}
+                if p["kind"] not in allowed:
+                    p["kind"] = "rain"
+                    try:
+                        await _sleep_refresh(update, context, uid)
+                    except BadRequest as e:
+                        if "Message is not modified" not in str(e):
+                            raise
+                    title, body = upsell_for(uid, "feature_bgm")
+                    return await q.answer(title, show_alert=True)
+
+            # ✅ рендерим/берём из кэша длинный ogg-файл
             try:
                 ogg_path = _render_sleep_ogg(p["kind"], p["duration_min"], p["gain_db"])
             except RuntimeError:
@@ -599,6 +658,7 @@ async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await q.answer("Error", show_alert=False)
         except Exception:
             pass
+
 
 def _current_voice_name(uid: str) -> str:
     lang = user_languages.get(uid, "ru")
