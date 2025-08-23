@@ -26,6 +26,18 @@ PLAN_PRO  = "pro"         # Mindra Pro
 
 ALL_PLANS = (PLAN_FREE, PLAN_PLUS, PLAN_PRO)
 
+PLAN_LABELS = {
+    "ru": {PLAN_FREE:"Бесплатно", PLAN_PLUS:"Mindra+", PLAN_PRO:"Mindra Pro"},
+    "uk": {PLAN_FREE:"Безкоштовно", PLAN_PLUS:"Mindra+", PLAN_PRO:"Mindra Pro"},
+    "md": {PLAN_FREE:"Gratuit", PLAN_PLUS:"Mindra+", PLAN_PRO:"Mindra Pro"},
+    "be": {PLAN_FREE:"Бясплатна", PLAN_PLUS:"Mindra+", PLAN_PRO:"Mindra Pro"},
+    "kk": {PLAN_FREE:"Тегін", PLAN_PLUS:"Mindra+", PLAN_PRO:"Mindra Pro"},
+    "kg": {PLAN_FREE:"Акысыз", PLAN_PLUS:"Mindra+", PLAN_PRO:"Mindra Pro"},
+    "hy": {PLAN_FREE:"Անվճար", PLAN_PLUS:"Mindra+", PLAN_PRO:"Mindra Pro"},
+    "ka": {PLAN_FREE:"უფასო", PLAN_PLUS:"Mindra+", PLAN_PRO:"Mindra Pro"},
+    "ce": {PLAN_FREE:"Биллийнан", PLAN_PLUS:"Mindra+", PLAN_PRO:"Mindra Pro"},
+    "en": {PLAN_FREE:"Free", PLAN_PLUS:"Mindra+", PLAN_PRO:"Mindra Pro"},
+}
 # ==== FEATURE MATRIX (булевы фичи) ====
 # True / False: доступность фичи на плане
 FEATURE_MATRIX = {
