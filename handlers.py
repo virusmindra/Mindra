@@ -918,26 +918,27 @@ async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if kind == "engine":
         new_engine = parts[2]
 
-        # 🚧 тарифный гейт для Eleven
+    # 🚧 тарифный гейт + проверка ключа для Eleven
         if new_engine.lower() == "eleven":
+        # нет фичи по тарифу → апселл и не переключаем
             if not has_feature(uid, "eleven_tts"):
                 try:
                     title, body = upsell_for(uid, "feature_eleven")
-                    # alert короткий — показываем title
-                    await q.answer(title, show_alert=True)
-                except Exception:
-                    await q.answer("ElevenLabs доступен в Mindra+ / Pro", show_alert=True)
-                return await _voice_refresh(q, uid, "engine")
-
-            # 🔑 проверка наличия ключа
-            if not _has_eleven():
-                try:
-                    t = _vm_i18n(uid)  # тексты меню
-                    await q.answer(t.get("no_eleven_key", "ElevenLabs key not set"), show_alert=True)
+                    await q.answer(title, show_alert=True)  # короткий алерт — только заголовок
                 except Exception:
                     pass
                 return await _voice_refresh(q, uid, "engine")
 
+        # нет API-ключа → не переключаем
+            if not _has_eleven():
+                try:
+                    t = _v_ui_i18n(uid)  # если у тебя функция называется _vm_i18n — используй её
+                    await q.answer(t.get("no_eleven_key", "ElevenLabs key not set — only gTTS available."), show_alert=True)
+                except Exception:
+                    pass
+                return await _voice_refresh(q, uid, "engine")
+        
+    # 🟢 всё ок — реально переключаем движок
         p["engine"] = new_engine
         current_tab = "engine"
 
