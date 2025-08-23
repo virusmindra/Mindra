@@ -189,6 +189,7 @@ _story_optout_until: dict[str, datetime] = {}   # uid -> utc time
 
 DEFAULT_ELEVEN_FEMALE = "21m00Tcm4TlvDq8ikWAM"
 DEFAULT_ELEVEN_MALE = "JBFqnCBsd6RMkjVDRZzb" 
+STORY_INTEN = STORY_INTENT
 
 # ==== Sleep (ambient only) ====
 sleep_prefs: dict[str, dict] = {}
