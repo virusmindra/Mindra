@@ -1327,29 +1327,6 @@ async def story_callback(update, context):
             await context.bot.send_message(chat_id=int(uid), text=t["ready"])
         return
 
-def _tts_synthesize_to_ogg(text: str, lang: str) -> str:
-    """Возвращает путь к .ogg (opus) для sendVoice. Требует gTTS + ffmpeg."""
-    try:
-        from gtts import gTTS  # ленивый импорт, чтобы без пакета не падал весь модуль
-    except Exception as e:
-        raise RuntimeError("gTTS not installed") from e
-
-    mp3_path = f"/tmp/{uuid.uuid4().hex}.mp3"
-    ogg_path = f"/tmp/{uuid.uuid4().hex}.ogg"
-
-    safe_text = textwrap.shorten(text, width=4000, placeholder="…")
-    gTTS(text=safe_text, lang=_tts_lang(lang)).save(mp3_path)
-
-    # mp3 -> ogg(opus) 48k mono
-    subprocess.run(
-        ["ffmpeg","-y","-i", mp3_path, "-ac","1","-ar","48000","-c:a","libopus", ogg_path],
-        check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-    )
-
-    try: os.remove(mp3_path)
-    except Exception: pass
-    return ogg_path
-
 async def send_voice_response(context, chat_id: int, text: str, lang: str, bgm_kind_override: str | None = None):
     uid = str(chat_id)
     ogg_path = None
