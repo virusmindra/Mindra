@@ -52,8 +52,42 @@ def set_premium_until_dt(user_id: str | int, dt_utc: datetime) -> None:
     else:
         dt_utc = dt_utc.astimezone(timezone.utc)
     set_premium_until(user_id, dt_utc.isoformat())
+
+def extend_premium_days(user_id: str | int, days: int) -> str:
+    """Продлевает премиум на N дней от текущего срока, если он в будущем;
+    иначе от «сейчас». Возвращает новый until (ISO)."""
+    now = datetime.now(timezone.utc)
+    cur = get_premium_until(user_id)
+    base = now
+    if cur:
+        try:
+            dt = _parse_any_dt(cur)
+            if dt > now:
+                base = dt
+        except Exception:
+            pass
+    new_until = base + timedelta(days=int(days))
+    set_premium_until_dt(user_id, new_until)
+    return new_until.isoformat()
+
+def _parse_any_dt(val: str) -> datetime:
+    """Понимает ISO, ISO с Z, а также epoch(строкой/числом). Возвращает UTC-aware datetime."""
+    v = str(val).strip()
+    # epoch?
+    if v.isdigit():
+        return datetime.fromtimestamp(int(v), tz=timezone.utc)
+    # ISO с Z?
+    if v.endswith("Z"):
+        v = v[:-1] + "+00:00"
+    dt = datetime.fromisoformat(v)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    else:
+        dt = dt.astimezone(timezone.utc)
+    return dt
+
     
-def is_premium(user_id):
+def is_premium(user_id) -> bool:
     # админы — всегда премиум
     if str(user_id) in ADMIN_USER_IDS:
         return True
@@ -61,25 +95,11 @@ def is_premium(user_id):
     until = get_premium_until(user_id)
     if not until:
         return False
-
     try:
-        u = until.strip()
-        # поддержка ISO с Z: 2025-08-12T10:00:00Z
-        if u.endswith("Z"):
-            u = u[:-1] + "+00:00"
-        dt = datetime.fromisoformat(u)
-        # если без таймзоны — считаем UTC
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-        return dt > datetime.now(timezone.utc)
+        return _parse_any_dt(until) > datetime.now(timezone.utc)
     except Exception:
-        # запасной план: epoch-секунды строкой
-        try:
-            ts = int(until)
-            return datetime.fromtimestamp(ts, tz=timezone.utc) > datetime.now(timezone.utc)
-        except Exception:
-            logging.warning("Bad premium_until for %s: %r", user_id, until)
-            return False
+        logging.warning("Bad premium_until for %s: %r", user_id, until)
+        return False
 
 def got_trial(user_id):
     stats = load_stats()
