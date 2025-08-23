@@ -26,6 +26,153 @@ PLAN_PRO  = "pro"         # Mindra Pro
 
 ALL_PLANS = (PLAN_FREE, PLAN_PLUS, PLAN_PRO)
 
+UPSELL_TEXTS = {
+    "ru": {
+        "title": "Нужна подписка",
+        "feature_story_voice": "Озвучка сказок доступна в {plus} и {pro}. Откройте волшебные истории с голосом и фоном 🌙",
+        "feature_eleven":     "Премиальные голоса ElevenLabs доступны в {plus} и {pro}.",
+        "feature_bgm":        "Фоновые звуки поверх речи доступны в {plus}/{pro}.",
+        "feature_sleep_long": "Длительность сна больше {min} мин — в {plus}/{pro}.",
+        "feature_story_long": "Средние и длинные сказки — в {plus}/{pro}.",
+        "feature_quota_msg":  "Достигнут дневной лимит сообщений ({n}). Больше — в {plus}/{pro}.",
+        "feature_goals":      "Больше целей — в {plus}/{pro}.",
+        "feature_habits":     "Больше привычек — в {plus}/{pro}.",
+        "feature_reminders":  "Больше напоминаний — в {plus}/{pro}.",
+        "cta": "Оформить → /premium",
+    },
+    "uk": {
+        "title": "Потрібна підписка",
+        "feature_story_voice": "Озвучення казок доступне в {plus} та {pro}.",
+        "feature_eleven":      "Голоси ElevenLabs — в {plus} та {pro}.",
+        "feature_bgm":         "Фонові звуки поверх мови — в {plus}/{pro}.",
+        "feature_sleep_long":  "Тривалість сну понад {min} хв — в {plus}/{pro}.",
+        "feature_story_long":  "Середні та довгі казки — в {plus}/{pro}.",
+        "feature_quota_msg":   "Денний ліміт повідомлень ({n}) досягнуто. Більше — в {plus}/{pro}.",
+        "feature_goals":       "Більше цілей — в {plus}/{pro}.",
+        "feature_habits":      "Більше звичок — в {plus}/{pro}.",
+        "feature_reminders":   "Більше нагадувань — в {plus}/{pro}.",
+        "cta": "Оформити → /premium",
+    },
+    "en": {
+        "title": "Subscription required",
+        "feature_story_voice": "Story voice playback is available on {plus} and {pro}.",
+        "feature_eleven":      "Premium ElevenLabs voices are on {plus} and {pro}.",
+        "feature_bgm":         "Background ambience over speech is on {plus}/{pro}.",
+        "feature_sleep_long":  "Sleep longer than {min} min is on {plus}/{pro}.",
+        "feature_story_long":  "Medium/long stories are on {plus}/{pro}.",
+        "feature_quota_msg":   "Daily message cap ({n}) reached. Get more with {plus}/{pro}.",
+        "feature_goals":       "More goals with {plus}/{pro}.",
+        "feature_habits":      "More habits with {plus}/{pro}.",
+        "feature_reminders":   "More reminders with {plus}/{pro}.",
+        "cta": "Upgrade → /premium",
+    },
+
+    # ——— MD (ro) ———
+    "md": {
+        "title": "Necesită abonament",
+        "feature_story_voice": "Redarea cu voce a poveștilor este disponibilă în {plus} și {pro}.",
+        "feature_eleven":      "Vocile premium ElevenLabs sunt disponibile în {plus} și {pro}.",
+        "feature_bgm":         "Sunete de fundal peste vorbire sunt disponibile în {plus}/{pro}.",
+        "feature_sleep_long":  "Durată pentru somn peste {min} min — în {plus}/{pro}.",
+        "feature_story_long":  "Povești medii și lungi — în {plus}/{pro}.",
+        "feature_quota_msg":   "Limita zilnică de mesaje ({n}) a fost atinsă. Mai mult în {plus}/{pro}.",
+        "feature_goals":       "Mai multe obiective — în {plus}/{pro}.",
+        "feature_habits":      "Mai multe obiceiuri — în {plus}/{pro}.",
+        "feature_reminders":   "Mai multe mementouri — în {plus}/{pro}.",
+        "cta": "Upgrade → /premium",
+    },
+
+    # ——— BE (be) ———
+    "be": {
+        "title": "Патрабуецца падпіска",
+        "feature_story_voice": "Агучванне казак даступна ў {plus} і {pro}.",
+        "feature_eleven":      "Галасы ElevenLabs даступныя ў {plus} і {pro}.",
+        "feature_bgm":         "Фонавыя гукі паверх маўлення — у {plus}/{pro}.",
+        "feature_sleep_long":  "Працягласць сну больш за {min} хв — у {plus}/{pro}.",
+        "feature_story_long":  "Сярэднія і доўгія казкі — у {plus}/{pro}.",
+        "feature_quota_msg":   "Дзённы ліміт паведамленняў ({n}) дасягнуты. Больш — у {plus}/{pro}.",
+        "feature_goals":       "Больш мэтаў — у {plus}/{pro}.",
+        "feature_habits":      "Больш звычак — у {plus}/{pro}.",
+        "feature_reminders":   "Больш напамінкаў — у {plus}/{pro}.",
+        "cta": "Абнавіць → /premium",
+    },
+
+    # ——— KK (kk) ———
+    "kk": {
+        "title": "Жазылым қажет",
+        "feature_story_voice": "Ертегіні дауыспен тыңдау {plus} және {pro} жоспарларында қолжетімді.",
+        "feature_eleven":      "ElevenLabs дауыстары {plus} және {pro} жоспарларында.",
+        "feature_bgm":         "Сөйлеудің үстіне фондық дыбыстар — {plus}/{pro}.",
+        "feature_sleep_long":  "{min} минуттан ұзақ ұйқы дыбыстары — {plus}/{pro}.",
+        "feature_story_long":  "Орта және ұзын ертегілер — {plus}/{pro}.",
+        "feature_quota_msg":   "Күндік хабарлама шегі ({n}) орындалды. Көбірек — {plus}/{pro}.",
+        "feature_goals":       "Көбірек мақсат — {plus}/{pro}.",
+        "feature_habits":      "Көбірек әдет — {plus}/{pro}.",
+        "feature_reminders":   "Көбірек еске салғыш — {plus}/{pro}.",
+        "cta": "Жаңарту → /premium",
+    },
+
+    # ——— KG (ky) ———
+    "kg": {
+        "title": "Жазылуу керек",
+        "feature_story_voice": "Жомокту үн менен угуу {plus} жана {pro} пландарында жеткиликтүү.",
+        "feature_eleven":      "ElevenLabs үндөрү {plus} жана {pro} пландарында.",
+        "feature_bgm":         "Сүйлөөнүн үстүнө фон кошуу — {plus}/{pro}.",
+        "feature_sleep_long":  "{min} мүнөттөн узун уктоо — {plus}/{pro}.",
+        "feature_story_long":  "Орто жана узун жомоктор — {plus}/{pro}.",
+        "feature_quota_msg":   "Күндүк билдирүү лимити ({n}) бүттү. Көбүрөөк — {plus}/{pro}.",
+        "feature_goals":       "Көбүрөөк максат — {plus}/{pro}.",
+        "feature_habits":      "Көбүрөөк адат — {plus}/{pro}.",
+        "feature_reminders":   "Көбүрөөк эскертме — {plus}/{pro}.",
+        "cta": "Жаңыртуу → /premium",
+    },
+
+    # ——— HY (hy) ———
+    "hy": {
+        "title": "Պահանջվում է բաժանորդագրություն",
+        "feature_story_voice": "Հեքիաթների ձայնային ընթերցումը հասանելի է {plus} և {pro} փաթեթներում։",
+        "feature_eleven":      "ElevenLabs-ի պրեմիում ձայները՝ {plus} և {pro}։",
+        "feature_bgm":         "Ֆոնային ձայներ խոսքի վրա՝ {plus}/{pro}։",
+        "feature_sleep_long":  "{min} րոպեից երկար քնի ձայներ՝ {plus}/{pro}։",
+        "feature_story_long":  "Միջին/երկար հեքիաթներ՝ {plus}/{pro}։",
+        "feature_quota_msg":   "Օրվա սահմանաչափը ({n}) սպառվել է։ Ավելի շատ՝ {plus}/{pro}։",
+        "feature_goals":       "Ավելի շատ նպատակներ՝ {plus}/{pro}։",
+        "feature_habits":      "Ավելի շատ սովորություններ՝ {plus}/{pro}։",
+        "feature_reminders":   "Ավելի շատ հիշեցումներ՝ {plus}/{pro}։",
+        "cta": "Թարմացնել → /premium",
+    },
+
+    # ——— KA (ka) ———
+    "ka": {
+        "title": "საჭიროა გამოწერა",
+        "feature_story_voice": "ზღაპრების ხმოვანი გაშვება ხელმისაწვდომია {plus}-სა და {pro}-ზე.",
+        "feature_eleven":      "ElevenLabs-ის ხმები — {plus}/{pro}.",
+        "feature_bgm":         "საუბარზე ფონური ხმები — {plus}/{pro}.",
+        "feature_sleep_long":  "{min} წთ-ზე მეტი ძილის ხმა — {plus}/{pro}.",
+        "feature_story_long":  "საშუალო/გრძელი ზღაპრები — {plus}/{pro}.",
+        "feature_quota_msg":   "დღიური ლიმიტი ({n}) ამოიწურა. მეტი — {plus}/{pro}.",
+        "feature_goals":       "მეტი მიზანი — {plus}/{pro}.",
+        "feature_habits":      "მეტი ჩვევა — {plus}/{pro}.",
+        "feature_reminders":   "მეტი შეხსენება — {plus}/{pro}.",
+        "cta": "განახლება → /premium",
+    },
+
+    # ——— CE (ce) ———
+    "ce": {
+        "title": "ДӀаяздар хир",
+        "feature_story_voice": "Йоза агӀо (сказка) хьалха {plus}/{pro} чохь.",
+        "feature_eleven":      "ElevenLabs хьалха {plus}/{pro}.",
+        "feature_bgm":         "Фонов хьалха хӀокху хьалхарш дийна — {plus}/{pro}.",
+        "feature_sleep_long":  "{min} дакъ йоцу тӀеххьара хьалха — {plus}/{pro}.",
+        "feature_story_long":  "Юккха/дуккха агӀонаш — {plus}/{pro}.",
+        "feature_quota_msg":   "Дийн лимит ({n}) дӀайо. ТӀехь кхечу — {plus}/{pro}.",
+        "feature_goals":       "Кхечуьна максаташ — {plus}/{pro}.",
+        "feature_habits":      "Кхечуьна гӀацаш — {plus}/{pro}.",
+        "feature_reminders":   "Кхечуьна хьажоргаш — {plus}/{pro}.",
+        "cta": "Upgrade → /premium",
+    },
+}
+
 PLAN_LABELS = {
     "ru": {PLAN_FREE:"Бесплатно", PLAN_PLUS:"Mindra+", PLAN_PRO:"Mindra Pro"},
     "uk": {PLAN_FREE:"Безкоштовно", PLAN_PLUS:"Mindra+", PLAN_PRO:"Mindra Pro"},
