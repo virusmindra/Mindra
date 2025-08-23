@@ -1257,10 +1257,10 @@ async def send_voice_response(context, chat_id: int, text: str, lang: str, bgm_k
         ogg_path = synthesize_to_ogg(text, lang, uid)  # ElevenLabs → gTTS фолбэк внутри
         path_to_send = ogg_path
 
-        # 🎧 фон (если выбран)
+        # 🎧 фон (если выбран) — только для тарифов с фичей voice_bgm_mix
         p = _vp(uid)
         kind = (bgm_kind_override if bgm_kind_override is not None else p.get("bgm_kind", "off")) or "off"
-        if kind != "off":
+        if kind != "off" and has_feature(uid, "voice_bgm_mix"):
             bg = BGM_PRESETS.get(kind, {}).get("path")
             if bg and os.path.exists(bg):
                 try:
@@ -1270,6 +1270,7 @@ async def send_voice_response(context, chat_id: int, text: str, lang: str, bgm_k
                 except Exception as mix_e:
                     # не роняем ответ, просто шлём без фона
                     logging.warning(f"BGM mix failed ({kind}): {mix_e}")
+        # если фича недоступна — просто отправим без фона (молча)
 
         # отправка с 1 ретраем на таймаут
         try:
@@ -1292,6 +1293,7 @@ async def send_voice_response(context, chat_id: int, text: str, lang: str, bgm_k
                     os.remove(pth)
             except Exception:
                 pass
+
                 
 def require_premium_message(update, context, uid):
     t = _p_i18n(uid)
