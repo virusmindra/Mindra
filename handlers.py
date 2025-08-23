@@ -122,7 +122,7 @@ from pathlib import Path
 from apscheduler.schedulers.background import BackgroundScheduler
 from storage import delete_goal, load_goals, save_goals, add_goal, get_goals, get_goals_for_user, mark_goal_done, load_habits, save_habits, add_habit, get_habits, mark_habit_done, delete_habit
 from random import randint, choice
-from stats import load_stats, save_stats, get_premium_until, set_premium_until, is_premium, got_trial, set_trial, add_referral, add_points, get_user_stats, get_stats, OWNER_ID, ADMIN_USER_IDS, _collect_activity_dates, get_user_points, get_next_title_info, build_titles_ladder, get_user_title
+from stats import load_stats, save_stats, get_premium_until, set_premium_until, is_premium, got_trial, set_trial, add_referral, add_points, get_user_stats, get_stats, OWNER_ID, ADMIN_USER_IDS, _collect_activity_dates, extend_premium_days, set_premium_until_dt, _parse_any_dt, get_user_points, get_next_title_info, build_titles_ladder, get_user_title
 from telegram.error import BadRequest
 global user_timezones
 from zoneinfo import ZoneInfo
