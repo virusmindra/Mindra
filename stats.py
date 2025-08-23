@@ -28,65 +28,6 @@ def save_stats(stats):
     with open(STATS_FILE, "w") as f:
         json.dump(stats, f, indent=2)
 
-# ==== PREMIUM/TRIAL/REFERRAL ====
-
-def get_premium_until(user_id: str | int) -> str | None:
-    """Возвращает ISO8601 строку или None."""
-    uid = str(user_id)
-    with sqlite3.connect(PREMIUM_DB_PATH) as db:
-        row = db.execute("SELECT until FROM premium WHERE user_id=?;", (uid,)).fetchone()
-        return row[0] if row else None
-
-
-def set_premium_until(user_id: str | int, until_iso: str) -> None:
-    """Ставит/обновляет срок премиума (строка ISO8601 в UTC)."""
-    uid = str(user_id)
-    with sqlite3.connect(PREMIUM_DB_PATH) as db:
-        db.execute(
-            "INSERT INTO premium(user_id, until) VALUES(?, ?) "
-            "ON CONFLICT(user_id) DO UPDATE SET until=excluded.until;",
-            (uid, until_iso),
-        )
-        db.commit()
-
-def set_premium_until_dt(user_id: str | int, dt_utc: datetime) -> None:
-    """То же самое, но на вход datetime; конвертируем в UTC-ISO."""
-    if dt_utc.tzinfo is None:
-        dt_utc = dt_utc.replace(tzinfo=timezone.utc)
-    else:
-        dt_utc = dt_utc.astimezone(timezone.utc)
-    set_premium_until(user_id, dt_utc.isoformat())
-
-def extend_premium_days(user_id: str | int, days: int) -> str:
-    """Продлевает премиум на N дней от текущего срока, если он в будущем;
-    иначе от «сейчас». Возвращает новый until (ISO)."""
-    now = datetime.now(timezone.utc)
-    cur = get_premium_until(user_id)
-    base = now
-    if cur:
-        try:
-            dt = _parse_any_dt(cur)
-            if dt > now:
-                base = dt
-        except Exception:
-            pass
-    new_until = base + timedelta(days=int(days))
-    set_premium_until_dt(user_id, new_until)
-    return new_until.isoformat()
-    
-def is_premium(user_id) -> bool:
-    # админы — всегда премиум
-    if str(user_id) in ADMIN_USER_IDS:
-        return True
-
-    until = get_premium_until(user_id)
-    if not until:
-        return False
-    try:
-        return _parse_any_dt(until) > datetime.now(timezone.utc)
-    except Exception:
-        logging.warning("Bad premium_until for %s: %r", user_id, until)
-        return False
 
 def got_trial(user_id):
     stats = load_stats()
