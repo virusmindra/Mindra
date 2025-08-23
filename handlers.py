@@ -235,7 +235,52 @@ def _s_i18n(uid: str) -> dict:
 def _has_eleven() -> bool:
     return bool(ELEVEN_API_KEY)
 
+def upsell_fmt(uid_lang: str, key: str, **kw) -> str:
+    t = UPSELL_TEXTS.get(uid_lang, UPSELL_TEXTS["ru"])
+    s = t.get(key, "")
+    return s.format(plus=PLAN_LABEL["plus"], pro=PLAN_LABEL["pro"], **kw)
 
+
+def current_plan(uid: str) -> str:
+    try:
+        db = sqlite3.connect(DB_PATH)
+        row = db.execute("SELECT plan, expires_utc FROM subscriptions WHERE user_id=?",
+                         (uid,)).fetchone()
+        db.close()
+        if not row:
+            return PLAN_FREE
+        plan, exp = row
+        if plan in (PLAN_PLUS, PLAN_PRO) and exp:
+            try:
+                if datetime.fromisoformat(exp) < datetime.now(timezone.utc):
+                    return PLAN_FREE
+            except Exception:
+                pass
+        return plan if plan in ALL_PLANS else PLAN_FREE
+    except Exception:
+        return PLAN_FREE
+
+def set_plan(uid: str, plan: str, days: int | None = None):
+    plan = plan if plan in ALL_PLANS else PLAN_FREE
+    exp = None
+    if plan in (PLAN_PLUS, PLAN_PRO) and days:
+        exp = (datetime.now(timezone.utc) + timedelta(days=days)).isoformat()
+    now = datetime.now(timezone.utc).isoformat()
+    db = sqlite3.connect(DB_PATH)
+    db.execute("""
+        INSERT INTO subscriptions(user_id, plan, expires_utc, updated_at)
+        VALUES(?,?,?,?)
+        ON CONFLICT(user_id) DO UPDATE SET plan=excluded.plan, expires_utc=excluded.expires_utc, updated_at=excluded.updated_at
+    """, (uid, plan, exp, now))
+    db.commit()
+    db.close()
+
+def has_feature(uid: str, feature: str) -> bool:
+    return FEATURE_MATRIX.get(current_plan(uid), {}).get(feature, False)
+
+def quota(uid: str, key: str) -> int:
+    return QUOTAS.get(current_plan(uid), {}).get(key, 0)
+    
 
 def _resolve_asset_path(rel_path: str | None) -> str | None:
     """Преобразует относительный путь из BGM_PRESETS в абсолютный (на всякий)."""
