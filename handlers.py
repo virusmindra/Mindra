@@ -841,9 +841,27 @@ async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if kind == "engine":
         new_engine = parts[2]
-        # ✅ не даём включить Eleven без ключа
-        if new_engine.lower() == "eleven" and not _has_eleven():
-            return await _voice_refresh(q, uid, "engine")
+
+        # 🚧 тарифный гейт для Eleven
+        if new_engine.lower() == "eleven":
+            if not has_feature(uid, "eleven_tts"):
+                try:
+                    title, body = upsell_for(uid, "feature_eleven")
+                    # alert короткий — показываем title
+                    await q.answer(title, show_alert=True)
+                except Exception:
+                    await q.answer("ElevenLabs доступен в Mindra+ / Pro", show_alert=True)
+                return await _voice_refresh(q, uid, "engine")
+
+            # 🔑 проверка наличия ключа
+            if not _has_eleven():
+                try:
+                    t = _vm_i18n(uid)  # тексты меню
+                    await q.answer(t.get("no_eleven_key", "ElevenLabs key not set"), show_alert=True)
+                except Exception:
+                    pass
+                return await _voice_refresh(q, uid, "engine")
+
         p["engine"] = new_engine
         current_tab = "engine"
 
@@ -852,12 +870,28 @@ async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
         presets = VOICE_PRESETS.get(user_languages.get(uid, "ru"), VOICE_PRESETS["ru"])
         if 0 <= idx < len(presets):
             name, eng_k, vid = presets[idx]
-            if eng_k.lower() == "eleven" and not _has_eleven():
-                # нет ключа — просто перерисуем меню
-                return await _voice_refresh(q, uid, "engine")
+
+            # 🚧 тарифный гейт и ключ для пресета Eleven
+            if eng_k.lower() == "eleven":
+                if not has_feature(uid, "eleven_tts"):
+                    try:
+                        title, body = upsell_for(uid, "feature_eleven")
+                        await q.answer(title, show_alert=True)
+                    except Exception:
+                        await q.answer("ElevenLabs доступен в Mindra+ / Pro", show_alert=True)
+                    return await _voice_refresh(q, uid, "engine")
+
+                if not _has_eleven():
+                    try:
+                        t = _vm_i18n(uid)
+                        await q.answer(t.get("no_eleven_key", "ElevenLabs key not set"), show_alert=True)
+                    except Exception:
+                        pass
+                    return await _voice_refresh(q, uid, "engine")
+
             p["engine"] = eng_k
             p["voice_id"] = vid or p.get("voice_id", "")
-            p["voice_name"] = name           # 👈 добавили для красивого отображения
+            p["voice_name"] = name
         current_tab = "engine"
 
     elif kind == "speed":
@@ -888,6 +922,7 @@ async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # единый рефреш (с защитой от "Message is not modified")
     await _voice_refresh(q, uid, current_tab)
+
 
 def _expressive(text: str, lang: str) -> str:
     s = text.replace("...", "…")
