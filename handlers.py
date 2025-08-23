@@ -775,38 +775,61 @@ def _voice_menu_text(uid: str) -> str:
         f"{t['speed'].format(speed=speed)}\n"
         f"{t['bgm'].format(bg=bg_label, db=bg_db)}"
     )
-
+    
 def _voice_kb(uid: str, tab: str = "engine") -> InlineKeyboardMarkup:
     t = _v_ui_i18n(uid)
     p = _vp(uid)
     rows: list[list[InlineKeyboardButton]] = []
 
+    # доступ к Eleven по тарифу (как ты просил — именно has_feature)
+    can_eleven = has_feature(uid, "eleven_tts")
+
+    # безопасно получаем “эффективный” движок для отрисовки галочки у gTTS
+    try:
+        eff_engine = _effective_tts_engine(uid)  # если функция есть в проекте
+    except Exception:
+        # фолбэк-логика на случай, если _effective_tts_engine отсутствует
+        eff_engine = (
+            "eleven"
+            if (str(p.get("engine", "gTTS")).lower() == "eleven"
+                and _has_eleven()
+                and bool(p.get("voice_id"))
+                and can_eleven)
+            else "gTTS"
+        )
+
     def _check(mark: bool) -> str:
         return "✅ " if mark else ""
 
     if tab == "engine":
-        rows.append([
+        row: list[InlineKeyboardButton] = []
+        # Кнопку Eleven показываем только если фича разрешена тарифом
+        if can_eleven:
+            row.append(
+                InlineKeyboardButton(
+                    _check(p.get("engine") == "eleven") + t["engine_eleven"],
+                    callback_data="v:engine:eleven"
+                )
+            )
+        # gTTS доступен всем; галочку рисуем по “эффективному” движку
+        row.append(
             InlineKeyboardButton(
-                _check(p.get("engine") == "eleven") + t["engine_eleven"],
-                callback_data="v:engine:eleven" if _has_eleven() else "v:tab:engine"
-            ),
-            InlineKeyboardButton(
-                _check(p.get("engine") == "gTTS") + t["engine_gtts"],
+                _check(eff_engine == "gTTS") + t["engine_gtts"],
                 callback_data="v:engine:gTTS"
-            ),
-        ])
+            )
+        )
+        rows.append(row)
 
     elif tab == "voice":
         presets = VOICE_PRESETS.get(user_languages.get(uid, "ru"), VOICE_PRESETS["ru"])
         cur_engine = p.get("engine")
         cur_voice  = p.get("voice_id", "")
         for i, (name, eng_k, vid) in enumerate(presets):
-            if eng_k.lower() == "eleven" and not _has_eleven():
+            # не показываем Eleven-голоса, если фича недоступна или нет ключа
+            if eng_k.lower() == "eleven" and (not can_eleven or not _has_eleven()):
                 continue
             selected = (eng_k == cur_engine) and ((vid == cur_voice) or (eng_k.lower() == "gTTS"))
-            rows.append([
-                InlineKeyboardButton(_check(selected) + name, callback_data=f"v:voice:{i}")
-            ])
+            rows.append([InlineKeyboardButton(_check(selected) + name, callback_data=f"v:voice:{i}")])
 
     elif tab == "speed":
         speeds = [0.8, 0.9, 1.0, 1.1, 1.2]
@@ -818,7 +841,6 @@ def _voice_kb(uid: str, tab: str = "engine") -> InlineKeyboardMarkup:
         rows.append(row)
 
     elif tab == "beh":
-        # Если нет локализованных подписей — используем дефолт
         voice_only_label = t.get("label_voice_only", "Voice only")
         auto_story_label = t.get("label_auto_story", "Auto story voice")
         rows.append([
@@ -835,21 +857,16 @@ def _voice_kb(uid: str, tab: str = "engine") -> InlineKeyboardMarkup:
         ])
 
     elif tab == "bg":
-        # 1) выбор фонового звука
         kinds_order = ["off", "rain", "fire", "ocean", "lofi"]
-        present = [k for k in kinds_order if k in BGM_PRESETS]
-        if not present:  # fallback — вдруг пресеты другие
-            present = list(BGM_PRESETS.keys())
+        present = [k for k in kinds_order if k in BGM_PRESETS] or list(BGM_PRESETS.keys())
 
         row: list[InlineKeyboardButton] = []
         for k in present:
             meta = BGM_PRESETS.get(k, {})
             label = meta.get("label", k)
-            row.append(InlineKeyboardButton(_check(p.get("bgm_kind") == k) + label,
-                                            callback_data=f"v:bg:set:{k}"))
+            row.append(InlineKeyboardButton(_check(p.get("bgm_kind") == k) + label, callback_data=f"v:bg:set:{k}"))
         rows.append(row)
 
-        # 2) уровни громкости в dB (по 4 в ряд)
         gains = globals().get("BGM_GAIN_CHOICES", [-25, -20, -15, -10, -5, 0, 5])
         cur_gain = int(p.get("bgm_gain_db", -20))
         for i in range(0, len(gains), 4):
@@ -861,7 +878,6 @@ def _voice_kb(uid: str, tab: str = "engine") -> InlineKeyboardMarkup:
                 ) for g in chunk
             ])
 
-
     # нижняя навигация по вкладкам
     rows.append([
         InlineKeyboardButton(t["btn_engine"], callback_data="v:tab:engine"),
@@ -871,7 +887,7 @@ def _voice_kb(uid: str, tab: str = "engine") -> InlineKeyboardMarkup:
         InlineKeyboardButton(t["btn_bg"],     callback_data="v:tab:bg"),
     ])
     return InlineKeyboardMarkup(rows)
- 
+
 # === /voice_settings ===
 async def voice_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
