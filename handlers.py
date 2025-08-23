@@ -23,6 +23,7 @@ from texts import (
     STORY_INTENT,
     FEATURE_MATRIX,
     PLAN_LABELS,
+    QUOTAS,
     SLEEP_UI_TEXTS,
     VOICE_PRESETS,
     VOICE_UI_TEXTS,
