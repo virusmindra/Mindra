@@ -216,6 +216,13 @@ def _vm_i18n(uid: str) -> dict:
     lang = user_languages.get(uid, "ru")
     return VOICE_UI_TEXTS.get(lang, VOICE_UI_TEXTS["ru"])
 
+def _effective_tts_engine(uid: str) -> str:
+    p = _vp(uid)
+    eng = p.get("engine", "gTTS")
+    if eng.lower() == "eleven" and not has_feature(uid, "eleven_tts"):
+        return "gTTS"
+    return eng
+
 # Обратная совместимость: где-то могли звать _v_ui_i18n
 def _v_ui_i18n(uid: str) -> dict:
     return _vm_i18n(uid)
