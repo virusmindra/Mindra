@@ -25,6 +25,7 @@ PLAN_PLUS = "plus"        # Mindra+
 PLAN_PRO  = "pro"         # Mindra Pro
 
 ALL_PLANS = (PLAN_FREE, PLAN_PLUS, PLAN_PRO)
+PLAN_LABEL = {"plus": "Mindra+", "pro": "Mindra Pro"}
 
 UPSELL_TEXTS = {
     "ru": {
