@@ -11,6 +11,10 @@ ADMIN_USER_IDS = ["7775321566"]
 OWNER_ID = "7775321566"
 ADMIN_USER_IDS = [OWNER_ID]  # Можно расширять список
 
+# единое место для путей БД
+DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+PREMIUM_DB_PATH = os.path.join(DATA_DIR, "premium.sqlite3")
+
 def load_stats():
     try:
         with open(STATS_FILE, "r") as f:
