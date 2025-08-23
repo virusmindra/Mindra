@@ -19,6 +19,82 @@ LANG_TO_TTS = {
     "kg":"ky", "hy":"hy", "ka":"ka", "ce":"ru", "en":"en"
 }
 
+# ==== PLANS ===========================
+PLAN_FREE = "free"
+PLAN_PLUS = "plus"        # Mindra+
+PLAN_PRO  = "pro"         # Mindra Pro
+
+ALL_PLANS = (PLAN_FREE, PLAN_PLUS, PLAN_PRO)
+
+# ==== FEATURE MATRIX (булевы фичи) ====
+# True / False: доступность фичи на плане
+FEATURE_MATRIX = {
+    PLAN_FREE: {
+        "chat": True,
+        "voice_tts": True,          # базовый gTTS
+        "eleven_tts": False,        # ElevenLabs
+        "voice_bgm_mix": False,     # фон поверх речи
+        "story_cmd": True,          # /story доступна, но короткие и без авто-озвучки
+        "story_voice": False,       # озвучка сказок
+        "story_medium_long": False, # средние/длинные сказки
+        "sleep_sounds": True,       # /sleep доступна
+        "sleep_all_sounds": False,  # не все пресеты
+        "voice_settings_advanced": False, # вкладки «движок», «фон» ограничены
+    },
+    PLAN_PLUS: {
+        "chat": True,
+        "voice_tts": True,
+        "eleven_tts": True,
+        "voice_bgm_mix": True,
+        "story_cmd": True,
+        "story_voice": True,
+        "story_medium_long": True,   # средние разрешим
+        "sleep_sounds": True,
+        "sleep_all_sounds": True,    # все пресеты
+        "voice_settings_advanced": True,
+    },
+    PLAN_PRO: {
+        "chat": True,
+        "voice_tts": True,
+        "eleven_tts": True,
+        "voice_bgm_mix": True,
+        "story_cmd": True,
+        "story_voice": True,
+        "story_medium_long": True,   # и длинные тоже (ниже квотой)
+        "sleep_sounds": True,
+        "sleep_all_sounds": True,
+        "voice_settings_advanced": True,
+    },
+}
+
+# ==== QUOTAS (числовые лимиты по планам) ====
+QUOTAS = {
+    PLAN_FREE: {
+        "daily_messages": 10,
+        "goals_max": 3,
+        "habits_max": 3,
+        "reminders_max": 3,
+        "sleep_max_minutes": 15,    # максимум длительность /sleep
+        "story_max_paras": 5,       # «short»
+    },
+    PLAN_PLUS: {
+        "daily_messages": 100,
+        "goals_max": 20,
+        "habits_max": 20,
+        "reminders_max": 50,
+        "sleep_max_minutes": 90,
+        "story_max_paras": 8,       # medium
+    },
+    PLAN_PRO: {
+        "daily_messages": 1000,
+        "goals_max": 100,
+        "habits_max": 100,
+        "reminders_max": 200,
+        "sleep_max_minutes": 240,
+        "story_max_paras": 12,      # long
+    },
+}
+
 SLEEP_UI_TEXTS = {
     "ru": {
         "title": "😴 Звуки для сна",
