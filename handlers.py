@@ -1090,12 +1090,14 @@ def _parse_story_args(raw: str) -> dict:
 
 async def story_cmd(update, context):
     uid = str(update.effective_user.id)
-    if not is_premium(uid):
-        tpay = _p_i18n(uid)
+
+    # 🔐 Тарифный гейт на саму команду /story
+    if not has_feature(uid, "story_cmd"):
+        title, body = upsell_for(uid, "feature_story_long")  # общий месседж про сказки
         return await update.message.reply_text(
-            f"*{tpay['upsell_title']}*\n\n{tpay['upsell_body']}",
+            f"*{title}*\n\n{body}",
             parse_mode="Markdown",
-            reply_markup=_premium_kb(uid)
+            reply_markup=_premium_kb(uid),
         )
 
     t = _s_i18n(uid)
@@ -1103,16 +1105,43 @@ async def story_cmd(update, context):
 
     # без аргументов — показать usage
     if not context.args:
-        return await update.message.reply_text(f"{t['title']}\n\n{t['usage']}", parse_mode="Markdown")
+        return await update.message.reply_text(
+            f"{t['title']}\n\n{t['usage']}",
+            parse_mode="Markdown"
+        )
 
     raw = " ".join(context.args)
-    args = _parse_story_args(raw)
+    args = _parse_story_args(raw)  # ожидаем keys: topic, name, length, voice(bool)
 
+    # 🧱 Квоты/фичи по длине
+    target_paras = {"short": 5, "medium": 8, "long": 12}.get(args.get("length"), 5)
+    max_paras = quota(uid, "story_max_paras")  # например: free=5, plus=8, pro=12
+    if target_paras > max_paras or (
+        args.get("length") in ("medium", "long") and not has_feature(uid, "story_medium_long")
+    ):
+        title, body = upsell_for(uid, "feature_story_long")
+        return await update.message.reply_text(
+            f"*{title}*\n\n{body}",
+            parse_mode="Markdown",
+            reply_markup=_premium_kb(uid),
+        )
+
+    # 🔊 Явная озвучка через аргумент — только если есть фича story_voice
+    if args.get("voice") and not has_feature(uid, "story_voice"):
+        title, body = upsell_for(uid, "feature_story_voice")
+        await update.message.reply_text(
+            f"*{title}*\n\n{body}",
+            parse_mode="Markdown",
+            reply_markup=_premium_kb(uid),
+        )
+        args["voice"] = False  # выключаем озвучку для этого вызова
+
+    # ✍️ Генерация текста сказки
     await update.message.reply_text(t["making"])
-    text = await generate_story_text(uid, lang, args["topic"], args["name"], args["length"])
+    text = await generate_story_text(uid, lang, args.get("topic"), args.get("name"), args.get("length"))
 
     # запомним последнюю историю
-    context.chat_data[f"story_last_{uid}"] = {"text": text, "lang": lang, "topic": args["topic"]}
+    context.chat_data[f"story_last_{uid}"] = {"text": text, "lang": lang, "topic": args.get("topic")}
 
     # показать текст + кнопки
     kb = InlineKeyboardMarkup([
@@ -1120,23 +1149,29 @@ async def story_cmd(update, context):
         [InlineKeyboardButton(t["btn_voice"], callback_data="st:voice")],
         [InlineKeyboardButton(t["btn_close"], callback_data="st:close")],
     ])
-    await update.message.reply_text(f"*{t['title']}*\n\n{text}", parse_mode="Markdown", reply_markup=kb)
+    await update.message.reply_text(
+        f"*{t['title']}*\n\n{text}",
+        parse_mode="Markdown",
+        reply_markup=kb
+    )
 
-    # 👉 авто-озвучка для премиума, если пользователь не просил /story ... voice
-    if not args.get("voice"):
+    # 🔊 Авто-озвучка (если фича доступна) — только если НЕ просили voice аргументом
+    if not args.get("voice") and has_feature(uid, "story_voice"):
         prefs = _vp(uid)
-        if is_premium(uid) and prefs.get("auto_story_voice", True):
+        if prefs.get("auto_story_voice", True):
             bg_override = None
+            # подмешаем «океан» по умолчанию, если пользователь сам фон не выбрал
             if prefs.get("auto_bgm_for_stories", True) and prefs.get("bgm_kind", "off") == "off":
-                bg_override = "ocean"  # мягкий фон по умолчанию
+                bg_override = "ocean"
             try:
                 await send_voice_response(context, int(uid), text, lang, bgm_kind_override=bg_override)
             except Exception:
                 logging.exception("Auto story TTS failed in story_cmd")
 
-    # явный запрос голосом — озвучиваем один раз
-    if args.get("voice"):
+    # 🔊 Явный запрос голосом — озвучиваем один раз (если фича есть)
+    if args.get("voice") and has_feature(uid, "story_voice"):
         await send_voice_response(context, int(uid), text, lang)
+
 
 async def story_callback(update, context):
     q = update.callback_query
