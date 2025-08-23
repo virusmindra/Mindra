@@ -25,6 +25,7 @@ from texts import (
     PLAN_FREE,
     PLAN_PLUS,
     PLAN_PRO,
+    UPSELL_TEXTS,
     ALL_PLANS,
     PLAN_LABELS,
     QUOTAS,
