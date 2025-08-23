@@ -26,11 +26,13 @@ def save_stats(stats):
 
 # ==== PREMIUM/TRIAL/REFERRAL ====
 
-def get_premium_until(user_id):
-    stats = load_stats()
-    user = stats.get(str(user_id), {})
-    return user.get("premium_until", None)
-    
+def get_premium_until(user_id: str | int) -> str | None:
+    """Возвращает ISO8601 (UTC) или None."""
+    uid = str(user_id)
+    with sqlite3.connect(PREMIUM_DB_PATH) as db:
+        row = db.execute("SELECT until FROM premium WHERE user_id=?;", (uid,)).fetchone()
+        return row[0] if row else None
+
 
 def set_premium_until(user_id, until_dt, add_days=False):
     stats = load_stats()
