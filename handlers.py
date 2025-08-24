@@ -224,6 +224,12 @@ def _vm_i18n(uid: str) -> dict:
     lang = user_languages.get(uid, "ru")
     return VOICE_UI_TEXTS.get(lang, VOICE_UI_TEXTS["ru"])
 
+def is_premium(user_id) -> bool:
+    # админы — всегда премиум
+    if str(user_id) in ADMIN_USER_IDS:
+        return True
+    return is_premium_db(user_id)
+    
 # Обратная совместимость: где-то могли звать _v_ui_i18n
 def _v_ui_i18n(uid: str) -> dict:
     return _vm_i18n(uid)
