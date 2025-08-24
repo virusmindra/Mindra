@@ -10,7 +10,7 @@ from telegram.ext import (
     filters
 )
 from telegram.request import HTTPXRequest
-from stats import ensure_premium_db, migrate_premium_from_stats, load_stats
+from stats import ensure_premium_db, migrate_premium_from_stats, load_stats, ensure_remind_db
 from handlers import (
     start,
     language_callback,
