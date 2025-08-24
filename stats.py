@@ -16,7 +16,6 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 PREMIUM_DB_PATH = os.path.join(DATA_DIR, "premium.sqlite3")
 
 def ensure_premium_db():
-    os.makedirs(DATA_DIR, exist_ok=True)
     with sqlite3.connect(PREMIUM_DB_PATH) as db:
         db.execute("""
             CREATE TABLE IF NOT EXISTS premium (
@@ -26,6 +25,7 @@ def ensure_premium_db():
             );
         """)
         db.commit()
+    logging.info(f"✅ premium DB ready at {PREMIUM_DB_PATH}")
 
 def _parse_any_dt(val: str) -> datetime:
     v = str(val).strip()
