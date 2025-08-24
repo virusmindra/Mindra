@@ -15,6 +15,14 @@ ADMIN_USER_IDS = [OWNER_ID]  # Можно расширять список
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 PREMIUM_DB_PATH = os.path.join(DATA_DIR, "premium.sqlite3")
 
+def remind_db():
+    db = sqlite3.connect(REMIND_DB_PATH)
+    db.row_factory = sqlite3.Row
+    try:
+        yield db
+    finally:
+        db.close()
+        
 def ensure_remind_db():
     with sqlite3.connect(REMIND_DB_PATH) as db:
         db.execute("""
