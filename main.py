@@ -15,6 +15,7 @@ from handlers import (
     start,
     language_callback,
     chat,
+    restore_reminder_jobs,
     voice_mode_cmd,
     handle_voice,
     my_stats_command,
