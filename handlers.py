@@ -122,7 +122,7 @@ from pathlib import Path
 from apscheduler.schedulers.background import BackgroundScheduler
 from storage import delete_goal, load_goals, save_goals, add_goal, get_goals, get_goals_for_user, mark_goal_done, load_habits, save_habits, add_habit, get_habits, mark_habit_done, delete_habit
 from random import randint, choice
-from stats import load_stats, save_stats, get_premium_until, set_premium_until, set_premium_until_dt, is_premium_db, got_trial, set_trial, add_referral, add_points, get_user_stats, get_stats, OWNER_ID, ADMIN_USER_IDS, _collect_activity_dates, extend_premium_days, ensure_premium_db, _parse_any_dt, get_user_points, migrate_premium_from_stats, get_next_title_info, build_titles_ladder, get_user_title
+from stats import load_stats, save_stats, get_premium_until, set_premium_until, set_premium_until_dt, is_premium_db, got_trial, set_trial, add_referral, add_points, get_user_stats, get_stats, OWNER_ID, ADMIN_USER_IDS, _collect_activity_dates, extend_premium_days, ensure_premium_db, _parse_any_dt, get_user_points, migrate_premium_from_stats, get_next_title_info, ensure_remind_db, build_titles_ladder, get_user_title
 from telegram.error import BadRequest
 global user_timezones
 from zoneinfo import ZoneInfo
@@ -1806,21 +1806,6 @@ def remind_db() -> sqlite3.Connection:
     conn = sqlite3.connect(REMIND_DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
-
-def ensure_remind_db():
-    with remind_db() as db:
-        db.execute("""
-        CREATE TABLE IF NOT EXISTS reminders (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id TEXT NOT NULL,
-            text TEXT NOT NULL,
-            due_utc INTEGER NOT NULL,   -- epoch seconds (UTC)
-            tz TEXT NOT NULL,
-            status TEXT NOT NULL DEFAULT 'scheduled', -- scheduled|fired|canceled
-            created_at INTEGER NOT NULL
-        );
-        """)
-        db.commit()
 
 # ========== Time helpers ==========
 def _utcnow() -> datetime:
