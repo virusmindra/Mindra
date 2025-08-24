@@ -2,6 +2,7 @@ import json
 import os, sqlite3, logging
 from datetime import datetime, timedelta, timezone
 from storage import get_goals, get_habits, load_goals, load_habits
+from config import DATA_DIR, PREMIUM_DB_PATH, REMIND_DB_PATH
 
 STATS_FILE = "data/stats.json"
 GOALS_FILE = "goals.json"
