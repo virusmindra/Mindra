@@ -1519,20 +1519,6 @@ async def premium_challenge_callback(update, context):
         await q.edit_message_text(t["challenge_done"])
         return
 
-def ensure_premium_db():
-    # простая SQLite миграция: создаём таблицу подписок (если нет)
-    db = sqlite3.connect(DB_PATH)
-    db.execute("""
-    CREATE TABLE IF NOT EXISTS subscriptions(
-        user_id TEXT PRIMARY KEY,
-        plan TEXT NOT NULL,
-        expires_utc TEXT,            -- NULL = бессрочно или free
-        updated_at TEXT NOT NULL
-    );
-    """)
-    db.commit()
-    db.close()
-
 def _week_start_iso(dt: datetime) -> str:
     # понедельник этой недели в локальном времени пользователя
     monday = dt - timedelta(days=dt.weekday())
