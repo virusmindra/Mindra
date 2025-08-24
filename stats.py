@@ -15,6 +15,20 @@ ADMIN_USER_IDS = [OWNER_ID]  # Можно расширять список
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 PREMIUM_DB_PATH = os.path.join(DATA_DIR, "premium.sqlite3")
 
+def ensure_remind_db():
+    with sqlite3.connect(REMIND_DB_PATH) as db:
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS reminders (
+                id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id   TEXT NOT NULL,
+                text      TEXT NOT NULL,
+                due_utc   INTEGER NOT NULL,
+                tz        TEXT NOT NULL,
+                status    TEXT NOT NULL DEFAULT 'scheduled'
+            );
+        """)
+        db.commit()
+
 def ensure_premium_db():
     with sqlite3.connect(PREMIUM_DB_PATH) as db:
         db.execute("""
