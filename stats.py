@@ -15,6 +15,101 @@ ADMIN_USER_IDS = [OWNER_ID]  # Можно расширять список
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 PREMIUM_DB_PATH = os.path.join(DATA_DIR, "premium.sqlite3")
 
+def ensure_premium_db():
+    os.makedirs(DATA_DIR, exist_ok=True)
+    with sqlite3.connect(PREMIUM_DB_PATH) as db:
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS premium (
+                user_id    TEXT PRIMARY KEY,
+                until      TEXT NOT NULL,           -- ISO8601 (UTC)
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+        """)
+        db.commit()
+
+def _parse_any_dt(val: str) -> datetime:
+    v = str(val).strip()
+    if v.isdigit():
+        return datetime.fromtimestamp(int(v), tz=timezone.utc)
+    if v.endswith("Z"):
+        v = v[:-1] + "+00:00"
+    dt = datetime.fromisoformat(v)
+    return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt.astimezone(timezone.utc)
+
+def get_premium_until(user_id: str | int) -> str | None:
+    uid = str(user_id)
+    with sqlite3.connect(PREMIUM_DB_PATH) as db:
+        row = db.execute("SELECT until FROM premium WHERE user_id=?;", (uid,)).fetchone()
+        return row[0] if row else None
+
+def set_premium_until(user_id: str | int, until_iso: str) -> None:
+    uid = str(user_id)
+    with sqlite3.connect(PREMIUM_DB_PATH) as db:
+        db.execute(
+            "INSERT INTO premium(user_id, until) VALUES(?, ?) "
+            "ON CONFLICT(user_id) DO UPDATE SET until=excluded.until;",
+            (uid, until_iso),
+        )
+        db.commit()
+
+def set_premium_until_dt(user_id: str | int, dt_utc: datetime) -> None:
+    if dt_utc.tzinfo is None:
+        dt_utc = dt_utc.replace(tzinfo=timezone.utc)
+    else:
+        dt_utc = dt_utc.astimezone(timezone.utc)
+    set_premium_until(user_id, dt_utc.isoformat())
+
+def extend_premium_days(user_id: str | int, days: int) -> str:
+    now = datetime.now(timezone.utc)
+    cur = get_premium_until(user_id)
+    base = now
+    if cur:
+        try:
+            dt = _parse_any_dt(cur)
+            if dt > now:
+                base = dt
+        except Exception:
+            pass
+    new_until = base + timedelta(days=int(days))
+    set_premium_until_dt(user_id, new_until)
+    return new_until.isoformat()
+
+def is_premium_db(user_id) -> bool:
+    """Чистая проверка по БД, без знания про админов (чтобы не тянуть handlers)."""
+    until = get_premium_until(user_id)
+    if not until:
+        return False
+    try:
+        return _parse_any_dt(until) > datetime.now(timezone.utc)
+    except Exception:
+        logging.warning("Bad premium_until for %s: %r", user_id, until)
+        return False
+
+def migrate_premium_from_stats(load_stats):
+    """Одноразовая миграция из старого stats.json (передай сюда функцию load_stats)."""
+    try:
+        stats = load_stats()
+    except Exception:
+        return
+    moved = 0
+    with sqlite3.connect(PREMIUM_DB_PATH) as db:
+        for uid, user in (stats or {}).items():
+            until = user.get("premium_until")
+            if not until:
+                continue
+            try:
+                iso = _parse_any_dt(until).isoformat()
+                db.execute(
+                    "INSERT INTO premium(user_id, until) VALUES(?, ?) "
+                    "ON CONFLICT(user_id) DO UPDATE SET until=excluded.until;",
+                    (str(uid), iso),
+                )
+                moved += 1
+            except Exception as e:
+                logging.warning("Skip premium migrate for %s: %r (%s)", uid, until, e)
+        db.commit()
+    logging.info("Premium migration completed: %d users", moved)
+    
 def load_stats():
     try:
         with open(STATS_FILE, "r") as f:
