@@ -3,6 +3,7 @@ import os, sqlite3, logging
 from datetime import datetime, timedelta, timezone
 from storage import get_goals, get_habits, load_goals, load_habits
 from config import DATA_DIR, PREMIUM_DB_PATH, REMIND_DB_PATH
+from contextlib import contextmanager
 
 STATS_FILE = "data/stats.json"
 GOALS_FILE = "goals.json"
@@ -17,12 +18,12 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 PREMIUM_DB_PATH = os.path.join(DATA_DIR, "premium.sqlite3")
 
 def remind_db():
-    db = sqlite3.connect(REMIND_DB_PATH)
-    db.row_factory = sqlite3.Row
+    conn = sqlite3.connect(REMIND_DB_PATH)
     try:
-        yield db
+        # если удобно, можно так: conn.row_factory = sqlite3.Row
+        yield conn
     finally:
-        db.close()
+        conn.close()
         
 def ensure_remind_db():
     with sqlite3.connect(REMIND_DB_PATH) as db:
