@@ -188,6 +188,16 @@ DEFAULT_ELEVEN_FEMALE = "21m00Tcm4TlvDq8ikWAM"
 DEFAULT_ELEVEN_MALE = "JBFqnCBsd6RMkjVDRZzb" 
 STORY_INTEN = STORY_INTENT
 
+# Базовая папка проекта
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Где хранить файлы БД (по умолчанию ./data, можно переопределить через ENV)
+DATA_DIR = os.getenv("DATA_DIR", os.path.join(BASE_DIR, "data"))
+os.makedirs(DATA_DIR, exist_ok=True)
+
+# Полные пути к БД (можно переопределить через ENV)
+PREMIUM_DB_PATH = os.getenv("PREMIUM_DB_PATH", os.path.join(DATA_DIR, "premium.sqlite3"))
+REMIND_DB_PATH  = os.getenv("REMIND_DB_PATH",  os.path.join(DATA_DIR, "reminders.sqlite3"))
 
 # ==== Sleep (ambient only) ====
 sleep_prefs: dict[str, dict] = {}
