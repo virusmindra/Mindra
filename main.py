@@ -10,6 +10,7 @@ from telegram.ext import (
     filters
 )
 from telegram.request import HTTPXRequest
+from stats import ensure_premium_db, migrate_premium_from_stats
 from handlers import (
     start,
     language_callback,
@@ -96,6 +97,8 @@ async def main():
     # БД премиума
     ensure_premium_db()
 
+    migrate_premium_from_stats(load_stats)
+    
     # 👉 Сначала текст
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
     # 👉 Голос
