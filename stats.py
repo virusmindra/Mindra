@@ -38,6 +38,16 @@ def ensure_remind_db():
         """)
         db.commit()
 
+def ensure_premium_db():
+    with sqlite3.connect(PREMIUM_DB_PATH) as db:
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS premium (
+                user_id    TEXT PRIMARY KEY,
+                until      TEXT NOT NULL,           -- ISO8601 (UTC)
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+        """)
+        db.commit()
 
 def _parse_any_dt(val: str) -> datetime:
     v = str(val).strip()
