@@ -57,12 +57,28 @@ def remind_db():
 
 
 def ensure_premium_db():
+    os.makedirs(DATA_DIR, exist_ok=True)
     with sqlite3.connect(PREMIUM_DB_PATH) as db:
         db.execute("""
             CREATE TABLE IF NOT EXISTS premium (
                 user_id    TEXT PRIMARY KEY,
-                until      TEXT NOT NULL,           -- ISO8601 (UTC)
+                until      TEXT NOT NULL,          -- ISO8601 (UTC)
                 created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+        """)
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS user_flags (
+                user_id    TEXT PRIMARY KEY,
+                trial_given INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+        """)
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS referrals (
+                invited_user_id TEXT PRIMARY KEY,
+                inviter_user_id TEXT NOT NULL,
+                granted_days    INTEGER NOT NULL,
+                created_at      TEXT NOT NULL DEFAULT (datetime('now'))
             );
         """)
         db.commit()
