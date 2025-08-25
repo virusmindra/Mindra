@@ -83,6 +83,76 @@ def ensure_premium_db():
         """)
         db.commit()
 
+def _to_utc(dt: datetime) -> datetime:
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+def trial_was_given(user_id) -> bool:
+    with sqlite3.connect(PREMIUM_DB_PATH) as db:
+        row = db.execute("SELECT trial_given FROM user_flags WHERE user_id=?;", (str(user_id),)).fetchone()
+        return bool(row and int(row[0]) == 1)
+
+def mark_trial_given(user_id) -> None:
+    with sqlite3.connect(PREMIUM_DB_PATH) as db:
+        db.execute(
+            "INSERT INTO user_flags(user_id, trial_given) VALUES(?,1) "
+            "ON CONFLICT(user_id) DO UPDATE SET trial_given=1;",
+            (str(user_id),)
+        )
+        db.commit()
+
+def grant_trial_if_eligible(user_id, days: int) -> str | None:
+    """Выдаёт триал (N дней), если ещё не выдавали и сейчас нет активного премиума.
+       Возвращает iso-дату until или None, если не выдано."""
+    if trial_was_given(user_id):
+        return None
+
+    now = datetime.now(timezone.utc)
+    cur = get_premium_until(user_id)
+    if cur:
+        try:
+            dt = datetime.fromisoformat(cur)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            if dt > now:
+                # уже премиум — просто пометим, чтобы не пытаться ещё раз
+                mark_trial_given(user_id)
+                return None
+        except Exception:
+            pass
+
+    until = now + timedelta(days=int(days))
+    set_premium_until(user_id, _to_utc(until).isoformat())
+    mark_trial_given(user_id)
+    return _to_utc(until).isoformat()
+
+def referral_already_claimed(invited_id) -> bool:
+    with sqlite3.connect(PREMIUM_DB_PATH) as db:
+        row = db.execute("SELECT 1 FROM referrals WHERE invited_user_id=?;", (str(invited_id),)).fetchone()
+        return row is not None
+
+def process_referral(inviter_id, invited_id, days: int = 7) -> bool:
+    """Выдаёт приглашённому trial на N дней (если возможно) и помечает рефералку.
+       Возвращает True, если зачли рефералку (даже если trial не выдали из-за ранее выданного)."""
+    inviter_id = str(inviter_id); invited_id = str(invited_id)
+    if inviter_id == invited_id:
+        return False
+    if referral_already_claimed(invited_id):
+        return False
+
+    # пробуем выдать приглашённому 7-дневный триал
+    try:
+        grant_trial_if_eligible(invited_id, int(days))
+    except Exception as e:
+        logging.warning("Referral grant failed for %s: %s", invited_id, e)
+
+    with sqlite3.connect(PREMIUM_DB_PATH) as db:
+        db.execute(
+            "INSERT INTO referrals(invited_user_id, inviter_user_id, granted_days) VALUES(?,?,?);",
+            (invited_id, inviter_id, int(days))
+        )
+        db.commit()
+    return True
+
 def _parse_any_dt(val: str) -> datetime:
     v = str(val).strip()
     if v.isdigit():
