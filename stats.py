@@ -13,31 +13,33 @@ ADMIN_USER_IDS = ["7775321566"]
 OWNER_ID = "7775321566"
 ADMIN_USER_IDS = [OWNER_ID]  # Можно расширять список
 
-# единое место для путей БД
-DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
-PREMIUM_DB_PATH = os.path.join(DATA_DIR, "premium.sqlite3")
+DATA_DIR = os.getenv("DATA_DIR", "data")
+os.makedirs(DATA_DIR, exist_ok=True)
+REMIND_DB_PATH = os.getenv("REMIND_DB_PATH", os.path.join(DATA_DIR, "reminders.sqlite3"))
 
-def remind_db():
-    conn = sqlite3.connect(REMIND_DB_PATH)
-    try:
-        # если удобно, можно так: conn.row_factory = sqlite3.Row
-        yield conn
-    finally:
-        conn.close()
-        
 def ensure_remind_db():
+    os.makedirs(DATA_DIR, exist_ok=True)
     with sqlite3.connect(REMIND_DB_PATH) as db:
         db.execute("""
             CREATE TABLE IF NOT EXISTS reminders (
-                id        INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id   TEXT NOT NULL,
-                text      TEXT NOT NULL,
-                due_utc   INTEGER NOT NULL,
-                tz        TEXT NOT NULL,
-                status    TEXT NOT NULL DEFAULT 'scheduled'
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id TEXT NOT NULL,
+                text TEXT NOT NULL,
+                run_at TEXT NOT NULL,   -- ISO8601 UTC
+                tz TEXT
             );
         """)
         db.commit()
+
+@contextmanager
+def remind_db():
+    # ВАЖНО: обычный def, НЕ async def
+    conn = sqlite3.connect(REMIND_DB_PATH)
+    try:
+        yield conn
+    finally:
+        conn.close()
+
 
 def ensure_premium_db():
     with sqlite3.connect(PREMIUM_DB_PATH) as db:
