@@ -47,8 +47,8 @@ def ensure_remind_db():
         db.execute("UPDATE reminders SET status='scheduled' WHERE status IS NULL;")
         db.commit()
         
+@contextmanager
 def remind_db():
-    # ВАЖНО: обычный def, НЕ async def
     conn = sqlite3.connect(REMIND_DB_PATH)
     try:
         yield conn
