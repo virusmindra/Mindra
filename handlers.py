@@ -228,6 +228,108 @@ REMIND_DB_PATH  = os.getenv("REMIND_DB_PATH",  os.path.join(DATA_DIR, "reminders
 # ==== Sleep (ambient only) ====
 _sleep_prefs: dict[str, dict] = {}
 
+async def menu_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    await update.message.reply_text(
+        _menu_home_text(uid),
+        parse_mode="Markdown",
+        reply_markup=_menu_home_kb(uid)
+    )
+
+async def menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    q: CallbackQuery = update.callback_query
+    if not q or not q.data.startswith("m:"):
+        return
+    await q.answer()
+    uid = str(q.from_user.id)
+    parts = q.data.split(":")
+    cat = parts[1] if len(parts) > 1 else ""
+
+    try:
+        # навигация
+        if cat == "nav":
+            dest = parts[2] if len(parts) > 2 else "home"
+            if dest == "home":
+                return await q.edit_message_text(_menu_home_text(uid), parse_mode="Markdown", reply_markup=_menu_home_kb(uid))
+            if dest == "voice":
+                # открыть твоё меню озвучки
+                return await _voice_refresh(q, uid, "engine")
+            if dest == "sleep":
+                # открыть твоё меню сна
+                return await _sleep_refresh(q, uid, "kind")
+            if dest == "story":
+                # короткая подсказка: как запустить /story
+                t = _s_i18n(uid)
+                txt = f"*{t['title']}*\n\n{t['usage']}"
+                kb = InlineKeyboardMarkup([[InlineKeyboardButton(_menu_i18n(uid)["back"], callback_data="m:nav:home")]])
+                return await q.edit_message_text(txt, parse_mode="Markdown", reply_markup=kb)
+            if dest == "premium":
+                return await q.edit_message_text(_premium_text(uid), parse_mode="Markdown", reply_markup=_premium_kb(uid))
+            if dest == "profile":
+                return await q.edit_message_text(_menu_i18n(uid)["title"], parse_mode="Markdown", reply_markup=_profile_kb(uid))
+            if dest == "help":
+                t = _menu_i18n(uid)
+                kb = InlineKeyboardMarkup([[InlineKeyboardButton(t["back"], callback_data="m:nav:home")]])
+                return await q.edit_message_text(t["help_text"], reply_markup=kb)
+            if dest == "lang":
+                # покажем те же кнопки, что и в /start (они у тебя уже обрабатываются)
+                kb = InlineKeyboardMarkup([
+                    [InlineKeyboardButton("Русский 🇷🇺", callback_data="lang_ru"),
+                     InlineKeyboardButton("Українська 🇺🇦", callback_data="lang_uk")],
+                    [InlineKeyboardButton("Moldovenească 🇲🇩", callback_data="lang_md"),
+                     InlineKeyboardButton("Беларуская 🇧🇾", callback_data="lang_be")],
+                    [InlineKeyboardButton("Қазақша 🇰🇿", callback_data="lang_kk"),
+                     InlineKeyboardButton("Кыргызча 🇰🇬", callback_data="lang_kg")],
+                    [InlineKeyboardButton("Հայերեն 🇦🇲", callback_data="lang_hy"),
+                     InlineKeyboardButton("ქართული 🇬🇪", callback_data="lang_ka")],
+                    [InlineKeyboardButton("Нохчийн мотт 🇷🇺", callback_data="lang_ce"),
+                     InlineKeyboardButton("English 🇬🇧", callback_data="lang_en")],
+                    [InlineKeyboardButton(_menu_i18n(uid)["back"], callback_data="m:nav:home")],
+                ])
+                return await q.edit_message_text(_menu_i18n(uid)["choose_lang"], reply_markup=kb)
+            if dest == "tz":
+                # переиспользуем твой /tz флоу: просто подскажем команду
+                txt = "Send /tz чтобы настроить часовой пояс."
+                kb = InlineKeyboardMarkup([[InlineKeyboardButton(_menu_i18n(uid)["back"], callback_data="m:nav:home")]])
+                return await q.edit_message_text(txt, reply_markup=kb)
+            if dest == "close":
+                try:
+                    return await q.edit_message_text("…")
+                except Exception:
+                    return
+        # премиум под-экран
+        if cat == "premium":
+            act = parts[2] if len(parts) > 2 else ""
+            if act == "days":
+                # покажем дни в инлайне, не вызывая команду
+                until = get_premium_until(uid)
+                if not until:
+                    msg = "У тебя нет активной подписки."
+                else:
+                    try:
+                        dt = datetime.fromisoformat(until)
+                        if dt.tzinfo is None:
+                            dt = dt.replace(tzinfo=timezone.utc)
+                    except Exception:
+                        dt = datetime.now(timezone.utc)
+                    days_left = max(0, math.floor((dt - datetime.now(timezone.utc)).total_seconds() / 86400))
+                    msg = f"Премиум до: {dt.isoformat()}\nОсталось дней: {days_left}"
+                return await q.edit_message_text(_premium_text(uid) + "\n\n" + msg, parse_mode="Markdown", reply_markup=_premium_kb(uid))
+            if act == "invite":
+                me = await context.bot.get_me()
+                link = f"https://t.me/{me.username}?start=ref_{uid}"
+                msg = f"🔗 Ваша пригласительная ссылка:\n{link}\n\nДруг получит +7 дней премиума при старте по этой ссылке."
+                kb = InlineKeyboardMarkup([
+                    [InlineKeyboardButton(_menu_i18n(uid)["back"], callback_data="m:nav:premium")],
+                    [InlineKeyboardButton("🏠", callback_data="m:nav:home")]
+                ])
+                return await q.edit_message_text(msg, reply_markup=kb)
+
+    except Exception as e:
+        # на всякий случай не роняем бот
+        logging.exception("menu_cb failed: %s", e)
+
+
 def _sleep_p(uid: str) -> dict:
     p = _sleep_prefs.get(uid)
     if not p:
