@@ -487,59 +487,58 @@ async def _sleep_refresh(update: Update, context: ContextTypes.DEFAULT_TYPE, uid
         # пробрасываем другие ошибки
         raise
 
-def _sleep_kb(uid: str) -> InlineKeyboardMarkup:
+def _sleep_kb(uid: str, tab: str = "kind") -> InlineKeyboardMarkup:
     t = _sleep_i18n(uid)
     p = _sp(uid)
-    rows: list[list[InlineKeyboardButton]] = []
 
-    # ——— звуки (кроме off) — сначала в удобном порядке, затем все остальные ———
-    rows.append([InlineKeyboardButton(t["pick_sound"], callback_data="sl:none")])
+    rows = []
 
-    desired_order = ["rain", "fireplace", "ocean", "lofi"]
-    seen = set()
+    if tab == "kind":
+        # показываем только доступные (файл существует)
+        available = []
+        for key, meta in BGM_PRESETS.items():
+            if key == "off":
+                continue
+            src_rel = meta.get("path")
+            src = _resolve_asset_path(src_rel) if ' _resolve_asset_path' in globals() else (src_rel or "")
+            if src and os.path.exists(src):
+                available.append((key, meta.get("label", key)))
+        if not available:
+            rows.append([InlineKeyboardButton("⚠️ Нет звуков", callback_data="sl:nop")])
+        else:
+            for key, label in available:
+                mark = "✅ " if p["kind"] == key else ""
+                rows.append([InlineKeyboardButton(mark + label, callback_data=f"sl:kind:{key}")])
 
-    # 1) желаемый порядок
-    for key in desired_order:
-        meta = BGM_PRESETS.get(key)
-        if not meta or key == "off":
-            continue
-        mark = "✅ " if p.get("kind") == key else ""
-        rows.append([InlineKeyboardButton(mark + meta.get("label", key), callback_data=f"sl:snd:{key}")])
-        seen.add(key)
+    elif tab == "dur":
+        row = []
+        for i, m in enumerate(SLEEP_DURATIONS, 1):
+            mark = "✅ " if p["duration_min"] == m else ""
+            row.append(InlineKeyboardButton(f"{mark}{m}m", callback_data=f"sl:dur:{m}"))
+            if i % 4 == 0:
+                rows.append(row); row = []
+        if row:
+            rows.append(row)
 
-    # 2) все остальные, если добавите новые пресеты
-    for key, meta in BGM_PRESETS.items():
-        if key == "off" or key in seen:
-            continue
-        mark = "✅ " if p.get("kind") == key else ""
-        rows.append([InlineKeyboardButton(mark + meta.get("label", key), callback_data=f"sl:snd:{key}")])
+    elif tab == "gain":
+        row = []
+        for i, db in enumerate(SLEEP_GAINS, 1):
+            mark = "✅ " if p["gain_db"] == db else ""
+            row.append(InlineKeyboardButton(f"{mark}{db} dB", callback_data=f"sl:gain:{db}"))
+            if i % 4 == 0:
+                rows.append(row); row = []
+        if row:
+            rows.append(row)
 
-    # ——— длительность ———
-    rows.append([InlineKeyboardButton(t["pick_duration"], callback_data="sl:none")])
-    for chunk in [(5, 10, 15), (20, 30, 45), (60, 90, 120)]:
-        rows.append([
-            InlineKeyboardButton(
-                ("✅ " if p.get("duration_min") == m else "") + f"{m}",
-                callback_data=f"sl:dur:{m}"
-            )
-            for m in chunk
-        ])
-
-    # ——— громкость ———
-    rows.append([InlineKeyboardButton(t["pick_gain"], callback_data="sl:none")])
-    for chunk in [(-25, -20, -15), (-10, -5, 0), (5,)]:
-        rows.append([
-            InlineKeyboardButton(
-                ("✅ " if p.get("gain_db") == g else "") + f"{g} dB",
-                callback_data=f"sl:gain:{g}"
-            )
-            for g in chunk
-        ])
-
-    # ——— старт / стоп ———
+    # управление
     rows.append([
         InlineKeyboardButton(t["start"], callback_data="sl:start"),
         InlineKeyboardButton(t["stop"],  callback_data="sl:stop"),
+    ])
+    rows.append([
+        InlineKeyboardButton("🎵 " + t["pick_sound"],    callback_data="sl:tab:kind"),
+        InlineKeyboardButton("⏱ " + t["pick_duration"], callback_data="sl:tab:dur"),
+        InlineKeyboardButton("🔊 " + t["pick_gain"],     callback_data="sl:tab:gain"),
     ])
 
     return InlineKeyboardMarkup(rows)
@@ -547,171 +546,100 @@ def _sleep_kb(uid: str) -> InlineKeyboardMarkup:
 # /sleep — открыть меню
 async def sleep_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
+    t = _sleep_i18n(uid)
+    p = _sp(uid)
+
     await update.message.reply_text(
-        _sleep_menu_text(uid),
+        f"*{t['title']}*\n"
+        f"{t['sound'].format(sound=p['kind'])}\n"
+        f"{t['duration'].format(min=p['duration_min'])}\n"
+        f"{t['gain'].format(db=p['gain_db'])}",
         parse_mode="Markdown",
-        reply_markup=_sleep_kb(uid)
+        reply_markup=_sleep_kb(uid, "kind"),
     )
+
     
 # Колбэк "sl:*"
 async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
-    if not q or not q.data.startswith("sl:"):
+    if not q or not q.data or not q.data.startswith("sl:"):
         return
-
-    # быстрый ответ, чтобы callback не протух
-    try:
-        await q.answer()
-    except Exception:
-        pass
-
     uid = str(q.from_user.id)
-    p = _sp(uid)          # профиль сна: kind, duration_min, gain_db
-    t = _sleep_i18n(uid)  # i18n
+    t = _sleep_i18n(uid)
+    p = _sp(uid)
 
     parts = q.data.split(":")
     action = parts[1]
 
     try:
-        if action == "snd":
-            picked = parts[2]
+        if action == "tab":
+            tab = parts[2]
+            await q.edit_message_reply_markup(_sleep_kb(uid, tab))
+            return
 
-            # ⛔ ограничение по пресетам для FREE
-            if not has_feature(uid, "sleep_all_sounds"):
-                allowed = {"rain"}  # например, только дождь на free
-                if picked not in allowed:
-                    p["kind"] = "rain"
-                    # перерисуем и покажем апселл
-                    try:
-                        await _sleep_refresh(update, context, uid)
-                    except BadRequest as e:
-                        if "Message is not modified" not in str(e):
-                            raise
-                    title, body = upsell_for(uid, "feature_bgm")
-                    return await q.answer(title, show_alert=True)
-
-            p["kind"] = picked
-            try:
-                await _sleep_refresh(update, context, uid)
-            except BadRequest as e:
-                if "Message is not modified" not in str(e):
-                    raise
+        if action == "kind":
+            kind = parts[2]
+            meta = BGM_PRESETS.get(kind, {})
+            src_rel = meta.get("path")
+            src = _resolve_asset_path(src_rel) if ' _resolve_asset_path' in globals() else (src_rel or "")
+            if not src or not os.path.exists(src):
+                try: await q.answer(t["err_missing"], show_alert=True)
+                except: pass
+            else:
+                p["kind"] = kind
+                await q.edit_message_reply_markup(_sleep_kb(uid, "kind"))
             return
 
         if action == "dur":
-            want = int(parts[2])
-            max_min = quota(uid, "sleep_max_minutes")
-            if want > max_min:
-                p["duration_min"] = max_min  # мягко урезаем
-                try:
-                    await _sleep_refresh(update, context, uid)
-                except BadRequest as e:
-                    if "Message is not modified" not in str(e):
-                        raise
-                title, body = upsell_for(uid, "feature_sleep_long", {"min": max_min})
-                return await q.answer(title, show_alert=True)
-
-            p["duration_min"] = want
             try:
-                await _sleep_refresh(update, context, uid)
-            except BadRequest as e:
-                if "Message is not modified" not in str(e):
-                    raise
+                minutes = int(parts[2])
+                p["duration_min"] = max(1, min(minutes, 240))
+            except Exception:
+                pass
+            await q.edit_message_reply_markup(_sleep_kb(uid, "dur"))
             return
 
         if action == "gain":
-            p["gain_db"] = int(parts[2])
             try:
-                await _sleep_refresh(update, context, uid)
-            except BadRequest as e:
-                if "Message is not modified" not in str(e):
-                    raise
+                p["gain_db"] = int(parts[2])
+            except Exception:
+                pass
+            await q.edit_message_reply_markup(_sleep_kb(uid, "gain"))
             return
 
         if action == "start":
-            # 🔐 глобальный гейт на саму функцию «звуки сна»
-            if not has_feature(uid, "sleep_sounds"):
-                title, body = upsell_for(uid, "feature_sleep_long", {"min": quota(uid, "sleep_max_minutes")})
-                return await q.answer(title, show_alert=True)
-
-            # ⛔ проверка длительности перед стартом
-            max_min = quota(uid, "sleep_max_minutes")
-            if p["duration_min"] > max_min:
-                p["duration_min"] = max_min
-                try:
-                    await _sleep_refresh(update, context, uid)
-                except BadRequest as e:
-                    if "Message is not modified" not in str(e):
-                        raise
-                title, body = upsell_for(uid, "feature_sleep_long", {"min": max_min})
-                return await q.answer(title, show_alert=True)
-
-            # ⛔ проверка допустимого пресета на free
-            if not has_feature(uid, "sleep_all_sounds"):
-                allowed = {"rain"}
-                if p["kind"] not in allowed:
-                    p["kind"] = "rain"
-                    try:
-                        await _sleep_refresh(update, context, uid)
-                    except BadRequest as e:
-                        if "Message is not modified" not in str(e):
-                            raise
-                    title, body = upsell_for(uid, "feature_bgm")
-                    return await q.answer(title, show_alert=True)
-
-            # ✅ рендерим/берём из кэша длинный ogg-файл
             try:
                 ogg_path = _render_sleep_ogg(p["kind"], p["duration_min"], p["gain_db"])
-            except RuntimeError:
-                await q.answer(t["err_ffmpeg"], show_alert=True)
-                return
             except FileNotFoundError:
-                await q.answer(t["err_missing"], show_alert=True)
-                return
+                return await q.answer(t["err_missing"], show_alert=True)
+            except RuntimeError:
+                return await q.answer(t["err_ffmpeg"], show_alert=True)
+            except Exception as e:
+                logging.exception("sleep render failed: %s", e)
+                return await q.answer("⚠️ Failed to prepare audio.", show_alert=True)
 
-            label = BGM_PRESETS.get(p["kind"], {}).get("label", p["kind"])
-
-            # обновляем экран (может вернуть "Message is not modified" — не критично)
             try:
-                await _sleep_refresh(update, context, uid)
-            except BadRequest as e:
-                if "Message is not modified" not in str(e):
-                    raise
-
-            # сообщение «стартуем»
-            await context.bot.send_message(
-                chat_id=q.message.chat_id,
-                text=t["started"].format(sound=label, min=p["duration_min"])
-            )
-
-            # отправляем как audio — удобный плеер; файл из кэша НЕ удаляем
-            with open(ogg_path, "rb") as f:
-                await context.bot.send_audio(
-                    chat_id=q.message.chat_id,
-                    audio=f,
-                    title=f"{label} — {p['duration_min']} min",
-                    caption=None
+                await context.bot.send_voice(chat_id=int(uid), voice=open(ogg_path, "rb"))
+                await q.answer()
+                await q.edit_message_text(
+                    t["started"].format(sound=p["kind"], min=p["duration_min"]),
+                    parse_mode="Markdown",
+                    reply_markup=_sleep_kb(uid, "kind"),
                 )
+            finally:
+                try: os.remove(ogg_path)
+                except Exception: pass
             return
 
         if action == "stop":
-            # один длинный файл — «стоп» просто уведомление
-            await q.answer(t["stopped"], show_alert=False)
+            await q.answer()
+            await q.edit_message_text(t["stopped"], parse_mode="Markdown", reply_markup=_sleep_kb(uid, "kind"))
             return
 
-        # игнор "sl:none"
-        await q.answer()
-
-    except BadRequest as e:
-        if "Message is not modified" in str(e):
-            return
-        logging.exception(f"sleep_cb BadRequest: {e}")
     except Exception as e:
-        logging.exception(f"sleep_cb failed: {e}")
-        try:
-            await q.answer("Error", show_alert=False)
-        except Exception:
-            pass
+        logging.exception("sleep_cb failed: %s", e)
+        try: await q.answer("⚠️ Error", show_alert=True)
+        except: pass
 
 
 def _current_voice_name(uid: str) -> str:
