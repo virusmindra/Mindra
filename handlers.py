@@ -4783,6 +4783,8 @@ handlers = [
     CallbackQueryHandler(handle_add_goal_callback, pattern="^add_goal\\|"),
     CallbackQueryHandler(handle_mark_habit_done_choose, pattern=r"^mark_habit_done_choose$"),
     CallbackQueryHandler(handle_done_habit_callback,    pattern=r"^done_habit\|\d+$"),
+    CommandHandler("menu", menu_cmd),
+    CallbackQueryHandler(menu_cb, pattern=r"^m:"),
     
     # --- Чаты и голос
     CommandHandler("voice_mode", voice_mode_cmd),
