@@ -22,6 +22,7 @@ from collections import defaultdict
 from texts import (
     VOICE_TEXTS_BY_LANG,
     STORY_INTENT,
+    MENU_TEXTS,
     FEATURE_MATRIX,
     PLAN_FREE,
     PLAN_PLUS,
