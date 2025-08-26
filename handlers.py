@@ -17,6 +17,7 @@ import asyncio
 import pytz
 import telegram
 import shutil
+from __future__ import annotations
 from elevenlabs import ElevenLabs 
 from collections import defaultdict
 from texts import (
