@@ -4563,99 +4563,53 @@ def plural_ru(number, one, few, many):
     else:
         return many
 
-async def premium_days(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
-    lang = user_languages.get(user_id, "ru")
-    until = get_premium_until(user_id)
-    now = datetime.utcnow()
-    days = 0
-    months = 0
-    years = 0
-    days_left = 0 
-    text = ""
-    if until:
-        try:
-            dt_until = datetime.fromisoformat(until)
-            diff = dt_until - now
-            days = diff.days
-            # future ready: считаем месяцы/годы
-            years = days // 365
-            months = (days % 365) // 30
-            days_left = (days % 365) % 30
-            if days < 0:
-                days = 0
-                years = months = days_left = 0
-        except Exception as e:
-            days = 0
-            years = months = days_left = 0
+async def premium_days(update, context):
+    uid = str(update.effective_user.id)
+    args = context.args or []
 
-    # Тексты для всех языков (русский — с падежами)
-    if lang == "ru":
-        years_text = f"{years} " + plural_ru(years, "год", "года", "лет") if years else ""
-        months_text = f"{months} " + plural_ru(months, "месяц", "месяца", "месяцев") if months else ""
-        days_text = f"{days_left} " + plural_ru(days_left, "день", "дня", "дней") if days_left or (not years and not months) else ""
-        parts = [years_text, months_text, days_text]
-        period = ", ".join([part for part in parts if part])
-        if period:
-            text = f"💎 У тебя осталось *{period}* Mindra+."
+    def _is_admin() -> bool:
+        return (update.effective_user.id in ADMIN_USER_IDS) or (update.effective_user.id == OWNER_ID)
+
+    try:
+        # /premium_days  — показать себе
+        if len(args) == 0:
+            until = get_premium_until(uid)
+            if not until:
+                return await update.message.reply_text("У тебя сейчас нет премиума.")
+            try:
+                dt = datetime.fromisoformat(until)
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+            except Exception:
+                dt = datetime.now(timezone.utc)
+            left_days = max(0, int((dt - datetime.now(timezone.utc)).total_seconds() // 86400))
+            return await update.message.reply_text(
+                f"Премиум до: {dt.isoformat()}\nОсталось дней: {left_days}"
+            )
+
+        # /premium_days <days> — продлить СЕБЕ (только админ)
+        elif len(args) == 1:
+            if not _is_admin():
+                return await update.message.reply_text("Команда доступна только админам.")
+            days = int(args[0])
+            new_until = extend_premium_days(uid, days)
+            return await update.message.reply_text(f"Готово. Твой премиум продлён до {new_until}")
+
+        # /premium_days <user_id> <days> — продлить КОМУ-ТО (только админ)
         else:
-            text = "💎 У тебя нет активной подписки Mindra+."
-    else:
-        # Для остальных языков просто числа
-        if years > 0:
-            text = {
-                "uk": f"💎 У тебе залишилося *{years}* років Mindra+.",
-                "be": f"💎 У цябе засталося *{years}* гадоў Mindra+.",
-                "kk": f"💎 Сенде Mindra+ қалған *{years}* жыл бар.",
-                "kg": f"💎 Сенде Mindra+ дагы *{years}* жыл калды.",
-                "hy": f"💎 Դու ունես դեռ *{years}* տարի Mindra+:",
-                "ce": f"💎 Хьо даьлча Mindra+ *{years}* сахь кхетам.",
-                "md": f"💎 Ai rămas cu *{years}* ani de Mindra+.",
-                "ka": f"💎 შენ დაგრჩა *{years}* წელი Mindra+.",
-                "en": f"💎 You have *{years}* years of Mindra+ left.",
-            }.get(lang, f"💎 You have *{years}* years of Mindra+ left.")
-        elif months > 0:
-            text = {
-                "uk": f"💎 У тебе залишилося *{months}* місяців Mindra+.",
-                "be": f"💎 У цябе засталося *{months}* месяцаў Mindra+.",
-                "kk": f"💎 Сенде Mindra+ қалған *{months}* ай бар.",
-                "kg": f"💎 Сенде Mindra+ дагы *{months}* ай калды.",
-                "hy": f"💎 Դու ունես դեռ *{months}* ամիս Mindra+:",
-                "ce": f"💎 Хьо даьлча Mindra+ *{months}* буьйса кхетам.",
-                "md": f"💎 Ai rămas cu *{months}* luni de Mindra+.",
-                "ka": f"💎 შენ დაგრჩა *{months}* თვე Mindra+.",
-                "en": f"💎 You have *{months}* months of Mindra+ left.",
-            }.get(lang, f"💎 You have *{months}* months of Mindra+ left.")
-        else:
-            text = {
-                "ru": f"💎 У тебя осталось *{days_left}* дней Mindra+.",
-                "uk": f"💎 У тебе залишилося *{days_left}* днів Mindra+.",
-                "be": f"💎 У цябе засталося *{days_left}* дзён Mindra+.",
-                "kk": f"💎 Сенде Mindra+ қалған *{days_left}* күн бар.",
-                "kg": f"💎 Сенде Mindra+ дагы *{days_left}* күн калды.",
-                "hy": f"💎 Դու ունես դեռ *{days_left}* օր Mindra+:",
-                "ce": f"💎 Хьо даьлча Mindra+ *{days_left}* де кхетам.",
-                "md": f"💎 Ai rămas cu *{days_left}* zile de Mindra+.",
-                "ka": f"💎 შენ დაგრჩა *{days_left}* დღე Mindra+.",
-                "en": f"💎 You have *{days_left}* days of Mindra+ left.",
-            }.get(lang, f"💎 You have *{days_left}* days of Mindra+ left.")
+            if not _is_admin():
+                return await update.message.reply_text("Команда доступна только админам.")
+            target = args[0]
+            days = int(args[1])
+            new_until = extend_premium_days(target, days)
+            return await update.message.reply_text(f"ОК. Пользователь {target} продлён до {new_until}")
 
-        if (not years and not months and not days_left):
-            text = {
-                "ru": "💎 У тебя нет активной подписки Mindra+.",
-                "uk": "💎 У тебе немає активної підписки Mindra+.",
-                "en": "💎 You don't have an active Mindra+ subscription.",
-                "be": "💎 У цябе няма актыўнай падпіскі Mindra+.",
-                "kk": "💎 Сенде белсенді Mindra+ жазылымы жоқ.",
-                "kg": "💎 Сенде активдүү Mindra+ жазылуусу жок.",
-                "hy": "💎 Դու չունես ակտիվ Mindra+ բաժանորդագրություն։",
-                "ce": "💎 Хьо доьзал хила Mindra+ яззийна цуьнан.",
-                "md": "💎 Nu ai un abonament activ Mindra+.",
-                "ka": "💎 შენ არ გაქვს აქტიური Mindra+ გამოწერა.",
-            }.get(lang, "💎 You don't have an active Mindra+ subscription.")
-
-    await update.message.reply_text(text, parse_mode="Markdown")
-    
+    except Exception as e:
+        logging.exception("premium_days_cmd failed: %s", e)
+        return await update.message.reply_text(
+            "Использование: /premium_days [days] или /premium_days <user_id> <days>"
+        )
+        
 # Список всех команд/обработчиков для экспорта
 handlers = [
     # --- Старт и информация
@@ -4708,6 +4662,7 @@ handlers = [
     CommandHandler("premium", premium_cmd),
     CommandHandler("premium_report", premium_report_cmd),
     CommandHandler("premium_challenge", premium_challenge_cmd),
+    CommandHandler("premium_days", premium_days),
     
     # --- Разное
     CommandHandler("timezone", set_timezone),
