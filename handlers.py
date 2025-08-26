@@ -417,7 +417,7 @@ def _kb_equal(a, b) -> bool:
     except Exception:
         return False
 
-async def _sleep_refresh(q: telegram.CallbackQuery, uid: str, tab: str):
+async def _sleep_refresh(q: CallbackQuery, uid: str, tab: str):
     try:
         await q.edit_message_text(
             _sleep_menu_text(uid),
