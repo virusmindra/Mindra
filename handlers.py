@@ -15,6 +15,7 @@ import textwrap
 import uuid
 import asyncio
 import pytz
+import telegram
 import shutil
 from elevenlabs import ElevenLabs 
 from collections import defaultdict
@@ -626,7 +627,7 @@ def _looks_like_story_intent(text: str, lang: str, uid: str) -> bool:
     patt = STORY_INTENT.get(lang, STORY_INTENT["ru"])
     return bool(patt.search(text))
     
-async def _voice_refresh(q, uid: str, tab: str):
+async def _voice_refresh(q: CallbackQuery, uid: str, tab: str):
     new_text = _voice_menu_text(uid) or "🎙"
     new_kb = _voice_kb(uid, tab)
 
