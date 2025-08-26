@@ -224,8 +224,6 @@ os.makedirs(DATA_DIR, exist_ok=True)
 PREMIUM_DB_PATH = os.getenv("PREMIUM_DB_PATH", os.path.join(DATA_DIR, "premium.sqlite3"))
 REMIND_DB_PATH  = os.getenv("REMIND_DB_PATH",  os.path.join(DATA_DIR, "reminders.sqlite3"))
 
-_sleep_p = _sp
-
 # ==== Sleep (ambient only) ====
 sleep_prefs: dict[str, dict] = {}
 
