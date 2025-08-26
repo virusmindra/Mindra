@@ -356,16 +356,12 @@ def _resolve_asset_path(rel_path: str | None) -> str | None:
     return rel_path  # вернём как есть — дальше всё равно проверим exists
     
 def _render_sleep_ogg(kind: str, minutes: int, gain_db: int = -20) -> str:
-    """
-    Рендерит/кэширует OGG/Opus с лупом звука для сна.
-    Кэш-ключ: <kind>_<minutes>_<gain_tag> в $TMP/sleep_cache.
-    """
     if kind == "off":
         raise ValueError("Sleep sound 'off' — нечего играть")
 
     meta = BGM_PRESETS.get(kind, {})
     src_rel = meta.get("path")
-    src = _resolve_asset_path(src_rel)
+    src = _resolve_asset_path(src_rel) if ' _resolve_asset_path' in globals() else (src_rel or "")
     if not src or not os.path.exists(src):
         raise FileNotFoundError(f"Sleep BGM not found: {src_rel}")
 
@@ -375,58 +371,35 @@ def _render_sleep_ogg(kind: str, minutes: int, gain_db: int = -20) -> str:
     minutes = max(1, min(int(minutes or 1), 240))
     total = minutes * 60
 
-    # кламп громкости (защита от странных значений)
-    gain_db = max(-40, min(int(gain_db), 6))
-    gain_tag = ("p" if gain_db >= 0 else "m") + str(abs(gain_db))
-
     cache_dir = os.path.join(tempfile.gettempdir(), "sleep_cache")
     os.makedirs(cache_dir, exist_ok=True)
+    gain_tag = str(gain_db).replace("-", "m").replace("+", "p")
     key = f"{kind}_{minutes}_{gain_tag}"
     out_path = os.path.join(cache_dir, f"{key}.ogg")
 
-    # уже есть — используем
     if os.path.exists(out_path):
         return out_path
 
-    # атомарная сборка (во временный → os.replace)
-    tmp_path = os.path.join(cache_dir, f".{key}.{next(tempfile._get_candidate_names())}.tmp.ogg")
-
-    fade_in = 3   # сек
-    fade_out = 5  # сек
-
+    fade_in = 3
+    fade_out = 5
     ff_cmd = [
-        "ffmpeg", "-y", "-loglevel", "error",
+        "ffmpeg", "-y",
         "-stream_loop", "-1", "-t", str(total + fade_out + 1), "-i", src,
         "-filter_complex",
         (
             f"[0:a]volume={gain_db}dB,"
-            f"dynaudnorm,"
             f"afade=t=in:st=0:d={fade_in},"
             f"atrim=duration={total},"
-            f"afade=t=out:st={max(0, total - fade_out)}:d={fade_out}[a]"
+            f"afade=t=out:st={max(0, total - fade_out)}:d={fade_out},"
+            f"aresample=48000[a]"
         ),
         "-map", "[a]",
-        "-vn",               # на всякий — без видео дорожек
-        "-ac", "1",          # моно — экономим размер
-        "-ar", "48000",
-        "-c:a", "libopus",
-        "-b:a", "48k",
-        tmp_path
+        "-ac", "1",
+        "-c:a", "libopus", "-b:a", "48k", "-ar", "48000",
+        out_path
     ]
-    try:
-        subprocess.run(ff_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        # если два процесса делали один ключ — победит первый os.replace
-        os.replace(tmp_path, out_path)
-        return out_path
-    except Exception as e:
-        logging.exception(f"Sleep render ffmpeg failed: {e}")
-        # подчистим возможный мусор
-        try: 
-            if os.path.exists(tmp_path): os.remove(tmp_path)
-        except Exception:
-            pass
-        raise
-
+    subprocess.run(ff_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return out_path
 
 def _sleep_menu_text(uid: str) -> str:
     t = _sleep_i18n(uid)
