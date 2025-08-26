@@ -401,21 +401,15 @@ def _render_sleep_ogg(kind: str, minutes: int, gain_db: int = -20) -> str:
     return out_path
 
 def _sleep_menu_text(uid: str) -> str:
+    p = _sleep_p(uid)
     t = _sleep_i18n(uid)
-    p = _sp(uid)
-
-    kind = p.get("kind", "rain")
-    label = BGM_PRESETS.get(kind, {}).get("label", kind)
-    dur = p.get("duration_min", 15)
-    gain = p.get("gain_db", -20)
-
+    meta = BGM_PRESETS.get(p["kind"], {"label": p["kind"]})
     return (
         f"*{t['title']}*\n\n"
-        f"{t['sound'].format(sound=label)}\n"
-        f"{t['duration'].format(min=dur)}\n"
-        f"{t['gain'].format(db=gain)}"
+        f"{t['sound'].format(sound=meta['label'])}\n"
+        f"{t['duration'].format(min=p['duration_min'])}\n"
+        f"{t['gain'].format(db=p['gain_db'])}"
     )
-
 
 def _kb_equal(a, b) -> bool:
     try:
@@ -423,109 +417,67 @@ def _kb_equal(a, b) -> bool:
     except Exception:
         return False
 
-async def _sleep_refresh(update: Update, context: ContextTypes.DEFAULT_TYPE, uid: str):
-    """Безопасно обновляет экран Sleep-меню: правит текст/клавиатуру только если есть изменения."""
-    q = update.callback_query
-    new_text = _sleep_menu_text(uid)
-    new_kb = _sleep_kb(uid)
-
-    curr_text = getattr(q.message, "text", "")
-    curr_kb = getattr(q.message, "reply_markup", None)
-
-    # Нечего менять — выходим
-    if curr_text == new_text and _kb_equal(curr_kb, new_kb):
-        return
-
+async def _sleep_refresh(q: telegram.CallbackQuery, uid: str, tab: str):
     try:
-        if curr_text != new_text:
-            await q.edit_message_text(new_text, parse_mode="Markdown", reply_markup=new_kb)
+        await q.edit_message_text(
+            _sleep_menu_text(uid),
+            parse_mode="Markdown",
+            reply_markup=_sleep_kb(uid, tab),
+        )
+    except telegram.error.BadRequest as e:
+        if "message is not modified" in str(e).lower():
+            try:
+                await q.edit_message_reply_markup(reply_markup=_sleep_kb(uid, tab))
+            except Exception:
+                pass
         else:
-            # текст тот же — меняем только клавиатуру
-            await q.edit_message_reply_markup(reply_markup=new_kb)
-    except BadRequest as e:
-        msg = str(e)
-        # просто игнорим этот кейс
-        if "Message is not modified" in msg:
-            return
-        # callback протух — шлём новое сообщение
-        if "Query is too old" in msg or "query id is invalid" in msg:
-            await context.bot.send_message(
-                chat_id=q.message.chat_id,
-                text=new_text,
-                parse_mode="Markdown",
-                reply_markup=new_kb
-            )
-            return
-        # пробрасываем другие ошибки
-        raise
+            # на всякий случай — пошлём новым сообщением
+            try:
+                await q.message.reply_text(
+                    _sleep_menu_text(uid),
+                    parse_mode="Markdown",
+                    reply_markup=_sleep_kb(uid, tab),
+                )
+            except Exception:
+                pass
+
+
 
 def _sleep_kb(uid: str, tab: str = "kind") -> InlineKeyboardMarkup:
+    p = _sleep_p(uid)
     t = _sleep_i18n(uid)
-    p = _sp(uid)
 
-    rows = []
-
+    rows: list[list[InlineKeyboardButton]] = []
     if tab == "kind":
-        # показываем только доступные (файл существует)
-        available = []
         for key, meta in BGM_PRESETS.items():
             if key == "off":
                 continue
-            src_rel = meta.get("path")
-            src = _resolve_asset_path(src_rel) if ' _resolve_asset_path' in globals() else (src_rel or "")
-            if src and os.path.exists(src):
-                available.append((key, meta.get("label", key)))
-        if not available:
-            rows.append([InlineKeyboardButton("⚠️ Нет звуков", callback_data="sl:nop")])
-        else:
-            for key, label in available:
-                mark = "✅ " if p["kind"] == key else ""
-                rows.append([InlineKeyboardButton(mark + label, callback_data=f"sl:kind:{key}")])
-
+            mark = "✅ " if p["kind"] == key else ""
+            rows.append([InlineKeyboardButton(f"{mark}{meta['label']}", callback_data=f"sleep:kind:{key}")])
     elif tab == "dur":
-        row = []
-        for i, m in enumerate(SLEEP_DURATIONS, 1):
-            mark = "✅ " if p["duration_min"] == m else ""
-            row.append(InlineKeyboardButton(f"{mark}{m}m", callback_data=f"sl:dur:{m}"))
-            if i % 4 == 0:
-                rows.append(row); row = []
-        if row:
-            rows.append(row)
-
+        for row in ((5,10,15),(20,30,45),(60,90,120)):
+            rows.append([InlineKeyboardButton(f"{m}m", callback_data=f"sleep:dur:{m}") for m in row])
     elif tab == "gain":
-        row = []
-        for i, db in enumerate(SLEEP_GAINS, 1):
-            mark = "✅ " if p["gain_db"] == db else ""
-            row.append(InlineKeyboardButton(f"{mark}{db} dB", callback_data=f"sl:gain:{db}"))
-            if i % 4 == 0:
-                rows.append(row); row = []
-        if row:
-            rows.append(row)
+        for row in ((-30,-25,-20),(-15,-10,-5),(0,5,10)):
+            rows.append([InlineKeyboardButton(f"{g} dB", callback_data=f"sleep:gain:{g}") for g in row])
 
-    # управление
+    # нижняя панель
     rows.append([
-        InlineKeyboardButton(t["start"], callback_data="sl:start"),
-        InlineKeyboardButton(t["stop"],  callback_data="sl:stop"),
+        InlineKeyboardButton("▶️", callback_data="sleep:act:start"),
+        InlineKeyboardButton("⏹", callback_data="sleep:act:stop"),
     ])
     rows.append([
-        InlineKeyboardButton("🎵 " + t["pick_sound"],    callback_data="sl:tab:kind"),
-        InlineKeyboardButton("⏱ " + t["pick_duration"], callback_data="sl:tab:dur"),
-        InlineKeyboardButton("🔊 " + t["pick_gain"],     callback_data="sl:tab:gain"),
+        InlineKeyboardButton(f"🎵 {t['pick_sound']}",    callback_data="sleep:tab:kind"),
+        InlineKeyboardButton(f"⏱ {t['pick_duration']}", callback_data="sleep:tab:dur"),
+        InlineKeyboardButton(f"🔉 {t['pick_gain']}",     callback_data="sleep:tab:gain"),
     ])
-
     return InlineKeyboardMarkup(rows)
 
 # /sleep — открыть меню
 async def sleep_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
-    t = _sleep_i18n(uid)
-    p = _sp(uid)
-
     await update.message.reply_text(
-        f"*{t['title']}*\n"
-        f"{t['sound'].format(sound=p['kind'])}\n"
-        f"{t['duration'].format(min=p['duration_min'])}\n"
-        f"{t['gain'].format(db=p['gain_db'])}",
+        _sleep_menu_text(uid),
         parse_mode="Markdown",
         reply_markup=_sleep_kb(uid, "kind"),
     )
@@ -534,85 +486,70 @@ async def sleep_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Колбэк "sl:*"
 async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
-    if not q or not q.data or not q.data.startswith("sl:"):
+    if not q or not q.data.startswith("sleep:"):
         return
+    await q.answer()  # ответим быстро, чтобы не было pop-up Error
+
     uid = str(q.from_user.id)
-    t = _sleep_i18n(uid)
-    p = _sp(uid)
+    p = _sleep_p(uid)
 
     parts = q.data.split(":")
-    action = parts[1]
+    kind = parts[1]
 
+    current_tab = "kind"
     try:
-        if action == "tab":
-            tab = parts[2]
-            await q.edit_message_reply_markup(_sleep_kb(uid, tab))
-            return
+        if kind == "tab":
+            current_tab = parts[2]
 
-        if action == "kind":
-            kind = parts[2]
-            meta = BGM_PRESETS.get(kind, {})
-            src_rel = meta.get("path")
-            src = _resolve_asset_path(src_rel) if ' _resolve_asset_path' in globals() else (src_rel or "")
-            if not src or not os.path.exists(src):
-                try: await q.answer(t["err_missing"], show_alert=True)
-                except: pass
-            else:
-                p["kind"] = kind
-                await q.edit_message_reply_markup(_sleep_kb(uid, "kind"))
-            return
+        elif kind == "kind":
+            new_kind = parts[2]
+            if new_kind in BGM_PRESETS:
+                p["kind"] = new_kind
+            current_tab = "kind"
 
-        if action == "dur":
-            try:
-                minutes = int(parts[2])
-                p["duration_min"] = max(1, min(minutes, 240))
-            except Exception:
-                pass
-            await q.edit_message_reply_markup(_sleep_kb(uid, "dur"))
-            return
+        elif kind == "dur":
+            p["duration_min"] = max(1, min(int(parts[2]), 240))
+            current_tab = "dur"
 
-        if action == "gain":
-            try:
-                p["gain_db"] = int(parts[2])
-            except Exception:
-                pass
-            await q.edit_message_reply_markup(_sleep_kb(uid, "gain"))
-            return
+        elif kind == "gain":
+            p["gain_db"] = int(parts[2])
+            current_tab = "gain"
 
-        if action == "start":
-            try:
-                ogg_path = _render_sleep_ogg(p["kind"], p["duration_min"], p["gain_db"])
-            except FileNotFoundError:
-                return await q.answer(t["err_missing"], show_alert=True)
-            except RuntimeError:
-                return await q.answer(t["err_ffmpeg"], show_alert=True)
-            except Exception as e:
-                logging.exception("sleep render failed: %s", e)
-                return await q.answer("⚠️ Failed to prepare audio.", show_alert=True)
+        elif kind == "act":
+            action = parts[2]
+            if action == "start":
+                try:
+                    ogg_path = _render_sleep_ogg(p["kind"], p["duration_min"], p["gain_db"])
+                except FileNotFoundError:
+                    t = _sleep_i18n(uid)
+                    await q.message.reply_text(t["err_missing"])
+                    return
+                except RuntimeError:
+                    t = _sleep_i18n(uid)
+                    await q.message.reply_text(t["err_ffmpeg"])
+                    return
 
-            try:
-                await context.bot.send_voice(chat_id=int(uid), voice=open(ogg_path, "rb"))
-                await q.answer()
-                await q.edit_message_text(
-                    t["started"].format(sound=p["kind"], min=p["duration_min"]),
+                with open(ogg_path, "rb") as f:
+                    await context.bot.send_voice(chat_id=int(uid), voice=f)
+                t = _sleep_i18n(uid)
+                meta = BGM_PRESETS.get(p["kind"], {"label": p["kind"]})
+                await q.message.reply_text(
+                    t["started"].format(sound=meta["label"], min=p["duration_min"]),
                     parse_mode="Markdown",
-                    reply_markup=_sleep_kb(uid, "kind"),
                 )
-            finally:
-                try: os.remove(ogg_path)
-                except Exception: pass
-            return
+            elif action == "stop":
+                # пока просто уведомление
+                t = _sleep_i18n(uid)
+                await q.message.reply_text(t["stopped"])
 
-        if action == "stop":
-            await q.answer()
-            await q.edit_message_text(t["stopped"], parse_mode="Markdown", reply_markup=_sleep_kb(uid, "kind"))
-            return
-
+        # обновим экран
+        await _sleep_refresh(q, uid, current_tab)
     except Exception as e:
         logging.exception("sleep_cb failed: %s", e)
-        try: await q.answer("⚠️ Error", show_alert=True)
-        except: pass
-
+        try:
+            await q.answer("Oops, try again", show_alert=False)
+        except Exception:
+            pass
 
 def _current_voice_name(uid: str) -> str:
     lang = user_languages.get(uid, "ru")
