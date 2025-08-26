@@ -4415,33 +4415,73 @@ async def test_mood(update: Update, context: ContextTypes.DEFAULT_TYPE):
     moods = MOODS_BY_LANG.get(lang, MOODS_BY_LANG["ru"])
     await update.message.reply_text(random.choice(moods))
 
-def give_trial_if_needed(user_id):
-    if got_trial(user_id):
+def give_trial_if_needed(user_id: str | int, days: int = 3) -> str | None:
+    """
+    Выдаёт триал, если ещё не выдавали. Возвращает ISO until или None.
+    Использует SQLite (extend_premium_days) + ваши got_trial/set_trial.
+    """
+    try:
+        # если уже был триал — не выдаём повторно
+        if got_trial(user_id):
+            return None
+
+        # продлеваем/назначаем премиум на days
+        until_iso = extend_premium_days(user_id, days)
+
+        # помечаем, что триал выдан (ваша старая функция/флаг)
+        set_trial(user_id)
+
+        logging.info(f"🎁 Trial: user {user_id} -> +{days} days (until {until_iso})")
+        return until_iso
+    except Exception as e:
+        logging.exception(f"give_trial_if_needed failed: {e}")
+        return None
+
+
+def handle_referral(user_id: str | int, referrer_id: str | int, days: int = 7) -> bool:
+    """
+    Начисляет реферальный бонус +days дня обоим (использует SQLite).
+    Возвращает True, если бонусы выданы.
+    """
+    try:
+        u = str(user_id)
+        r = str(referrer_id)
+
+        # нельзя пригласить самого себя
+        if not r or r == u:
+            return False
+
+        # если есть ваша защита от повторов — проверьте тут (опционально):
+        # if already_referred(u): return False
+
+        # оба получают +days (наращиваем к текущему, если уже есть)
+        u_until = extend_premium_days(u, days)
+        r_until = extend_premium_days(r, days)
+
+        # триальный флаг (ок: отметим получателя; рефереру можно не ставить)
+        try:
+            if not got_trial(u):
+                set_trial(u)
+        except Exception:
+            pass
+
+        # ваша аналитика/лог
+        try:
+            add_referral(u, r)
+        except Exception:
+            pass
+
+        logging.info(f"👥 Referral: {u} via {r} -> +{days} days each (u:{u_until}, r:{r_until})")
+        return True
+    except Exception as e:
+        logging.exception(f"handle_referral failed: {e}")
         return False
-    now = datetime.utcnow()
-    set_premium_until(user_id, now + timedelta(days=3), add_days=True)
-    set_trial(user_id)
-    logging.info(f"Пользователь {user_id} получил триал до {now + timedelta(days=3)}")
-    return True
-    
-def handle_referral(user_id, referrer_id):
-    # Проверка, был ли уже trial
-    if got_trial(user_id):
-        # уже был триал, но можем добавить дни!
-        pass
-    now = datetime.utcnow()
-    set_premium_until(user_id, now + timedelta(days=7), add_days=True)
-    set_premium_until(referrer_id, now + timedelta(days=7), add_days=True)
-    set_trial(user_id)
-    set_trial(referrer_id)
-    add_referral(user_id, referrer_id)
-    logging.info(f"👥 Реферал: {user_id} пришёл по ссылке {referrer_id}, всем +7 дней")
-    return True
+
 
 async def invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
-    lang = user_languages.get(user_id, "ru")
-    invite_link = f"https://t.me/talktomindra_bot?start=ref{user_id}"
+    me = await context.bot.get_me()
+    uid = str(update.effective_user.id)
+    link = f"https://t.me/{me.username}?start=ref_{uid}"
     
     INVITE_TEXT = {
         "ru": (
