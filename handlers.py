@@ -228,7 +228,7 @@ REMIND_DB_PATH  = os.getenv("REMIND_DB_PATH",  os.path.join(DATA_DIR, "reminders
 # ==== Sleep (ambient only) ====
 _sleep_prefs: dict[str, dict] = {}
 
-def _sp(uid: str) -> dict:
+def _sleep_p(uid: str) -> dict:
     p = _sleep_prefs.get(uid)
     if not p:
         p = {"kind": "rain", "duration_min": 20, "gain_db": -20}
