@@ -2468,7 +2468,6 @@ def _parse_referrer_id(ref_code: str | None) -> str | None:
     return digits or None
 
 async def tz_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработчик нажатий на инлайн-кнопки tz:..."""
     q = update.callback_query
     if not q or not q.data or not q.data.startswith("tz:"):
         return
@@ -2499,59 +2498,58 @@ async def tz_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="Markdown"
         )
 
-    # === ФИНАЛ ОНБОРДИНГА: делаем только если ещё НЕ выдавали триал ===
+    # === ФИНАЛ ОНБОРДИНГА: здесь выдаём бонусы ===
     try:
-        if not got_trial(uid):
-            # 1) Реферал (если в /start был payload)
-            ref_bonus_given = False
-            ref_code = user_ref_args.pop(uid, None)   # ты сохраняешь это в /start
-            referrer_id = _parse_referrer_id(ref_code)
-            if referrer_id and referrer_id != uid:
-                try:
-                    ref_bonus_given = handle_referral(uid, referrer_id)  # твоя функция
-                except Exception as e:
-                    logging.warning(f"handle_referral error: {e}")
-                if ref_bonus_given:
+        # 1) Реферал (если /start был с ref-пейлоадом)
+        ref_bonus_given = False
+        referrer_id = user_ref_args.pop(uid, None)  # мы сохраняли это в /start
+        if referrer_id and referrer_id != uid:
+            try:
+                # process_referral(inviter_id, invitee_id, days)
+                if process_referral(referrer_id, uid, days=7):
+                    ref_bonus_given = True
                     bonus_text = REFERRAL_BONUS_TEXT.get(lang, REFERRAL_BONUS_TEXT["ru"])
                     await context.bot.send_message(chat_id=int(uid), text=bonus_text, parse_mode="Markdown")
-                    # уведомим пригласившего
+                    # уведомим пригласившего (не критично, можно молча)
                     try:
                         await context.bot.send_message(
                             chat_id=int(referrer_id),
-                            text="🎉 Твой друг зарегистрировался по твоей ссылке! Вам обоим начислено +7 дней Mindra+ 🎉"
+                            text=REFERRER_NOTIFY_TEXT.get(lang, REFERRER_NOTIFY_TEXT["ru"]),
+                            parse_mode="Markdown"
                         )
-                    except Exception as e:
-                        logging.warning(f"referrer notify failed: {e}")
-
-            # 2) Если не реферал — выдаём триал
-            if not ref_bonus_given:
-                try:
-                    trial_given = give_trial_if_needed(uid)  # твоя функция
-                except Exception as e:
-                    logging.warning(f"trial error: {e}")
-                    trial_given = False
-                if trial_given:
-                    trial_info = TRIAL_INFO_TEXT.get(lang, TRIAL_INFO_TEXT["ru"])
-                    await context.bot.send_message(chat_id=int(uid), text=trial_info, parse_mode="Markdown")
-
-            # 3) Инициализируем системный промпт/историю (как у тебя было в language_callback)
-            try:
-                mode = "support"
-                lang_prompt = LANG_PROMPTS.get(lang, LANG_PROMPTS["ru"])
-                mode_prompt = MODES[mode].get(lang, MODES[mode]['ru'])
-                system_prompt = f"{lang_prompt}\n\n{mode_prompt}"
-                conversation_history[uid] = [{"role": "system", "content": system_prompt}]
-                save_history(conversation_history)
+                    except Exception:
+                        pass
             except Exception as e:
-                logging.warning(f"history init failed: {e}")
+                logging.warning("process_referral failed: %s", e)
 
-            # 4) Welcome в самом конце
-            first_name = q.from_user.first_name or {"ru":"друг","uk":"друже","en":"friend"}.get(lang, "друг")
-            welcome_text = WELCOME_TEXTS.get(lang, WELCOME_TEXTS["ru"]).format(first_name=first_name)
-            await context.bot.send_message(chat_id=int(uid), text=welcome_text, parse_mode="Markdown")
+        # 2) Базовый триал 3 дня (идемпотентная функция — сама проверит, выдавался ли уже)
+        try:
+            granted_until_iso = grant_trial_if_eligible(uid, days=3)
+            if granted_until_iso:
+                txt = TRIAL_INFO_TEXT.get(lang, TRIAL_INFO_TEXT["ru"]).format(until=granted_until_iso)
+                await context.bot.send_message(chat_id=int(uid), text=txt, parse_mode="Markdown")
+        except Exception as e:
+            logging.warning("Trial grant failed: %s", e)
+
+        # 3) Инициализируем system prompt/историю
+        try:
+            mode = "support"
+            lang_prompt = LANG_PROMPTS.get(lang, LANG_PROMPTS["ru"])
+            mode_prompt = MODES[mode].get(lang, MODES[mode]['ru'])
+            system_prompt = f"{lang_prompt}\n\n{mode_prompt}"
+            conversation_history[uid] = [{"role": "system", "content": system_prompt}]
+            save_history(conversation_history)
+        except Exception as e:
+            logging.warning("history init failed: %s", e)
+
+        # 4) Welcome
+        first_name = q.from_user.first_name or {"ru":"друг","uk":"друже","en":"friend"}.get(lang, "друг")
+        welcome_text = WELCOME_TEXTS.get(lang, WELCOME_TEXTS["ru"]).format(first_name=first_name)
+        await context.bot.send_message(chat_id=int(uid), text=welcome_text, parse_mode="Markdown")
+
     except Exception as e:
         logging.exception(f"onboarding finalize error: {e}")
-
+        
 async def points_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
