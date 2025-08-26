@@ -168,13 +168,57 @@ def get_premium_until(user_id: str | int) -> str | None:
         row = db.execute("SELECT until FROM premium WHERE user_id=?;", (uid,)).fetchone()
         return row[0] if row else None
 
+
+def _set_premium_until_iso(uid: str, until_iso: str) -> None:
+    with sqlite3.connect(PREMIUM_DB_PATH) as db:
+        db.execute(
+            "INSERT INTO premium(user_id, until) VALUES(?, ?) "
+            "ON CONFLICT(user_id) DO UPDATE SET until=excluded.until;",
+            (uid, until_iso),
+        )
+        db.commit()
+
+def set_premium_until(user_id, until, add_days: bool = False) -> None:
+    """
+    Back-compat:
+      - until может быть datetime ИЛИ ISO-строкой.
+      - add_days=True — старое поведение «добавить N дней» (если until — datetime в будущем).
+    Новым кодом лучше пользоваться set_premium_until_dt() или extend_premium_days().
+    """
+    uid = str(user_id)
+
+    # Если просили именно "добавить дни"
+    if add_days and isinstance(until, datetime):
+        now = datetime.now(timezone.utc)
+        if until.tzinfo is None:
+            until = until.replace(tzinfo=timezone.utc)
+        else:
+            until = until.astimezone(timezone.utc)
+        delta_days = max(0, int((until - now).total_seconds() // 86400))
+        if delta_days > 0:
+            extend_premium_days(uid, delta_days)
+        else:
+            # если delta_days == 0, просто выставим указанную дату
+            _set_premium_until_iso(uid, until.isoformat())
+        return
+
+    # Обычная установка срока
+    if isinstance(until, datetime):
+        if until.tzinfo is None:
+            until = until.replace(tzinfo=timezone.utc)
+        else:
+            until = until.astimezone(timezone.utc)
+        _set_premium_until_iso(uid, until.isoformat())
+    else:
+        _set_premium_until_iso(uid, str(until))
+
 def set_premium_until_dt(user_id: str | int, dt_utc: datetime) -> None:
     if dt_utc.tzinfo is None:
         dt_utc = dt_utc.replace(tzinfo=timezone.utc)
     else:
         dt_utc = dt_utc.astimezone(timezone.utc)
-    set_premium_until(user_id, dt_utc.isoformat())
-
+    _set_premium_until_iso(str(user_id), dt_utc.isoformat())
+    
 def extend_premium_days(user_id: str | int, days: int) -> str:
     now = datetime.now(timezone.utc)
     cur = get_premium_until(user_id)
