@@ -136,7 +136,7 @@ user_points = {}
 user_message_count = {}
 user_goal_count = {}
 user_languages = {}  # {user_id: 'ru'/'uk'/'md'/'be'/'kk'/'kg'/'hy'/'ka'/'ce'}
-user_ref_args = {}
+user_ref_args: dict[str, str] = {}
 user_last_polled = {}
 user_last_report_sent = {}  # user_id: date (ISO)
 user_last_daily_sent = {}  # user_id: date (iso)
@@ -3681,26 +3681,36 @@ def get_random_daily_task(user_id: str) -> str:
     return random.choice(tasks)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
-    logging.info(f"/start: user_id={user_id}, context.args={context.args}, message.text={update.message.text}")
+    uid = str(update.effective_user.id)
+    logging.info(f"/start: user_id={uid}, context.args={context.args}, message.text={update.message.text}")
 
-    # --- 0. Если язык ещё не выбран — показываем кнопки выбора ---
-    if user_id not in user_languages:
-        # Если в context.args есть ref — сохраняем!
-        if context.args and context.args[0].startswith("ref"):
-            user_ref_args[user_id] = context.args[0]
+    # 1) Сохраняем реф-пейлоад из deep-link (/start ref_XXXX)
+    ref_payload = None
+    if context.args:
+        a0 = context.args[0]
+        if isinstance(a0, str):
+            if a0.startswith("ref_"):
+                ref_payload = a0[4:]
+            elif a0.startswith("ref"):
+                ref_payload = a0[3:]
+    if ref_payload:
+        # будет использовано позже в tz_callback для начисления бонусов
+        user_ref_args[uid] = ref_payload
+
+    # 2) Если язык ещё не выбран — показываем выбор языка и выходим
+    if uid not in user_languages:
         keyboard = [
             [
                 InlineKeyboardButton("Русский 🇷🇺", callback_data="lang_ru"),
-                InlineKeyboardButton("Українська 🇺🇦", callback_data="lang_uk")
+                InlineKeyboardButton("Українська 🇺🇦", callback_data="lang_uk"),
             ],
             [
                 InlineKeyboardButton("Moldovenească 🇲🇩", callback_data="lang_md"),
-                InlineKeyboardButton("Беларуская 🇧🇾", callback_data="lang_be")
+                InlineKeyboardButton("Беларуская 🇧🇾", callback_data="lang_be"),
             ],
             [
                 InlineKeyboardButton("Қазақша 🇰🇿", callback_data="lang_kk"),
-                InlineKeyboardButton("Кыргызча 🇰🇬", callback_data="lang_kg")
+                InlineKeyboardButton("Кыргызча 🇰🇬", callback_data="lang_kg"),
             ],
             [
                 InlineKeyboardButton("Հայերեն 🇦🇲", callback_data="lang_hy"),
@@ -3708,19 +3718,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ],
             [
                 InlineKeyboardButton("Нохчийн мотт 🇷🇺", callback_data="lang_ce"),
-                InlineKeyboardButton("English 🇬🇧", callback_data="lang_en")
-            ]
+                InlineKeyboardButton("English 🇬🇧", callback_data="lang_en"),
+            ],
         ]
         await update.message.reply_text(
             "🌐 Please select the language of communication:",
-            reply_markup=InlineKeyboardMarkup(keyboard)
+            reply_markup=InlineKeyboardMarkup(keyboard),
         )
         return
-     # Если язык уже выбран — обычное приветствие
-    lang_code = user_languages.get(user_id, "ru")
+
+    # 3) Язык уже выбран — обычное приветствие
+    lang_code = user_languages.get(uid, "ru")
     first_name = update.effective_user.first_name or "друг"
     welcome_text = WELCOME_TEXTS.get(lang_code, WELCOME_TEXTS["ru"]).format(first_name=first_name)
-    await update.message.reply_text(welcome_text, parse_mode="Markdown")   
+    await update.message.reply_text(welcome_text, parse_mode="Markdown")
 
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
