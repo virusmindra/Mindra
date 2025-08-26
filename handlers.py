@@ -4604,7 +4604,7 @@ handlers = [
     CommandHandler("voice_settings", voice_settings),
     CallbackQueryHandler(voice_settings_cb, pattern=r"^v:"),
     CommandHandler("sleep", sleep_cmd),
-    CallbackQueryHandler(sleep_cb, pattern=r"^sl:"),
+    CallbackQueryHandler(sleep_cb, pattern=r"^sleep:"),
     
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
