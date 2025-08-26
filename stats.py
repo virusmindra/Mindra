@@ -168,16 +168,6 @@ def get_premium_until(user_id: str | int) -> str | None:
         row = db.execute("SELECT until FROM premium WHERE user_id=?;", (uid,)).fetchone()
         return row[0] if row else None
 
-def set_premium_until(user_id: str | int, until_iso: str) -> None:
-    uid = str(user_id)
-    with sqlite3.connect(PREMIUM_DB_PATH) as db:
-        db.execute(
-            "INSERT INTO premium(user_id, until) VALUES(?, ?) "
-            "ON CONFLICT(user_id) DO UPDATE SET until=excluded.until;",
-            (uid, until_iso),
-        )
-        db.commit()
-
 def set_premium_until_dt(user_id: str | int, dt_utc: datetime) -> None:
     if dt_utc.tzinfo is None:
         dt_utc = dt_utc.replace(tzinfo=timezone.utc)
