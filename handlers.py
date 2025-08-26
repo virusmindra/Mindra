@@ -225,20 +225,19 @@ PREMIUM_DB_PATH = os.getenv("PREMIUM_DB_PATH", os.path.join(DATA_DIR, "premium.s
 REMIND_DB_PATH  = os.getenv("REMIND_DB_PATH",  os.path.join(DATA_DIR, "reminders.sqlite3"))
 
 # ==== Sleep (ambient only) ====
-sleep_prefs: dict[str, dict] = {}
+_sleep_prefs: dict[str, dict] = {}
 
 def _sp(uid: str) -> dict:
-    if uid not in sleep_prefs:
-        sleep_prefs[uid] = {
-            "kind": "rain",       # ключ из BGM_PRESETS
-            "gain_db": -20,       # громкость фона (дБ)
-            "duration_min": 20,   # длительность в минутах
-        }
-    return sleep_prefs[uid]
+    p = _sleep_prefs.get(uid)
+    if not p:
+        p = {"kind": "rain", "duration_min": 20, "gain_db": -20}
+        _sleep_prefs[uid] = p
+    return p
 
 def _sleep_i18n(uid: str) -> dict:
     lang = user_languages.get(uid, "ru")
     return SLEEP_UI_TEXTS.get(lang, SLEEP_UI_TEXTS["ru"])
+
     
 def _v_i18n(uid: str) -> dict:
     """Короткие тексты для /voice_mode (on/off/help)."""
