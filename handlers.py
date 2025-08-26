@@ -1379,18 +1379,61 @@ def require_premium_message(update, context, uid):
         reply_markup=_premium_kb(uid)
     )
 
+# ---- helpers ----
+def _engine_label_for(uid: str, engine_key: str) -> str:
+    """Красивое имя движка с локализацией из _v_i18n."""
+    t = _v_i18n(uid)
+    k = (engine_key or "").strip().lower()
+    if k == "eleven":
+        return t.get("engine_eleven", "ElevenLabs")
+    if k in ("gtts", "gtts"):
+        return t.get("engine_gtts", "gTTS")
+    return engine_key or "gTTS"
+
+
+# ---- /voice_mode ----
 async def voice_mode_cmd(update, context):
     uid = str(update.effective_user.id)
     t = _v_i18n(uid)
+    p = _vp(uid)  # здесь лежат engine/speed и т.д.
+
+    # премиум-гейт
     if not is_premium(uid):
         return await require_premium_message(update, context, uid)
+
+    # показать текущий статус, если без аргументов
     if not context.args:
-        return await update.message.reply_text(t["help"])
+        is_on = user_voice_mode.get(uid, False)
+        eng_label = _engine_label_for(uid, p.get("engine", "gTTS"))
+        speed = p.get("speed", 1.0)
+
+        base = t.get("status_on", t.get("on", "🔊 Voice mode: ON")) if is_on \
+               else t.get("status_off", t.get("off", "🔇 Voice mode: OFF"))
+
+        extra = f"\n{t.get('label_engine','Движок')}: *{eng_label}* • {t.get('label_speed','Скорость')}: *{speed:.1f}x*"
+        hint  = f"\n\n{t.get('hint_settings','Настроить: /voice_settings')}"
+        return await update.message.reply_text(base + extra + hint, parse_mode="Markdown")
+
+    # включить/выключить
     arg = context.args[0].lower()
-    if arg not in ("on","off"):
-        return await update.message.reply_text(t["err"])
-    user_voice_mode[uid] = (arg=="on")
-    await update.message.reply_text(t["on"] if user_voice_mode[uid] else t["off"])
+    if arg not in ("on", "off"):
+        return await update.message.reply_text(t.get("err", "Использование: /voice_mode on|off"))
+
+    new_state = (arg == "on")
+    user_voice_mode[uid] = new_state
+
+    base = t.get("status_on", t.get("on", "🔊 Voice mode: ON")) if new_state \
+           else t.get("status_off", t.get("off", "🔇 Voice mode: OFF"))
+
+    # если включили — покажем подробности (движок/скорость)
+    if new_state:
+        eng_label = _engine_label_for(uid, p.get("engine", "gTTS"))
+        speed = p.get("speed", 1.0)
+        extra = f"\n{t.get('label_engine','Движок')}: *{eng_label}* • {t.get('label_speed','Скорость')}: *{speed:.1f}x*"
+        hint  = f"\n\n{t.get('hint_settings','Настроить: /voice_settings')}"
+        return await update.message.reply_text(base + extra + hint, parse_mode="Markdown")
+    else:
+        return await update.message.reply_text(base)
 
 async def plus_callback(update, context):
     q = update.callback_query
