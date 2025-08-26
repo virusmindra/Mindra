@@ -329,7 +329,75 @@ async def menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # на всякий случай не роняем бот
         logging.exception("menu_cb failed: %s", e)
 
+def _menu_i18n(uid: str) -> dict:
+    lang = user_languages.get(uid, "ru")
+    return MENU_TEXTS.get(lang, MENU_TEXTS["ru"])
 
+def _engine_label(uid: str) -> str:
+    eng = _vp(uid).get("engine", "gTTS")
+    return "ElevenLabs" if str(eng).lower() == "eleven" else "gTTS"
+
+def _sleep_summary(uid: str) -> tuple[str, int, int]:
+    try:
+        p = _sleep_p(uid)  # твоя новая prefs-функция
+    except Exception:
+        p = {"kind": "rain", "duration_min": 15, "gain_db": -20}
+    kind = p.get("kind", "rain")
+    meta = BGM_PRESETS.get(kind, {})
+    label = meta.get("label", kind)
+    return label, int(p.get("duration_min", 15)), int(p.get("gain_db", -20))
+
+def _premium_summary(uid: str, t: dict) -> tuple[str, str]:
+    has = is_premium(uid)
+    until_iso = get_premium_until(uid)
+    if not has:
+        return (t["premium_no"], "")
+    dt_str = ""
+    try:
+        if until_iso:
+            dt = datetime.fromisoformat(until_iso)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            dt_str = t["until_fmt"].format(dt=dt.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"))
+    except Exception:
+        dt_str = ""
+    return (t["premium_yes"], dt_str)
+
+def _menu_home_text(uid: str) -> str:
+    t = _menu_i18n(uid)
+    eng = _engine_label(uid)
+    sleep_label, dur, gain = _sleep_summary(uid)
+    prem, until = _premium_summary(uid, t)
+    summary = t["summary"].format(engine=eng, sleep_sound=sleep_label, dur=dur, gain=gain, premium=prem, until=until)
+    return f"*{t['title']}*\n\n{summary}"
+
+def _menu_home_kb(uid: str) -> InlineKeyboardMarkup:
+    t = _menu_i18n(uid)
+    rows = [
+        [InlineKeyboardButton(t["voice"], callback_data="m:nav:voice"),
+         InlineKeyboardButton(t["sleep"], callback_data="m:nav:sleep")],
+        [InlineKeyboardButton(t["story"], callback_data="m:nav:story"),
+         InlineKeyboardButton(t["premium"], callback_data="m:nav:premium")],
+        [InlineKeyboardButton(t["profile"], callback_data="m:nav:profile"),
+         InlineKeyboardButton(t["help"], callback_data="m:nav:help")],
+        [InlineKeyboardButton(t["close"], callback_data="m:nav:close")],
+    ]
+    return InlineKeyboardMarkup(rows)
+
+def _premium_text(uid: str) -> str:
+    t = _menu_i18n(uid)
+    prem, until = _premium_summary(uid, t)
+    return f"*{t['premium_title']}*\n\n{prem}{until}"
+
+def _profile_kb(uid: str) -> InlineKeyboardMarkup:
+    t = _menu_i18n(uid)
+    rows = [
+        [InlineKeyboardButton(t["lang"], callback_data="m:nav:lang"),
+         InlineKeyboardButton(t["tz"],   callback_data="m:nav:tz")],
+        [InlineKeyboardButton(t["back"], callback_data="m:nav:home")],
+    ]
+    return InlineKeyboardMarkup(rows)
+    
 def _sleep_p(uid: str) -> dict:
     p = _sleep_prefs.get(uid)
     if not p:
