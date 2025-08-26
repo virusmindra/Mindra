@@ -1431,11 +1431,22 @@ def _week_start_iso(dt: datetime) -> str:
     return monday.date().isoformat()
 
 def _premium_kb(uid: str) -> InlineKeyboardMarkup:
-    t = _p_i18n(uid)
-    return InlineKeyboardMarkup([
-        [InlineKeyboardButton(t["btn_get"],  callback_data="plus:buy")],
-        [InlineKeyboardButton(t["btn_code"], callback_data="plus:code")],
-    ])
+    # тексты берём из общего меню (MENU_TEXTS); если его нет — можешь вернуть на _p_i18n(uid)
+    t = _menu_i18n(uid)
+
+    rows = [
+        # новые пункты раздела «Премиум»
+        [InlineKeyboardButton(t["premium_days"], callback_data="m:premium:days")],
+        [InlineKeyboardButton(t["invite"],       callback_data="m:premium:invite")],
+
+        # СТАРЫЕ обработчики оплаты/кода — сохраняем callbacks, чтобы всё продолжало работать
+        [InlineKeyboardButton(t.get("premium_buy", "💎 Mindra+"), callback_data="plus:buy")],
+        [InlineKeyboardButton(t.get("redeem_code", "🎟 Ввести код"), callback_data="plus:code")],
+
+        # назад в главное меню
+        [InlineKeyboardButton(t["back"], callback_data="m:nav:home")],
+    ]
+    return InlineKeyboardMarkup(rows)
 
 def require_premium(func):
     async def wrapper(update, context, *args, **kwargs):
