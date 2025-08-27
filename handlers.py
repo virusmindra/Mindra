@@ -226,6 +226,10 @@ os.makedirs(DATA_DIR, exist_ok=True)
 PREMIUM_DB_PATH = os.getenv("PREMIUM_DB_PATH", os.path.join(DATA_DIR, "premium.sqlite3"))
 REMIND_DB_PATH  = os.getenv("REMIND_DB_PATH",  os.path.join(DATA_DIR, "reminders.sqlite3"))
 
+
+# URL страницы оплаты — замени на свою
+PREMIUM_URL = "https://example.com/pay"
+
 # ==== Sleep (ambient only) ====
 _sleep_prefs: dict[str, dict] = {}
 
@@ -1619,24 +1623,49 @@ def _week_start_iso(dt: datetime) -> str:
     monday = dt - timedelta(days=dt.weekday())
     return monday.date().isoformat()
 
-def _premium_kb(uid: str) -> InlineKeyboardMarkup:
-    # тексты берём из общего меню (MENU_TEXTS); если его нет — можешь вернуть на _p_i18n(uid)
+
+def _menu_main_kb(uid: str) -> InlineKeyboardMarkup:
     t = _menu_i18n(uid)
-
     rows = [
-        # новые пункты раздела «Премиум»
-        [InlineKeyboardButton(t["premium_days"], callback_data="m:premium:days")],
-        [InlineKeyboardButton(t["invite"],       callback_data="m:premium:invite")],
-
-        # СТАРЫЕ обработчики оплаты/кода — сохраняем callbacks, чтобы всё продолжало работать
-        [InlineKeyboardButton(t.get("premium_buy", "💎 Mindra+"), callback_data="plus:buy")],
-        [InlineKeyboardButton(t.get("redeem_code", "🎟 Ввести код"), callback_data="plus:code")],
-
-        # назад в главное меню
-        [InlineKeyboardButton(t["back"], callback_data="m:nav:home")],
+        [InlineKeyboardButton(t["features"],       callback_data="m:feat:open"),
+         InlineKeyboardButton(t["plus_features"],  callback_data="m:plus:open")],
+        [InlineKeyboardButton(t["premium"],        callback_data="m:prem:open")],
+        [InlineKeyboardButton(t["close"],          callback_data="m:nav:close")],
     ]
     return InlineKeyboardMarkup(rows)
 
+def _features_kb(uid: str) -> InlineKeyboardMarkup:
+    t = _menu_i18n(uid)
+    rows = [
+        [InlineKeyboardButton(t["feat_goals"],     callback_data="m:feat:goals")],
+        [InlineKeyboardButton(t["feat_habits"],    callback_data="m:feat:habits")],
+        [InlineKeyboardButton(t["feat_reminders"], callback_data="m:feat:reminders")],
+        [InlineKeyboardButton(t["feat_points"],    callback_data="m:feat:points")],
+        [InlineKeyboardButton(t["feat_mood"],      callback_data="m:feat:mood")],
+        [InlineKeyboardButton(t["back"],           callback_data="m:nav:home")],
+    ]
+    return InlineKeyboardMarkup(rows)
+
+def _plus_features_kb(uid: str) -> InlineKeyboardMarkup:
+    t = _menu_i18n(uid)
+    rows = [
+        [InlineKeyboardButton(t["plus_voice"], callback_data="m:plus:voice")],
+        [InlineKeyboardButton(t["plus_sleep"], callback_data="m:plus:sleep")],
+        [InlineKeyboardButton(t["plus_story"], callback_data="m:plus:story")],
+        [InlineKeyboardButton(t["back"],       callback_data="m:nav:home")],
+    ]
+    return InlineKeyboardMarkup(rows)
+
+def _premium_kb(uid: str) -> InlineKeyboardMarkup:
+    t = _menu_i18n(uid)
+    rows = [
+        [InlineKeyboardButton(t["premium_days"], callback_data="m:premium:days")],
+        [InlineKeyboardButton(t["invite"],       callback_data="m:premium:invite")],
+        [InlineKeyboardButton(t["premium_buy"],  url=PREMIUM_URL)],
+        [InlineKeyboardButton(t["back"],         callback_data="m:nav:home")],
+    ]
+    return InlineKeyboardMarkup(rows)
+    
 def require_premium(func):
     async def wrapper(update, context, *args, **kwargs):
         uid = str(update.effective_user.id)
