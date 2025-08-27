@@ -243,6 +243,36 @@ async def menu_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=_menu_main_kb(uid),
     )
 
+# универсальный «шим», чтобы любой командный хендлер можно было вызвать из callback
+def _shim_update_for_cb(q: CallbackQuery, context) -> "object":
+    chat_id = q.message.chat.id
+    user = q.from_user
+    bot = context.bot
+
+    class _Msg:
+        async def reply_text(self, text, **kw):
+            await bot.send_message(chat_id=chat_id, text=text, **kw)
+
+    class _Upd:
+        pass
+
+    u = _Upd()
+    u.effective_user = user
+    u.effective_chat = q.message.chat
+    u.message = _Msg()
+    return u
+
+async def _try_call(names: list[str], update_from_cb: Update, context) -> bool:
+    for name in names:
+        func = globals().get(name)
+        if callable(func):
+            try:
+                await func(update_from_cb, context)
+                return True
+            except Exception as e:
+                logging.warning("call %s failed: %s", name, e)
+    return False
+
 async def menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     if not q or not q.data or not q.data.startswith("m:"):
