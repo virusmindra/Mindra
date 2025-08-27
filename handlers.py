@@ -421,6 +421,18 @@ def _menu_kb_home(uid: str) -> InlineKeyboardMarkup:
     ]
     return InlineKeyboardMarkup(rows)
 
+def _menu_kb_features(uid: str) -> InlineKeyboardMarkup:
+    t = _menu_i18n(uid)
+    rows = [
+        [InlineKeyboardButton(t["feat_tracker"],   callback_data="m:feat:tracker")],
+        [InlineKeyboardButton(t["features_mode"],  callback_data="m:feat:mode")],
+        [InlineKeyboardButton(t["feat_reminders"], callback_data="m:feat:reminders")],
+        [InlineKeyboardButton(t["feat_points"],    callback_data="m:feat:points")],
+        [InlineKeyboardButton(t["feat_mood"],      callback_data="m:feat:mood")],
+        [InlineKeyboardButton(t["back"],           callback_data="m:nav:home")],
+    ]
+    return InlineKeyboardMarkup(rows)
+
 def _features_text(uid: str) -> str:
     t = _menu_i18n(uid)
     return f"*{t['feat_title']}*\n{t['feat_body']}"
