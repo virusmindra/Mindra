@@ -403,10 +403,19 @@ def _menu_home_kb(uid: str) -> InlineKeyboardMarkup:
     ]
     return InlineKeyboardMarkup(rows)
 
+def _features_text(uid: str) -> str:
+    t = _menu_i18n(uid)
+    return f"*{t['feat_title']}*\n{t['feat_body']}"
+
+def _plus_features_text(uid: str) -> str:
+    t = _menu_i18n(uid)
+    return f"*{t['plus_title']}*\n{t['plus_body']}"
+
 def _premium_text(uid: str) -> str:
     t = _menu_i18n(uid)
-    prem, until = _premium_summary(uid, t)
-    return f"*{t['premium_title']}*\n\n{prem}{until}"
+    # шапку «премиум до…» возьмём из общего заголовка
+    return _menu_header_text(uid).replace(t["title"], t["prem_title"])
+
 
 def _profile_kb(uid: str) -> InlineKeyboardMarkup:
     t = _menu_i18n(uid)
