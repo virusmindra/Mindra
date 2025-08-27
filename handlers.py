@@ -170,6 +170,7 @@ user_last_daily_sent = {}  # user_id: date (iso)
 user_timezones = {}
 user_voice_mode = {}  # {user_id: bool}
 user_voice_prefs = {}
+waiting_feedback: set[str] = set()
 
 MIN_HOURS_SINCE_LAST_POLL = 96  # минимум 4 дня между опросами для одного юзера
 MIN_HOURS_SINCE_ACTIVE = 8      # не отправлять, если был онлайн последние 8 часов
