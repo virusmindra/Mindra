@@ -334,6 +334,20 @@ def _menu_i18n(uid: str) -> dict:
     lang = user_languages.get(uid, "ru")
     return MENU_TEXTS.get(lang, MENU_TEXTS["ru"])
 
+def _menu_header_text(uid: str) -> str:
+    t = _menu_i18n(uid)
+    until = get_premium_until(uid)
+    if not until:
+        return f"*{t['title']}*\n{t['premium_none']}"
+    try:
+        dt = datetime.fromisoformat(until)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        until_str = dt.astimezone(timezone.utc).isoformat()
+    except Exception:
+        until_str = until
+    return f"*{t['title']}*\n{t['premium_until'].format(until=until_str)}"
+
 def _engine_label(uid: str) -> str:
     eng = _vp(uid).get("engine", "gTTS")
     return "ElevenLabs" if str(eng).lower() == "eleven" else "gTTS"
