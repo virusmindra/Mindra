@@ -242,117 +242,165 @@ async def menu_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=_menu_main_kb(uid),
     )
 
-# колбэки меню
 async def menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
-    if not q or not q.data.startswith("m:"):
+    if not q or not q.data or not q.data.startswith("m:"):
         return
     await q.answer()
-
     uid = str(q.from_user.id)
-    parts = q.data.split(":")
-    sec = parts[1]
-    act = parts[2] if len(parts) > 2 else ""
+    t = _menu_i18n(uid)
 
-    # навигация
-    if sec == "nav":
-        if act == "home":
-            return await q.edit_message_text(
-                _menu_header_text(uid),
-                parse_mode="Markdown",
-                reply_markup=_menu_main_kb(uid)
-            )
-        if act == "close":
-            try:
-                return await q.delete_message()
-            except Exception:
-                return
+    # Навигация
+    if q.data == "m:nav:home":
+        try:
+            await q.edit_message_text(_menu_home_text(uid), reply_markup=_menu_kb_home(uid), parse_mode="Markdown")
+        except:
+            await context.bot.send_message(chat_id=q.message.chat.id, text=_menu_home_text(uid),
+                                           reply_markup=_menu_kb_home(uid), parse_mode="Markdown")
+        return
+    if q.data == "m:nav:features":
+        return await q.edit_message_text(f"*{t['feat_title']}*\n{t['feat_body']}",
+                                         parse_mode="Markdown", reply_markup=_menu_kb_features(uid))
+    if q.data == "m:nav:plus":
+        return await q.edit_message_text(f"*{t['plus_title']}*\n{t['plus_body']}",
+                                         parse_mode="Markdown", reply_markup=_menu_kb_plus(uid))
+    if q.data == "m:nav:premium":
+        return await q.edit_message_text(f"*{t['prem_title']}*",
+                                         parse_mode="Markdown", reply_markup=_menu_kb_premium(uid))
+    if q.data == "m:nav:settings":
+        return await q.edit_message_text(f"*{t['set_title']}*\n{t['set_body']}",
+                                         parse_mode="Markdown", reply_markup=_menu_kb_settings(uid))
+    if q.data == "m:nav:close":
+        try:
+            await q.delete_message()
+        except:
+            pass
+        return
 
-    # обычные функции
-    if sec == "feat":
-        if act == "open":
-            return await q.edit_message_text(
-                _features_text(uid), parse_mode="Markdown", reply_markup=_features_kb(uid)
-            )
-        # попытка вызвать твои реальные меню если они есть:
-        if act == "goals":
-            try:
-                return await goals_menu(update, context)  # если есть
-            except Exception:
-                pass
-            return await q.edit_message_text("Команда целей: /goals", reply_markup=_features_kb(uid))
-        if act == "habits":
-            try:
-                return await habits_menu(update, context)
-            except Exception:
-                pass
-            return await q.edit_message_text("Команда привычек: /habits", reply_markup=_features_kb(uid))
-        if act == "reminders":
-            try:
-                return await reminders_menu(update, context)
-            except Exception:
-                pass
-            return await q.edit_message_text("Команда напоминаний: /reminders_menu", reply_markup=_features_kb(uid))
-        if act == "points":
-            try:
-                return await points_cmd(update, context)
-            except Exception:
-                pass
-            return await q.edit_message_text("Очки/титул: /points", reply_markup=_features_kb(uid))
-        if act == "mood":
-            try:
-                return await test_mood(update, context)
-            except Exception:
-                pass
-            return await q.edit_message_text("Тест настроения: /test_mood", reply_markup=_features_kb(uid))
+    # Шим для вызова команд
+    u = _shim_update_for_cb(q, context)
 
-    # премиум-функции
-    if sec == "plus":
-        if act == "open":
-            return await q.edit_message_text(
-                _plus_features_text(uid), parse_mode="Markdown", reply_markup=_plus_features_kb(uid)
-            )
-        if act == "voice":
-            try:
-                return await voice_settings(update, context)
-            except Exception:
-                pass
-            return await q.edit_message_text("Озвучка: /voice_settings", reply_markup=_plus_features_kb(uid))
-        if act == "sleep":
-            try:
-                return await sleep_cmd(update, context)
-            except Exception:
-                pass
-            return await q.edit_message_text("Звуки для сна: /sleep", reply_markup=_plus_features_kb(uid))
-        if act == "story":
-            try:
-                return await story_cmd(update, context)
-            except Exception:
-                pass
-            return await q.edit_message_text("Сказка: /story", reply_markup=_plus_features_kb(uid))
+    # Обычные функции
+    if q.data == "m:feat:tracker":
+        # один пункт → твой /tracker_menu с 4 кнопками
+        ok = await _try_call(["tracker_menu_cmd", "tracker_menu"], u, context)
+        if not ok:
+            await context.bot.send_message(q.message.chat.id, "Команда трекера недоступна.")
+        return
 
-    # премиум раздел
-    if sec == "prem":
-        if act == "open":
-            return await q.edit_message_text(
-                _premium_text(uid), parse_mode="Markdown", reply_markup=_premium_kb(uid)
-            )
+    if q.data == "m:feat:mode":
+        ok = await _try_call(["mode_cmd", "mode"], u, context)
+        if not ok:
+            await context.bot.send_message(q.message.chat.id, "Команда /mode недоступна.")
+        return
 
-    # действия внутри «Премиум»
-    if sec == "premium":
-        if act == "days":
-            try:
-                return await premium_days_cmd(update, context)
-            except Exception:
-                # фолбэк — просто показать хедер ещё раз
-                return await q.edit_message_text(
-                    _menu_header_text(uid), parse_mode="Markdown", reply_markup=_premium_kb(uid)
-                )
-        if act == "invite":
-            try:
-                return await invite_cmd(update, context)
-            except Exception:
-                return await q.edit_message_text("Пригласить друга: /invite", reply_markup=_premium_kb(uid))
+    if q.data == "m:feat:reminders":
+        ok = await _try_call(["reminders_menu_cmd", "reminders_menu"], u, context)
+        if not ok:
+            await context.bot.send_message(q.message.chat.id, "Меню напоминаний недоступно.")
+        return
+
+    if q.data == "m:feat:points":
+        ok = await _try_call(["points_cmd", "titles_status_cmd"], u, context)
+        if not ok:
+            await context.bot.send_message(q.message.chat.id, "Статус очков/титула недоступен.")
+        return
+
+    if q.data == "m:feat:mood":
+        ok = await _try_call(["test_mood_cmd", "test_mood"], u, context)
+        if not ok:
+            await context.bot.send_message(q.message.chat.id, "Тест настроения недоступен.")
+        return
+
+    # Премиум-функции
+    if q.data == "m:plus:voice":
+        ok = await _try_call(["voice_settings_cmd", "voice_settings"], u, context)
+        if not ok:
+            await context.bot.send_message(q.message.chat.id, "Настройки озвучки недоступны.")
+        return
+
+    if q.data == "m:plus:sleep":
+        ok = await _try_call(["sleep_cmd"], u, context)
+        if not ok:
+            await context.bot.send_message(q.message.chat.id, "Звуки сна недоступны.")
+        return
+
+    if q.data == "m:plus:story":
+        ok = await _try_call(["story_cmd", "story_menu_cmd"], u, context)
+        if not ok:
+            await context.bot.send_message(q.message.chat.id, "Меню сказок недоступно.")
+        return
+
+    if q.data == "m:plus:pmode":
+        ok = await _try_call(["premium_mode_cmd", "premium_mode"], u, context)
+        if not ok:
+            await context.bot.send_message(q.message.chat.id, "Premium-mode недоступен.")
+        return
+
+    if q.data == "m:plus:pstats":
+        ok = await _try_call(["premium_stats_cmd", "premium_stats", "premium_status"], u, context)
+        if not ok:
+            await context.bot.send_message(q.message.chat.id, "Premium-stats недоступен.")
+        return
+
+    if q.data == "m:plus:preport":
+        ok = await _try_call(["premium_report_cmd", "premium_report"], u, context)
+        if not ok:
+            await context.bot.send_message(q.message.chat.id, "Premium-report недоступен.")
+        return
+
+    if q.data == "m:plus:pchallenge":
+        ok = await _try_call(["premium_challenge_cmd", "premium_challenge"], u, context)
+        if not ok:
+            await context.bot.send_message(q.message.chat.id, "Premium-challenge недоступен.")
+        return
+
+    # Премиум раздел
+    if q.data == "m:premium:days":
+        ok = await _try_call(["premium_days_cmd", "premium_days"], u, context)
+        if not ok:
+            await context.bot.send_message(q.message.chat.id, "Не смог получить остаток премиума.")
+        return
+
+    if q.data == "m:premium:invite":
+        ok = await _try_call(["invite_cmd", "invite"], u, context)
+        if not ok:
+            await context.bot.send_message(q.message.chat.id, "Команда приглашения недоступна.")
+        return
+
+    # Настройки
+    if q.data == "m:set:lang":
+        # покажем тот же список языков, что в /start
+        kb = [
+            [InlineKeyboardButton("Русский 🇷🇺", callback_data="lang_ru"),
+             InlineKeyboardButton("Українська 🇺🇦", callback_data="lang_uk")],
+            [InlineKeyboardButton("Moldovenească 🇲🇩", callback_data="lang_md"),
+             InlineKeyboardButton("Беларуская 🇧🇾", callback_data="lang_be")],
+            [InlineKeyboardButton("Қазақша 🇰🇿", callback_data="lang_kk"),
+             InlineKeyboardButton("Кыргызча 🇰🇬", callback_data="lang_kg")],
+            [InlineKeyboardButton("Հայերեն 🇦🇲", callback_data="lang_hy"),
+             InlineKeyboardButton("ქართული 🇬🇪", callback_data="lang_ka")],
+            [InlineKeyboardButton("Нохчийн мотт 🇷🇺", callback_data="lang_ce"),
+             InlineKeyboardButton("English 🇬🇧", callback_data="lang_en")],
+            [InlineKeyboardButton(t["back"], callback_data="m:nav:settings")],
+        ]
+        return await q.edit_message_text(f"*{t['set_title']}*\n{t['set_body']}",
+                                         parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb))
+
+    if q.data == "m:set:tz":
+        # переиспользуем твой /settings (там уже есть тайм-зона)
+        ok = await _try_call(["settings_cmd", "settings"], u, context)
+        if not ok:
+            await context.bot.send_message(q.message.chat.id, "Меню настроек недоступно.")
+        return
+
+    if q.data == "m:set:feedback":
+        await q.edit_message_text(t["feedback_ask"],
+                                  parse_mode="Markdown",
+                                  reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(t["back"], callback_data="m:nav:settings")]]))
+        # пометим, что ждём текст
+        waiting_feedback.add(uid)
+        return
 
 def _menu_i18n(uid: str) -> dict:
     lang = user_languages.get(uid, "ru")
