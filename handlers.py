@@ -500,6 +500,42 @@ def _menu_kb_home(uid: str) -> InlineKeyboardMarkup:
     ]
     return InlineKeyboardMarkup(rows)
 
+
+def _menu_kb_plus(uid: str) -> InlineKeyboardMarkup:
+    t = _menu_i18n(uid)
+    rows = [
+        [InlineKeyboardButton(t["plus_voice"],      callback_data="m:plus:voice")],
+        [InlineKeyboardButton(t["plus_sleep"],      callback_data="m:plus:sleep")],
+        [InlineKeyboardButton(t["plus_story"],      callback_data="m:plus:story")],
+        [InlineKeyboardButton(t["plus_pmode"],      callback_data="m:plus:pmode")],
+        [InlineKeyboardButton(t["plus_pstats"],     callback_data="m:plus:pstats")],
+        [InlineKeyboardButton(t["plus_preport"],    callback_data="m:plus:preport")],
+        [InlineKeyboardButton(t["plus_pchallenge"], callback_data="m:plus:pchallenge")],
+        [InlineKeyboardButton(t["back"],            callback_data="m:nav:home")],
+    ]
+    return InlineKeyboardMarkup(rows)
+
+def _menu_kb_premium(uid: str) -> InlineKeyboardMarkup:
+    t = _menu_i18n(uid)
+    rows = [
+        [InlineKeyboardButton(t["premium_days"], callback_data="m:premium:days")],
+        [InlineKeyboardButton(t["invite"],       callback_data="m:premium:invite")],
+        # Заменишь URL на свою страницу оплаты
+        [InlineKeyboardButton(t["premium_buy"],  url="https://example.com/pay")],
+        [InlineKeyboardButton(t["back"],         callback_data="m:nav:home")],
+    ]
+    return InlineKeyboardMarkup(rows)
+
+def _menu_kb_settings(uid: str) -> InlineKeyboardMarkup:
+    t = _menu_i18n(uid)
+    rows = [
+        [InlineKeyboardButton(t["set_lang"],     callback_data="m:set:lang")],
+        [InlineKeyboardButton(t["set_tz"],       callback_data="m:set:tz")],
+        [InlineKeyboardButton(t["set_feedback"], callback_data="m:set:feedback")],
+        [InlineKeyboardButton(t["back"],         callback_data="m:nav:home")],
+    ]
+    return InlineKeyboardMarkup(rows)
+
 def _menu_kb_features(uid: str) -> InlineKeyboardMarkup:
     t = _menu_i18n(uid)
     rows = [
