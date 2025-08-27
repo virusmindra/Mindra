@@ -410,15 +410,13 @@ def _menu_home_text(uid: str) -> str:
     summary = t["summary"].format(engine=eng, sleep_sound=sleep_label, dur=dur, gain=gain, premium=prem, until=until)
     return f"*{t['title']}*\n\n{summary}"
 
-def _menu_home_kb(uid: str) -> InlineKeyboardMarkup:
+def _menu_kb_home(uid: str) -> InlineKeyboardMarkup:
     t = _menu_i18n(uid)
     rows = [
-        [InlineKeyboardButton(t["voice"], callback_data="m:nav:voice"),
-         InlineKeyboardButton(t["sleep"], callback_data="m:nav:sleep")],
-        [InlineKeyboardButton(t["story"], callback_data="m:nav:story"),
-         InlineKeyboardButton(t["premium"], callback_data="m:nav:premium")],
-        [InlineKeyboardButton(t["profile"], callback_data="m:nav:profile"),
-         InlineKeyboardButton(t["help"], callback_data="m:nav:help")],
+        [InlineKeyboardButton(t["features"], callback_data="m:nav:features")],
+        [InlineKeyboardButton(t["plus_features"], callback_data="m:nav:plus")],
+        [InlineKeyboardButton(t["premium"], callback_data="m:nav:premium")],
+        [InlineKeyboardButton(t["settings"], callback_data="m:nav:settings")],
         [InlineKeyboardButton(t["close"], callback_data="m:nav:close")],
     ]
     return InlineKeyboardMarkup(rows)
