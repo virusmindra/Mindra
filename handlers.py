@@ -404,11 +404,11 @@ def _premium_summary(uid: str, t: dict) -> tuple[str, str]:
 
 def _menu_home_text(uid: str) -> str:
     t = _menu_i18n(uid)
-    eng = _engine_label(uid)
-    sleep_label, dur, gain = _sleep_summary(uid)
-    prem, until = _premium_summary(uid, t)
-    summary = t["summary"].format(engine=eng, sleep_sound=sleep_label, dur=dur, gain=gain, premium=prem, until=until)
-    return f"*{t['title']}*\n\n{summary}"
+    until = get_premium_until(uid)
+    if until:
+        return f"*{t['title']}*\n\n" + t["premium_until"].format(until=until)
+    else:
+        return f"*{t['title']}*\n\n" + t["premium_none"]
 
 def _menu_kb_home(uid: str) -> InlineKeyboardMarkup:
     t = _menu_i18n(uid)
