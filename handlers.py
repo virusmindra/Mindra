@@ -134,7 +134,7 @@ from stats import (
     ensure_remind_db, remind_db,
 
     # --- premium/subscription ---
-    ensure_premium_db, migrate_premium_from_stats,
+    ensure_premium_db, migrate_premium_from_stats, ensure_premium_challenges,
     get_premium_until, set_premium_until, set_premium_until_dt, extend_premium_days,
     is_premium_db, _parse_any_dt,
 
