@@ -240,13 +240,12 @@ async def _dbg_cb(update, context):
         import logging
         logging.info("[DBG] callback data: %s", q.data)
         
-# /menu
-async def menu_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def menu_cmd(update, context):
     uid = str(update.effective_user.id)
     await update.message.reply_text(
         _menu_header_text(uid),
+        reply_markup=_menu_kb_home(uid),  # ← построили клавиатуру
         parse_mode="Markdown",
-        reply_markup=_menu_main_kb(uid),
     )
 
 async def _safe_answer(q):
