@@ -234,6 +234,12 @@ PREMIUM_URL = "https://example.com/pay"
 # ==== Sleep (ambient only) ====
 _sleep_prefs: dict[str, dict] = {}
 
+async def _dbg_cb(update, context):
+    q = update.callback_query
+    if q:
+        import logging
+        logging.info("[DBG] callback data: %s", q.data)
+        
 # /menu
 async def menu_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
@@ -5001,7 +5007,8 @@ handlers = [
     CallbackQueryHandler(voice_settings_cb, pattern=r"^v:"),
     CommandHandler("sleep", sleep_cmd),
     CallbackQueryHandler(sleep_cb, pattern=r"^sleep:"),
-    
+    CallbackQueryHandler(_dbg_cb,          pattern=r".+"), group=999,
+
     MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
     MessageHandler(filters.VOICE, handle_voice),
     MessageHandler(filters.COMMAND, unknown_command),  # Unknown в самом конце!
