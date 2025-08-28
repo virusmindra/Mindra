@@ -273,11 +273,11 @@ async def _try_call(names: list[str], update_from_cb: Update, context) -> bool:
                 logging.warning("call %s failed: %s", name, e)
     return False
 
-async def menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def menu_cb(update, context):
     q = update.callback_query
     if not q or not q.data or not q.data.startswith("m:"):
         return
-    await q.answer()
+    await _safe_answer(q) 
     uid = str(q.from_user.id)
     t = _menu_i18n(uid)
 
