@@ -98,6 +98,8 @@ async def main():
     # БД премиума
     ensure_premium_db()
 
+    ensure_premium_challenges() 
+    
     migrate_premium_from_stats(load_stats)
     
     # 👉 Сначала текст
