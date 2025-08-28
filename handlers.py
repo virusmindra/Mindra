@@ -128,7 +128,7 @@ from stats import (
     # --- constants ---
     ADMIN_USER_IDS, OWNER_ID,
     STATS_FILE, GOALS_FILE, HABITS_FILE,
-    DATA_DIR, REMIND_DB_PATH,
+    DATA_DIR, REMIND_DB_PATH, PREMIUM_DB_PATH,
 
     # --- reminders DB ---
     ensure_remind_db, remind_db,
