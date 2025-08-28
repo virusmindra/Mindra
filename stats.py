@@ -83,6 +83,27 @@ def ensure_premium_db():
         """)
         db.commit()
 
+# --- Premium Challenges ---
+def ensure_premium_challenges():
+    """Создаёт таблицу premium_challenges, если её нет."""
+    os.makedirs(DATA_DIR, exist_ok=True)
+    with sqlite3.connect(PREMIUM_DB_PATH) as db:
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS premium_challenges (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id    TEXT    NOT NULL,
+                title      TEXT    NOT NULL,
+                goal       INTEGER NOT NULL DEFAULT 1,
+                unit       TEXT    NOT NULL DEFAULT '',
+                progress   INTEGER NOT NULL DEFAULT 0,
+                status     TEXT    NOT NULL DEFAULT 'active', -- active|done|archived
+                created_at TEXT    NOT NULL DEFAULT (datetime('now')),
+                due_at     TEXT
+            );
+        """)
+        db.execute("CREATE INDEX IF NOT EXISTS idx_ch_user_status ON premium_challenges(user_id, status);")
+        db.commit()
+
 def _to_utc(dt: datetime) -> datetime:
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
