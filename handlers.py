@@ -243,6 +243,16 @@ async def menu_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=_menu_main_kb(uid),
     )
 
+async def _safe_answer(q):
+    try:
+        await q.answer()
+    except BadRequest as e:
+        s = str(e)
+        if "query is too old" in s or "query ID is invalid" in s:
+            pass
+        else:
+            raise
+            
 # универсальный «шим», чтобы любой командный хендлер можно было вызвать из callback
 def _shim_update_for_cb(q: CallbackQuery, context) -> "object":
     chat_id = q.message.chat.id
