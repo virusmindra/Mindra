@@ -2141,8 +2141,10 @@ def _user_tz(uid: str) -> ZoneInfo:
     except Exception:
         return ZoneInfo("Europe/Kyiv")
 
-def _to_epoch(dt_aware: datetime) -> int:
-    return int(dt_aware.timestamp())
+def _to_epoch(dt):
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return int(dt.timestamp())
 
 def _from_epoch(sec: int) -> datetime:
     return datetime.fromtimestamp(sec, tz=timezone.utc)
