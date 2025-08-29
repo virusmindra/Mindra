@@ -273,11 +273,14 @@ def _debounce(uid: str, key: str, ms: int = 800) -> bool:
     _last_action[k] = now
     return False
     
-async def _dbg_cb(update, context):
+async def _dbg_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
-    if q:
-        import logging
-        logging.info("[DBG] callback data: %s", q.data)
+    try:
+        await q.answer()
+    except Exception:
+        pass
+    logging.debug(f"[DBG] unhandled callback: {q.data if q else None}")
+    # ничего не отправляем
         
 async def menu_cmd(update, context):
     uid = str(update.effective_user.id)
