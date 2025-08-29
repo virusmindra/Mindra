@@ -1789,6 +1789,7 @@ async def plus_callback(update, context):
 
 async def premium_challenge_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
+    await q.answer()  # мгновенный answer — иначе 400 "query is too old"
     if not q or not q.data.startswith("pch:"):
         return
 
