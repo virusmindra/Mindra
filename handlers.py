@@ -1789,33 +1789,32 @@ async def plus_callback(update, context):
 
 async def premium_challenge_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
-    await q.answer()  # мгновенный answer — иначе 400 "query is too old"
-    if not q or not q.data.startswith("pch:"):
+    if not q or not q.data or not q.data.startswith("pch:"):
         return
+    # мгновенный answer, чтобы Telegram не ругался
+    try:
+        await q.answer()
+    except Exception:
+        pass
 
     uid = str(q.from_user.id)
-    if _debounce(uid, "pch_cb"):  # антидубль
-        try:
-            await q.answer()
-        except Exception:
-            pass
-        return
 
+    # антидубль: если у тебя есть _debounce — оставляем
     try:
-        await q.answer()  # сразу отвечаем, чтобы TG не считал запрос «старым»
+        if _debounce(uid, "pch_cb"):
+            return
     except Exception:
         pass
 
     lang = user_languages.get(uid, "ru")
     t = _p_i18n(uid)
 
-    action = q.data.split(":")[1]
-    try:
-        ensure_premium_challenges()
-    except Exception as e:
-        logging.warning("ensure_premium_challenges failed: %s", e)
+    # pch:ACTION[:ID]
+    parts = q.data.split(":", 2)
+    action = parts[1] if len(parts) > 1 else ""
+    cb_id = parts[2] if len(parts) > 2 else None
 
-    # на какой неделе работаем
+    # неделя по локальному времени
     try:
         tz = _user_tz(uid)
         now_local = datetime.now(tz)
@@ -1823,20 +1822,28 @@ async def premium_challenge_callback(update: Update, context: ContextTypes.DEFAU
         now_local = datetime.now()
     week_iso = _week_start_iso(now_local)
 
-    with sqlite3.connect(PREMIUM_DB_PATH) as db:
-        db.row_factory = sqlite3.Row
+    def _render(text_value: str, row_id: int, prefix: str | None = None):
+        """Возвращает (body, kb) с ОБЕИМИ кнопками."""
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton(t["btn_done"], callback_data=f"pch:done:{row_id}")],
+            [InlineKeyboardButton(t["btn_new"],  callback_data="pch:new")],
+        ])
+        title = t["challenge_title"]
+        head = (prefix + "\n\n") if prefix else ""
+        body = f"{head}*{title}*\n\n{text_value}"
+        return body, kb
 
-        # получим текущую строку (нам нужен id для кнопок)
+    def _ensure_and_get(db: sqlite3.Connection) -> sqlite3.Row:
+        db.row_factory = sqlite3.Row
         row = db.execute(
             "SELECT * FROM premium_challenges WHERE user_id=? AND week_start=?;",
             (uid, week_iso)
         ).fetchone()
-
-        # если совсем нет — создадим
         if not row:
             text = random.choice(CHALLENGE_BANK.get(lang, CHALLENGE_BANK["ru"]))
             db.execute(
-                "INSERT INTO premium_challenges (user_id, week_start, text, done, created_at) VALUES (?, ?, ?, 0, ?);",
+                "INSERT INTO premium_challenges (user_id, week_start, text, done, created_at) "
+                "VALUES (?, ?, ?, 0, ?);",
                 (uid, week_iso, text, _to_epoch(_utcnow()))
             )
             db.commit()
@@ -1844,43 +1851,67 @@ async def premium_challenge_callback(update: Update, context: ContextTypes.DEFAU
                 "SELECT * FROM premium_challenges WHERE user_id=? AND week_start=?;",
                 (uid, week_iso)
             ).fetchone()
+        return row
+
+    def _handle(db: sqlite3.Connection):
+        # получаем текущую строку
+        row = _ensure_and_get(db)
+
+        # если в callback есть id — предпочитаем его (на случай гонок)
+        if cb_id:
+            try:
+                rid = int(cb_id)
+                got = db.execute(
+                    "SELECT * FROM premium_challenges WHERE id=? AND user_id=? AND week_start=?;",
+                    (rid, uid, week_iso)
+                ).fetchone()
+                if got:
+                    row = got
+            except Exception:
+                pass
 
         if action == "done":
-            db.execute(
-                "UPDATE premium_challenges SET done=1 WHERE id=? AND user_id=?;",
-                (row["id"], uid)
-            )
+            db.execute("UPDATE premium_challenges SET done=1 WHERE id=? AND user_id=?;", (row["id"], uid))
             db.commit()
-            # после «выполнено» оставим кнопку «новый» (можно и обе оставить, по желанию)
-            kb = InlineKeyboardMarkup([
-                [InlineKeyboardButton(t["btn_new"],  callback_data="pch:new")],
-            ])
-            await q.edit_message_text(
-                f"✅ {t['done_ok']}\n\n*{t['challenge_title']}*\n\n{row['text']}",
-                parse_mode="Markdown",
-                reply_markup=kb
-            )
-            return
+            body, kb = _render(row["text"], row["id"], prefix=f"✅ {t['done_ok']}")
+            return body, kb
 
         if action == "new":
             new_text = random.choice(CHALLENGE_BANK.get(lang, CHALLENGE_BANK["ru"]))
-            db.execute(
-                "UPDATE premium_challenges SET text=?, done=0 WHERE id=? AND user_id=?;",
-                (new_text, row["id"], uid)
-            )
+            db.execute("UPDATE premium_challenges SET text=?, done=0 WHERE id=? AND user_id=?;",
+                       (new_text, row["id"], uid))
             db.commit()
-            # перерисовываем с ОБЕИМИ кнопками — вот это и чинило баг «кнопки пропали»
-            kb = InlineKeyboardMarkup([
-                [InlineKeyboardButton(t["btn_done"], callback_data=f"pch:done:{row['id']}")],
-                [InlineKeyboardButton(t["btn_new"],  callback_data="pch:new")],
-            ])
-            await q.edit_message_text(
-                f"🔄 {t['changed_ok']}\n\n*{t['challenge_title']}*\n\n{new_text}",
-                parse_mode="Markdown",
-                reply_markup=kb
-            )
+            body, kb = _render(new_text, row["id"], prefix=f"🔄 {t['changed_ok']}")
+            return body, kb
+
+        # по умолчанию просто показать текущий
+        body, kb = _render(row["text"], row["id"])
+        return body, kb
+
+    try:
+        with sqlite3.connect(PREMIUM_DB_PATH) as db:
+            body, kb = _handle(db)
+    except sqlite3.OperationalError as e:
+        # если таблицы нет — создаём и повторяем один раз
+        if "no such table: premium_challenges" in str(e):
+            try:
+                ensure_premium_challenges()
+                with sqlite3.connect(PREMIUM_DB_PATH) as db:
+                    body, kb = _handle(db)
+            except Exception as ee:
+                logging.exception("premium_challenge_callback retry failed: %s", ee)
+                return
+        else:
+            logging.exception("premium_challenge_callback failed: %s", e)
             return
-        
+
+    try:
+        await q.edit_message_text(body, parse_mode="Markdown", reply_markup=kb)
+    except Exception as e:
+        # если исходное сообщение нельзя редактировать — шлём новое
+        logging.warning("edit_message_text failed, sending new: %s", e)
+        await context.bot.send_message(chat_id=int(uid), text=body, parse_mode="Markdown", reply_markup=kb)
+
 def _week_start_iso(dt):
     """ISO даты понедельника текущей недели в локальном времени."""
     if isinstance(dt, datetime):
