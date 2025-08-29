@@ -98,9 +98,12 @@ def ensure_premium_challenges():
                 created_at INTEGER NOT NULL          -- epoch seconds (UTC)
             );
         """)
-        db.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_ch_user_week ON premium_challenges(user_id, week_start);")
+        db.execute("""
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_ch_user_week
+            ON premium_challenges(user_id, week_start);
+        """)
         db.commit()
-
+        
 def _to_utc(dt: datetime) -> datetime:
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
