@@ -5062,95 +5062,101 @@ async def premium_days(update, context):
         
 # Список всех команд/обработчиков для экспорта
 handlers = [
-    # --- Старт и информация
+    # --- Старт / Меню (сверху, чтобы всё меню ловилось первым)
     CommandHandler("start", start),
-    CommandHandler("help", help_command),
-    CommandHandler("about", about),
+    CommandHandler("menu", menu_cmd),
+    CallbackQueryHandler(menu_cb, pattern=r"^m:"),
 
-    # --- Язык
+    # --- Язык / Настройки
     CommandHandler("language", language_command),
-    CallbackQueryHandler(language_callback, pattern="^lang_"),
+    CallbackQueryHandler(language_callback, pattern=r"^lang_"),
     CommandHandler("settings", settings_command),
     CallbackQueryHandler(settings_language_callback, pattern=r"^setlang_"),
     CallbackQueryHandler(settings_tz_callback, pattern=r"^settz:"),
-    
-    # --- Цели и привычки
+    CallbackQueryHandler(tz_callback, pattern=r"^tz:"),
+
+    # --- Премиум и челленджи (подняты выше, чтобы команды не ловились чем-то ещё)
+    CommandHandler("premium", premium_cmd),
+    CommandHandler("premium_days", premium_days),              # твоя версия или premium_days_cmd
+    CommandHandler("premium_mode", premium_mode_cmd),
+    CommandHandler("premium_stats", premium_stats_cmd),
+    CommandHandler("premium_report", premium_report_cmd),
+
+    # Челлендж — отдельно и раньше всего остального
+    CommandHandler("premium_challenge", premium_challenge_cmd),
+    CallbackQueryHandler(premium_challenge_callback, pattern=r"^pch:"),
+
+    # --- Функции: трекер целей/привычек/напоминаний/очки/статистика
+    CommandHandler("tracker_menu", tracker_menu_cmd),
+    CallbackQueryHandler(gh_callback, pattern=r"^gh:"),
+
     CommandHandler("goal", goal),
     CommandHandler("goals", show_goals),
     CommandHandler("habit", habit),
     CommandHandler("habits", habits_list),
     CommandHandler("delete", delete_goal_command),
-    CommandHandler("tracker_menu", tracker_menu_cmd),
-    CallbackQueryHandler(gh_callback, pattern=r"^gh:"),
 
-    # Для показа списка целей и кнопок "Добавить/Удалить"
-    CallbackQueryHandler(show_goals, pattern="^show_goals$"),
-    CallbackQueryHandler(goal, pattern="^create_goal$"),
-    CallbackQueryHandler(delete_goal_choose_handler, pattern="^delete_goal_choose$"),
-    CallbackQueryHandler(delete_goal_confirm_handler, pattern="^delete_goal_\\d+$"),
-    CallbackQueryHandler(show_habits, pattern="^show_habits$"),
-    CallbackQueryHandler(create_habit_handler, pattern="^create_habit$"),
-    CallbackQueryHandler(delete_habit_choose_handler, pattern="^delete_habit_choose$"),
-    CallbackQueryHandler(delete_habit_confirm_handler, pattern="^delete_habit_\\d+$"),
-    # --- Работа с задачами
+    # если у тебя кнопки напрямую зовут эти экраны
+    CallbackQueryHandler(show_goals, pattern=r"^show_goals$"),
+    CallbackQueryHandler(goal, pattern=r"^create_goal$"),
+    CallbackQueryHandler(delete_goal_choose_handler,   pattern=r"^delete_goal_choose$"),
+    CallbackQueryHandler(delete_goal_confirm_handler,  pattern=r"^delete_goal_\d+$"),
+    CallbackQueryHandler(show_habits,                  pattern=r"^show_habits$"),
+    CallbackQueryHandler(create_habit_handler,         pattern=r"^create_habit$"),
+    CallbackQueryHandler(delete_habit_choose_handler,  pattern=r"^delete_habit_choose$"),
+    CallbackQueryHandler(delete_habit_confirm_handler, pattern=r"^delete_habit_\d+$"),
+
+    # Напоминания / задачи
     CommandHandler("task", task),
     CommandHandler("remind", remind_command),
     CommandHandler("reminders", reminders_list),
-    CallbackQueryHandler(remind_callback, pattern=r"^rem:"),
     CommandHandler("reminders_menu", reminders_menu_cmd),
-    # --- Статистика и очки
+    CallbackQueryHandler(remind_callback, pattern=r"^rem:"),
+
+    # Статистика и очки
     CommandHandler("stats", stats_command),
     CommandHandler("mypoints", mypoints_command),
     CommandHandler("mystats", my_stats_command),
-    
+    CommandHandler("points", points_command),
 
-    # --- Премиум и челленджи
-    CallbackQueryHandler(premium_challenge_callback, pattern=r"^pch:"),
-    CallbackQueryHandler(plus_callback, pattern=r"^plus:"),
-    CommandHandler("premium_stats", premium_stats_cmd),
-    CommandHandler("premium_mode", premium_mode_cmd),
-    CommandHandler("premium", premium_cmd),
-    CommandHandler("premium_report", premium_report_cmd),
-    CommandHandler("premium_challenge", premium_challenge_cmd),
-    CommandHandler("premium_days", premium_days),
-    
+    # --- Моды, голос, сказки, сон
+    CommandHandler("mode", mode),
+    CallbackQueryHandler(handle_mode_choice, pattern=r"^mode_"),
+
+    CommandHandler("voice_mode", voice_mode_cmd),
+    CommandHandler("voice_settings", voice_settings),
+    CallbackQueryHandler(voice_settings_cb, pattern=r"^v:"),
+
+    CommandHandler("story", story_cmd),
+    CallbackQueryHandler(story_callback, pattern=r"^st:"),
+
+    CommandHandler("sleep", sleep_cmd),
+    CallbackQueryHandler(sleep_cb, pattern=r"^sleep:"),
+
     # --- Разное
     CommandHandler("timezone", set_timezone),
     CommandHandler("feedback", feedback),
-    CommandHandler("mode", mode),
-    CallbackQueryHandler(handle_mode_choice, pattern="^mode_"),
     CommandHandler("quote", quote),
     CommandHandler("invite", invite),
     CommandHandler("mytask", mytask_command),
     CommandHandler("reset", reset),
     CommandHandler("test_mood", test_mood),
-    CallbackQueryHandler(handle_mark_goal_done_choose, pattern=r"^mark_goal_done_choose$"),
-    CallbackQueryHandler(handle_done_goal_callback, pattern=r"^done_goal\|\d+$"),
-    CommandHandler("points", points_command),
-    CallbackQueryHandler(tz_callback, pattern=r"^tz:"),
-    
-    # --- Кнопки реакции и добавления цели
-    CallbackQueryHandler(handle_reaction_button, pattern="^react_"),
-    CallbackQueryHandler(handle_add_goal_callback, pattern="^add_goal\\|"),
-    CallbackQueryHandler(handle_mark_habit_done_choose, pattern=r"^mark_habit_done_choose$"),
-    CallbackQueryHandler(handle_done_habit_callback,    pattern=r"^done_habit\|\d+$"),
-    CommandHandler("menu", menu_cmd),
-    CallbackQueryHandler(menu_cb, pattern=r"^m:"),
-    
-    # --- Чаты и голос
-    CommandHandler("voice_mode", voice_mode_cmd),
-    CommandHandler("story", story_cmd),
-    CallbackQueryHandler(story_callback, pattern=r"^st:"),
-    CommandHandler("voice_settings", voice_settings),
-    CallbackQueryHandler(voice_settings_cb, pattern=r"^v:"),
-    CommandHandler("sleep", sleep_cmd),
-    CallbackQueryHandler(sleep_cb, pattern=r"^sleep:"),
-    CallbackQueryHandler(_dbg_cb,          pattern=r".+"),
 
-    MessageHandler(filters.TEXT & ~filters.COMMAND, chat),
+    # Кнопки реакций и done
+    CallbackQueryHandler(handle_reaction_button,          pattern=r"^react_"),
+    CallbackQueryHandler(handle_add_goal_callback,        pattern=r"^add_goal\|"),
+    CallbackQueryHandler(handle_mark_goal_done_choose,    pattern=r"^mark_goal_done_choose$"),
+    CallbackQueryHandler(handle_done_goal_callback,       pattern=r"^done_goal\|\d+$"),
+    CallbackQueryHandler(handle_mark_habit_done_choose,   pattern=r"^mark_habit_done_choose$"),
+    CallbackQueryHandler(handle_done_habit_callback,      pattern=r"^done_habit\|\d+$"),
+
+    # --- Диагностический ловец в самом конце и НЕ блокирующий
+    CallbackQueryHandler(_dbg_cb, pattern=r".+", block=False),
+
+    # --- Сообщения
     MessageHandler(filters.VOICE, handle_voice),
-    MessageHandler(filters.COMMAND, unknown_command),  # Unknown в самом конце!
-    
+    MessageHandler(filters.TEXT & ~filters.COMMAND, chat),  # важно исключить команды!
+    MessageHandler(filters.COMMAND, unknown_command),       # Unknown строго последним
 ]
 
 __all__ = [
