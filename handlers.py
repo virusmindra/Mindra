@@ -235,6 +235,34 @@ PREMIUM_URL = "https://example.com/pay"
 # ==== Sleep (ambient only) ====
 _sleep_prefs: dict[str, dict] = {}
 
+def once_per_message(handler_name: str):
+    def deco(fn):
+        async def wrapper(update, context, *args, **kwargs):
+            mid = getattr(getattr(update, "effective_message", None), "message_id", None)
+            key = f"_once_{handler_name}_{mid}"
+            if mid is not None and context.chat_data.get(key):
+                return
+            if mid is not None:
+                context.chat_data[key] = True
+            return await fn(update, context, *args, **kwargs)
+        return wrapper
+    return deco
+
+def once_per_callback(handler_name: str):
+    def deco(fn):
+        async def wrapper(update, context, *args, **kwargs):
+            q = getattr(update, "callback_query", None)
+            cid = getattr(q, "id", None)
+            key = f"_once_{handler_name}_{cid}"
+            if cid is not None and context.chat_data.get(key):
+                return
+            if cid is not None:
+                context.chat_data[key] = True
+            return await fn(update, context, *args, **kwargs)
+        return wrapper
+    return deco
+
+
 def _debounce(uid: str, key: str, ms: int = 800) -> bool:
     """True = надо игнорировать (слишком рано повтор)."""
     now = datetime.now(timezone.utc)
