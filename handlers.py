@@ -1932,12 +1932,61 @@ async def premium_report_cmd(update, context):
     )
     await update.message.reply_text(text, parse_mode="Markdown")
 
-async def premium_challenge_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def premium_challenge_cmd(update, context):
     uid = str(update.effective_user.id)
     lang = user_languages.get(uid, "ru")
-    t = _p_i18n(uid)  # твои i18n-тексты
-    # Берём локальную зону пользователя
-    tz = _user_tz(uid)
+    t = _p_i18n(uid)
+
+    # неделя по локальному времени пользователя (если у вас есть user_tz)
+    try:
+        tz = _user_tz(uid)
+        now_local = datetime.now(tz)
+    except Exception:
+        now_local = datetime.now(timezone.utc)
+    week_iso = _week_start_iso(now_local)
+
+    # гарантируем таблицу
+    try:
+        ensure_premium_challenges()
+    except Exception:
+        pass
+
+    try:
+        with premium_db() as db:
+            row = db.execute(
+                "SELECT * FROM premium_challenges WHERE user_id=? AND week_start=?;",
+                (uid, week_iso)
+            ).fetchone()
+
+            if not row:
+                text = random.choice(CHALLENGE_BANK.get(lang, CHALLENGE_BANK["en"]))
+                db.execute(
+                    "INSERT INTO premium_challenges (user_id, week_start, text, done, created_at) "
+                    "VALUES (?, ?, ?, 0, ?);",
+                    (uid, week_iso, text, _to_epoch(_utcnow()))
+                )
+                db.commit()
+                row = db.execute(
+                    "SELECT * FROM premium_challenges WHERE user_id=? AND week_start=?;",
+                    (uid, week_iso)
+                ).fetchone()
+
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton(t["btn_done"], callback_data=f"pch:done:{row['id']}")],
+            [InlineKeyboardButton(t["btn_new"],  callback_data="pch:new")],
+        ])
+        await update.message.reply_text(
+            f"*{t['challenge_title']}*\n\n{t['challenge_cta'].format(text=row['text'])}",
+            parse_mode="Markdown", reply_markup=kb
+        )
+
+    except sqlite3.OperationalError as e:
+        # если вдруг таблица отсутствует — создадим и повторим один раз
+        if "no such table: premium_challenges" in str(e):
+            ensure_premium_challenges()
+            return await premium_challenge_cmd(update, context)
+        raise
+
 
     def _run_once():
         """Одна попытка: получить/создать челлендж на текущую неделю и вернуть тексты+клаву."""
