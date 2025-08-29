@@ -251,7 +251,7 @@ def extend_premium_days(user_id: str | int, days: int) -> str:
     new_until = base + timedelta(days=int(days))
     set_premium_until_dt(user_id, new_until)
     return new_until.isoformat()
-
+    
 def is_premium_db(user_id) -> bool:
     """Чистая проверка по БД, без знания про админов (чтобы не тянуть handlers)."""
     until = get_premium_until(user_id)
