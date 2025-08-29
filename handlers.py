@@ -1753,40 +1753,70 @@ async def premium_challenge_callback(update, context):
     if not q or not q.data.startswith("pch:"):
         return
     await q.answer()
+
     uid = str(q.from_user.id)
+    lang = user_languages.get(uid, "ru")
     t = _p_i18n(uid)
+
+    # текущая неделя
+    try:
+        tz = _user_tz(uid)
+        now_local = datetime.now(tz)
+    except Exception:
+        now_local = datetime.now(timezone.utc)
+    week_iso = _week_start_iso(now_local)
+
+    # гарантируем таблицу
+    try:
+        ensure_premium_challenges()
+    except Exception:
+        pass
+
     parts = q.data.split(":")
     action = parts[1]
 
-    ensure_premium_db()
+    try:
+        with premium_db() as db:
+            if action == "done":
+                # pch:done:<id>
+                try:
+                    _id = int(parts[2])
+                except Exception:
+                    _id = None
+                if _id:
+                    db.execute("UPDATE premium_challenges SET done=1 WHERE id=? AND user_id=?;", (_id, uid))
+                else:
+                    # на всякий: по текущей неделе
+                    db.execute("UPDATE premium_challenges SET done=1 WHERE user_id=? AND week_start=?;", (uid, week_iso))
+                db.commit()
+                await q.edit_message_text(t.get("challenge_done", "✅ Выполнено! Хорошая работа 💪"))
 
-    if action == "new":
-        # принудительно выдаём новый текст на текущую неделю (переписываем)
-        tz = _user_tz(uid)
-        week_iso = _week_start_iso(datetime.now(tz))
-        lang = user_languages.get(uid, "ru")
-        new_text = random.choice(CHALLENGE_BANK.get(lang, CHALLENGE_BANK["ru"]))
-        with sqlite3.connect("mindra.db") as db:
-            db.execute("UPDATE premium_challenges SET text=?, done=0 WHERE user_id=? AND week_start=?;",
-                       (new_text, uid, week_iso))
-            db.commit()
-        await q.edit_message_text(f"*{t['challenge_title']}*\n\n{t['challenge_cta'].format(text=new_text)}",
-                                  parse_mode="Markdown",
-                                  reply_markup=InlineKeyboardMarkup([
-                                      [InlineKeyboardButton(t["btn_done"], callback_data=f"pch:done:0")],
-                                      [InlineKeyboardButton(t["btn_new"],  callback_data="pch:new")],
-                                  ]))
-        return
+            elif action == "new":
+                text = random.choice(CHALLENGE_BANK.get(lang, CHALLENGE_BANK["en"]))
+                db.execute(
+                    "UPDATE premium_challenges SET text=?, done=0 WHERE user_id=? AND week_start=?;",
+                    (text, uid, week_iso)
+                )
+                if db.total_changes == 0:
+                    # если строки не было — создадим
+                    db.execute(
+                        "INSERT INTO premium_challenges (user_id, week_start, text, done, created_at) "
+                        "VALUES (?, ?, ?, 0, ?);",
+                        (uid, week_iso, text, _to_epoch(_utcnow()))
+                    )
+                db.commit()
+                await q.edit_message_text(
+                    f"*{t['challenge_title']}*\n\n{t['challenge_cta'].format(text=text)}",
+                    parse_mode="Markdown"
+                )
 
-    if action == "done" and len(parts) >= 3:
-        # отметим выполненным любую текущую запись пользователя
-        with sqlite3.connect("mindra.db") as db:
-            db.execute("UPDATE premium_challenges SET done=1 WHERE user_id=?;",
-                       (uid,))
-            db.commit()
-        await q.edit_message_text(t["challenge_done"])
-        return
-
+    except sqlite3.OperationalError as e:
+        if "no such table: premium_challenges" in str(e):
+            ensure_premium_challenges()
+            await q.answer("Таблица создана, повтори действие.")
+            return
+        raise
+        
 def _week_start_iso(dt):
     """ISO даты понедельника текущей недели в локальном времени."""
     if isinstance(dt, datetime):
