@@ -2131,7 +2131,7 @@ async def reminders_menu_cmd(update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(t["menu_title"], reply_markup=kb)
     
 # ========== Time helpers ==========
-def _utcnow() -> datetime:
+def _utcnow():
     return datetime.now(timezone.utc)
 
 def _user_tz(uid: str) -> ZoneInfo:
