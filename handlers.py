@@ -171,6 +171,7 @@ user_timezones = {}
 user_voice_mode = {}  # {user_id: bool}
 user_voice_prefs = {}
 waiting_feedback: set[str] = set()
+_last_action = {}
 
 MIN_HOURS_SINCE_LAST_POLL = 96  # минимум 4 дня между опросами для одного юзера
 MIN_HOURS_SINCE_ACTIVE = 8      # не отправлять, если был онлайн последние 8 часов
@@ -234,6 +235,16 @@ PREMIUM_URL = "https://example.com/pay"
 # ==== Sleep (ambient only) ====
 _sleep_prefs: dict[str, dict] = {}
 
+def _debounce(uid: str, key: str, ms: int = 800) -> bool:
+    """True = надо игнорировать (слишком рано повтор)."""
+    now = datetime.now(timezone.utc)
+    k = (uid, key)
+    t = _last_action.get(k)
+    if t and (now - t) < timedelta(milliseconds=ms):
+        return True
+    _last_action[k] = now
+    return False
+    
 async def _dbg_cb(update, context):
     q = update.callback_query
     if q:
