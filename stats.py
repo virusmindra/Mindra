@@ -103,7 +103,14 @@ def ensure_premium_challenges():
             ON premium_challenges(user_id, week_start);
         """)
         db.commit()
-        
+
+
+def premium_db():
+    """Единая точка подключения к premium.sqlite3."""
+    con = sqlite3.connect(PREMIUM_DB_PATH)
+    con.row_factory = sqlite3.Row
+    return con
+    
 def _to_utc(dt: datetime) -> datetime:
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
