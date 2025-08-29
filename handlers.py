@@ -131,7 +131,7 @@ from stats import (
     DATA_DIR, REMIND_DB_PATH, PREMIUM_DB_PATH,
 
     # --- reminders DB ---
-    ensure_remind_db, remind_db,
+    ensure_remind_db, remind_db, premium_db,
 
     # --- premium/subscription ---
     ensure_premium_db, migrate_premium_from_stats, ensure_premium_challenges,
