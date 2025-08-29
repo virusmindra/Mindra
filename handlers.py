@@ -5146,8 +5146,8 @@ handlers = [
     CommandHandler("premium_report", premium_report_cmd),
 
     # Челлендж — отдельно и раньше всего остального
-    CommandHandler("premium_challenge", premium_challenge_cmd),
-    CallbackQueryHandler(premium_challenge_callback, pattern=r"^pch:"),
+    CommandHandler("premium_challenge", premium_challenge_cmd, block=True),
+    CallbackQueryHandler(premium_challenge_callback, pattern=r"^pch:", block=True),
 
     # --- Функции: трекер целей/привычек/напоминаний/очки/статистика
     CommandHandler("tracker_menu", tracker_menu_cmd),
