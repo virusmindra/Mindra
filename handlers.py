@@ -1787,11 +1787,14 @@ async def premium_challenge_callback(update, context):
         await q.edit_message_text(t["challenge_done"])
         return
 
-def _week_start_iso(dt: datetime) -> str:
-    # понедельник этой недели в локальном времени пользователя
-    monday = dt - timedelta(days=dt.weekday())
+def _week_start_iso(dt):
+    """ISO даты понедельника текущей недели в локальном времени."""
+    if isinstance(dt, datetime):
+        base = dt
+    else:
+        base = datetime.now(timezone.utc)
+    monday = base - timedelta(days=base.weekday())
     return monday.date().isoformat()
-
 
 def _menu_main_kb(uid: str) -> InlineKeyboardMarkup:
     t = _menu_i18n(uid)
