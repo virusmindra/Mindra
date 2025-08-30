@@ -234,7 +234,7 @@ PREMIUM_URL = "https://example.com/pay"
 
 # ==== Sleep (ambient only) ====
 _sleep_prefs: dict[str, dict] = {}
-
+CB = "ui:"
 CHALLENGE_POINTS = int(os.getenv("CHALLENGE_POINTS", 25)) 
 
 def once_per_message(handler_name: str):
