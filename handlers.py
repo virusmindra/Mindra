@@ -1760,7 +1760,8 @@ async def premium_challenge_callback(update: Update, context: ContextTypes.DEFAU
     q = update.callback_query
     if not q or not q.data or not q.data.startswith("pch:"):
         return
-    # мгновенный answer, чтобы Telegram не ругался
+
+    # быстрый ack (иначе "query is too old")
     try:
         await q.answer()
     except Exception:
@@ -1768,7 +1769,7 @@ async def premium_challenge_callback(update: Update, context: ContextTypes.DEFAU
 
     uid = str(q.from_user.id)
 
-    # антидубль: если у тебя есть _debounce — оставляем
+    # антидубль
     try:
         if _debounce(uid, "pch_cb"):
             return
@@ -1783,7 +1784,7 @@ async def premium_challenge_callback(update: Update, context: ContextTypes.DEFAU
     action = parts[1] if len(parts) > 1 else ""
     cb_id = parts[2] if len(parts) > 2 else None
 
-    # неделя по локальному времени
+    # неделя по локальному времени пользователя
     try:
         tz = _user_tz(uid)
         now_local = datetime.now(tz)
@@ -1791,8 +1792,13 @@ async def premium_challenge_callback(update: Update, context: ContextTypes.DEFAU
         now_local = datetime.now()
     week_iso = _week_start_iso(now_local)
 
-  def _kb(done_flag: bool, row_id: int) -> InlineKeyboardMarkup:
-        # если уже выполнено — оставляем только «Новый»
+    # гарантируем таблицу
+    try:
+        ensure_premium_challenges()
+    except Exception as e:
+        logging.warning("ensure_premium_challenges failed: %s", e)
+
+    def _kb(done_flag: bool, row_id: int) -> InlineKeyboardMarkup:
         if done_flag:
             return InlineKeyboardMarkup([[InlineKeyboardButton(t["btn_new"], callback_data="pch:new")]])
         return InlineKeyboardMarkup([
@@ -1800,29 +1806,24 @@ async def premium_challenge_callback(update: Update, context: ContextTypes.DEFAU
             [InlineKeyboardButton(t["btn_new"],  callback_data="pch:new")],
         ])
 
- def _render(text: str, row_id: int, done_flag: bool, prefix: str | None = None) -> tuple[str, InlineKeyboardMarkup]:
-        title = t["challenge_title"]
-        body_lines = []
-        if prefix:
-            body_lines.append(prefix)
-            body_lines.append("")  # пустая строка
-        body_lines.append(f"*{title}*")
-        body_lines.append("")
-        body_lines.append(t["challenge_cta"].format(text=text))
-        return "\n".join(body_lines), _kb(done_flag, row_id)
+    def _render(text: str, row_id: int, done_flag: bool, prefix: str | None = None) -> tuple[str, InlineKeyboardMarkup]:
+        title = t.get("challenge_title", "🏆 Weekly challenge")
+        cta   = t.get("challenge_cta", "Your challenge this week:\n\n“{text}”").format(text=text)
+        header = [prefix] if prefix else []
+        body = "\n".join([*(header + ["", f"*{title}*", "", cta])]) if header else "\n".join([f"*{title}*", "", cta])
+        return body, _kb(done_flag, row_id)
 
     try:
         with sqlite3.connect(PREMIUM_DB_PATH) as db:
             db.row_factory = sqlite3.Row
 
-            # строка за текущую неделю
+            # базовая строка недели (если нет — создаём)
             row = db.execute(
                 "SELECT * FROM premium_challenges WHERE user_id=? AND week_start=?;",
                 (uid, week_iso)
             ).fetchone()
 
             if not row:
-                # создаём первую запись недели
                 text = random.choice(CHALLENGE_BANK.get(lang, CHALLENGE_BANK["ru"]))
                 db.execute(
                     "INSERT INTO premium_challenges (user_id, week_start, text, done, created_at) VALUES (?, ?, ?, 0, ?);",
@@ -1834,28 +1835,42 @@ async def premium_challenge_callback(update: Update, context: ContextTypes.DEFAU
                     (uid, week_iso)
                 ).fetchone()
 
-            # текущее состояние
-            row_id = int(row["id"])
+            row_id   = int(row["id"])
             row_text = row["text"]
             row_done = bool(row["done"])
 
             if action == "done":
+                # если в callback пришёл id — удостоверимся, что работаем по нему и этой же неделе
+                try:
+                    target_id = int(cb_id) if cb_id else None
+                except Exception:
+                    target_id = None
+
+                if target_id and target_id != row_id:
+                    r2 = db.execute(
+                        "SELECT * FROM premium_challenges WHERE id=? AND user_id=? AND week_start=?;",
+                        (target_id, uid, week_iso)
+                    ).fetchone()
+                    if r2:
+                        row = r2
+                        row_id   = int(row["id"])
+                        row_text = row["text"]
+                        row_done = bool(row["done"])
+
                 if row_done:
-                    # уже был done — очки НЕ начисляем повторно
                     body, kb = _render(row_text, row_id, True, prefix=t.get("done_ok", "✅ Done"))
                     return await q.edit_message_text(body, parse_mode="Markdown", reply_markup=kb)
 
-                # выставляем done=1
                 db.execute("UPDATE premium_challenges SET done=1 WHERE id=? AND user_id=?;", (row_id, uid))
                 db.commit()
 
-                # даём очки ОДИН раз за неделю
+                # очки за неделю — 1 раз
                 try:
                     add_points(uid, CHALLENGE_POINTS, reason="premium_challenge_done")
                 except Exception as e:
                     logging.warning("add_points failed: %s", e)
 
-                # небольшой тост сверху
+                # тост ⭐️ +N
                 try:
                     await q.answer(text=f"⭐️ +{CHALLENGE_POINTS}")
                 except Exception:
@@ -1865,23 +1880,18 @@ async def premium_challenge_callback(update: Update, context: ContextTypes.DEFAU
                 return await q.edit_message_text(body, parse_mode="Markdown", reply_markup=kb)
 
             if action == "new":
-                # генерим новый текст
                 new_text = random.choice(CHALLENGE_BANK.get(lang, CHALLENGE_BANK["ru"]))
                 if row_done:
-                    # если уже выполнено — меняем только текст, done оставляем =1 (чтобы не фармили очки)
-                    db.execute("UPDATE premium_challenges SET text=? WHERE id=? AND user_id=?;",
-                               (new_text, row_id, uid))
+                    db.execute("UPDATE premium_challenges SET text=? WHERE id=? AND user_id=?;", (new_text, row_id, uid))
                     db.commit()
                     body, kb = _render(new_text, row_id, True, prefix=t.get("changed_ok", "🔄 Updated"))
                 else:
-                    # не выполнено — меняем текст и оставляем возможность «Готово»
-                    db.execute("UPDATE premium_challenges SET text=?, done=0 WHERE id=? AND user_id=?;",
-                               (new_text, row_id, uid))
+                    db.execute("UPDATE premium_challenges SET text=?, done=0 WHERE id=? AND user_id=?;", (new_text, row_id, uid))
                     db.commit()
                     body, kb = _render(new_text, row_id, False, prefix=t.get("changed_ok", "🔄 Updated"))
                 return await q.edit_message_text(body, parse_mode="Markdown", reply_markup=kb)
 
-            # неизвестное действие — просто перерисуем текущее
+            # неизвестное действие → просто перерисуем текущее
             body, kb = _render(row_text, row_id, row_done)
             return await q.edit_message_text(body, parse_mode="Markdown", reply_markup=kb)
 
@@ -1889,9 +1899,12 @@ async def premium_challenge_callback(update: Update, context: ContextTypes.DEFAU
         if "no such table: premium_challenges" in str(e):
             logging.warning("challenge table missing; creating and retrying…")
             ensure_premium_challenges()
-            # второй шанс — рекурсивно один раз
             return await premium_challenge_callback(update, context)
-        raise
+        logging.exception("premium_challenge_callback op-error: %s", e)
+        try:
+            await context.bot.send_message(chat_id=q.message.chat.id, text="⚠️ Ошибка. Попробуй ещё раз.")
+        except Exception:
+            pass
     except Exception as e:
         logging.exception("premium_challenge_callback failed: %s", e)
         try:
