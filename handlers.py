@@ -1789,17 +1789,105 @@ async def premium_challenge_callback(update: Update, context: ContextTypes.DEFAU
         now_local = datetime.now()
     week_iso = _week_start_iso(now_local)
 
-    def _render(text_value: str, row_id: int, prefix: str | None = None):
-        """Возвращает (body, kb) с ОБЕИМИ кнопками."""
-        kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton(t["btn_done"], callback_data=f"pch:done:{row_id}")],
-            [InlineKeyboardButton(t["btn_new"],  callback_data="pch:new")],
-        ])
+ def _render(text: str, row_id: int, done_flag: bool, prefix: str | None = None) -> tuple[str, InlineKeyboardMarkup]:
         title = t["challenge_title"]
-        head = (prefix + "\n\n") if prefix else ""
-        body = f"{head}*{title}*\n\n{text_value}"
-        return body, kb
+        body_lines = []
+        if prefix:
+            body_lines.append(prefix)
+            body_lines.append("")  # пустая строка
+        body_lines.append(f"*{title}*")
+        body_lines.append("")
+        body_lines.append(t["challenge_cta"].format(text=text))
+        return "\n".join(body_lines), _kb(done_flag, row_id)
 
+    try:
+        with sqlite3.connect(PREMIUM_DB_PATH) as db:
+            db.row_factory = sqlite3.Row
+
+            # строка за текущую неделю
+            row = db.execute(
+                "SELECT * FROM premium_challenges WHERE user_id=? AND week_start=?;",
+                (uid, week_iso)
+            ).fetchone()
+
+            if not row:
+                # создаём первую запись недели
+                text = random.choice(CHALLENGE_BANK.get(lang, CHALLENGE_BANK["ru"]))
+                db.execute(
+                    "INSERT INTO premium_challenges (user_id, week_start, text, done, created_at) VALUES (?, ?, ?, 0, ?);",
+                    (uid, week_iso, text, _to_epoch(_utcnow()))
+                )
+                db.commit()
+                row = db.execute(
+                    "SELECT * FROM premium_challenges WHERE user_id=? AND week_start=?;",
+                    (uid, week_iso)
+                ).fetchone()
+
+            # текущее состояние
+            row_id = int(row["id"])
+            row_text = row["text"]
+            row_done = bool(row["done"])
+
+            if action == "done":
+                if row_done:
+                    # уже был done — очки НЕ начисляем повторно
+                    body, kb = _render(row_text, row_id, True, prefix=t.get("done_ok", "✅ Done"))
+                    return await q.edit_message_text(body, parse_mode="Markdown", reply_markup=kb)
+
+                # выставляем done=1
+                db.execute("UPDATE premium_challenges SET done=1 WHERE id=? AND user_id=?;", (row_id, uid))
+                db.commit()
+
+                # даём очки ОДИН раз за неделю
+                try:
+                    add_points(uid, CHALLENGE_POINTS, reason="premium_challenge_done")
+                except Exception as e:
+                    logging.warning("add_points failed: %s", e)
+
+                # небольшой тост сверху
+                try:
+                    await q.answer(text=f"⭐️ +{CHALLENGE_POINTS}")
+                except Exception:
+                    pass
+
+                body, kb = _render(row_text, row_id, True, prefix=t.get("done_ok", "✅ Done"))
+                return await q.edit_message_text(body, parse_mode="Markdown", reply_markup=kb)
+
+            if action == "new":
+                # генерим новый текст
+                new_text = random.choice(CHALLENGE_BANK.get(lang, CHALLENGE_BANK["ru"]))
+                if row_done:
+                    # если уже выполнено — меняем только текст, done оставляем =1 (чтобы не фармили очки)
+                    db.execute("UPDATE premium_challenges SET text=? WHERE id=? AND user_id=?;",
+                               (new_text, row_id, uid))
+                    db.commit()
+                    body, kb = _render(new_text, row_id, True, prefix=t.get("changed_ok", "🔄 Updated"))
+                else:
+                    # не выполнено — меняем текст и оставляем возможность «Готово»
+                    db.execute("UPDATE premium_challenges SET text=?, done=0 WHERE id=? AND user_id=?;",
+                               (new_text, row_id, uid))
+                    db.commit()
+                    body, kb = _render(new_text, row_id, False, prefix=t.get("changed_ok", "🔄 Updated"))
+                return await q.edit_message_text(body, parse_mode="Markdown", reply_markup=kb)
+
+            # неизвестное действие — просто перерисуем текущее
+            body, kb = _render(row_text, row_id, row_done)
+            return await q.edit_message_text(body, parse_mode="Markdown", reply_markup=kb)
+
+    except sqlite3.OperationalError as e:
+        if "no such table: premium_challenges" in str(e):
+            logging.warning("challenge table missing; creating and retrying…")
+            ensure_premium_challenges()
+            # второй шанс — рекурсивно один раз
+            return await premium_challenge_callback(update, context)
+        raise
+    except Exception as e:
+        logging.exception("premium_challenge_callback failed: %s", e)
+        try:
+            await context.bot.send_message(chat_id=q.message.chat.id, text="⚠️ Ошибка. Попробуй ещё раз.")
+        except Exception:
+            pass
+            
     def _ensure_and_get(db: sqlite3.Connection) -> sqlite3.Row:
         db.row_factory = sqlite3.Row
         row = db.execute(
