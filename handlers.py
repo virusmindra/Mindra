@@ -319,15 +319,24 @@ def _shim_update_for_cb(q: CallbackQuery, context) -> "object":
     u.message = _Msg()
     return u
 
-async def _try_call(names: list[str], update_from_cb: Update, context) -> bool:
+async def _try_call(names, update, context) -> bool:
+    """Пробует вызвать ПЕРВУЮ найденную функцию из списка names. Возвращает True при успехе."""
+    import inspect, sys
+    g = globals()
     for name in names:
-        func = globals().get(name)
-        if callable(func):
+        fn = g.get(name)
+        if callable(fn):
             try:
-                await func(update_from_cb, context)
+                if inspect.iscoroutinefunction(fn):
+                    await fn(update, context)
+                else:
+                    # синхронное — завернём
+                    loop = asyncio.get_event_loop()
+                    await loop.run_in_executor(None, lambda: fn(update, context))
                 return True
             except Exception as e:
                 logging.warning("call %s failed: %s", name, e)
+                return False
     return False
 
 async def menu_cb(update, context):
