@@ -365,99 +365,55 @@ async def menu_cb(update, context):
             pass
         return
 
-    # Шим для вызова команд
     u = _shim_update_for_cb(q, context)
 
-    # Обычные функции
+# Обычные функции
     if q.data == "m:feat:tracker":
-        # один пункт → твой /tracker_menu с 4 кнопками
         ok = await _try_call(["tracker_menu_cmd", "tracker_menu"], u, context)
-        if not ok:
-            await context.bot.send_message(q.message.chat.id, "Команда трекера недоступна.")
-        return
 
-    if q.data == "m:feat:mode":
-        ok = await _try_call(["mode_cmd", "mode"], u, context)
-        if not ok:
-            await context.bot.send_message(q.message.chat.id, "Команда /mode недоступна.")
-        return
+    elif q.data == "m:feat:mode":
+        ok = await _try_call(["mode", "mode_cmd"], u, context)  # у тебя функция называется mode
 
-    if q.data == "m:feat:reminders":
+    elif q.data == "m:feat:reminders":
         ok = await _try_call(["reminders_menu_cmd", "reminders_menu"], u, context)
-        if not ok:
-            await context.bot.send_message(q.message.chat.id, "Меню напоминаний недоступно.")
-        return
 
-    if q.data == "m:feat:points":
-        ok = await _try_call(["points_cmd", "titles_status_cmd"], u, context)
-        if not ok:
-            await context.bot.send_message(q.message.chat.id, "Статус очков/титула недоступен.")
-        return
+    elif q.data == "m:feat:points":
+        ok = await _try_call(["points_command", "points", "mypoints_command"], u, context)
 
-    if q.data == "m:feat:mood":
-        ok = await _try_call(["test_mood_cmd", "test_mood"], u, context)
-        if not ok:
-            await context.bot.send_message(q.message.chat.id, "Тест настроения недоступен.")
-        return
+    elif q.data == "m:feat:mood":
+        ok = await _try_call(["test_mood", "test_mood_cmd"], u, context)
 
-    # Премиум-функции
-    if q.data == "m:plus:voice":
-        ok = await _try_call(["voice_settings_cmd", "voice_settings"], u, context)
-        if not ok:
-            await context.bot.send_message(q.message.chat.id, "Настройки озвучки недоступны.")
-        return
+# Премиум-функции
+    elif q.data == "m:plus:voice":
+        ok = await _try_call(["voice_settings", "voice_settings_cmd"], u, context)
 
-    if q.data == "m:plus:sleep":
-        ok = await _try_call(["sleep_cmd"], u, context)
-        if not ok:
-            await context.bot.send_message(q.message.chat.id, "Звуки сна недоступны.")
-        return
-
-    if q.data == "m:plus:story":
+    elif q.data == "m:plus:sleep":
+        ok = await _try_call(["sleep_cmd", "sleep"], u, context)
+    
+    elif q.data == "m:plus:story":
         ok = await _try_call(["story_cmd", "story_menu_cmd"], u, context)
-        if not ok:
-            await context.bot.send_message(q.message.chat.id, "Меню сказок недоступно.")
-        return
 
-    if q.data == "m:plus:pmode":
+    elif q.data == "m:plus:pmode":
         ok = await _try_call(["premium_mode_cmd", "premium_mode"], u, context)
-        if not ok:
-            await context.bot.send_message(q.message.chat.id, "Premium-mode недоступен.")
-        return
 
-    if q.data == "m:plus:pstats":
+    elif q.data == "m:plus:pstats":
         ok = await _try_call(["premium_stats_cmd", "premium_stats", "premium_status"], u, context)
-        if not ok:
-            await context.bot.send_message(q.message.chat.id, "Premium-stats недоступен.")
-        return
 
-    if q.data == "m:plus:preport":
+    elif q.data == "m:plus:preport":
         ok = await _try_call(["premium_report_cmd", "premium_report"], u, context)
-        if not ok:
-            await context.bot.send_message(q.message.chat.id, "Premium-report недоступен.")
-        return
 
-    if q.data == "m:plus:pchallenge":
+    elif q.data == "m:plus:pchallenge":
         ok = await _try_call(["premium_challenge_cmd", "premium_challenge"], u, context)
-        if not ok:
-            await context.bot.send_message(q.message.chat.id, "Premium-challenge недоступен.")
-        return
 
-    # Премиум раздел
-    if q.data == "m:premium:days":
+# Премиум раздел
+    elif q.data == "m:premium:days":
         ok = await _try_call(["premium_days_cmd", "premium_days"], u, context)
-        if not ok:
-            await context.bot.send_message(q.message.chat.id, "Не смог получить остаток премиума.")
-        return
 
-    if q.data == "m:premium:invite":
-        ok = await _try_call(["invite_cmd", "invite"], u, context)
-        if not ok:
-            await context.bot.send_message(q.message.chat.id, "Команда приглашения недоступна.")
-        return
+    elif q.data == "m:premium:invite":
+        ok = await _try_call(["invite", "invite_cmd"], u, context)
 
     # Настройки
-    if q.data == "m:set:lang":
+    elif q.data == "m:set:lang":
         # покажем тот же список языков, что в /start
         kb = [
             [InlineKeyboardButton("Русский 🇷🇺", callback_data="lang_ru"),
@@ -472,23 +428,22 @@ async def menu_cb(update, context):
              InlineKeyboardButton("English 🇬🇧", callback_data="lang_en")],
             [InlineKeyboardButton(t["back"], callback_data="m:nav:settings")],
         ]
-        return await q.edit_message_text(f"*{t['set_title']}*\n{t['set_body']}",
-                                         parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb))
+        pass
+        
+    elif q.data == "m:set:tz":
+        ok = await _try_call(["settings_command", "settings", "settings_cmd"], u, context)
 
-    if q.data == "m:set:tz":
-        # переиспользуем твой /settings (там уже есть тайм-зона)
-        ok = await _try_call(["settings_cmd", "settings"], u, context)
-        if not ok:
-            await context.bot.send_message(q.message.chat.id, "Меню настроек недоступно.")
-        return
-
-    if q.data == "m:set:feedback":
+    elif q.data == "m:set:feedback":
         await q.edit_message_text(t["feedback_ask"],
                                   parse_mode="Markdown",
                                   reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(t["back"], callback_data="m:nav:settings")]]))
-        # пометим, что ждём текст
         waiting_feedback.add(uid)
         return
+
+    # общий результат
+    if not ok:
+        await context.bot.send_message(q.message.chat.id, "Команда недоступна.")
+    return
 
 def _menu_i18n(uid: str) -> dict:
     lang = user_languages.get(uid, "ru")
