@@ -1789,6 +1789,15 @@ async def premium_challenge_callback(update: Update, context: ContextTypes.DEFAU
         now_local = datetime.now()
     week_iso = _week_start_iso(now_local)
 
+  def _kb(done_flag: bool, row_id: int) -> InlineKeyboardMarkup:
+        # если уже выполнено — оставляем только «Новый»
+        if done_flag:
+            return InlineKeyboardMarkup([[InlineKeyboardButton(t["btn_new"], callback_data="pch:new")]])
+        return InlineKeyboardMarkup([
+            [InlineKeyboardButton(t["btn_done"], callback_data=f"pch:done:{row_id}")],
+            [InlineKeyboardButton(t["btn_new"],  callback_data="pch:new")],
+        ])
+
  def _render(text: str, row_id: int, done_flag: bool, prefix: str | None = None) -> tuple[str, InlineKeyboardMarkup]:
         title = t["challenge_title"]
         body_lines = []
