@@ -329,7 +329,7 @@ async def show_main_menu(msg):
         t = _p_i18n(uid)
     except Exception:
         t = {}
-    await msg.edit_text(MENU_TEXT, reply_markup=_menu_main_kb(t))
+    await msg.edit_text(MENU_TEXTS, reply_markup=_menu_main_kb(t))
 
 async def _try_call(names, update, context) -> bool:
     """Пробует вызвать ПЕРВУЮ найденную функцию из списка names. Возвращает True при успехе."""
