@@ -2314,7 +2314,7 @@ async def gh_callback(update, context: ContextTypes.DEFAULT_TYPE):
         await q.edit_message_text(t["habits_title"] + "\n\n" + "\n".join(lines), reply_markup=kb)
         return
 
-        if action == "back":
+    if action == "back":
         return await show_main_menu(msg) 
 
 def _i18n(uid: str) -> dict:
