@@ -321,6 +321,16 @@ def _shim_update_for_cb(q: CallbackQuery, context) -> "object":
     u.message = _Msg()
     return u
 
+
+async def show_main_menu(msg):
+    # получаем локализацию, если есть
+    try:
+        uid = str(msg.chat.id)
+        t = _p_i18n(uid)
+    except Exception:
+        t = {}
+    await msg.edit_text(MENU_TEXT, reply_markup=_main_menu_keyboard(t))
+
 async def _try_call(names, update, context) -> bool:
     """Пробует вызвать ПЕРВУЮ найденную функцию из списка names. Возвращает True при успехе."""
     import inspect, sys
