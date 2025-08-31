@@ -2315,7 +2315,7 @@ async def gh_callback(update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if action == "back":
-        return await show_main_menu(msg) 
+        return await menu_cb(msg) 
 
 def _i18n(uid: str) -> dict:
     return REMIND_TEXTS.get(user_languages.get(uid, "ru"), REMIND_TEXTS["ru"])
