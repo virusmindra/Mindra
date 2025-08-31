@@ -2059,6 +2059,7 @@ def _gh_menu_keyboard(t: dict) -> InlineKeyboardMarkup:
         [InlineKeyboardButton(t["btn_list_goals"], callback_data="gh:list_goals")],
         [InlineKeyboardButton(t["btn_add_habit"],  callback_data="gh:new_habit")],
         [InlineKeyboardButton(t["btn_list_habits"],callback_data="gh:list_habits")],
+        [InlineKeyboardButton(t["back"],            callback_data="gh:back")],
     ])
 
 async def tracker_menu_cmd(update, context: ContextTypes.DEFAULT_TYPE):
