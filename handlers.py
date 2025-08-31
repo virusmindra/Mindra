@@ -2251,6 +2251,7 @@ async def gh_callback(update, context: ContextTypes.DEFAULT_TYPE):
         return
     await q.answer()
 
+    msg = q.message 
     uid = str(q.from_user.id)
     t = _gh_i18n(uid)
     action = q.data.split(":", 1)[1]
