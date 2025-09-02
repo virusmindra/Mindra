@@ -2250,13 +2250,12 @@ async def premium_mode_cmd(update, context):
 
     await update.message.reply_text(f"*{t['mode_title']}*\n\n{t['mode_set']}", parse_mode="Markdown")
 
-# /premium_stats — расширенная статистика
 @require_premium
 async def premium_stats_cmd(update, context):
     uid = str(update.effective_user.id)
     t = _p_i18n(uid)
 
-    # простые агрегаты
+    # агрегаты (как у тебя)
     try:
         goals = get_goals(uid)
         total_goals_done = sum(1 for g in goals if isinstance(g, dict) and g.get("done"))
@@ -2267,8 +2266,7 @@ async def premium_stats_cmd(update, context):
         habit_days = len(habits)
     except Exception:
         habit_days = 0
-
-    active_30 = 0  # при желании сюда можно подвести real metric
+    active_30 = 0
 
     text = (
         f"*{t['stats_title']}*\n\n"
@@ -2276,7 +2274,7 @@ async def premium_stats_cmd(update, context):
         f"{t['stats_habit_days'].format(n=habit_days)}\n"
         f"{t['stats_active_days'].format(n=active_30)}"
     )
-    await update.message.reply_text(text, parse_mode="Markdown")
+    await ui_show_from_command(update, context, text, reply_markup=_kb_close(uid), parse_mode="Markdown")
 
 async def gh_callback(update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
