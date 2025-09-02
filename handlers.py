@@ -2393,6 +2393,48 @@ def _next_weekday(base_local: datetime, target_wd: int) -> datetime:
         delta = 7
     return base_local + timedelta(days=delta)
 
+async def menu_router(update, context):
+    q = update.callback_query
+    if not q or not q.data.startswith("m:nav:"):
+        return
+    await q.answer()
+
+    uid = str(q.from_user.id)
+    t = _menu_i18n(uid)
+    msg = q.message
+    act = q.data.split(":", 2)[2]
+
+    if act == "features":
+        return await msg.edit_text(t.get("features_title", t["features"]),
+                                   reply_markup=InlineKeyboardMarkup(
+                                       [[InlineKeyboardButton(t["back"], callback_data="m:nav:home")]]
+                                   ))
+    elif act == "plus":
+        return await msg.edit_text(t.get("plus_title", t["plus_features"]),
+                                   reply_markup=InlineKeyboardMarkup(
+                                       [[InlineKeyboardButton(t["back"], callback_data="m:nav:home")]]
+                                   ))
+    elif act == "premium":
+        return await msg.edit_text(t.get("premium_title", t["premium"]),
+                                   reply_markup=InlineKeyboardMarkup(
+                                       [[InlineKeyboardButton(t["back"], callback_data="m:nav:home")]]
+                                   ))
+    elif act == "settings":
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton(t["set_lang"], callback_data="m:set:lang")],
+            [InlineKeyboardButton(t["set_tz"],   callback_data="m:set:tz")],
+            [InlineKeyboardButton(t["back"],     callback_data="m:nav:home")],
+        ])
+        return await msg.edit_text(t.get("settings_title", t["settings"]), reply_markup=kb)
+    elif act == "home":
+        return await show_main_menu(msg)
+    elif act == "close":
+        try:
+            return await msg.delete()
+        except Exception:
+            # если удаление нельзя — вернёмся домой
+            return await show_main_menu(msg)
+
 def parse_natural_time(text: str, lang: str, user_tz: ZoneInfo) -> datetime | None:
     """
     Возвращает AWARE local datetime (в таймзоне пользователя) или None.
@@ -5195,7 +5237,7 @@ handlers = [
     # --- Функции: трекер целей/привычек/напоминаний/очки/статистика
     CommandHandler("tracker_menu", tracker_menu_cmd),
     CallbackQueryHandler(gh_callback, pattern=r"^gh:"),
-
+    CallbackQueryHandler(menu_router,        pattern=r"^m:nav:"),
     CommandHandler("goal", goal),
     CommandHandler("goals", show_goals),
     CommandHandler("habit", habit),
