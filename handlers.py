@@ -2403,6 +2403,7 @@ def _next_weekday(base_local: datetime, target_wd: int) -> datetime:
         delta = 7
     return base_local + timedelta(days=delta)
 
+# ==== РОУТЕР ГЛАВНОГО МЕНЮ ====
 async def menu_router(update, context):
     q = update.callback_query
     if not q or not q.data.startswith("m:nav:"):
@@ -2415,34 +2416,28 @@ async def menu_router(update, context):
     act = q.data.split(":", 2)[2]
 
     if act == "features":
-        return await msg.edit_text(t.get("features_title", t["features"]),
-                                   reply_markup=InlineKeyboardMarkup(
-                                       [[InlineKeyboardButton(t["back"], callback_data="m:nav:home")]]
-                                   ))
+        text = f'{t.get("feat_title", t["features"])}\n{t.get("feat_body", "")}'
+        return await msg.edit_text(text, reply_markup=_features_kb(uid), parse_mode="Markdown")
+
     elif act == "plus":
         return await msg.edit_text(t.get("plus_title", t["plus_features"]),
-                                   reply_markup=InlineKeyboardMarkup(
-                                       [[InlineKeyboardButton(t["back"], callback_data="m:nav:home")]]
-                                   ))
+                                   reply_markup=_plus_kb(uid), parse_mode="Markdown")
+
     elif act == "premium":
-        return await msg.edit_text(t.get("premium_title", t["premium"]),
-                                   reply_markup=InlineKeyboardMarkup(
-                                       [[InlineKeyboardButton(t["back"], callback_data="m:nav:home")]]
-                                   ))
+        return await msg.edit_text(t.get("prem_title", t["premium"]),
+                                   reply_markup=_premium_kb(uid), parse_mode="Markdown")
+
     elif act == "settings":
-        kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton(t["set_lang"], callback_data="m:set:lang")],
-            [InlineKeyboardButton(t["set_tz"],   callback_data="m:set:tz")],
-            [InlineKeyboardButton(t["back"],     callback_data="m:nav:home")],
-        ])
-        return await msg.edit_text(t.get("settings_title", t["settings"]), reply_markup=kb)
+        return await msg.edit_text(t.get("set_title", t["settings"]),
+                                   reply_markup=_settings_kb(uid), parse_mode="Markdown")
+
     elif act == "home":
         return await show_main_menu(msg)
+
     elif act == "close":
         try:
             return await msg.delete()
         except Exception:
-            # если удаление нельзя — вернёмся домой
             return await show_main_menu(msg)
 
 def parse_natural_time(text: str, lang: str, user_tz: ZoneInfo) -> datetime | None:
