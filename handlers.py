@@ -4873,69 +4873,26 @@ async def send_daily_task(context: ContextTypes.DEFAULT_TYPE):
             logging.error(f"❌ Ошибка при отправке утреннего задания {uid}: {e}")
 
 async def mypoints_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
-    lang = user_languages.get(user_id, "ru")
-    stats = get_user_stats(user_id)
+    uid  = str(update.effective_user.id)
+    lang = user_languages.get(uid, "ru")
+    stats = get_user_stats(uid)
     points = stats.get("points", 0)
     completed = stats.get("goals_completed", 0)
 
     TEXTS = {
-        "ru": (
-            "🌟 *Твоя статистика:*\n\n"
-            f"✨ Очки: {points}\n"
-            f"🎯 Выполнено целей: {completed}"
-        ),
-        "en": (
-            "🌟 *Your Stats:*\n\n"
-            f"✨ Points: {points}\n"
-            f"🎯 Goals completed: {completed}"
-        ),
-        "uk": (
-            "🌟 *Твоя статистика:*\n\n"
-            f"✨ Бали: {points}\n"
-            f"🎯 Виконано цілей: {completed}"
-        ),
-        "be": (
-            "🌟 *Твая статыстыка:*\n\n"
-            f"✨ Балы: {points}\n"
-            f"🎯 Выканана мэт: {completed}"
-        ),
-        "kk": (
-            "🌟 *Сенің статистикаң:*\n\n"
-            f"✨ Ұпайлар: {points}\n"
-            f"🎯 Орындалған мақсаттар: {completed}"
-        ),
-        "kg": (
-            "🌟 *Сенин статистикаң:*\n\n"
-            f"✨ Упайлар: {points}\n"
-            f"🎯 Аткарылган максаттар: {completed}"
-        ),
-        "hy": (
-            "🌟 *Քո վիճակագրությունը:*\n\n"
-            f"✨ Միավորներ: {points}\n"
-            f"🎯 Կատարված նպատակներ: {completed}"
-        ),
-        "ce": (
-            "🌟 *Хьо статистика:* \n\n"
-            f"✨ Баллар: {points}\n"
-            f"🎯 Хийцар мацахь: {completed}"
-        ),
-        "md": (
-            "🌟 *Statistica ta:*\n\n"
-            f"✨ Puncte: {points}\n"
-            f"🎯 Obiective realizate: {completed}"
-        ),
-        "ka": (
-            "🌟 *შენი სტატისტიკა:*\n\n"
-            f"✨ ქულები: {points}\n"
-            f"🎯 შესრულებული მიზნები: {completed}"
-        ),
+        "ru":  "🌟 *Твоя статистика:*\n\n✨ Очки: {p}\n🎯 Выполнено целей: {c}",
+        "en":  "🌟 *Your Stats:*\n\n✨ Points: {p}\n🎯 Goals completed: {c}",
+        "uk":  "🌟 *Твоя статистика:*\n\n✨ Бали: {p}\n🎯 Виконано цілей: {c}",
+        "be":  "🌟 *Твая статыстыка:*\n\n✨ Балы: {p}\n🎯 Выканана мэт: {c}",
+        "kk":  "🌟 *Сенің статистикаң:*\n\n✨ Ұпайлар: {p}\n🎯 Орындалған мақсаттар: {c}",
+        "kg":  "🌟 *Сенин статистикаң:*\n\n✨ Упайлар: {p}\n🎯 Аткарылган максаттар: {c}",
+        "hy":  "🌟 *Քո վիճակագրությունը:*\n\n✨ Միավորներ: {p}\n🎯 Կատարված նպատակներ: {c}",
+        "ce":  "🌟 *Хьо статистика:*\n\n✨ Баллар: {p}\n🎯 Хийцар мацахь: {c}",
+        "md":  "🌟 *Statistica ta:*\n\n✨ Puncte: {p}\n🎯 Obiective realizate: {c}",
+        "ka":  "🌟 *შენი სტატისტიკა:*\n\n✨ ქულები: {p}\n🎯 შესრულებული მიზნები: {c}",
     }
-
-    await update.message.reply_text(
-        TEXTS.get(lang, TEXTS["ru"]),
-        parse_mode="Markdown"
-    )
+    text = TEXTS.get(lang, TEXTS["ru"]).format(p=points, c=completed)
+    await ui_show_from_command(update, context, text, reply_markup=_kb_back_home(uid), parse_mode="Markdown")
 
 
 async def send_weekly_report(context: ContextTypes.DEFAULT_TYPE):
