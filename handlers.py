@@ -2121,13 +2121,10 @@ def _gh_menu_keyboard(t: dict) -> InlineKeyboardMarkup:
         [InlineKeyboardButton(t["back"],            callback_data="gh:back")],
     ])
 
-async def tracker_menu_cmd(update, context: ContextTypes.DEFAULT_TYPE):
+async def tracker_menu_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
     t = _gh_i18n(uid)
-    await update.message.reply_text(
-        t["menu_title"],
-        reply_markup=_gh_menu_keyboard(t)
-    )
+    await ui_show_from_command(update, context, t["menu_title"], reply_markup=_gh_menu_keyboard(t))
 
 # /premium — апселл/статус
 async def premium_cmd(update, context):
