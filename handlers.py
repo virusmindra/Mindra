@@ -878,7 +878,7 @@ async def _sleep_refresh(q: CallbackQuery, uid: str, tab: str):
 
 
 
-def _sleep_kb(uid: str, tab: str = "kind") -> InlineKeyboardMarkup:
+def _sleep_kb(uid: str, tab: str = "kind", back_to: str = "plus") -> InlineKeyboardMarkup:
     p = _sleep_p(uid)
     t = _sleep_i18n(uid)
 
@@ -889,9 +889,11 @@ def _sleep_kb(uid: str, tab: str = "kind") -> InlineKeyboardMarkup:
                 continue
             mark = "✅ " if p["kind"] == key else ""
             rows.append([InlineKeyboardButton(f"{mark}{meta['label']}", callback_data=f"sleep:kind:{key}")])
+
     elif tab == "dur":
         for row in ((5,10,15),(20,30,45),(60,90,120)):
             rows.append([InlineKeyboardButton(f"{m}m", callback_data=f"sleep:dur:{m}") for m in row])
+
     elif tab == "gain":
         for row in ((-30,-25,-20),(-15,-10,-5),(0,5,10)):
             rows.append([InlineKeyboardButton(f"{g} dB", callback_data=f"sleep:gain:{g}") for g in row])
@@ -906,32 +908,40 @@ def _sleep_kb(uid: str, tab: str = "kind") -> InlineKeyboardMarkup:
         InlineKeyboardButton(f"⏱ {t['pick_duration']}", callback_data="sleep:tab:dur"),
         InlineKeyboardButton(f"🔉 {t['pick_gain']}",     callback_data="sleep:tab:gain"),
     ])
-    return InlineKeyboardMarkup(rows)
 
+    # ⬅️ Назад (в экран Премиум-функций или в корень)
+    back_cb = "m:nav:plus" if back_to == "plus" else "m:nav:home"
+    rows.append([InlineKeyboardButton(_menu_i18n(uid)["back"], callback_data=back_cb)])
+
+    return InlineKeyboardMarkup(rows)
+    
 # /sleep — открыть меню
 async def sleep_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
-    await update.message.reply_text(
+    await ui_show_from_command(
+        update, context,
         _sleep_menu_text(uid),
-        parse_mode="Markdown",
         reply_markup=_sleep_kb(uid, "kind"),
+        parse_mode="Markdown",
     )
 
     
 # Колбэк "sl:*"
+
 async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     if not q or not q.data.startswith("sleep:"):
         return
-    await q.answer()  # ответим быстро, чтобы не было pop-up Error
+    await q.answer()  # чтобы не висел "loading…"
+    context.user_data[UI_MSG_KEY] = q.message.message_id  # работаем в одном сообщении
 
     uid = str(q.from_user.id)
     p = _sleep_p(uid)
 
     parts = q.data.split(":")
     kind = parts[1]
-
     current_tab = "kind"
+
     try:
         if kind == "tab":
             current_tab = parts[2]
@@ -952,40 +962,35 @@ async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         elif kind == "act":
             action = parts[2]
+            t = _sleep_i18n(uid)
             if action == "start":
                 try:
                     ogg_path = _render_sleep_ogg(p["kind"], p["duration_min"], p["gain_db"])
                 except FileNotFoundError:
-                    t = _sleep_i18n(uid)
-                    await q.message.reply_text(t["err_missing"])
-                    return
+                    return await q.answer(t["err_missing"], show_alert=True)
                 except RuntimeError:
-                    t = _sleep_i18n(uid)
-                    await q.message.reply_text(t["err_ffmpeg"])
-                    return
+                    return await q.answer(t["err_ffmpeg"], show_alert=True)
 
+                # шлём ВОЙС отдельным сообщением (это нормально)
                 with open(ogg_path, "rb") as f:
                     await context.bot.send_voice(chat_id=int(uid), voice=f)
-                t = _sleep_i18n(uid)
+
                 meta = BGM_PRESETS.get(p["kind"], {"label": p["kind"]})
-                await q.message.reply_text(
-                    t["started"].format(sound=meta["label"], min=p["duration_min"]),
-                    parse_mode="Markdown",
-                )
+                await q.answer(t["started"].format(sound=meta["label"], min=p["duration_min"]), show_alert=True)
+
             elif action == "stop":
-                # пока просто уведомление
-                t = _sleep_i18n(uid)
-                await q.message.reply_text(t["stopped"])
+                await q.answer(t["stopped"], show_alert=True)
 
         # обновим экран
         await _sleep_refresh(q, uid, current_tab)
+
     except Exception as e:
         logging.exception("sleep_cb failed: %s", e)
         try:
-            await q.answer("Oops, try again", show_alert=False)
+            await q.answer("Oops, try again", show_alert=True)
         except Exception:
             pass
-
+            
 def _current_voice_name(uid: str) -> str:
     lang = user_languages.get(uid, "ru")
     p = _vp(uid)
