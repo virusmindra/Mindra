@@ -2345,6 +2345,7 @@ async def reminders_menu_cmd(update, context: ContextTypes.DEFAULT_TYPE):
     kb = InlineKeyboardMarkup([
         [InlineKeyboardButton(t["btn_add_rem"],  callback_data="rem:new")],
         [InlineKeyboardButton(t["btn_list_rem"], callback_data="rem:list")],
+        [InlineKeyboardButton(t_menu["back"],    callback_data="m:nav:home")],
     ])
     # Покажем компактный заголовок-меню
     await update.message.reply_text(t["menu_title"], reply_markup=kb)
