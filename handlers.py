@@ -925,7 +925,15 @@ async def sleep_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="Markdown",
     )
 
-    
+
+async def show_sleep_menu(msg):
+    uid = str(msg.chat.id)
+    await msg.edit_text(
+        _sleep_menu_text(uid),
+        parse_mode="Markdown",
+        reply_markup=_sleep_kb(uid, "kind"),
+    )
+
 # Колбэк "sl:*"
 
 async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
