@@ -2489,7 +2489,7 @@ async def plus_router(update, context):
         except Exception:
             pass
         return await q.message.edit_text(
-            _story_help(uid),
+            STORY_TEXTS(uid),
             parse_mode="Markdown",
             disable_web_page_preview=True,
             reply_markup=None,   # ← без кнопок
