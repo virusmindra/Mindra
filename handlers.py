@@ -228,6 +228,7 @@ os.makedirs(DATA_DIR, exist_ok=True)
 PREMIUM_DB_PATH = os.getenv("PREMIUM_DB_PATH", os.path.join(DATA_DIR, "premium.sqlite3"))
 REMIND_DB_PATH  = os.getenv("REMIND_DB_PATH",  os.path.join(DATA_DIR, "reminders.sqlite3"))
 
+UI_MSG_KEY = "ui_msg_id"
 
 # URL страницы оплаты — замени на свою
 PREMIUM_URL = "https://example.com/pay"
@@ -471,6 +472,22 @@ async def menu_cb(update, context):
     if not ok:
         await context.bot.send_message(q.message.chat.id, "Команда недоступна.")
     return
+
+async def ui_show_from_command(update, context, text, reply_markup=None, parse_mode=None):
+    chat_id = update.effective_chat.id
+    ui_id = context.user_data.get(UI_MSG_KEY)
+    if ui_id:
+        try:
+            await context.bot.edit_message_text(
+                chat_id=chat_id, message_id=ui_id, text=text,
+                reply_markup=reply_markup, parse_mode=parse_mode
+            )
+            return
+        except Exception:
+            # например, сообщение удалено или слишком старое — пошлём новое
+            pass
+    sent = await update.message.reply_text(text, reply_markup=reply_markup, parse_mode=parse_mode)
+    context.user_data[UI_MSG_KEY] = sent.message_id
 
 def _menu_i18n(uid: str) -> dict:
     lang = user_languages.get(uid, "ru")
