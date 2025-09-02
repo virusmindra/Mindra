@@ -238,6 +238,12 @@ _sleep_prefs: dict[str, dict] = {}
 CB = "ui:"
 CHALLENGE_POINTS = int(os.getenv("CHALLENGE_POINTS", 25)) 
 
+
+def _kb_close(uid: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton(_menu_i18n(uid)["close"], callback_data="m:nav:close")]
+    ])
+    
 def once_per_message(handler_name: str):
     def deco(fn):
         async def wrapper(update, context, *args, **kwargs):
