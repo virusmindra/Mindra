@@ -2339,16 +2339,25 @@ def _i18n(uid: str) -> dict:
 
 # ========== DB ==========
 
-async def reminders_menu_cmd(update, context: ContextTypes.DEFAULT_TYPE):
-    uid = str(update.effective_user.id)
-    t = _i18n(uid)
-    kb = InlineKeyboardMarkup([
+async def reminders_menu_open(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    await q.answer()
+    await q.message.edit_text(_i18n(str(q.from_user.id))["menu_title"],
+                              reply_markup=_reminders_kb(str(q.from_user.id)))
+
+def _reminders_kb(uid: str) -> InlineKeyboardMarkup:
+    t = _i18n(uid)          # тексты блока напоминаний
+    t_menu = _menu_i18n(uid)  # чтобы взять локализованный "Назад"
+    return InlineKeyboardMarkup([
         [InlineKeyboardButton(t["btn_add_rem"],  callback_data="rem:new")],
         [InlineKeyboardButton(t["btn_list_rem"], callback_data="rem:list")],
-        [InlineKeyboardButton(t_menu["back"],    callback_data="m:nav:home")],
+        [InlineKeyboardButton(t_menu["back"],    callback_data="m:nav:home")],  # ⬅️ назад в Гл. меню
     ])
-    # Покажем компактный заголовок-меню
-    await update.message.reply_text(t["menu_title"], reply_markup=kb)
+
+async def reminders_menu_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    t = _i18n(uid)
+    await update.message.reply_text(t["menu_title"], reply_markup=_reminders_kb(uid))
     
 # ========== Time helpers ==========
 def _utcnow():
@@ -5278,10 +5287,11 @@ handlers = [
     # Напоминания / задачи
     CommandHandler("task", task),
     CommandHandler("remind", remind_command),
-    CommandHandler("reminders", reminders_list),
+    CommandHandler("reminders", reminders_menu_cmd),
     CommandHandler("reminders_menu", reminders_menu_cmd),
     CallbackQueryHandler(remind_callback, pattern=r"^rem:"),
-
+    CallbackQueryHandler(reminders_menu_open, pattern=r"^rem:menu$"),
+    
     # Статистика и очки
     CommandHandler("stats", stats_command),
     CommandHandler("mypoints", mypoints_command),
