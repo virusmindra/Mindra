@@ -1102,64 +1102,51 @@ def _voice_menu_text(uid: str) -> str:
         f"{t['bgm'].format(bg=bg_label, db=bg_db)}"
     )
     
-def _voice_kb(uid: str, tab: str = "engine") -> InlineKeyboardMarkup:
-    t = _v_ui_i18n(uid)
+def _voice_kb(uid: str, tab: str = "engine", back_to: str = "plus") -> InlineKeyboardMarkup:
+    t = _v_ui_i18n(uid)          # оставляю твой i18n
     p = _vp(uid)
     rows: list[list[InlineKeyboardButton]] = []
-
-    # доступ к Eleven по тарифу (как ты просил — именно has_feature)
     can_eleven = has_feature(uid, "eleven_tts")
 
-    # безопасно получаем “эффективный” движок для отрисовки галочки у gTTS
+    # ↓↓↓ унифицируем название эффективного движка: 'eleven' | 'gtts'
     try:
-        eff_engine = _effective_tts_engine(uid)  # если функция есть в проекте
+        eff_engine = _effective_tts_engine(uid).lower()
     except Exception:
-        # фолбэк-логика на случай, если _effective_tts_engine отсутствует
         eff_engine = (
             "eleven"
-            if (str(p.get("engine", "gTTS")).lower() == "eleven"
-                and _has_eleven()
-                and bool(p.get("voice_id"))
-                and can_eleven)
-            else "gTTS"
+            if (str(p.get("engine", "gtts")).lower() == "eleven"
+                and _has_eleven() and bool(p.get("voice_id")) and can_eleven)
+            else "gtts"
         )
 
-    def _check(mark: bool) -> str:
-        return "✅ " if mark else ""
+    def _check(mark: bool) -> str: return "✅ " if mark else ""
 
     if tab == "engine":
-        row: list[InlineKeyboardButton] = []
-        # Кнопку Eleven показываем только если фича разрешена тарифом
+        row = []
         if can_eleven:
-            row.append(
-                InlineKeyboardButton(
-                    _check(p.get("engine") == "eleven") + t["engine_eleven"],
-                    callback_data="v:engine:eleven"
-                )
-            )
-        # gTTS доступен всем; галочку рисуем по “эффективному” движку
-        row.append(
-            InlineKeyboardButton(
-                _check(eff_engine == "gTTS") + t["engine_gtts"],
-                callback_data="v:engine:gTTS"
-            )
-        )
+            row.append(InlineKeyboardButton(
+                _check(p.get("engine","").lower() == "eleven") + t["engine_eleven"],
+                callback_data="v:engine:eleven"
+            ))
+        row.append(InlineKeyboardButton(
+            _check(eff_engine == "gtts") + t["engine_gtts"],
+            callback_data="v:engine:gTTS"             # callback оставляю как у тебя
+        ))
         rows.append(row)
 
     elif tab == "voice":
         presets = VOICE_PRESETS.get(user_languages.get(uid, "ru"), VOICE_PRESETS["ru"])
-        cur_engine = p.get("engine")
+        cur_engine = (p.get("engine") or "").lower()
         cur_voice  = p.get("voice_id", "")
         for i, (name, eng_k, vid) in enumerate(presets):
-            # не показываем Eleven-голоса, если фича недоступна или нет ключа
             if eng_k.lower() == "eleven" and (not can_eleven or not _has_eleven()):
                 continue
-            selected = (eng_k == cur_engine) and ((vid == cur_voice) or (eng_k.lower() == "gTTS"))
+            selected = (eng_k.lower() == cur_engine) and ((vid == cur_voice) or (eng_k.lower() == "gtts"))
             rows.append([InlineKeyboardButton(_check(selected) + name, callback_data=f"v:voice:{i}")])
 
     elif tab == "speed":
         speeds = [0.8, 0.9, 1.0, 1.1, 1.2]
-        row: list[InlineKeyboardButton] = []
+        row = []
         for s in speeds:
             sel = abs(p.get("speed", 1.0) - s) < 1e-6
             label = f"{'➖ ' if s < 1.0 else ('➕ ' if s > 1.0 else '')}{s:.1f}x"
@@ -1167,26 +1154,17 @@ def _voice_kb(uid: str, tab: str = "engine") -> InlineKeyboardMarkup:
         rows.append(row)
 
     elif tab == "beh":
-        voice_only_label = t.get("label_voice_only", "Voice only")
-        auto_story_label = t.get("label_auto_story", "Auto story voice")
-        rows.append([
-            InlineKeyboardButton(
-                (_check(p.get("voice_only", False)) + voice_only_label),
-                callback_data="v:beh:voiceonly"
-            )
-        ])
-        rows.append([
-            InlineKeyboardButton(
-                (_check(p.get("auto_story_voice", True)) + auto_story_label),
-                callback_data="v:beh:autostory"
-            )
-        ])
+        rows += [
+            [InlineKeyboardButton((_check(p.get("voice_only", False)) + t.get("label_voice_only","Voice only")),
+                                  callback_data="v:beh:voiceonly")],
+            [InlineKeyboardButton((_check(p.get("auto_story_voice", True)) + t.get("label_auto_story","Auto story voice")),
+                                  callback_data="v:beh:autostory")],
+        ]
 
     elif tab == "bg":
         kinds_order = ["off", "rain", "fire", "ocean", "lofi"]
         present = [k for k in kinds_order if k in BGM_PRESETS] or list(BGM_PRESETS.keys())
-
-        row: list[InlineKeyboardButton] = []
+        row = []
         for k in present:
             meta = BGM_PRESETS.get(k, {})
             label = meta.get("label", k)
@@ -1198,13 +1176,11 @@ def _voice_kb(uid: str, tab: str = "engine") -> InlineKeyboardMarkup:
         for i in range(0, len(gains), 4):
             chunk = gains[i:i+4]
             rows.append([
-                InlineKeyboardButton(
-                    ("✅ " if g == cur_gain else "") + f"{g:+} dB",
-                    callback_data=f"v:bg:gain:{g}"
-                ) for g in chunk
+                InlineKeyboardButton(("✅ " if g == cur_gain else "") + f"{g:+} dB",
+                                     callback_data=f"v:bg:gain:{g}") for g in chunk
             ])
 
-    # нижняя навигация по вкладкам
+    # Навигация по вкладкам
     rows.append([
         InlineKeyboardButton(t["btn_engine"], callback_data="v:tab:engine"),
         InlineKeyboardButton(t["btn_voice"],  callback_data="v:tab:voice"),
@@ -1212,15 +1188,21 @@ def _voice_kb(uid: str, tab: str = "engine") -> InlineKeyboardMarkup:
         InlineKeyboardButton(t["btn_beh"],    callback_data="v:tab:beh"),
         InlineKeyboardButton(t["btn_bg"],     callback_data="v:tab:bg"),
     ])
+
+    # ⬅️ Назад
+    back_cb = "m:nav:plus" if back_to == "plus" else "m:nav:home"
+    rows.append([InlineKeyboardButton(_menu_i18n(uid)["back"], callback_data=back_cb)])
+
     return InlineKeyboardMarkup(rows)
 
 # === /voice_settings ===
 async def voice_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
-    await update.message.reply_text(
+    await ui_show_from_command(
+        update, context,
         _voice_menu_text(uid),
-        parse_mode="Markdown",
-        reply_markup=_voice_kb(uid, "engine"),
+        reply_markup=_voice_kb(uid, "engine", back_to="plus"),
+        parse_mode="Markdown"
     )
 
 # === Callback ===
@@ -1229,42 +1211,30 @@ async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not q or not q.data.startswith("v:"):
         return
     await q.answer()
+    context.user_data[UI_MSG_KEY] = q.message.message_id   # <<< важно для единого сообщения
 
     uid = str(q.from_user.id)
     p = _vp(uid)
-
     parts = q.data.split(":")
     kind = parts[1]
-    current_tab = "engine"  # вкладка, которую освежаем после изменений
+    current_tab = "engine"
 
     if kind == "tab":
-        tab = parts[2]
-        return await _voice_refresh(q, uid, tab)
+        return await _voice_refresh(q, uid, parts[2])
 
     if kind == "engine":
         new_engine = parts[2]
-
-    # 🚧 тарифный гейт + проверка ключа для Eleven
         if new_engine.lower() == "eleven":
-        # нет фичи по тарифу → апселл и не переключаем
             if not has_feature(uid, "eleven_tts"):
                 try:
-                    title, body = upsell_for(uid, "feature_eleven")
-                    await q.answer(title, show_alert=True)  # короткий алерт — только заголовок
+                    title, _ = upsell_for(uid, "feature_eleven")
+                    await q.answer(title, show_alert=True)
                 except Exception:
                     pass
                 return await _voice_refresh(q, uid, "engine")
-
-        # нет API-ключа → не переключаем
             if not _has_eleven():
-                try:
-                    t = _v_ui_i18n(uid)  # если у тебя функция называется _vm_i18n — используй её
-                    await q.answer(t.get("no_eleven_key", "ElevenLabs key not set — only gTTS available."), show_alert=True)
-                except Exception:
-                    pass
+                await q.answer(_v_ui_i18n(uid).get("no_eleven_key","ElevenLabs key not set"), show_alert=True)
                 return await _voice_refresh(q, uid, "engine")
-        
-    # 🟢 всё ок — реально переключаем движок
         p["engine"] = new_engine
         current_tab = "engine"
 
@@ -1273,35 +1243,18 @@ async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
         presets = VOICE_PRESETS.get(user_languages.get(uid, "ru"), VOICE_PRESETS["ru"])
         if 0 <= idx < len(presets):
             name, eng_k, vid = presets[idx]
-
-            # 🚧 тарифный гейт и ключ для пресета Eleven
             if eng_k.lower() == "eleven":
-                if not has_feature(uid, "eleven_tts"):
-                    try:
-                        title, body = upsell_for(uid, "feature_eleven")
-                        await q.answer(title, show_alert=True)
-                    except Exception:
-                        await q.answer("ElevenLabs доступен в Mindra+ / Pro", show_alert=True)
+                if not has_feature(uid, "eleven_tts") or not _has_eleven():
+                    await q.answer(_v_ui_i18n(uid).get("no_eleven_key","ElevenLabs not available"), show_alert=True)
                     return await _voice_refresh(q, uid, "engine")
-
-                if not _has_eleven():
-                    try:
-                        t = _vm_i18n(uid)
-                        await q.answer(t.get("no_eleven_key", "ElevenLabs key not set"), show_alert=True)
-                    except Exception:
-                        pass
-                    return await _voice_refresh(q, uid, "engine")
-
             p["engine"] = eng_k
-            p["voice_id"] = vid or p.get("voice_id", "")
+            p["voice_id"] = vid or p.get("voice_id","")
             p["voice_name"] = name
         current_tab = "engine"
 
     elif kind == "speed":
-        try:
-            p["speed"] = float(parts[2])
-        except Exception:
-            pass
+        try: p["speed"] = float(parts[2])
+        except Exception: pass
         current_tab = "speed"
 
     elif kind == "beh":
@@ -1317,13 +1270,10 @@ async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if sub == "set":
             p["bgm_kind"] = parts[3]
         elif sub == "gain":
-            try:
-                p["bgm_gain_db"] = int(parts[3])
-            except Exception:
-                pass
+            try: p["bgm_gain_db"] = int(parts[3])
+            except Exception: pass
         current_tab = "bg"
 
-    # единый рефреш (с защитой от "Message is not modified")
     await _voice_refresh(q, uid, current_tab)
 
 
