@@ -323,13 +323,19 @@ def _shim_update_for_cb(q: CallbackQuery, context) -> "object":
 
 
 async def show_main_menu(msg):
-    # получаем локализацию, если есть
-    try:
-        uid = str(msg.chat.id)
-        t = _p_i18n(uid)
-    except Exception:
-        t = {}
-    await msg.edit_text(MENU_TEXTS, reply_markup=_menu_main_kb(t))
+    uid = str(msg.chat.id)
+    t = _menu_i18n(uid)  # тексты по текущему языку
+
+    # Заголовок + (если нужно) статус премиума
+    lines = [t.get("title", "🏠 Main menu")]  # подстраховка от KeyError
+
+    text = "\n".join(lines)
+
+    await msg.edit_text(
+        text,
+        reply_markup=_menu_kb_home(uid),  # существующая клавиатура главного меню
+        parse_mode="Markdown",
+    )
 
 async def _try_call(names, update, context) -> bool:
     """Пробует вызвать ПЕРВУЮ найденную функцию из списка names. Возвращает True при успехе."""
