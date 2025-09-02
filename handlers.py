@@ -3219,15 +3219,12 @@ async def tz_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logging.exception(f"onboarding finalize error: {e}")
         
 async def points_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
-    lang = user_languages.get(user_id, "ru")
+    uid  = str(update.effective_user.id)
+    lang = user_languages.get(uid, "ru")
 
-    points = get_user_points(user_id)
-    title = get_user_title(points, lang)
-
-    # было: _, next_title, to_next = get_next_title_info(points, lang)
-    next_title, to_next = get_next_title_info(points, lang)  # ← так правильно
-
+    points = get_user_points(uid)
+    title  = get_user_title(points, lang)
+    next_title, to_next = get_next_title_info(points, lang)  # ← как ты и писал
     ladder = build_titles_ladder(lang)
 
     text = POINTS_HELP_TEXTS.get(lang, POINTS_HELP_TEXTS["ru"]).format(
@@ -3237,7 +3234,7 @@ async def points_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         to_next=to_next,
         ladder=ladder,
     )
-    await update.message.reply_text(text, parse_mode="Markdown")
+    await ui_show_from_command(update, context, text, reply_markup=_kb_back_home(uid), parse_mode="Markdown")
 
 async def show_habits(update, context):
     # Универсальная поддержка и команды, и callback
