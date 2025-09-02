@@ -2440,6 +2440,74 @@ async def menu_router(update, context):
         except Exception:
             return await show_main_menu(msg)
 
+# m:plus:* — экраны внутри "Премиум-функции"
+async def plus_router(update, context):
+    q = update.callback_query
+    if not q or not q.data.startswith("m:plus:"):
+        return
+    await q.answer()
+    context.user_data[UI_MSG_KEY] = q.message.message_id  # работаем в одном сообщении
+
+    uid = str(q.from_user.id)
+    msg = q.message
+    parts = q.data.split(":")  # ["m","plus", ...]
+    action = parts[2] if len(parts) >= 3 else ""
+
+    # --- Озвучка
+    if act == "voice":
+        context.user_data[UI_MSG_KEY] = q.message.message_id
+        return await show_voice_menu(q.message)   # edit того же сообщения
+
+    # --- Звуки для сна
+    if action == "sleep":
+        # m:plus:sleep | m:plus:sleep:set:<kind> | m:plus:sleep:gain:<db>
+        if len(parts) == 3:
+            return await show_sleep_menu(msg)
+        sub = parts[3]
+        p = _vp(uid)
+        if sub == "set" and len(parts) >= 5:
+            p["bgm_kind"] = parts[4]
+            return await show_sleep_menu(msg)
+        if sub == "gain" and len(parts) >= 5:
+            try:
+                p["bgm_gain_db"] = int(parts[4])
+            except Exception:
+                pass
+            return await show_sleep_menu(msg)
+
+    # --- Сказка
+    if action == "story":
+        return await msg.edit_text(_plus_story_text(uid), reply_markup=_plus_story_kb(uid), parse_mode="Markdown")
+
+    # --- Premium-mode
+    if action == "pmode":
+        if len(parts) == 3:
+            return await msg.edit_text(_pmode_text(uid), reply_markup=_pmode_kb(uid), parse_mode="Markdown")
+        if len(parts) >= 4 and parts[3] == "toggle":
+            user_premium_mode[uid] = not user_premium_mode.get(uid, False)
+            return await msg.edit_text(_pmode_text(uid), reply_markup=_pmode_kb(uid), parse_mode="Markdown")
+
+    # --- Premium-stats
+    if action == "pstats":
+        return await msg.edit_text(
+            _simple_text("📊 Premium-stats", "Раздел в разработке. Тут будут расширенные графики и метрики."),
+            reply_markup=_simple_kb_back(uid), parse_mode="Markdown"
+        )
+
+    # --- Premium-report
+    if action == "preport":
+        return await msg.edit_text(
+            _simple_text("📝 Premium-report", "Еженедельный отчёт с персональными инсайтами — скоро."),
+            reply_markup=_simple_kb_back(uid), parse_mode="Markdown"
+        )
+
+    # --- Premium-challenge
+    if action == "pchallenge":
+        return await msg.edit_text(
+            _simple_text("🏆 Premium-challenge", "Ежемесячные челленджи с прогрессом и наградами — скоро."),
+            reply_markup=_simple_kb_back(uid), parse_mode="Markdown"
+        )
+
 async def feat_router(update, context):
     q = update.callback_query
     if not q or not q.data.startswith("m:feat:"):
@@ -5284,7 +5352,8 @@ handlers = [
     CommandHandler("voice_mode", voice_mode_cmd),
     CommandHandler("voice_settings", voice_settings),
     CallbackQueryHandler(voice_settings_cb, pattern=r"^v:"),
-
+    CallbackQueryHandler(plus_router, pattern=r"^m:plus:"),
+    
     CommandHandler("story", story_cmd),
     CallbackQueryHandler(story_callback, pattern=r"^st:"),
 
