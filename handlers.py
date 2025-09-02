@@ -2417,19 +2417,19 @@ async def menu_router(update, context):
 
     if act == "features":
         text = f'{t.get("feat_title", t["features"])}\n{t.get("feat_body", "")}'
-        return await msg.edit_text(text, reply_markup=_features_kb(uid), parse_mode="Markdown")
+        return await msg.edit_text(text, reply_markup=_menu_kb_features(uid), parse_mode="Markdown")
 
     elif act == "plus":
         return await msg.edit_text(t.get("plus_title", t["plus_features"]),
-                                   reply_markup=_plus_kb(uid), parse_mode="Markdown")
+                                   reply_markup=_menu_kb_plus(uid), parse_mode="Markdown")
 
     elif act == "premium":
         return await msg.edit_text(t.get("prem_title", t["premium"]),
-                                   reply_markup=_premium_kb(uid), parse_mode="Markdown")
+                                   reply_markup=_menu_kb_premium(uid), parse_mode="Markdown")
 
     elif act == "settings":
         return await msg.edit_text(t.get("set_title", t["settings"]),
-                                   reply_markup=_settings_kb(uid), parse_mode="Markdown")
+                                   reply_markup=_menu_kb_settings(uid), parse_mode="Markdown")
 
     elif act == "home":
         return await show_main_menu(msg)
