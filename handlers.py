@@ -1479,6 +1479,10 @@ async def story_help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
     await ui_show_from_command(update, context, _story_help(uid), parse_mode="Markdown")
 
+def _story_help(uid: str) -> str:
+    lang = user_languages.get(uid, "ru")
+    return STORY_TEXTS.get(lang, STORY_TEXTS["ru"])
+
 async def story_cmd(update, context):
     uid = str(update.effective_user.id)
 
