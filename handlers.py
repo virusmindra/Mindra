@@ -1567,12 +1567,13 @@ async def story_cmd(update, context):
     if args.get("voice") and has_feature(uid, "story_voice"):
         await send_voice_response(context, int(uid), text, lang)
 
-
 async def story_callback(update, context):
     q = update.callback_query
     if not q or not q.data.startswith("st:"):
         return
     await q.answer()
+    context.user_data[UI_MSG_KEY] = q.message.message_id  # работаем в одном сообщении
+
     uid = str(q.from_user.id)
     lang = user_languages.get(uid, "ru")
     t = _s_i18n(uid)
@@ -1582,7 +1583,12 @@ async def story_callback(update, context):
 
     if action == "confirm":
         topic = context.chat_data.get(f"story_pending_{uid}", "")
-        await q.edit_message_text(t["making"])
+        # показываем «делаю…» в ТОМ ЖЕ сообщении
+        try:
+            await q.edit_message_text(t["making"])
+        except Exception:
+            pass
+
         text = await generate_story_text(uid, lang, topic, None, "short")
         context.chat_data[f"story_last_{uid}"] = {"text": text, "lang": lang, "topic": topic}
 
@@ -1591,16 +1597,21 @@ async def story_callback(update, context):
             [InlineKeyboardButton(t["btn_voice"], callback_data="st:voice")],
             [InlineKeyboardButton(t["btn_close"], callback_data="st:close")],
         ])
-        await context.bot.send_message(chat_id=int(uid),
-                                       text=f"*{t['title']}*\n\n{text}",
-                                       parse_mode="Markdown",
-                                       reply_markup=kb)
+        try:
+            await q.edit_message_text(
+                f"*{t['title']}*\n\n{text}",
+                parse_mode="Markdown",
+                reply_markup=kb,
+            )
+        except BadRequest as e:
+            if "message is not modified" not in str(e).lower():
+                raise
 
-        # 🔊 Авто-озвучка для премиума
+        # авто-озвучка (доп. сообщение только с voice — это нормально)
         if is_premium(uid) and _vp(uid).get("auto_story_voice", True):
             bg_override = None
             prefs = _vp(uid)
-            if prefs.get("auto_bgm_for_stories", True) and prefs.get("bgm_kind","off") == "off":
+            if prefs.get("auto_bgm_for_stories", True) and prefs.get("bgm_kind", "off") == "off":
                 bg_override = "ocean"
             try:
                 await send_voice_response(context, int(uid), text, lang, bgm_kind_override=bg_override)
@@ -1614,24 +1625,25 @@ async def story_callback(update, context):
         text = await generate_story_text(uid, lang, topic, None, "short")
         context.chat_data[f"story_last_{uid}"] = {"text": text, "lang": lang, "topic": topic}
 
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton(t["btn_more"],  callback_data="st:new")],
+            [InlineKeyboardButton(t["btn_voice"], callback_data="st:voice")],
+            [InlineKeyboardButton(t["btn_close"], callback_data="st:close")],
+        ])
         try:
-            await q.edit_message_text(f"*{t['title']}*\n\n{text}",
-                                      parse_mode="Markdown",
-                                      reply_markup=InlineKeyboardMarkup([
-                                          [InlineKeyboardButton(t["btn_more"],  callback_data="st:new")],
-                                          [InlineKeyboardButton(t["btn_voice"], callback_data="st:voice")],
-                                          [InlineKeyboardButton(t["btn_close"], callback_data="st:close")],
-                                      ]))
-        except:
-            await context.bot.send_message(chat_id=int(uid),
-                                           text=f"*{t['title']}*\n\n{text}",
-                                           parse_mode="Markdown")
+            await q.edit_message_text(
+                f"*{t['title']}*\n\n{text}",
+                parse_mode="Markdown",
+                reply_markup=kb,
+            )
+        except BadRequest as e:
+            if "message is not modified" not in str(e).lower():
+                raise
 
-        # 🔊 Авто-озвучка для премиума
         if is_premium(uid) and _vp(uid).get("auto_story_voice", True):
             bg_override = None
             prefs = _vp(uid)
-            if prefs.get("auto_bgm_for_stories", True) and prefs.get("bgm_kind","off") == "off":
+            if prefs.get("auto_bgm_for_stories", True) and prefs.get("bgm_kind", "off") == "off":
                 bg_override = "ocean"
             try:
                 await send_voice_response(context, int(uid), text, lang, bgm_kind_override=bg_override)
@@ -1646,13 +1658,13 @@ async def story_callback(update, context):
         return
 
     elif action == "close":
-    # не предлагать сказки этому пользователю ближайшие STORY_COOLDOWN_HOURS часов
+        # ставим кулдаун и редактируем это же сообщение
         _story_optout_until[uid] = datetime.now(timezone.utc) + timedelta(hours=STORY_COOLDOWN_HOURS)
         try:
-            await q.edit_message_text(t["ready"])
-        except Exception:
-            # если редактирование не удалось (удалено/старое сообщение) — просто отправим новое
-            await context.bot.send_message(chat_id=int(uid), text=t["ready"])
+            await q.edit_message_text(t["ready"], parse_mode="Markdown")
+        except BadRequest as e:
+            if "message is not modified" not in str(e).lower():
+                raise
         return
 
 async def send_voice_response(context, chat_id: int, text: str, lang: str, bgm_kind_override: str | None = None):
