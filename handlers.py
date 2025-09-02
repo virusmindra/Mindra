@@ -2135,24 +2135,25 @@ async def premium_cmd(update, context):
         await update.message.reply_text(f"*{t['upsell_title']}*\n\n{t['upsell_body']}",
                                         reply_markup=_premium_kb(uid), parse_mode="Markdown")
 
-# /premium_report — отчёт 7д
+
 @require_premium
 async def premium_report_cmd(update, context):
     uid = str(update.effective_user.id)
     t = _p_i18n(uid)
-    # цели: просто считаем done
+
+    # агрегаты (как у тебя)
     try:
         goals = get_goals(uid)
         goals_done = sum(1 for g in goals if isinstance(g, dict) and g.get("done"))
     except Exception:
         goals_done = 0
-    # привычки: сколько отметок (если нет дат — берём количество записей)
+
     try:
         habits = get_habits(uid)
         habits_marked = len(habits)
     except Exception:
         habits_marked = 0
-    # напоминания: fired за 7д (если нет статусов — 0)
+
     rems_7 = 0
     try:
         with remind_db() as db:
@@ -2163,13 +2164,8 @@ async def premium_report_cmd(update, context):
             ).fetchone()[0]
     except Exception:
         pass
-    # активные дни — грубая метрика: дни с любой активностью (по last_seen логике не считаем, просто ~мин)
-    active_30 = 0
-    try:
-        # если есть user_message_count или логи — подставь. Иначе ноль.
-        active_30 = 0
-    except Exception:
-        pass
+
+    active_30 = 0  # заглушка под реальную метрику
 
     text = (
         f"*{t['report_title']}*\n\n"
@@ -2178,8 +2174,8 @@ async def premium_report_cmd(update, context):
         f"{t['report_rems'].format(n=rems_7)}\n"
         f"{t['report_streak'].format(n=active_30)}"
     )
-    await update.message.reply_text(text, parse_mode="Markdown")
-
+    await ui_show_from_command(update, context, text, reply_markup=_kb_close(uid), parse_mode="Markdown")
+    
 async def premium_challenge_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
     if _debounce(uid, "pch_cmd"):  # антидубль
