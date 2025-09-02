@@ -2249,7 +2249,6 @@ async def premium_stats_cmd(update, context):
     uid = str(update.effective_user.id)
     t = _p_i18n(uid)
 
-    # агрегаты (как у тебя)
     try:
         goals = get_goals(uid)
         total_goals_done = sum(1 for g in goals if isinstance(g, dict) and g.get("done"))
@@ -2268,7 +2267,7 @@ async def premium_stats_cmd(update, context):
         f"{t['stats_habit_days'].format(n=habit_days)}\n"
         f"{t['stats_active_days'].format(n=active_30)}"
     )
-    await ui_show_from_command(update, context, text, reply_markup=_kb_close(uid), parse_mode="Markdown")
+    await ui_show_from_command(update, context, text, reply_markup=_kb_home(uid), parse_mode="Markdown")
 
 async def gh_callback(update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
