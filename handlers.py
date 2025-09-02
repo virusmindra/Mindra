@@ -2440,6 +2440,38 @@ async def menu_router(update, context):
         except Exception:
             return await show_main_menu(msg)
 
+async def feat_router(update, context):
+    q = update.callback_query
+    if not q or not q.data.startswith("m:feat:"):
+        return
+    await q.answer()
+
+    uid = str(q.from_user.id)
+    msg = q.message
+    action = q.data.split(":", 2)[2]  # tracker | mode | reminders | points | mood
+
+    if action == "tracker":
+        # экран трекера
+        t_p = _p_i18n(uid)  # тексты трекера (у тебя уже есть)
+        return await msg.edit_text(t_p["menu_title"], reply_markup=_gh_menu_keyboard(t_p))
+
+    elif action == "mode":
+        # экран выбора режима
+        return await show_mode_menu(msg)  # мы уже делали эту функцию
+
+    elif action == "reminders":
+        # экран напоминаний
+        return await show_reminders_menu(msg)  # функция из блока reminders
+
+    elif action == "points":
+        # заглушка/экран очков — подставь свою функцию, если есть
+        kb_back = InlineKeyboardMarkup([[InlineKeyboardButton(_menu_i18n(uid)["back"], callback_data="m:nav:home")]])
+        return await msg.edit_text("⭐️ Очки/Титул (скоро)", reply_markup=kb_back)
+
+    elif action == "mood":
+        kb_back = InlineKeyboardMarkup([[InlineKeyboardButton(_menu_i18n(uid)["back"], callback_data="m:nav:home")]])
+        return await msg.edit_text("🧪 Тест настроения (скоро)", reply_markup=kb_back)
+
 def parse_natural_time(text: str, lang: str, user_tz: ZoneInfo) -> datetime | None:
     """
     Возвращает AWARE local datetime (в таймзоне пользователя) или None.
@@ -5264,6 +5296,7 @@ handlers = [
     CallbackQueryHandler(gh_callback, pattern=r"^gh:"),
     CallbackQueryHandler(menu_router,        pattern=r"^m:nav:"),
     CommandHandler("goal", goal),
+    CallbackQueryHandler(feat_router,    pattern=r"^m:feat:"),
     CommandHandler("goals", show_goals),
     CommandHandler("habit", habit),
     CommandHandler("habits", habits_list),
