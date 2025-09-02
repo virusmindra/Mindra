@@ -2478,7 +2478,18 @@ async def plus_router(update, context):
 
     # --- Сказка
     if action == "story":
-        return await msg.edit_text(_plus_story_text(uid), reply_markup=_plus_story_kb(uid), parse_mode="Markdown")
+        context.user_data[UI_MSG_KEY] = q.message.message_id  # работаем в одном сообщении
+        # на всякий случай уберём клавиатуру (если текст вдруг совпадёт)
+        try:
+            await q.edit_message_reply_markup(reply_markup=None)
+        except Exception:
+            pass
+        return await q.message.edit_text(
+            _story_help(uid),
+            parse_mode="Markdown",
+            disable_web_page_preview=True,
+            reply_markup=None,   # ← без кнопок
+        )
 
     # --- Premium-mode
     if action == "pmode":
