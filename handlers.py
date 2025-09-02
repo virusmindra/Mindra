@@ -492,22 +492,29 @@ async def menu_cb(update, context):
         await context.bot.send_message(q.message.chat.id, "Команда недоступна.")
     return
 
-async def ui_show_from_command(update, context, text, reply_markup=None, parse_mode=None):
+async def ui_show_from_command(update: Update, context: ContextTypes.DEFAULT_TYPE,
+                               text: str, reply_markup=None, parse_mode: str | None = "Markdown"):
     chat_id = update.effective_chat.id
     ui_id = context.user_data.get(UI_MSG_KEY)
+
     if ui_id:
+        # Пытаемся отредактировать текущее UI-сообщение
         try:
             await context.bot.edit_message_text(
-                chat_id=chat_id, message_id=ui_id, text=text,
-                reply_markup=reply_markup, parse_mode=parse_mode
+                chat_id=chat_id,
+                message_id=ui_id,
+                text=text,
+                reply_markup=reply_markup,
+                parse_mode=parse_mode,
             )
             return
         except Exception:
-            # например, сообщение удалено или слишком старое — пошлём новое
+            # если не получилось (удалено/старое) — пошлём новое ниже
             pass
+
     sent = await update.message.reply_text(text, reply_markup=reply_markup, parse_mode=parse_mode)
     context.user_data[UI_MSG_KEY] = sent.message_id
-
+                                   
 def _menu_i18n(uid: str) -> dict:
     lang = user_languages.get(uid, "ru")
     return MENU_TEXTS.get(lang, MENU_TEXTS["ru"])
