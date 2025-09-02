@@ -4334,18 +4334,38 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(RESET_TEXTS.get(lang, RESET_TEXTS["ru"]))
 
 async def mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
-    lang = user_languages.get(user_id, "ru")
+    uid = str(update.effective_user.id)
+    lang = user_languages.get(uid, "ru")
     t = MODE_TEXTS.get(lang, MODE_TEXTS["ru"])
 
+    await update.message.reply_text(
+        t["text"],
+        reply_markup=_mode_keyboard(uid)
+    )
+
+
+def _mode_keyboard(uid: str) -> InlineKeyboardMarkup:
+    lang = user_languages.get(uid, "ru")
+    t_mode = MODE_TEXTS.get(lang, MODE_TEXTS["ru"])
+    t_menu = MENU_TEXTS.get(lang, MENU_TEXTS["ru"])  # чтобы взять локализованный "Назад"
+
     keyboard = [
-        [InlineKeyboardButton(t["support"], callback_data="mode_support")],
-        [InlineKeyboardButton(t["motivation"], callback_data="mode_motivation")],
-        [InlineKeyboardButton(t["philosophy"], callback_data="mode_philosophy")],
-        [InlineKeyboardButton(t["humor"], callback_data="mode_humor")]
+        [InlineKeyboardButton(t_mode["support"],    callback_data="mode_support")],
+        [InlineKeyboardButton(t_mode["motivation"], callback_data="mode_motivation")],
+        [InlineKeyboardButton(t_mode["philosophy"], callback_data="mode_philosophy")],
+        [InlineKeyboardButton(t_mode["humor"],      callback_data="mode_humor")],
+        [InlineKeyboardButton(t_menu["back"],       callback_data="m:nav:home")],  # ⬅️ Назад в главное меню
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text(t["text"], reply_markup=reply_markup)
+    return InlineKeyboardMarkup(keyboard)
+
+async def mode_menu_open(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    await q.answer()
+    msg = q.message
+    uid = str(q.from_user.id)
+    lang = user_languages.get(uid, "ru")
+    t = MODE_TEXTS.get(lang, MODE_TEXTS["ru"])
+    await msg.edit_text(t["text"], reply_markup=_mode_keyboard(uid))
 
 async def handle_mode_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -5270,7 +5290,8 @@ handlers = [
     # --- Моды, голос, сказки, сон
     CommandHandler("mode", mode),
     CallbackQueryHandler(handle_mode_choice, pattern=r"^mode_"),
-
+    CallbackQueryHandler(mode_menu_open, pattern=r"^mode:menu$"),
+    
     CommandHandler("voice_mode", voice_mode_cmd),
     CommandHandler("voice_settings", voice_settings),
     CallbackQueryHandler(voice_settings_cb, pattern=r"^v:"),
