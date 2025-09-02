@@ -1475,6 +1475,10 @@ def _parse_story_args(raw: str) -> dict:
     d["topic"] = re.sub(r"(имя|name|длина|length|голос|voice)\s*=\s*[^\|\n]+","", d["topic"], flags=re.I).replace("|"," ").strip()
     return d
 
+async def story_help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    await ui_show_from_command(update, context, _story_help(uid), parse_mode="Markdown")
+
 async def story_cmd(update, context):
     uid = str(update.effective_user.id)
 
@@ -5368,7 +5372,8 @@ handlers = [
     
     CommandHandler("story", story_cmd),
     CallbackQueryHandler(story_callback, pattern=r"^st:"),
-
+    CommandHandler("story_help", story_help_cmd),
+    
     CommandHandler("sleep", sleep_cmd),
     CallbackQueryHandler(sleep_cb, pattern=r"^sleep:"),
 
