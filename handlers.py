@@ -285,13 +285,32 @@ async def _dbg_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logging.debug(f"[DBG] unhandled callback: {q.data if q else None}")
     # ничего не отправляем
         
-async def menu_cmd(update, context):
+async def menu_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
-    await update.message.reply_text(
-        _menu_header_text(uid),
-        reply_markup=_menu_kb_home(uid),  # ← построили клавиатуру
-        parse_mode="Markdown",
-    )
+    text = _menu_header_text(uid)
+    kb = _menu_kb_home(uid)
+
+    chat_id = update.effective_chat.id
+    ui_id = context.user_data.get(UI_MSG_KEY)
+
+    if ui_id:
+        # Пытаемся отредактировать существующее UI-сообщение
+        try:
+            await context.bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=ui_id,
+                text=text,
+                reply_markup=kb,
+                parse_mode="Markdown",
+            )
+            return
+        except Exception:
+            # если сообщение нельзя отредактировать (удалено/протухло) — пошлём новое ниже
+            pass
+
+    # UI-сообщения ещё нет — шлём новое и запоминаем id
+    sent = await update.message.reply_text(text, reply_markup=kb, parse_mode="Markdown")
+    context.user_data[UI_MSG_KEY] = sent.message_id
 
 async def _safe_answer(q):
     try:
