@@ -492,13 +492,15 @@ async def menu_cb(update, context):
         await context.bot.send_message(q.message.chat.id, "Команда недоступна.")
     return
 
-async def ui_show_from_command(update: Update, context: ContextTypes.DEFAULT_TYPE,
-                               text: str, reply_markup=None, parse_mode: str | None = "Markdown"):
+async def ui_show_from_command(update: Update,
+                               context: ContextTypes.DEFAULT_TYPE,
+                               text: str,
+                               reply_markup=None,
+                               parse_mode: str | None = "Markdown"):
     chat_id = update.effective_chat.id
     ui_id = context.user_data.get(UI_MSG_KEY)
 
     if ui_id:
-        # Пытаемся отредактировать текущее UI-сообщение
         try:
             await context.bot.edit_message_text(
                 chat_id=chat_id,
@@ -508,13 +510,20 @@ async def ui_show_from_command(update: Update, context: ContextTypes.DEFAULT_TYP
                 parse_mode=parse_mode,
             )
             return
+        except BadRequest as e:
+            # если текст/клава те же — просто выходим, не создавая новое сообщение
+            if "message is not modified" in str(e).lower():
+                return
+            # другие BadRequest обрабатываем ниже (пошлём новое сообщение)
         except Exception:
-            # если не получилось (удалено/старое) — пошлём новое ниже
-            pass
+            pass  # сообщение могло быть удалено / слишком старое — пошлём новое ниже
 
     sent = await update.message.reply_text(text, reply_markup=reply_markup, parse_mode=parse_mode)
     context.user_data[UI_MSG_KEY] = sent.message_id
-                                   
+
+def _kb_back_home(uid: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup([[InlineKeyboardButton(_menu_i18n(uid)["back"], callback_data="m:nav:home")]])
+    
 def _menu_i18n(uid: str) -> dict:
     lang = user_languages.get(uid, "ru")
     return MENU_TEXTS.get(lang, MENU_TEXTS["ru"])
