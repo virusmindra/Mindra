@@ -2484,13 +2484,17 @@ async def plus_router(update, context):
 
     # --- Сказка: просто показать инструкцию, БЕЗ клавиатуры
     if action == "story":
-        text = _story_help(uid)  # ← берём строку из STORY_TEXTS
+        text = _story_help(uid)
         try:
+            try:
+                await q.edit_message_reply_markup(reply_markup=None)
+            except Exception:
+                pass
             await q.edit_message_text(
                 text,
                 parse_mode="Markdown",
                 disable_web_page_preview=True,
-            )  # без reply_markup — меню исчезает
+            )
         except BadRequest as e:
             if "message is not modified" not in str(e).lower():
                 raise
