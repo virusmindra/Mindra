@@ -4417,11 +4417,7 @@ async def mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
     lang = user_languages.get(uid, "ru")
     t = MODE_TEXTS.get(lang, MODE_TEXTS["ru"])
-
-    await update.message.reply_text(
-        t["text"],
-        reply_markup=_mode_keyboard(uid)
-    )
+    await ui_show_from_command(update, context, t["text"], reply_markup=_mode_keyboard(uid))
 
 
 def _mode_keyboard(uid: str) -> InlineKeyboardMarkup:
