@@ -1086,9 +1086,10 @@ async def _voice_refresh(q: CallbackQuery, uid: str, tab: str):
             raise
             
 def _voice_menu_text(uid: str) -> str:
-    t = _vm_i18n(uid); p = _vp(uid)
-    eng_label = t["engine_eleven"] if p.get("engine")==ENGINE_ELEVEN else t["engine_gtts"]
-    vname = p.get("voice_name") or ("Eleven default" if p.get("engine")==ENGINE_ELEVEN else "gTTS")
+    t = _vm_i18n(uid)     # оставляю твой i18n
+    p = _vp(uid)
+    eng_label = t["engine_eleven"] if str(p.get("engine")).lower() == "eleven" else t["engine_gtts"]
+    vname = p.get("voice_name") or ( "Female (Eleven)" if str(p.get("engine")).lower()=="eleven" else "gTTS" )
     speed = p.get("speed", 1.0)
     bg_cfg = BGM_PRESETS.get(p.get("bgm_kind","off"), {"label":"Off"})
     bg_label = bg_cfg["label"]
