@@ -859,24 +859,12 @@ async def _sleep_refresh(q: CallbackQuery, uid: str, tab: str):
             parse_mode="Markdown",
             reply_markup=_sleep_kb(uid, tab),
         )
-    except telegram.error.BadRequest as e:
+    except BadRequest as e:
         if "message is not modified" in str(e).lower():
             try:
                 await q.edit_message_reply_markup(reply_markup=_sleep_kb(uid, tab))
             except Exception:
                 pass
-        else:
-            # на всякий случай — пошлём новым сообщением
-            try:
-                await q.message.reply_text(
-                    _sleep_menu_text(uid),
-                    parse_mode="Markdown",
-                    reply_markup=_sleep_kb(uid, tab),
-                )
-            except Exception:
-                pass
-
-
 
 def _sleep_kb(uid: str, tab: str = "kind", back_to: str = "plus") -> InlineKeyboardMarkup:
     p = _sleep_p(uid)
