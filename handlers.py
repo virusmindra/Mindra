@@ -531,11 +531,11 @@ def _menu_home_text(uid: str) -> str:
 def _menu_kb_home(uid: str) -> InlineKeyboardMarkup:
     t = _menu_i18n(uid)
     rows = [
-        [InlineKeyboardButton(t["features"], callback_data="m:nav:features")],
-        [InlineKeyboardButton(t["plus_features"], callback_data="m:nav:plus")],
-        [InlineKeyboardButton(t["premium"], callback_data="m:nav:premium")],
-        [InlineKeyboardButton(t["settings"], callback_data="m:nav:settings")],
-        [InlineKeyboardButton(t["close"], callback_data="m:nav:close")],
+        [InlineKeyboardButton(t["features"],       callback_data="m:nav:features")],
+        [InlineKeyboardButton(t["plus_features"],  callback_data="m:nav:plus")],
+        [InlineKeyboardButton(t["premium"],        callback_data="m:nav:premium")],
+        [InlineKeyboardButton(t["settings"],       callback_data="m:nav:settings")],
+        [InlineKeyboardButton(t["close"],          callback_data="m:nav:close")],
     ]
     return InlineKeyboardMarkup(rows)
 
