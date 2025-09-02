@@ -2400,8 +2400,8 @@ def _reminders_kb(uid: str) -> InlineKeyboardMarkup:
 async def reminders_menu_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
     t = _i18n(uid)
-    await update.message.reply_text(t["menu_title"], reply_markup=_reminders_kb(uid))
-    
+    await ui_show_from_command(update, context, t["menu_title"], reply_markup=_reminders_kb(uid))
+
 # ========== Time helpers ==========
 def _utcnow():
     return datetime.now(timezone.utc)
