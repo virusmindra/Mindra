@@ -2459,17 +2459,15 @@ async def plus_router(update, context):
 
     uid = str(q.from_user.id)
     msg = q.message
-    parts = q.data.split(":")  # ["m","plus", ...]
+    parts = q.data.split(":")            # ["m","plus", ...]
     action = parts[2] if len(parts) >= 3 else ""
 
     # --- Озвучка
-    if act == "voice":
-        context.user_data[UI_MSG_KEY] = q.message.message_id
-        return await show_voice_menu(q.message)   # edit того же сообщения
+    if action == "voice":
+        return await show_voice_menu(msg)  # edit того же сообщения
 
     # --- Звуки для сна
     if action == "sleep":
-        # m:plus:sleep | m:plus:sleep:set:<kind> | m:plus:sleep:gain:<db>
         if len(parts) == 3:
             return await show_sleep_menu(msg)
         sub = parts[3]
@@ -2484,20 +2482,19 @@ async def plus_router(update, context):
                 pass
             return await show_sleep_menu(msg)
 
-    # --- Сказка
+    # --- Сказка: просто показать инструкцию, БЕЗ клавиатуры
     if action == "story":
-        context.user_data[UI_MSG_KEY] = q.message.message_id  # работаем в одном сообщении
-        # на всякий случай уберём клавиатуру (если текст вдруг совпадёт)
+        text = _story_help(uid)   # <- функция с инструкцией
         try:
-            await q.edit_message_reply_markup(reply_markup=None)
-        except Exception:
-            pass
-        return await q.message.edit_text(
-            STORY_TEXTS(uid),
-            parse_mode="Markdown",
-            disable_web_page_preview=True,
-            reply_markup=None,   # ← без кнопок
-        )
+            await q.edit_message_text(
+                text,
+                parse_mode="Markdown",
+                disable_web_page_preview=True,
+            )
+        except BadRequest as e:
+            if "message is not modified" not in str(e).lower():
+                raise
+        return
 
     # --- Premium-mode
     if action == "pmode":
