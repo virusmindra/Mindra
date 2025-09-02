@@ -2141,13 +2141,11 @@ async def premium_report_cmd(update, context):
     uid = str(update.effective_user.id)
     t = _p_i18n(uid)
 
-    # агрегаты (как у тебя)
     try:
         goals = get_goals(uid)
         goals_done = sum(1 for g in goals if isinstance(g, dict) and g.get("done"))
     except Exception:
         goals_done = 0
-
     try:
         habits = get_habits(uid)
         habits_marked = len(habits)
@@ -2165,7 +2163,7 @@ async def premium_report_cmd(update, context):
     except Exception:
         pass
 
-    active_30 = 0  # заглушка под реальную метрику
+    active_30 = 0  # заглушка
 
     text = (
         f"*{t['report_title']}*\n\n"
@@ -2174,7 +2172,7 @@ async def premium_report_cmd(update, context):
         f"{t['report_rems'].format(n=rems_7)}\n"
         f"{t['report_streak'].format(n=active_30)}"
     )
-    await ui_show_from_command(update, context, text, reply_markup=_kb_close(uid), parse_mode="Markdown")
+    await ui_show_from_command(update, context, text, reply_markup=_kb_home(uid), parse_mode="Markdown")
     
 async def premium_challenge_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
