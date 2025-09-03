@@ -3700,21 +3700,25 @@ async def language_callback(update, context):
     code = q.data.split("_", 1)[1]
     user_languages[uid] = code
 
-    # краткий тост
+    # тост
     name = SETTINGS_TEXTS["ru"]["lang_name"].get(code, code)
     try:
         await q.answer(f"✅ {name}", show_alert=False)
     except Exception:
         pass
 
-    # возвращаемся в экран «Настройки» (без запуска таймзоны!)
+    # 🔹 онбординг: сразу перейти к выбору таймзоны (кнопки onb:tz:...)
+    if context.user_data.pop("onb_waiting_lang", None):
+        return await show_timezone_menu(q.message, origin="onboarding")
+
+    # 🔹 обычные настройки: вернуться в экран «Настройки»
     t = _menu_i18n(uid)
     return await q.message.edit_text(
         t.get("set_title", t["settings"]),
         reply_markup=_menu_kb_settings(uid),
         parse_mode="Markdown",
     )
-    
+
 # ✨ Сначала редактируем старое сообщение
 async def habit_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
