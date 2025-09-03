@@ -502,8 +502,7 @@ async def menu_cb(update, context):
         return  # ← ранний выход, чтобы не упасть на "if not ok"
 
     elif q.data == "m:set:tz":
-        # было: ok = await _try_call(["settings_command", "settings", "settings_cmd"], u, context)
-        return await show_timezone_menu(q.message)   # ← только таймзона
+        return await show_timezone_menu(q.message, origin="settings")
 
     elif q.data == "m:set:feedback":
         await q.edit_message_text(t["feedback_ask"],
