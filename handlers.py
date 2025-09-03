@@ -716,6 +716,96 @@ def _s_i18n(uid: str) -> dict:
 def _has_eleven() -> bool:
     return bool(ELEVEN_API_KEY)
 
+# Иконки-флаги по коду (опционально)
+FLAG_BY_CODE = {
+    "ru":"🇷🇺","uk":"🇺🇦","en":"🇬🇧","md":"🇲🇩","be":"🇧🇾",
+    "kk":"🇰🇿","kg":"🇰🇬","hy":"🇦🇲","ka":"🇬🇪","ce":"🏴"
+}
+
+# Порядок отображения
+LANG_ORDER = ["ru","uk","en","md","be","kk","kg","hy","ka","ce"]
+
+def _settings_i18n(uid: str) -> dict:
+    lang = user_languages.get(uid, "ru")
+    return SETTINGS_TEXTS.get(lang, SETTINGS_TEXTS["ru"])
+
+def _lang_native_name(code: str) -> str:
+    # Берём «родное» имя языка из твоего словаря (там уже хорошо заполнено)
+    return SETTINGS_TEXTS["ru"]["lang_name"].get(code, code)
+
+def _lang_menu_text(uid: str) -> str:
+    t = _settings_i18n(uid)
+    return f"*{t.get('choose_lang','🌐 Выбери язык интерфейса:')}*"
+
+def _lang_kb(uid: str) -> InlineKeyboardMarkup:
+    names = SETTINGS_TEXTS["ru"]["lang_name"]  # источник кодов
+    # берём только те коды, что есть в словаре, и в заданном порядке
+    codes = [c for c in LANG_ORDER if c in names]
+
+    rows = []
+    for i in range(0, len(codes), 2):
+        chunk = codes[i:i+2]
+        btns = []
+        for code in chunk:
+            label = f"{FLAG_BY_CODE.get(code,'')} {_lang_native_name(code)}".strip()
+            btns.append(InlineKeyboardButton(label, callback_data=f"lang:{code}"))
+        rows.append(btns)
+
+    rows.append([InlineKeyboardButton(_menu_i18n(uid)["back"], callback_data="m:nav:settings")])
+    return InlineKeyboardMarkup(rows)
+
+async def show_language_menu(msg):
+    uid = str(msg.chat.id)
+    await msg.edit_text(_lang_menu_text(uid), reply_markup=_lang_kb(uid), parse_mode="Markdown")
+
+async def settings_router(update, context):
+    q = update.callback_query
+    if not q or not q.data.startswith("m:set:"):
+        return
+    await q.answer()
+    context.user_data[UI_MSG_KEY] = q.message.message_id
+
+    uid = str(q.from_user.id)
+    msg = q.message
+    act = q.data.split(":", 2)[2]  # lang | tz | feedback
+
+    if act == "lang":
+        return await show_language_menu(msg)
+
+    if act == "tz":
+        # сюда — ТОЛЬКО таймзона, отдельный экран
+        return await show_timezone_menu(msg)
+
+    if act == "feedback":
+        t = _menu_i18n(uid)
+        kb = InlineKeyboardMarkup([[InlineKeyboardButton(t["back"], callback_data="m:nav:settings")]])
+        return await msg.edit_text(t.get("feedback_ask","💌 Напишите отзыв"), reply_markup=kb, parse_mode="Markdown")
+
+
+async def language_cb(update, context):
+    q = update.callback_query
+    if not q or not q.data.startswith("lang:"):
+        return
+    await q.answer()
+    context.user_data[UI_MSG_KEY] = q.message.message_id
+
+    uid = str(q.from_user.id)
+    code = q.data.split(":", 1)[1]
+    user_languages[uid] = code  # сохраняем язык
+
+    # тост с подтверждением
+    try:
+        await q.answer(f"✅ {_lang_native_name(code)}", show_alert=False)
+    except Exception:
+        pass
+
+    # возвращаемся в экран «Настройки» (или сразу домой — как тебе нужно)
+    t = _menu_i18n(uid)
+    return await q.message.edit_text(t.get("set_title", t["settings"]),
+                                     reply_markup=_menu_kb_settings(uid),
+                                     parse_mode="Markdown")
+
+
 def upsell_fmt(uid_lang: str, key: str, **kw) -> str:
     t = UPSELL_TEXTS.get(uid_lang, UPSELL_TEXTS["ru"])
     s = t.get(key, "")
@@ -5328,7 +5418,10 @@ handlers = [
     CallbackQueryHandler(settings_language_callback, pattern=r"^setlang_"),
     CallbackQueryHandler(settings_tz_callback, pattern=r"^settz:"),
     CallbackQueryHandler(tz_callback, pattern=r"^tz:"),
-
+    CallbackQueryHandler(settings_router, pattern=r"^m:set:"),
+    CallbackQueryHandler(language_cb,   pattern=r"^lang:"),
+    CallbackQueryHandler(menu_router,   pattern=r"^m:nav:"),
+    
     # --- Премиум и челленджи (подняты выше, чтобы команды не ловились чем-то ещё)
     CommandHandler("premium", premium_cmd),
     CommandHandler("premium_days", premium_days),              # твоя версия или premium_days_cmd
