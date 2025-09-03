@@ -383,50 +383,58 @@ async def _try_call(names, update, context) -> bool:
                 logging.warning("call %s failed: %s", name, e)
                 return False
     return False
-
+    
 async def menu_cb(update, context):
     q = update.callback_query
     if not q or not q.data or not q.data.startswith("m:"):
         return
-    await _safe_answer(q) 
+    await _safe_answer(q)
+    context.user_data[UI_MSG_KEY] = q.message.message_id  # работаем в одном UI-сообщении
+
     uid = str(q.from_user.id)
     t = _menu_i18n(uid)
 
-    # Навигация
+    # ---------- Навигация ----------
     if q.data == "m:nav:home":
         try:
             await q.edit_message_text(_menu_home_text(uid), reply_markup=_menu_kb_home(uid), parse_mode="Markdown")
-        except:
+        except Exception:
             await context.bot.send_message(chat_id=q.message.chat.id, text=_menu_home_text(uid),
                                            reply_markup=_menu_kb_home(uid), parse_mode="Markdown")
         return
+
     if q.data == "m:nav:features":
         return await q.edit_message_text(f"*{t['feat_title']}*\n{t['feat_body']}",
                                          parse_mode="Markdown", reply_markup=_menu_kb_features(uid))
+
     if q.data == "m:nav:plus":
         return await q.edit_message_text(f"*{t['plus_title']}*\n{t['plus_body']}",
                                          parse_mode="Markdown", reply_markup=_menu_kb_plus(uid))
+
     if q.data == "m:nav:premium":
         return await q.edit_message_text(f"*{t['prem_title']}*",
                                          parse_mode="Markdown", reply_markup=_menu_kb_premium(uid))
+
     if q.data == "m:nav:settings":
         return await q.edit_message_text(f"*{t['set_title']}*\n{t['set_body']}",
                                          parse_mode="Markdown", reply_markup=_menu_kb_settings(uid))
+
     if q.data == "m:nav:close":
         try:
             await q.delete_message()
-        except:
+        except Exception:
             pass
         return
 
+    # ---------- Обычные функции (через вызов внешних хендлеров) ----------
     u = _shim_update_for_cb(q, context)
+    ok = None  # важно: чтобы не было UnboundLocalError
 
-# Обычные функции
     if q.data == "m:feat:tracker":
         ok = await _try_call(["tracker_menu_cmd", "tracker_menu"], u, context)
 
     elif q.data == "m:feat:mode":
-        ok = await _try_call(["mode", "mode_cmd"], u, context)  # у тебя функция называется mode
+        ok = await _try_call(["mode", "mode_cmd"], u, context)
 
     elif q.data == "m:feat:reminders":
         ok = await _try_call(["reminders_menu_cmd", "reminders_menu"], u, context)
@@ -437,13 +445,13 @@ async def menu_cb(update, context):
     elif q.data == "m:feat:mood":
         ok = await _try_call(["test_mood", "test_mood_cmd"], u, context)
 
-# Премиум-функции
+    # ---------- Премиум-функции ----------
     elif q.data == "m:plus:voice":
         ok = await _try_call(["voice_settings", "voice_settings_cmd"], u, context)
 
     elif q.data == "m:plus:sleep":
         ok = await _try_call(["sleep_cmd", "sleep"], u, context)
-    
+
     elif q.data == "m:plus:story":
         ok = await _try_call(["story_cmd", "story_menu_cmd"], u, context)
 
@@ -459,16 +467,23 @@ async def menu_cb(update, context):
     elif q.data == "m:plus:pchallenge":
         ok = await _try_call(["premium_challenge_cmd", "premium_challenge"], u, context)
 
-# Премиум раздел
+    # ---------- Премиум раздел ----------
     elif q.data == "m:premium:days":
         ok = await _try_call(["premium_days_cmd", "premium_days"], u, context)
 
     elif q.data == "m:premium:invite":
         ok = await _try_call(["invite", "invite_cmd"], u, context)
 
-    # Настройки
+    # ---------- Настройки ----------
     elif q.data == "m:set:lang":
-        # покажем тот же список языков, что в /start
+        # только выбор ЯЗЫКА (без таймзоны)
+        # берём текст из твоего SETTINGS_TEXTS
+        try:
+            st = SETTINGS_TEXTS.get(user_languages.get(uid, "ru"), SETTINGS_TEXTS["ru"])
+            title = st.get("choose_lang", "🌐 Выбери язык интерфейса:")
+        except Exception:
+            title = "🌐 Выбери язык интерфейса:"
+
         kb = [
             [InlineKeyboardButton("Русский 🇷🇺", callback_data="lang_ru"),
              InlineKeyboardButton("Українська 🇺🇦", callback_data="lang_uk")],
@@ -482,8 +497,10 @@ async def menu_cb(update, context):
              InlineKeyboardButton("English 🇬🇧", callback_data="lang_en")],
             [InlineKeyboardButton(t["back"], callback_data="m:nav:settings")],
         ]
-        pass
-        
+        await q.edit_message_text(title, parse_mode="Markdown",
+                                  reply_markup=InlineKeyboardMarkup(kb))
+        return  # ← ранний выход, чтобы не упасть на "if not ok"
+
     elif q.data == "m:set:tz":
         ok = await _try_call(["settings_command", "settings", "settings_cmd"], u, context)
 
@@ -494,8 +511,8 @@ async def menu_cb(update, context):
         waiting_feedback.add(uid)
         return
 
-    # общий результат
-    if not ok:
+    # ---------- общий результат ----------
+    if ok is False:
         await context.bot.send_message(q.message.chat.id, "Команда недоступна.")
     return
 
