@@ -3650,27 +3650,32 @@ async def language_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
-async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
+async def language_callback(update, context):
+    q = update.callback_query
+    if not q or not q.data.startswith("lang_"):
+        return
+    await q.answer()
+    context.user_data[UI_MSG_KEY] = q.message.message_id
 
-    user_id = str(query.from_user.id)
-    lang_code = query.data.replace("lang_", "")
-    valid = {"ru","uk","md","be","kk","kg","hy","ka","ce","en"}
-    if lang_code not in valid:
-        lang_code = "ru"
+    uid = str(q.from_user.id)
+    code = q.data.split("_", 1)[1]
+    user_languages[uid] = code
 
-    user_languages[user_id] = lang_code
-    logging.info(f"🌐 Пользователь {user_id} выбрал язык: {lang_code}")
-
-    # Показываем выбор таймзоны (тексты берём из TZ_TEXTS)
-    t = TZ_TEXTS.get(lang_code, TZ_TEXTS["ru"])
-    prompt = f"{t['title']}\n\n{t['hint']}"
+    # краткий тост
+    name = SETTINGS_TEXTS["ru"]["lang_name"].get(code, code)
     try:
-        await query.edit_message_text(prompt, reply_markup=_tz_keyboard(), parse_mode="Markdown")
+        await q.answer(f"✅ {name}", show_alert=False)
     except Exception:
-        await context.bot.send_message(chat_id=int(user_id), text=prompt, reply_markup=_tz_keyboard(), parse_mode="Markdown")
+        pass
 
+    # возвращаемся в экран «Настройки» (без запуска таймзоны!)
+    t = _menu_i18n(uid)
+    return await q.message.edit_text(
+        t.get("set_title", t["settings"]),
+        reply_markup=_menu_kb_settings(uid),
+        parse_mode="Markdown",
+    )
+    
 # ✨ Сначала редактируем старое сообщение
 async def habit_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
