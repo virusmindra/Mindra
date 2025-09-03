@@ -3238,11 +3238,15 @@ GOALS_FILE = Path("user_goals.json")
 
 YOUR_ID = "7775321566"  # твой ID
 
-def _tz_keyboard() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup([
-        [InlineKeyboardButton(text, callback_data=f"tz:{code}") for (text, code) in row]
+def _tz_keyboard(prefix: str = "tz:", include_back: bool = False, uid: str | None = None) -> InlineKeyboardMarkup:
+    rows = [
+        [InlineKeyboardButton(text, callback_data=f"{prefix}{code}") for (text, code) in row]
         for row in TZ_KEYBOARD_ROWS
-    ])
+    ]
+    if include_back and uid is not None:
+        rows.append([InlineKeyboardButton(_menu_i18n(uid)["back"], callback_data="m:nav:settings")])
+    return InlineKeyboardMarkup(rows)
+    
     
 def _get_lang(uid: str) -> str:
     return user_languages.get(uid, "ru")
