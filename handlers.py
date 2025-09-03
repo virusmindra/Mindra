@@ -3308,48 +3308,73 @@ def _parse_referrer_id(ref_code: str | None) -> str | None:
 
 async def tz_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
-    if not q or not q.data or not q.data.startswith("tz:"):
+    if not q or not q.data:
+        return
+    if not (q.data.startswith("tz:") or q.data.startswith("onb:tz:")):
         return
     await q.answer()
 
     uid = str(q.from_user.id)
     lang = _get_lang(uid)
     t = TZ_TEXTS.get(lang, TZ_TEXTS["ru"])
+    t_menu = _menu_i18n(uid)
 
-    tz = q.data.split(":", 1)[1]
+    data = q.data
+    is_onboarding = data.startswith("onb:tz:")
+    # tz:<Area/City>            → ["tz", "<Area/City>"]
+    # onb:tz:<Area/City>        → ["onb", "tz", "<Area/City>"]
+    tz = data.split(":", 2)[2] if is_onboarding else data.split(":", 1)[1]
+
+    # валидация
     try:
         _ = ZoneInfo(tz)
     except Exception:
-        await q.edit_message_text(t["unknown"])
-        return
+        if is_onboarding:
+            return await q.edit_message_text(t.get("unknown", "Unknown timezone"))
+        else:
+            try:
+                await q.answer(t.get("unknown", "Unknown timezone"), show_alert=True)
+            except Exception:
+                pass
+            return await show_timezone_menu(q.message, origin="settings")
 
+    # сохраняем
     user_timezones[uid] = tz
     local_str = _format_local_time_now(tz, lang)
-    try:
-        await q.edit_message_text(
-            t["saved"].format(tz=tz, local_time=local_str),
-            parse_mode="Markdown"
-        )
-    except Exception:
-        await context.bot.send_message(
-            chat_id=int(uid),
-            text=t["saved"].format(tz=tz, local_time=local_str),
-            parse_mode="Markdown"
+
+    if not is_onboarding:
+        # ==== ВАРИАНТ: НАСТРОЙКИ (без языка и без бонусов)
+        try:
+            await q.answer(f"✅ {tz} · {local_str}", show_alert=False)
+        except Exception:
+            pass
+        return await q.message.edit_text(
+            t_menu.get("set_title", t_menu["settings"]),
+            reply_markup=_menu_kb_settings(uid),
+            parse_mode="Markdown",
         )
 
-    # === ФИНАЛ ОНБОРДИНГА: здесь выдаём бонусы ===
+    # ==== ВАРИАНТ: ОНБОРДИНГ (с бонусами/рефералом/приветствием)
     try:
-        # 1) Реферал (если /start был с ref-пейлоадом)
-        ref_bonus_given = False
-        referrer_id = user_ref_args.pop(uid, None)  # мы сохраняли это в /start
+        try:
+            await q.edit_message_text(
+                t["saved"].format(tz=tz, local_time=local_str),
+                parse_mode="Markdown"
+            )
+        except BadRequest:
+            await context.bot.send_message(
+                chat_id=int(uid),
+                text=t["saved"].format(tz=tz, local_time=local_str),
+                parse_mode="Markdown"
+            )
+
+        # 1) Реферал
+        referrer_id = user_ref_args.pop(uid, None)
         if referrer_id and referrer_id != uid:
             try:
-                # process_referral(inviter_id, invitee_id, days)
                 if process_referral(referrer_id, uid, days=7):
-                    ref_bonus_given = True
                     bonus_text = REFERRAL_BONUS_TEXT.get(lang, REFERRAL_BONUS_TEXT["ru"])
                     await context.bot.send_message(chat_id=int(uid), text=bonus_text, parse_mode="Markdown")
-                    # уведомим пригласившего (не критично, можно молча)
                     try:
                         await context.bot.send_message(
                             chat_id=int(referrer_id),
@@ -3361,7 +3386,7 @@ async def tz_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             except Exception as e:
                 logging.warning("process_referral failed: %s", e)
 
-        # 2) Базовый триал 3 дня (идемпотентная функция — сама проверит, выдавался ли уже)
+        # 2) Триал
         try:
             granted_until_iso = grant_trial_if_eligible(uid, days=3)
             if granted_until_iso:
@@ -3370,7 +3395,7 @@ async def tz_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception as e:
             logging.warning("Trial grant failed: %s", e)
 
-        # 3) Инициализируем system prompt/историю
+        # 3) Инициализация system prompt/истории
         try:
             mode = "support"
             lang_prompt = LANG_PROMPTS.get(lang, LANG_PROMPTS["ru"])
@@ -3388,7 +3413,18 @@ async def tz_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     except Exception as e:
         logging.exception(f"onboarding finalize error: {e}")
-        
+
+async def show_timezone_menu(msg, origin: str = "settings"):
+    uid = str(msg.chat.id)
+    t = SETTINGS_TEXTS.get(user_languages.get(uid, "ru"), SETTINGS_TEXTS["ru"])
+    prefix = "onb:tz:" if origin == "onboarding" else "tz:"
+    include_back = (origin == "settings")
+    await msg.edit_text(
+        t.get("choose_tz", "🌍 Укажи свой часовой пояс:"),
+        reply_markup=_tz_keyboard(prefix=prefix, include_back=include_back, uid=uid),
+        parse_mode="Markdown",
+    )
+
 async def points_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid  = str(update.effective_user.id)
     lang = user_languages.get(uid, "ru")
@@ -5444,7 +5480,7 @@ handlers = [
     CommandHandler("settings", settings_command),
     CallbackQueryHandler(settings_language_callback, pattern=r"^setlang_"),
     CallbackQueryHandler(settings_tz_callback, pattern=r"^settz:"),
-    CallbackQueryHandler(tz_callback, pattern=r"^tz:"),
+    CallbackQueryHandler(tz_callback, pattern=r"^(tz|onb:tz):"),
     CallbackQueryHandler(settings_router, pattern=r"^m:set:"),
     CallbackQueryHandler(language_cb,   pattern=r"^lang:"),
     CallbackQueryHandler(menu_router,   pattern=r"^m:nav:"),
