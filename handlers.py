@@ -1861,13 +1861,36 @@ async def send_voice_response(context, chat_id: int, text: str, lang: str, bgm_k
                 pass
 
                 
-def require_premium_message(update, context, uid):
-    t = _p_i18n(uid)
-    return update.message.reply_text(
-        f"*{t['upsell_title']}*\n\n{t['upsell_body']}",
-        parse_mode="Markdown",
-        reply_markup=_premium_kb(uid)
-    )
+
+@wraps
+def _noop(f):  # just to silence linters if needed
+    return f
+
+async def require_premium_message(update, context, uid: str | None):
+    t = _p_i18n(uid or "ru")
+    msg = f"*{t['upsell_title']}*\n\n{t['upsell_body']}"
+    kb = _premium_kb(uid or "0")
+
+    q = getattr(update, "callback_query", None)
+    if q:
+        try:
+            await q.answer("💎 Mindra+", show_alert=False)
+        except Exception:
+            pass
+        # Пытаемся редактировать текущее UI-сообщение
+        try:
+            return await q.message.edit_text(msg, reply_markup=kb, parse_mode="Markdown")
+        except Exception:
+            # Фолбэк — отправим новым сообщением
+            return await context.bot.send_message(chat_id=q.message.chat.id, text=msg, reply_markup=kb, parse_mode="Markdown")
+
+    # Командный вызов (/...):
+    if getattr(update, "message", None):
+        return await update.message.reply_text(msg, reply_markup=kb, parse_mode="Markdown")
+
+    # Самый последний фолбэк
+    return await context.bot.send_message(chat_id=update.effective_chat.id, text=msg, reply_markup=kb, parse_mode="Markdown")
+
 
 # ---- helpers ----
 def _engine_label_for(uid: str, engine_key: str) -> str:
