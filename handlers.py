@@ -4352,29 +4352,26 @@ async def my_stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(text + extra, parse_mode="Markdown")
 
 async def habit(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
-    lang = user_languages.get(user_id, "ru")
+    uid = str(update.effective_user.id)
+    lang = user_languages.get(uid, "ru")
     texts = HABIT_TEXTS.get(lang, HABIT_TEXTS["ru"])
-    is_premium = (user_id == str(YOUR_ID)) or (user_id in PREMIUM_USERS)
 
-    # Проверка лимита для бесплатных
-    current_habits = get_habits(user_id)
-    if not is_premium and len(current_habits) >= 2:
-        await update.message.reply_text(
-            texts["limit"],
-            parse_mode="Markdown"
+    # лимит
+    can, limit, cnt = tracker_can_add(uid, "habit")
+    if not can:
+        return await ui_show_from_command(
+            update, context,
+            _tracker_limit_message(uid, "habit", cnt, limit),
+            reply_markup=_tracker_limit_kb(uid),
+            parse_mode="Markdown",
         )
-        return
 
     if not context.args:
-        await update.message.reply_text(
-            texts["how_to"]
-        )
-        return
+        return await update.message.reply_text(texts["how_to"])
 
     habit_text = " ".join(context.args)
-    add_habit(user_id, habit_text)
-    add_points(user_id, 1)  # +1 очко за новую привычку
+    add_habit(uid, habit_text)
+    add_points(uid, 1)
 
     await update.message.reply_text(
         texts["added"].format(habit=habit_text),
