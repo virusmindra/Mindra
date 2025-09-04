@@ -154,6 +154,7 @@ from telegram.error import BadRequest
 global user_timezones
 from zoneinfo import ZoneInfo
 from collections import defaultdict
+from functools import wraps
 
 # Глобальные переменные
 user_last_seen = {}
@@ -2244,17 +2245,24 @@ def _premium_kb(uid: str) -> InlineKeyboardMarkup:
     ]
     return InlineKeyboardMarkup(rows)
     
+
 def require_premium(func):
+    @wraps(func)
     async def wrapper(update, context, *args, **kwargs):
-        uid = str(update.effective_user.id)
-        if not is_premium(uid):
-            t = _p_i18n(uid)
-            msg = f"*{t['upsell_title']}*\n\n{t['upsell_body']}"
-            await update.message.reply_text(msg, reply_markup=_premium_kb(uid), parse_mode="Markdown")
-            return
-        return await func(update, context, *args, **kwargs)
+        uid = str(getattr(update.effective_user, "id", "")) if getattr(update, "effective_user", None) else None
+        try:
+            allowed = is_premium(uid)
+        except Exception:
+            allowed = False
+
+        if allowed:
+            return await func(update, context, *args, **kwargs)
+
+        # нет премиума — показываем апселл (аккуратно для callback/command)
+        return await require_premium_message(update, context, uid)
     return wrapper
-    
+# --- end premium gate ---
+
 def _gh_menu_keyboard(t: dict) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup([
         [InlineKeyboardButton(t["btn_add_goal"],   callback_data="gh:new_goal")],
