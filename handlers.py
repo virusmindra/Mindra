@@ -1224,6 +1224,16 @@ def _voice_kb(uid: str, tab: str = "engine", back_to: str = "plus") -> InlineKey
     rows: list[list[InlineKeyboardButton]] = []
     can_eleven = has_feature(uid, "eleven_tts")
 
+    # ⬇️ новый первый ряд — тумблер и «в меню»
+    state = user_voice_mode.get(uid, False)
+    on_lbl  = t.get("mode_on_btn",  "🔊 Включить")
+    off_lbl = t.get("mode_off_btn", "🔇 Выключить")
+    back_lbl = _menu_i18n(uid)["back"]
+    rows.append([
+        InlineKeyboardButton(("✅ " if state else "") + on_lbl,  callback_data="v:mode:on"),
+        InlineKeyboardButton(("✅ " if not state else "") + off_lbl, callback_data="v:mode:off"),
+        InlineKeyboardButton(back_lbl, callback_data="m:nav:plus"),
+    ])    
     # ↓↓↓ унифицируем название эффективного движка: 'eleven' | 'gtts'
     try:
         eff_engine = _effective_tts_engine(uid).lower()
