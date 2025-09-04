@@ -1348,7 +1348,27 @@ async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if kind == "tab":
         return await _voice_refresh(q, uid, parts[2])
 
-    if kind == "engine":
+    # ←← ДОБАВЛЕННЫЙ БЛОК ДЛЯ /voice_mode (кнопки v:mode:on|off)
+    elif kind == "mode":
+        desired = (parts[2] or "").lower()   # "on" | "off"
+        if not is_premium(uid):
+            try:
+                title, _ = upsell_for(uid, "feature_voice_mode")
+                await q.answer(title, show_alert=True)
+            except Exception:
+                pass
+            return await _voice_refresh(q, uid, "engine")
+
+        user_voice_mode[uid] = (desired == "on")
+        t_mode = _vmode_i18n(uid)
+        toast = t_mode.get("on") if user_voice_mode[uid] else t_mode.get("off")
+        try:
+            await q.answer(f"✅ {toast}" if toast else "✅", show_alert=False)
+        except Exception:
+            pass
+        return await _voice_refresh(q, uid, "engine")
+
+    elif kind == "engine":
         new_engine = parts[2]
         if new_engine.lower() == "eleven":
             if not has_feature(uid, "eleven_tts"):
@@ -1379,8 +1399,10 @@ async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
         current_tab = "engine"
 
     elif kind == "speed":
-        try: p["speed"] = float(parts[2])
-        except Exception: pass
+        try:
+            p["speed"] = float(parts[2])
+        except Exception:
+            pass
         current_tab = "speed"
 
     elif kind == "beh":
@@ -1396,12 +1418,13 @@ async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if sub == "set":
             p["bgm_kind"] = parts[3]
         elif sub == "gain":
-            try: p["bgm_gain_db"] = int(parts[3])
-            except Exception: pass
+            try:
+                p["bgm_gain_db"] = int(parts[3])
+            except Exception:
+                pass
         current_tab = "bg"
 
     await _voice_refresh(q, uid, current_tab)
-
 
 def _expressive(text: str, lang: str) -> str:
     s = text.replace("...", "…")
