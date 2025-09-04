@@ -1877,35 +1877,27 @@ def _engine_label(uid: str) -> str:
     return labels.get(key, eng)
 
 # ---- /voice_mode ----
+@require_premium
 async def voice_mode_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
-    t = _v_i18n(uid)
+    t = _v_i18n(uid)  # берёт VOICE_MODE_TEXTS[lang]
 
-    # Премиум-гейт
-    if not is_premium(uid):
-        return await require_premium_message(update, context, uid)
-
-    # Без аргументов — показать статус
+    # без аргументов — показать текущее состояние
     if not context.args:
         state = user_voice_mode.get(uid, False)
         eng = _engine_label(uid)
-        txt = (t.get("on_simple",  "Озвучка включена.")  if state
-               else t.get("off_simple", "Озвучка выключена."))
-        txt += f"\n🎛 Движок: {eng}"
-        return await update.message.reply_text(txt)
+        base = t["on"] if state else t["off"]
+        return await ui_show_from_command(update, context, f"{base}\n🎛 Движок: {eng}", parse_mode="Markdown")
 
-    # on|off
     arg = (context.args[0] or "").lower()
     if arg not in ("on", "off"):
-        return await update.message.reply_text(t.get("err", "Используй /voice_mode on|off"))
+        return await ui_show_from_command(update, context, f"{t['err']}\n\n{t['help']}", parse_mode="Markdown")
 
     user_voice_mode[uid] = (arg == "on")
     eng = _engine_label(uid)
-    txt = (t.get("on_simple",  "Озвучка включена.")  if user_voice_mode[uid]
-           else t.get("off_simple", "Озвучка выключена."))
-    txt += f"\n🎛 Движок: {eng}"
-    await update.message.reply_text(txt)
-
+    base = t["on"] if user_voice_mode[uid] else t["off"]
+    await ui_show_from_command(update, context, f"{base}\n🎛 Движок: {eng}", parse_mode="Markdown")
+    
 async def plus_callback(update, context):
     q = update.callback_query
     if not q or not q.data.startswith("plus:"):
