@@ -1361,7 +1361,7 @@ async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return await _voice_refresh(q, uid, "engine")
 
         user_voice_mode[uid] = (desired == "on")
-        t_mode = _vmode_i18n(uid)
+        t_mode = _v_i18n(uid)
         toast = t_mode.get("on") if user_voice_mode[uid] else t_mode.get("off")
         try:
             await q.answer(f"✅ {toast}" if toast else "✅", show_alert=False)
