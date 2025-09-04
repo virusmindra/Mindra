@@ -2245,24 +2245,6 @@ def _premium_kb(uid: str) -> InlineKeyboardMarkup:
     ]
     return InlineKeyboardMarkup(rows)
     
-
-def require_premium(func):
-    @wraps(func)
-    async def wrapper(update, context, *args, **kwargs):
-        uid = str(getattr(update.effective_user, "id", "")) if getattr(update, "effective_user", None) else None
-        try:
-            allowed = is_premium(uid)
-        except Exception:
-            allowed = False
-
-        if allowed:
-            return await func(update, context, *args, **kwargs)
-
-        # нет премиума — показываем апселл (аккуратно для callback/command)
-        return await require_premium_message(update, context, uid)
-    return wrapper
-# --- end premium gate ---
-
 def _gh_menu_keyboard(t: dict) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup([
         [InlineKeyboardButton(t["btn_add_goal"],   callback_data="gh:new_goal")],
