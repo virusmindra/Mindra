@@ -2463,13 +2463,27 @@ async def gh_callback(update, context: ContextTypes.DEFAULT_TYPE):
             await context.bot.send_message(chat_id=int(uid), text=t["menu_title"], reply_markup=_gh_menu_keyboard(t))
         return
 
-    # Создание: просто показываем подсказку (как мы делали для reminders)
     if action == "new_goal":
-        await context.bot.send_message(chat_id=int(uid), text=t["goal_usage"], parse_mode="Markdown")
-        return
+        can, limit, cnt = tracker_can_add(uid, "goal")
+        if not can:
+            return await q.edit_message_text(
+                _tracker_limit_message(uid, "goal", cnt, limit),
+                parse_mode="Markdown",
+                reply_markup=_tracker_limit_kb(uid),
+            )
+        # иначе показываем usage
+        return await context.bot.send_message(chat_id=int(uid), text=t["goal_usage"], parse_mode="Markdown")
+
     if action == "new_habit":
-        await context.bot.send_message(chat_id=int(uid), text=t["habit_usage"], parse_mode="Markdown")
-        return
+        can, limit, cnt = tracker_can_add(uid, "habit")
+        if not can:
+            return await q.edit_message_text(
+                _tracker_limit_message(uid, "habit", cnt, limit),
+                parse_mode="Markdown",
+                reply_markup=_tracker_limit_kb(uid),
+            )
+        # иначе usage
+        return await context.bot.send_message(chat_id=int(uid), text=t["habit_usage"], parse_mode="Markdown")
 
     # Списки: берём данные напрямую
     if action == "list_goals":
