@@ -21,6 +21,7 @@ from elevenlabs import ElevenLabs
 from collections import defaultdict
 from texts import (
     VOICE_TEXTS_BY_LANG,
+    TRACKER_LIMIT_TEXTS,
     STORY_INTENT,
     MENU_TEXTS,
     FEATURE_MATRIX,
@@ -234,12 +235,68 @@ UI_MSG_KEY = "ui_msg_id"
 # URL страницы оплаты — замени на свою
 PREMIUM_URL = "https://example.com/pay"
 
+FREE_TRACKER_LIMIT  = {"goal": 1, "habit": 1}  # Free
+PLUS_TRACKER_LIMIT  = {"goal": 5, "habit": 5}  # Mindra+
+
 # ==== Sleep (ambient only) ====
 _sleep_prefs: dict[str, dict] = {}
 CB = "ui:"
 CHALLENGE_POINTS = int(os.getenv("CHALLENGE_POINTS", 25)) 
 
 
+def _is_unlimited_tracker(uid: str) -> bool:
+    # фича Pro / безлимит — подхватываем любые из этих флагов
+    for feat in ("tracker_unlimited", "pro", "unlimited"):
+        try:
+            if has_feature(uid, feat):
+                return True
+        except Exception:
+            pass
+    return False
+
+def _tracker_limit_for(uid: str, kind: str) -> int | None:
+    """None = безлимит"""
+    if _is_unlimited_tracker(uid):
+        return None
+    if is_premium(uid):
+        return PLUS_TRACKER_LIMIT.get(kind)
+    return FREE_TRACKER_LIMIT.get(kind)
+
+def _count_goals(uid: str) -> int:
+    try:
+        goals = get_goals(uid)
+        return sum(1 for g in (goals or []) if isinstance(g, dict) or g)
+    except Exception:
+        return 0
+
+def _count_habits(uid: str) -> int:
+    try:
+        habits = get_habits(uid)
+        return len(habits or [])
+    except Exception:
+        return 0
+
+def tracker_can_add(uid: str, kind: str) -> tuple[bool, int | None, int]:
+    """Возвращает: can_add, limit, current_count"""
+    limit = _tracker_limit_for(uid, kind)
+    cnt = _count_goals(uid) if kind == "goal" else _count_habits(uid)
+    if limit is None:
+        return True, None, cnt
+    return (cnt < limit), limit, cnt
+
+def _tracker_limit_message(uid: str, kind: str, current: int, limit: int) -> str:
+    lang = user_languages.get(uid, "ru")
+    d = TRACKER_LIMIT_TEXTS.get(lang, TRACKER_LIMIT_TEXTS["ru"])
+    key = ("plus_" if is_premium(uid) else "free_") + ("goal" if kind == "goal" else "habit")
+    return d[key].format(current=current, limit=limit)
+
+def _tracker_limit_kb(uid: str) -> InlineKeyboardMarkup:
+    t = _menu_i18n(uid)
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton(t.get("premium","💎 Премиум"), callback_data="m:nav:premium")],
+        [InlineKeyboardButton(t.get("back","⬅️ Назад"),      callback_data="m:nav:home")],
+    ])
+    
 def _kb_home(uid: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup([
         [InlineKeyboardButton(_menu_i18n(uid)["back"], callback_data="m:nav:home")]
