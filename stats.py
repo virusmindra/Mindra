@@ -19,41 +19,51 @@ REMIND_DB_PATH = os.getenv("REMIND_DB_PATH", os.path.join(DATA_DIR, "reminders.s
 
 def ensure_remind_db():
     with sqlite3.connect(REMIND_DB_PATH) as db:
-        # базовое создание (если таблицы нет)
         db.execute("""
             CREATE TABLE IF NOT EXISTS reminders (
-                id        INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id   TEXT    NOT NULL,
-                text      TEXT    NOT NULL,
-                run_at    TEXT    NOT NULL,   -- ISO8601 UTC
-                tz        TEXT,
-                status    TEXT    NOT NULL DEFAULT 'scheduled',
-                created_at TEXT   NOT NULL DEFAULT (datetime('now')),
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id    TEXT    NOT NULL,
+                text       TEXT    NOT NULL,
+                run_at     TEXT    NOT NULL,   -- ISO8601 UTC (legacy)
+                tz         TEXT,
+                status     TEXT    NOT NULL DEFAULT 'scheduled',
+                created_at TEXT    NOT NULL DEFAULT (datetime('now')),
                 updated_at TEXT
+                -- due_utc добавим миграцией ниже
             );
         """)
-        # миграция недостающих колонок (если таблица была старой)
+
         cols = {row[1] for row in db.execute("PRAGMA table_info(reminders);")}
+
         def add(col, ddl):
             if col not in cols:
                 db.execute(f"ALTER TABLE reminders ADD COLUMN {ddl};")
 
+        # существующие + новые поля
         add("tz",        "tz TEXT")
         add("status",    "status TEXT NOT NULL DEFAULT 'scheduled'")
         add("created_at","created_at TEXT NOT NULL DEFAULT (datetime('now'))")
         add("updated_at","updated_at TEXT")
+        add("due_utc",   "due_utc INTEGER NOT NULL DEFAULT 0")  # <-- важное поле для твоего INSERT
 
-        # на всякий случай — заполнить NULL статусы
+        # базовые индексы
+        db.execute("CREATE INDEX IF NOT EXISTS idx_reminders_user_due   ON reminders(user_id, due_utc);")
+        db.execute("CREATE INDEX IF NOT EXISTS idx_reminders_status_due ON reminders(status,  due_utc);")
+
+        # на всякий — привести NULL статусы к 'scheduled'
         db.execute("UPDATE reminders SET status='scheduled' WHERE status IS NULL;")
         db.commit()
-        
+
 @contextmanager
 def remind_db():
+    # гарантируем схему перед выдачей коннекта
+    ensure_remind_db()
     conn = sqlite3.connect(REMIND_DB_PATH)
     try:
         yield conn
     finally:
         conn.close()
+
 
 
 def ensure_premium_db():
