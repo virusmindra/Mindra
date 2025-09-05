@@ -59,6 +59,7 @@ def remind_db():
     # гарантируем схему перед выдачей коннекта
     ensure_remind_db()
     conn = sqlite3.connect(REMIND_DB_PATH)
+    conn.row_factory = sqlite3.Row
     try:
         yield conn
     finally:
