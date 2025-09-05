@@ -120,6 +120,20 @@ from telegram.ext import ContextTypes, CommandHandler, MessageHandler, CallbackQ
 from telegram.constants import ChatAction, ParseMode
 from config import client, TELEGRAM_BOT_TOKEN, ELEVEN_API_KEY, BASE_DIR, DATA_DIR, PREMIUM_DB_PATH, REMIND_DB_PATH
 from history import load_history, save_history, trim_history
+# === Exports expected by main.py ===
+try:
+    conversation_history = load_history()
+    if not isinstance(conversation_history, dict):
+        conversation_history = {}
+except Exception:
+    conversation_history = {}
+
+# если main.py тоже импортирует user_modes — инициализируем
+try:
+    user_modes
+except NameError:
+    user_modes = {}
+
 from goals import  is_goal_like, goal_keywords_by_lang, REACTIONS_GOAL_DONE, DELETE_MESSAGES
 from pathlib import Path
 from apscheduler.schedulers.background import BackgroundScheduler
