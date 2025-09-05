@@ -4616,76 +4616,87 @@ async def handle_done_habit_callback(update: Update, context: ContextTypes.DEFAU
         await query.answer("Ошибка при обновлении.", show_alert=True)
 
 async def goal(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global user_goal_count
-    user_id = str(update.effective_user.id)
-    lang = user_languages.get(user_id, "ru")
+    uid = str(update.effective_user.id)
+    lang = user_languages.get(uid, "ru")
     t = goal_texts.get(lang, goal_texts["ru"])
+
+    # i18n-паттерны для дедлайна/триггера напоминания
     patterns = LANG_PATTERNS.get(lang, LANG_PATTERNS["ru"])
     deadline_pattern = patterns["deadline"]
     remind_kw = patterns["remind"]
 
-    # Универсальная функция для ответа (через команду или кнопку)
-    def get_send_func(update):
+    # --- лимит по тарифу: Free=1, Plus=5, Pro=∞ ---
+    can, limit, cnt = tracker_can_add(uid, "goal")
+    if not can:
+        # если команда /goal пришла как message — используем единое UI-сообщение
         if getattr(update, "message", None):
-            return update.message.reply_text
-        elif getattr(update, "callback_query", None):
-            return update.callback_query.edit_message_text
-        else:
-            return None
-
-    send_func = get_send_func(update)
-    if send_func is None:
+            return await ui_show_from_command(
+                update, context,
+                _tracker_limit_message(uid, "goal", cnt, limit),
+                reply_markup=_tracker_limit_kb(uid),
+                parse_mode="Markdown",
+            )
+        # если вызов пришёл из callback (редко для /goal) — редактируем сообщение
+        q = getattr(update, "callback_query", None)
+        if q and q.message:
+            return await q.edit_message_text(
+                _tracker_limit_message(uid, "goal", cnt, limit),
+                parse_mode="Markdown",
+                reply_markup=_tracker_limit_kb(uid),
+            )
+        # фолбэк
         return
 
-    # ✅ Проверка аргументов
+    # --- проверка аргументов ---
     if not context.args:
-        await send_func(t["no_args"], parse_mode="Markdown")
+        if getattr(update, "message", None):
+            return await update.message.reply_text(t["no_args"], parse_mode="Markdown")
+        q = getattr(update, "callback_query", None)
+        if q and q.message:
+            return await q.edit_message_text(t["no_args"], parse_mode="Markdown")
         return
 
-    today = str(date.today())
-    if user_id not in user_goal_count:
-        user_goal_count[user_id] = {"date": today, "count": 0}
-    else:
-        if user_goal_count[user_id]["date"] != today:
-            user_goal_count[user_id] = {"date": today, "count": 0}
+    # --- разбор текста цели ---
+    full_text = " ".join(context.args)
 
-    if not is_premium(user_id):
-        if user_goal_count[user_id]["count"] >= 3:
-            await send_func(t["limit"])
-            return
-
-    user_goal_count[user_id]["count"] += 1
-
-    # ✨ Логика постановки цели
-    text = " ".join(context.args)
-    deadline_match = re.search(deadline_pattern, text, flags=re.IGNORECASE)
-    remind = remind_kw in text.lower()
-
+    # дедлайн (YYYY-MM-DD) по локальному паттерну
     deadline = None
-    if deadline_match:
+    m = re.search(deadline_pattern, full_text, flags=re.IGNORECASE)
+    if m:
         try:
-            deadline = deadline_match.group(1)
+            deadline = m.group(1)
             datetime.strptime(deadline, "%Y-%m-%d")
         except ValueError:
-            await send_func(t["bad_date"])
+            if getattr(update, "message", None):
+                return await update.message.reply_text(t["bad_date"], parse_mode="Markdown")
+            q = getattr(update, "callback_query", None)
+            if q and q.message:
+                return await q.edit_message_text(t["bad_date"], parse_mode="Markdown")
             return
 
-    goal_text = re.sub(deadline_pattern, '', text, flags=re.IGNORECASE).replace(remind_kw, "").strip()
+    # признак «напомнить»
+    remind = remind_kw.lower() in full_text.lower()
 
-    add_goal(user_id, goal_text, deadline=deadline, remind=remind)
-    add_points(user_id, 1)
+    # чистый текст цели без служебных фрагментов
+    goal_text = re.sub(deadline_pattern, "", full_text, flags=re.IGNORECASE)
+    goal_text = goal_text.replace(remind_kw, "").strip()
 
+    # --- создать цель ---
+    add_goal(uid, goal_text, deadline=deadline, remind=remind)
+    add_points(uid, 1)
+
+    # --- ответ пользователю ---
     reply = f"{t['added']} *{goal_text}*"
     if deadline:
         reply += f"\n{t['deadline']} `{deadline}`"
     if remind:
         reply += f"\n{t['remind']}"
 
-    await send_func(reply, parse_mode="Markdown")
-    
-# Загрузка истории и режимов
-conversation_history = load_history()
-user_modes = {}
+    if getattr(update, "message", None):
+        return await update.message.reply_text(reply, parse_mode="Markdown")
+    q = getattr(update, "callback_query", None)
+    if q and q.message:
+        return await q.edit_message_text(reply, parse_mode="Markdown")
 
 def get_random_daily_task(user_id: str) -> str:
     # Получаем язык пользователя, если нет — по умолчанию русский
