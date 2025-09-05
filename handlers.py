@@ -3035,9 +3035,9 @@ async def remind_command(update, context: ContextTypes.DEFAULT_TYPE):
     # Сохраняем в БД и планируем
     with remind_db() as db:
         cur = db.execute(
-            "INSERT INTO reminders (user_id, text, due_utc, tz, status, created_at) "
-            "VALUES (?, ?, ?, ?, 'scheduled', ?)",
-            (uid, text, _to_epoch(dt_utc), str(tz.key), _to_epoch(_utcnow()))
+            "INSERT INTO reminders (user_id, text, due_utc, run_at, tz, status, created_at) "
+            "VALUES (?, ?, ?, ?, ?, 'scheduled', ?)",
+            (uid, text, _to_epoch(dt_utc), dt_utc.isoformat(), str(tz.key), _to_epoch(_utcnow()))
         )
         rem_id = cur.lastrowid
         db.commit()
