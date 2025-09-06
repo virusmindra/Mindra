@@ -3519,6 +3519,11 @@ async def tz_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="Markdown"
             )
 
+        finally:
+            # После установки часового пояса освобождаем UI-сообщение,
+            # чтобы команда /menu выводила новое меню отдельным сообщением.
+            context.user_data.pop(UI_MSG_KEY, None)
+            
         # 1) Реферал
         referrer_id = user_ref_args.pop(uid, None)
         if referrer_id and referrer_id != uid:
