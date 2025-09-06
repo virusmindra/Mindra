@@ -3622,10 +3622,24 @@ async def show_habits(update, context):
 
     # Кнопки: удалить и добавить
     buttons = [
-        [
-            InlineKeyboardButton(t["delete"], callback_data="delete_habit_choose"),
-            InlineKeyboardButton(t["add"], callback_data="create_habit"),
-        ]
+        [InlineKeyboardButton(t["add"], callback_data="create_habit")],
+        [InlineKeyboardButton(
+            "✅ "
+            + {
+                "ru": "Выполнить",
+                "uk": "Виконати",
+                "be": "Выканаць",
+                "kk": "Аяқтау",
+                "kg": "Аткаруу",
+                "hy": "Կատարել",
+                "ce": "Батта",
+                "md": "Finalizează",
+                "ka": "შესრულება",
+                "en": "Done",
+            }.get(lang, "Выполнить"),
+            callback_data="mark_habit_done_choose",
+        )],
+        [InlineKeyboardButton(t["delete"], callback_data="delete_habit_choose")],
     ]
     reply_markup = InlineKeyboardMarkup(buttons)
 
