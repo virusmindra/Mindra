@@ -880,6 +880,23 @@ def _has_remind_intent(text: str, lang: str) -> bool:
     pats = REMIND_KEYWORDS.get(lang, REMIND_KEYWORDS["ru"])
     return any(re.search(p, txt) for p in pats)
 
+async def maybe_suggest_reminder(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Показывает карточку «Сделать напоминание?» если в сообщении есть намерение."""
+    if not getattr(update, "message", None):
+        return
+    uid = str(update.effective_user.id)
+    lang = user_languages.get(uid, "ru")
+    text = update.message.text or ""
+    if not _has_remind_intent(text, lang):
+        return
+
+    t = _rem_suggest_i18n(uid)
+    kb = InlineKeyboardMarkup([[
+        InlineKeyboardButton(f"✅ {t['yes']}", callback_data="rs:yes"),
+        InlineKeyboardButton(f"❌ {t['no']}",  callback_data="rs:no"),
+    ]])
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=t["ask"], reply_markup=kb)
+
 async def reminder_suggest_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     if not q or not q.data.startswith("rs:"):
