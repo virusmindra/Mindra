@@ -21,6 +21,8 @@ from elevenlabs import ElevenLabs
 from collections import defaultdict
 from texts import (
     VOICE_TEXTS_BY_LANG,
+    REMIND_KEYWORDS,
+    REMIND_SUGGEST_TEXTS,
     TRACKER_LIMIT_TEXTS,
     STORY_INTENT,
     MENU_TEXTS,
@@ -782,6 +784,10 @@ def is_premium(user_id) -> bool:
     if str(user_id) in ADMIN_USER_IDS:
         return True
     return is_premium_db(user_id)
+
+def _rem_suggest_i18n(uid: str) -> dict:
+    lang = user_languages.get(uid, "ru")
+    return REMIND_SUGGEST_TEXTS.get(lang, REMIND_SUGGEST_TEXTS["ru"])
     
 # Обратная совместимость: где-то могли звать _v_ui_i18n
 def _v_ui_i18n(uid: str) -> dict:
@@ -867,6 +873,38 @@ async def settings_router(update, context):
         kb = InlineKeyboardMarkup([[InlineKeyboardButton(t["back"], callback_data="m:nav:settings")]])
         return await msg.edit_text(t.get("feedback_ask","💌 Напишите отзыв"), reply_markup=kb, parse_mode="Markdown")
 
+
+def _has_remind_intent(text: str, lang: str) -> bool:
+    if not text: return False
+    txt = text.lower()
+    pats = REMIND_KEYWORDS.get(lang, REMIND_KEYWORDS["ru"])
+    return any(re.search(p, txt) for p in pats)
+
+async def reminder_suggest_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    if not q or not q.data.startswith("rs:"):
+        return
+    await q.answer()
+    uid = str(q.from_user.id)
+    lang = user_languages.get(uid, "ru")
+    t = _rem_suggest_i18n(uid)
+
+    if q.data == "rs:yes":
+        # уберём кнопки с вопроса
+        try:
+            await q.edit_message_text(t["ask"])
+        except Exception:
+            pass
+        # открываем твоё меню напоминаний (готовая функция)
+        # используем shim, чтобы переиспользовать существующий код
+        u = _shim_update_for_cb(q, context)
+        return await reminders_menu_cmd(u, context)
+
+    # rs:no
+    try:
+        await q.edit_message_text("👍")
+    except Exception:
+        pass
 
 async def language_cb(update, context):
     q = update.callback_query
@@ -5729,6 +5767,7 @@ handlers = [
     CommandHandler("voice_settings", voice_settings),
     CallbackQueryHandler(voice_settings_cb, pattern=r"^v:"),
     CallbackQueryHandler(plus_router, pattern=r"^m:plus:"),
+    CallbackQueryHandler(reminder_suggest_cb, pattern=r"^rs:"),
     
     CommandHandler("story", story_cmd),
     CallbackQueryHandler(story_callback, pattern=r"^st:"),
