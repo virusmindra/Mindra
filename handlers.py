@@ -2345,9 +2345,9 @@ def _premium_kb(uid: str) -> InlineKeyboardMarkup:
 def _gh_menu_keyboard(t: dict) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup([
         [InlineKeyboardButton(t["btn_add_goal"],   callback_data="gh:new_goal")],
-        [InlineKeyboardButton(t["btn_list_goals"], callback_data="gh:list_goals")],
+        [InlineKeyboardButton(t["btn_list_goals"], callback_data="show_goals")],
         [InlineKeyboardButton(t["btn_add_habit"],  callback_data="gh:new_habit")],
-        [InlineKeyboardButton(t["btn_list_habits"],callback_data="gh:list_habits")],
+        [InlineKeyboardButton(t["btn_list_habits"],callback_data="show_habits")],
         [InlineKeyboardButton(t["back"],            callback_data="gh:back")],
     ])
 
@@ -3641,6 +3641,7 @@ async def show_habits(update, context):
         )],
         [InlineKeyboardButton(t["delete"], callback_data="delete_habit_choose")],
     ]
+    buttons.append([InlineKeyboardButton(_menu_i18n(user_id)["back"], callback_data="m:nav:features")])
     reply_markup = InlineKeyboardMarkup(buttons)
 
     await send_func(reply, reply_markup=reply_markup, parse_mode="Markdown")
@@ -3775,6 +3776,7 @@ async def show_goals(update, context):
             "hy": "Ջնջել", "ce": "ДӀелла", "md": "Șterge", "ka": "წაშლა", "en": "Delete"
         }.get(lang, "Удалить"), callback_data="delete_goal_choose")]
     ]
+    buttons.append([InlineKeyboardButton(_menu_i18n(user_id)["back"], callback_data="m:nav:features")])
     reply_markup = InlineKeyboardMarkup(buttons)
 
     try:
@@ -4453,6 +4455,9 @@ async def habits_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         ]
     ]
+
+    
+    keyboard.append([InlineKeyboardButton(_menu_i18n(user_id)["back"], callback_data="m:nav:features")])
 
     await update.message.reply_text(
         reply, reply_markup=InlineKeyboardMarkup(keyboard)
