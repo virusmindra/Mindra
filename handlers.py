@@ -4978,16 +4978,27 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     await update.message.reply_text(lock_msg)
             return
 
-    # +1
+    # +1 к счётчику (после проверки лимита)
     user_message_count[user_id]["count"] += 1
 
+    # 📌 текст пользователя
     user_input = (update.message.text or "").strip()
     if not user_input:
         return
 
+    # 🌐 язык
     lang_code = user_languages.get(user_id, "ru")
 
-    # ——— перехват сказки ———
+    # === РАННИЙ ПЕРЕХВАТ НАМЕРЕНИЯ «НАПОМНИ» ===
+    try:
+        if _has_remind_intent(user_input, lang_code):
+            # показать карточку «Сделать напоминание?» и НЕ вызывать LLM
+            await maybe_suggest_reminder(update, context)
+            return
+    except Exception as e:
+        logging.warning(f"Remind intercept failed: {e}")
+
+    # === РАННИЙ ПЕРЕХВАТ ЗАПРОСА СКАЗКИ ===
     try:
         if _looks_like_story_intent(user_input, lang_code, user_id):
             if is_premium(user_id):
@@ -5014,7 +5025,7 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logging.warning(f"Story intercept failed: {e}")
 
-    # ——— обычный ответ ассистента ———
+    # === Обычный ответ ассистента ===
     lang_prompt = LANG_PROMPTS.get(lang_code, LANG_PROMPTS["ru"])
     mode = user_modes.get(user_id, "support")
     mode_prompt = MODES.get(mode, MODES["support"]).get(lang_code, MODES["support"]["ru"])
@@ -5026,6 +5037,7 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     }.get(lang_code, "Если пользователь просит сказку — не пиши её здесь; предложи кнопки «Сказка».")
     system_prompt = f"{lang_prompt}\n\n{mode_prompt}\n\n{guard}"
 
+    # 💾 история
     if user_id not in conversation_history:
         conversation_history[user_id] = [{"role": "system", "content": system_prompt}]
     else:
@@ -5035,31 +5047,37 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     trimmed_history = trim_history(conversation_history[user_id])
 
     try:
-        await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
+        # ✨ “печатает…”
+        await context.bot.send_chat_action(
+            chat_id=update.effective_chat.id,
+            action=ChatAction.TYPING
+        )
 
-        resp = client.chat.completions.create(model="gpt-4o", messages=trimmed_history)
+        # 🤖 LLM-ответ
+        resp = client.chat.completions.create(
+            model="gpt-4o",
+            messages=trimmed_history
+        )
         reply = (resp.choices[0].message.content or "").strip() or "…"
 
+        # сохранить в историю
         conversation_history[user_id].append({"role": "assistant", "content": reply})
         save_history(conversation_history)
 
+        # 💜 эмпатичный префикс
         reaction = detect_emotion_reaction(user_input, lang_code) + detect_topic_and_react(user_input, lang_code)
         final_text = reaction + reply
 
+        # 📝 ответ текстом
         await update.message.reply_text(
             final_text,
             reply_markup=generate_post_response_buttons()
         )
 
-        # 👇 добавлено: подсказка «Сделать напоминание?»
-        try:
-            await maybe_suggest_reminder(update, context)
-        except Exception as e:
-            logging.warning(f"remind suggest failed: {e}")
-
         # 🔊 авто-озвучка (если включена)
         if is_premium(user_id) and user_voice_mode.get(user_id, False):
             await send_voice_response(context, user_id_int, final_text, lang_code)
+
     except Exception as e:
         logging.error(f"❌ Ошибка в chat(): {e}")
         await update.message.reply_text(
