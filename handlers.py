@@ -633,7 +633,9 @@ def _menu_header_text(uid: str) -> str:
         dt = datetime.fromisoformat(until)
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
-        until_str = dt.astimezone(timezone.utc).isoformat()
+        tz_name = user_timezones.get(uid, "Europe/Kyiv")
+        dt_local = dt.astimezone(ZoneInfo(tz_name))
+        until_str = dt_local.strftime("%Y-%m-%d %H:%M")
     except Exception:
         until_str = until
     return f"*{t['title']}*\n{t['premium_until'].format(until=until_str)}"
@@ -669,12 +671,7 @@ def _premium_summary(uid: str, t: dict) -> tuple[str, str]:
     return (t["premium_yes"], dt_str)
 
 def _menu_home_text(uid: str) -> str:
-    t = _menu_i18n(uid)
-    until = get_premium_until(uid)
-    if until:
-        return f"*{t['title']}*\n\n" + t["premium_until"].format(until=until)
-    else:
-        return f"*{t['title']}*\n\n" + t["premium_none"]
+    return _menu_header_text(uid)
 
 def _menu_kb_home(uid: str) -> InlineKeyboardMarkup:
     t = _menu_i18n(uid)
@@ -4757,8 +4754,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("Нохчийн мотт 🏴",   callback_data="lang_ce"),
              InlineKeyboardButton("English 🇬🇧",       callback_data="lang_en")],
         ]
-        # текст берём из твоих SETTINGS_TEXTS (если есть), иначе дефолт
-        choose_lang = SETTINGS_TEXTS.get("ru", {}).get(
+        # By default show the language prompt in English for first-time users
+        choose_lang = SETTINGS_TEXTS.get("en", {}).get(
             "choose_lang", "🌐 Please select the language of communication:"
         )
         sent = await update.message.reply_text(
