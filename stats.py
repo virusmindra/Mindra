@@ -76,6 +76,7 @@ def ensure_remind_db():
 def remind_db():
     ensure_remind_db()
     conn = sqlite3.connect(REMIND_DB_PATH)
+    conn.row_factory = sqlite3.Row
     try:
         yield conn
     finally:
