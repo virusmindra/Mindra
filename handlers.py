@@ -405,19 +405,8 @@ def _quick_parse_due(text: str, lang: str, tz: ZoneInfo) -> datetime | None:
 
 
 def _create_reminder_quick(uid: str, body: str, due_local: datetime, tz_name: str) -> int:
-    """Создаёт запись о напоминании (и в due_utc, и в run_at ISO для совместимости)."""
-    due_utc_dt = due_local.astimezone(timezone.utc)
-    run_at_iso = due_utc_dt.replace(microsecond=0).isoformat().replace("+00:00", "Z")
-    due_epoch = int(due_utc_dt.timestamp())
+    return insert_reminder(uid, body, due_local, tz_name)
 
-    with remind_db() as db:
-        cur = db.execute(
-            "INSERT INTO reminders (user_id, text, run_at, tz, status, created_at, due_utc) "
-            "VALUES (?, ?, ?, ?, 'scheduled', ?, ?)",
-            (uid, body, run_at_iso, tz_name, _iso_utc_now(), due_epoch),
-        )
-        db.commit()
-        return cur.lastrowid
         
 def once_per_message(handler_name: str):
     def deco(fn):
