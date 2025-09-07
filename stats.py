@@ -24,48 +24,62 @@ def ensure_remind_db():
                 id         INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id    TEXT    NOT NULL,
                 text       TEXT    NOT NULL,
-                run_at     TEXT    NOT NULL,   -- ISO8601 UTC (legacy)
+                run_at     TEXT,                  -- ISO8601 UTC (Z)
                 tz         TEXT,
                 status     TEXT    NOT NULL DEFAULT 'scheduled',
                 created_at TEXT    NOT NULL DEFAULT (datetime('now')),
-                updated_at TEXT
-                -- due_utc добавим миграцией ниже
+                updated_at TEXT,
+                due_utc    INTEGER NOT NULL DEFAULT 0   -- epoch seconds (UTC)
             );
         """)
 
         cols = {row[1] for row in db.execute("PRAGMA table_info(reminders);")}
-
         def add(col, ddl):
             if col not in cols:
                 db.execute(f"ALTER TABLE reminders ADD COLUMN {ddl};")
 
-        # существующие + новые поля
+        # на случай старых баз
         add("tz",        "tz TEXT")
         add("status",    "status TEXT NOT NULL DEFAULT 'scheduled'")
         add("created_at","created_at TEXT NOT NULL DEFAULT (datetime('now'))")
         add("updated_at","updated_at TEXT")
-        add("due_utc",   "due_utc INTEGER NOT NULL DEFAULT 0")  # <-- важное поле для твоего INSERT
+        add("due_utc",   "due_utc INTEGER NOT NULL DEFAULT 0")
+        # run_at теперь допускаем NULL, чтобы можно было восстановить из due_utc
 
-        # базовые индексы
-        db.execute("CREATE INDEX IF NOT EXISTS idx_reminders_user_due   ON reminders(user_id, due_utc);")
-        db.execute("CREATE INDEX IF NOT EXISTS idx_reminders_status_due ON reminders(status,  due_utc);")
+        # индексы
+        db.execute("CREATE INDEX IF NOT EXISTS idx_rem_user_due   ON reminders(user_id, due_utc);")
+        db.execute("CREATE INDEX IF NOT EXISTS idx_rem_status_due ON reminders(status,  due_utc);")
 
-        # на всякий — привести NULL статусы к 'scheduled'
+        # миграции значений: заполняем пустые run_at из due_utc
+        db.execute("""
+            UPDATE reminders
+               SET run_at = strftime('%Y-%m-%dT%H:%M:%SZ', due_utc, 'unixepoch')
+             WHERE (run_at IS NULL OR run_at = '')
+               AND due_utc > 0;
+        """)
+
+        # и наоборот: если due_utc = 0, но run_at есть — посчитаем epoch
+        cur = db.execute("SELECT id, run_at FROM reminders WHERE (due_utc IS NULL OR due_utc = 0) AND run_at IS NOT NULL;")
+        rows = cur.fetchall()
+        for _id, iso in rows:
+            try:
+                dt = datetime.fromisoformat(iso.replace("Z", "+00:00"))
+                db.execute("UPDATE reminders SET due_utc=? WHERE id=?", (int(dt.timestamp()), _id))
+            except Exception:
+                pass
+
+        # нормализуем статусы
         db.execute("UPDATE reminders SET status='scheduled' WHERE status IS NULL;")
         db.commit()
 
 @contextmanager
 def remind_db():
-    # гарантируем схему перед выдачей коннекта
     ensure_remind_db()
     conn = sqlite3.connect(REMIND_DB_PATH)
-    conn.row_factory = sqlite3.Row
     try:
         yield conn
     finally:
         conn.close()
-
-
 
 def ensure_premium_db():
     os.makedirs(DATA_DIR, exist_ok=True)
