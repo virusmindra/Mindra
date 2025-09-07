@@ -914,19 +914,48 @@ async def reminder_suggest_cb(update: Update, context: ContextTypes.DEFAULT_TYPE
     await q.answer()
 
     uid = str(q.from_user.id)
+    lang = user_languages.get(uid, "ru")
     t = _rem_suggest_i18n(uid)
 
     if q.data == "rs:yes":
-        # ✅ закрепляем текущее сообщение как «UI-сообщение»
+        # редактируем в этом же сообщении и дальше
         context.user_data[UI_MSG_KEY] = q.message.message_id
 
-        # уберём кнопки у вопроса (чтобы не было двойных UI)
+        # убираем клавиатуру у вопроса
         try:
             await q.edit_message_reply_markup(reply_markup=None)
         except Exception:
             pass
 
-        # открываем меню напоминаний в том же сообщении
+        # исходный текст пользователя, который мы сохранили в maybe_suggest_reminder
+        src = (context.chat_data.get(f"rem_src_{uid}") or "").strip()
+
+        # определяем TZ пользователя (или UTC по умолчанию)
+        tz_name = user_timezones.get(uid, "UTC")
+        try:
+            tz = ZoneInfo(tz_name)
+        except Exception:
+            tz = ZoneInfo("UTC")
+            tz_name = "UTC"
+
+        # пробуем распарсить срок
+        due = _quick_parse_due(src, lang, tz)
+        if due:
+            _create_reminder_quick(uid, src, due, tz_name)
+            # локальное время для подтверждения
+            when_local = due.strftime("%Y-%m-%d %H:%M")
+            msg = t.get("created", "⏰ Готово! Напоминание создано на *{when}*.").format(when=when_local)
+            try:
+                await q.edit_message_text(msg, parse_mode="Markdown")
+            except Exception:
+                await context.bot.send_message(chat_id=int(uid), text=msg, parse_mode="Markdown")
+            return
+
+        # если парсер не понял — откроем твоё меню
+        try:
+            await q.answer(t.get("parse_fail", "Не понял дату/время — выбери ниже."), show_alert=False)
+        except Exception:
+            pass
         u = _shim_update_for_cb(q, context)
         return await reminders_menu_cmd(u, context)
 
@@ -939,6 +968,7 @@ async def reminder_suggest_cb(update: Update, context: ContextTypes.DEFAULT_TYPE
         await q.edit_message_text("👍")
     except Exception:
         pass
+
 
 async def language_cb(update, context):
     q = update.callback_query
