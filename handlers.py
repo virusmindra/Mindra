@@ -3026,10 +3026,14 @@ async def feat_router(update, context):
 
 def parse_natural_time(text: str, lang: str, user_tz: ZoneInfo) -> datetime | None:
     """
-    Возвращает AWARE local datetime (в таймзоне пользователя) или None.
-    Поддержка:
-      RU/UK: «через 15 мин/час/день», «сегодня в 18:30», «завтра в 9», «в пт в 19»
-      EN:    “in 30 min/hour/day”, “today at 6:30pm”, “tomorrow at 9”, “on fri at 7”
+    AWARE local datetime (в таймзоне пользователя) или None.
+    Поддержка: RU/UK/EN.
+    Понимает:
+      • «через 15 мин/час/день», «in 30 minutes/hours/days»
+      • «сегодня в 18:30», «today at 6:30pm»
+      • «завтра в 9», «tomorrow at 9»
+      • «в пт в 19», «on fri at 7pm»
+      • «в 2 ночи/утра/дня/вечера» (RU/UK), а также AM/PM (EN)
     """
     s = re.sub(r"\s+", " ", text.lower().strip())
     now_local = datetime.now(user_tz)
@@ -3043,32 +3047,51 @@ def parse_natural_time(text: str, lang: str, user_tz: ZoneInfo) -> datetime | No
         if "day" in unit:  return now_local + timedelta(days=n)
 
     # RU/UK: через X ...
-    m = re.search(r"через\s+(\d+)\s*(мин|минут|хв|хвилин|час|часа|часов|годин|день|дня|дней|дн)\b", s)
+    m = re.search(r"\bчерез\s+(\d+)\s*(мин|минут|хв|хвилин|час|часа|часов|годин|день|дня|дней|дн)\b", s)
     if m:
         n = int(m.group(1)); unit = m.group(2)
-        if unit.startswith(("мин","хв")): return now_local + timedelta(minutes=n)
-        if unit.startswith(("час","годин")): return now_local + timedelta(hours=n)
-        if unit.startswith(("д","дн")): return now_local + timedelta(days=n)
+        if unit.startswith(("мин","хв")):     return now_local + timedelta(minutes=n)
+        if unit.startswith(("час","годин")):  return now_local + timedelta(hours=n)
+        if unit.startswith(("д","дн")):       return now_local + timedelta(days=n)
+
+    # helper: фикс AM/PM и суффиксов "утра/дня/вечера/ночи"
+    def _apply_daypart(h: int, tail: str) -> int:
+        tail = tail or ""
+        # RU/UK варианты
+        if any(w in tail for w in ("вечера","вечір","вечора")):
+            if h < 12: h += 12
+        elif any(w in tail for w in ("дня",)):   # 12–16
+            if 1 <= h <= 10: h += 12
+        elif any(w in tail for w in ("ночи","ночі")):
+            # ночь — 0..5; если пользователь сказал 1..5 — оставим; если 10 — вероятно имел ввиду 22
+            if h == 12: h = 0
+            if 6 <= h <= 11: h = (h + 12) % 24
+        # "утра/ранку" — 6..11: оставляем как есть (кроме 12 -> 0)
+        if any(w in tail for w in ("утра","ранку")) and h == 12:
+            h = 0
+        return h
 
     # today / сегодня / сьогодні
     if "today" in s or "сегодня" in s or "сьогодні" in s:
         base = now_local
-        tm = re.search(r"\bв\s*(\d{1,2})(?::(\d{2}))?|\bat\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?", s)
+        tm = re.search(r"\b(?:в|at)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm|утра|ранку|дня|вечера|вечір|вечора|ночи|ночі)?", s)
         if tm:
-            h = int(tm.group(1) or tm.group(3)); mnt = int((tm.group(2) or tm.group(4) or "0"))
-            ampm = (tm.group(5) or "").lower()
-            if ampm == "pm" and h < 12: h += 12
+            h = int(tm.group(1)); mnt = int(tm.group(2) or 0); tail = (tm.group(3) or "").lower()
+            if tail in ("pm",) and h < 12: h += 12
+            if tail in ("am",) and h == 12: h = 0
+            if tail not in ("am","pm"): h = _apply_daypart(h, tail)
             return base.replace(hour=h, minute=mnt, second=0, microsecond=0)
         return now_local + timedelta(hours=1)
 
     # tomorrow / завтра
     if "tomorrow" in s or "завтра" in s:
         base = now_local + timedelta(days=1)
-        tm = re.search(r"\bв\s*(\d{1,2})(?::(\d{2}))?|\bat\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?", s)
+        tm = re.search(r"\b(?:в|at)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm|утра|ранку|дня|вечера|вечір|вечора|ночи|ночі)?", s)
         if tm:
-            h = int(tm.group(1) or tm.group(3)); mnt = int((tm.group(2) or tm.group(4) or "0"))
-            ampm = (tm.group(5) or "").lower()
-            if ampm == "pm" and h < 12: h += 12
+            h = int(tm.group(1)); mnt = int(tm.group(2) or 0); tail = (tm.group(3) or "").lower()
+            if tail in ("pm",) and h < 12: h += 12
+            if tail in ("am",) and h == 12: h = 0
+            if tail not in ("am","pm"): h = _apply_daypart(h, tail)
             return base.replace(hour=h, minute=mnt, second=0, microsecond=0)
         return base.replace(hour=9, minute=0, second=0, microsecond=0)
 
@@ -3077,20 +3100,22 @@ def parse_natural_time(text: str, lang: str, user_tz: ZoneInfo) -> datetime | No
     for name, idx in wd_map.items():
         if re.search(rf"\b(в|на|on)\s*{name}\b", s):
             base = _next_weekday(now_local, idx)
-            tm = re.search(r"\bв\s*(\d{1,2})(?::(\d{2}))?|\bat\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?", s)
+            tm = re.search(r"\b(?:в|at)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm|утра|ранку|дня|вечера|вечір|вечора|ночи|ночі)?", s)
             if tm:
-                h = int(tm.group(1) or tm.group(3)); mnt = int((tm.group(2) or tm.group(4) or "0"))
-                ampm = (tm.group(5) or "").lower()
-                if ampm == "pm" and h < 12: h += 12
+                h = int(tm.group(1)); mnt = int(tm.group(2) or 0); tail = (tm.group(3) or "").lower()
+                if tail in ("pm",) and h < 12: h += 12
+                if tail in ("am",) and h == 12: h = 0
+                if tail not in ("am","pm"): h = _apply_daypart(h, tail)
                 return base.replace(hour=h, minute=mnt, second=0, microsecond=0)
             return base.replace(hour=9, minute=0, second=0, microsecond=0)
 
-    # bare "в 18:30" / "at 6:30pm"
-    tm = re.search(r"\bв\s*(\d{1,2})(?::(\d{2}))?|\bat\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?", s)
+    # bare "в 18:30", "at 6:30pm", "в 2 ночи"
+    tm = re.search(r"\b(?:в|at)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm|утра|ранку|дня|вечера|вечір|вечора|ночи|ночі)?", s)
     if tm:
-        h = int(tm.group(1) or tm.group(3)); mnt = int((tm.group(2) or tm.group(4) or "0"))
-        ampm = (tm.group(5) or "").lower()
-        if ampm == "pm" and h < 12: h += 12
+        h = int(tm.group(1)); mnt = int(tm.group(2) or 0); tail = (tm.group(3) or "").lower()
+        if tail in ("pm",) and h < 12: h += 12
+        if tail in ("am",) and h == 12: h = 0
+        if tail not in ("am","pm"): h = _apply_daypart(h, tail)
         cand = now_local.replace(hour=h, minute=mnt, second=0, microsecond=0)
         if cand <= now_local:
             cand += timedelta(days=1)
