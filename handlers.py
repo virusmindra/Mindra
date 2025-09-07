@@ -321,6 +321,10 @@ def _kb_home(uid: str) -> InlineKeyboardMarkup:
 def _iso_utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
+
+def _to_iso_z(dt_utc: datetime) -> str:
+    return dt_utc.astimezone(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
 def _quick_parse_due(text: str, lang: str, tz: ZoneInfo) -> datetime | None:
     """Простой парсер срока напоминания.
     Поддерживает RU/EN относительные фразы и конкретное время с суффиксами:
