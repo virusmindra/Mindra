@@ -912,22 +912,29 @@ async def reminder_suggest_cb(update: Update, context: ContextTypes.DEFAULT_TYPE
     if not q or not q.data.startswith("rs:"):
         return
     await q.answer()
+
     uid = str(q.from_user.id)
-    lang = user_languages.get(uid, "ru")
     t = _rem_suggest_i18n(uid)
 
     if q.data == "rs:yes":
-        # уберём кнопки с вопроса
+        # ✅ закрепляем текущее сообщение как «UI-сообщение»
+        context.user_data[UI_MSG_KEY] = q.message.message_id
+
+        # уберём кнопки у вопроса (чтобы не было двойных UI)
         try:
-            await q.edit_message_text(t["ask"])
+            await q.edit_message_reply_markup(reply_markup=None)
         except Exception:
             pass
-        # открываем твоё меню напоминаний (готовая функция)
-        # используем shim, чтобы переиспользовать существующий код
+
+        # открываем меню напоминаний в том же сообщении
         u = _shim_update_for_cb(q, context)
         return await reminders_menu_cmd(u, context)
 
-    # rs:no
+    # rs:no — просто убираем клавиатуру/подтверждаем
+    try:
+        await q.edit_message_reply_markup(reply_markup=None)
+    except Exception:
+        pass
     try:
         await q.edit_message_text("👍")
     except Exception:
