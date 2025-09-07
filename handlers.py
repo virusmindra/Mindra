@@ -3183,6 +3183,22 @@ async def reminder_fire(context: ContextTypes.DEFAULT_TYPE):
         db.execute("UPDATE reminders SET status='fired' WHERE id=?;", (rem_id,))
         db.commit()
 
+def insert_reminder(uid: str, text: str, due_local: datetime, tz_name: str) -> int:
+    """Создаёт запись: и due_utc (epoch), и run_at (ISO Z)."""
+    if due_local.tzinfo is None:
+        raise ValueError("due_local must be timezone-aware")
+    due_utc = due_local.astimezone(timezone.utc)
+    run_at_iso = _to_iso_z(due_utc)
+    due_epoch  = int(due_utc.timestamp())
+    with remind_db() as db:
+        cur = db.execute(
+            "INSERT INTO reminders (user_id, text, run_at, tz, status, created_at, due_utc) "
+            "VALUES (?, ?, ?, ?, 'scheduled', ?, ?)",
+            (uid, text, run_at_iso, tz_name, _iso_utc_now(), due_epoch)
+        )
+        db.commit()
+        return cur.lastrowid
+
 # ========== Команды ==========
 async def remind_command(update, context: ContextTypes.DEFAULT_TYPE):
     ensure_remind_db()
