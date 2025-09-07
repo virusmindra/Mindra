@@ -590,15 +590,18 @@ async def menu_cb(update, context):
         await context.bot.send_message(q.message.chat.id, "Команда недоступна.")
     return
 
-async def ui_show_from_command(update: Update,
-                               context: ContextTypes.DEFAULT_TYPE,
-                               text: str,
-                               reply_markup=None,
-                               parse_mode: str | None = "Markdown"):
+async def ui_show_from_command(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    text: str,
+    reply_markup=None,
+    parse_mode: str | None = "Markdown",
+):
     chat_id = update.effective_chat.id
     ui_id = context.user_data.get(UI_MSG_KEY)
 
     if ui_id:
+        # сначала пробуем отредактировать «единое UI-сообщение»
         try:
             await context.bot.edit_message_text(
                 chat_id=chat_id,
@@ -609,16 +612,23 @@ async def ui_show_from_command(update: Update,
             )
             return
         except BadRequest as e:
-            # если текст/клава те же — просто выходим, не создавая новое сообщение
+            # если ничего не изменилось — тихо выходим
             if "message is not modified" in str(e).lower():
                 return
-            # другие BadRequest обрабатываем ниже (пошлём новое сообщение)
+            # иначе упадём в отправку нового сообщения ниже
         except Exception:
-            pass  # сообщение могло быть удалено / слишком старое — пошлём новое ниже
+            # сообщение могли удалить / слишком старое и т.п.
+            pass
 
-    sent = await update.message.reply_text(text, reply_markup=reply_markup, parse_mode=parse_mode)
+    # fallback: отправляем новое сообщение (работает и при callback, и при команде)
+    sent = await context.bot.send_message(
+        chat_id=chat_id,
+        text=text,
+        reply_markup=reply_markup,
+        parse_mode=parse_mode,
+    )
     context.user_data[UI_MSG_KEY] = sent.message_id
-
+    
 def _kb_back_home(uid: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup([[InlineKeyboardButton(_menu_i18n(uid)["back"], callback_data="m:nav:home")]])
     
