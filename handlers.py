@@ -322,11 +322,14 @@ def _iso_utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 def _quick_parse_due(text: str, lang: str, tz: ZoneInfo) -> datetime | None:
-    """Простейший парсер: RU/EN относительные и простые абсолютные выражения."""
-    s = text.lower()
+    """Простой парсер срока напоминания.
+    Поддерживает RU/EN относительные фразы и конкретное время с суффиксами:
+    «в 2 ночи/утра/дня/вечера», «at 2 am/pm», а также 24ч формат.
+    """
+    s = (text or "").lower().strip()
     now = datetime.now(tz)
 
-    # относительное: через N минут/часов | in N minutes/hours
+    # --- относительное: "через 10 минут/часов" | "in 10 minutes/hours"
     m = re.search(r"(через|in)\s+(\d{1,3})\s*(минут(?:у|ы)?|мин|minutes?|час(?:а|ов)?|час|hours?)", s)
     if m:
         n = int(m.group(2))
@@ -336,33 +339,66 @@ def _quick_parse_due(text: str, lang: str, tz: ZoneInfo) -> datetime | None:
         else:
             return now + timedelta(hours=n)
 
-    # завтра/tomorrow (с временем, если указано; иначе 09:00)
+    # --- завтра/tomorrow (с временем, если указано; иначе 09:00)
     if ("завтра" in s) or ("tomorrow" in s):
-        m = re.search(r"(?:в|at)\s*(\d{1,2})(?::(\d{2}))?", s)
-        h = int(m.group(1)) if m else 9
-        mi = int(m.group(2)) if (m and m.group(2)) else 0
+        mt = re.search(r"(?:в|at)\s*(\d{1,2})(?:[:.](\d{2}))?\s*(утра|вечера|дня|ночи|am|pm)?", s)
+        h = int(mt.group(1)) if mt else 9
+        mi = int(mt.group(2)) if (mt and mt.group(2)) else 0
+        suf = (mt.group(3) if mt else "") or ""
+        # нормализация часов по суффиксу
+        if suf in ("am", "утра", "ночи"):
+            if h == 12: h = 0
+        elif suf in ("pm", "вечера", "дня"):
+            if h < 12: h += 12
         target = (now + timedelta(days=1)).replace(hour=h, minute=mi, second=0, microsecond=0)
         return target
 
-    # сегодня: "в 18:30" | "at 18:30"
-    m = re.search(r"(?:в|at)\s*(\d{1,2})(?::(\d{2}))", s)
+    # --- конкретное время: "в 18:30", "в 2", "в 2 ночи/утра/дня/вечера", "at 2 pm"
+    m = re.search(
+        r"(?:в|at)\s*(\d{1,2})(?:[:.](\d{2}))?\s*(?:час(?:а|ов)?)?\s*(утра|вечера|дня|ночи|am|pm)?",
+        s
+    )
     if m:
         h = int(m.group(1))
         mi = int(m.group(2) or 0)
-        target = now.replace(hour=h, minute=mi, second=0, microsecond=0)
+        suf = (m.group(3) or "").strip()
+
+        # если указали суффикс — переводим в 24ч
+        if suf in ("am", "утра", "ночи"):
+            if h == 12:  # 12 am / 12 ночи -> 00:00
+                h = 0
+        elif suf in ("pm", "вечера", "дня"):
+            if h < 12:   # 1..11 pm -> +12
+                h += 12
+            # 12 pm -> 12:00 (без изменений)
+
+        # если суффикса нет — трактуем как 24ч формат: 0..23
+        # (если пользователь ввёл 2 → это 02:00; 18 → 18:00)
+
+        # собираем целевое сегодня
+        try:
+            target = now.replace(hour=h, minute=mi, second=0, microsecond=0)
+        except ValueError:
+            return None
+
+        # если время уже прошло — переносим на завтра
         if target <= now:
-            target += timedelta(days=1)  # если время уже прошло — на завтра
+            target += timedelta(days=1)
         return target
 
-    # ISO-like: 2025-09-07 13:45 (время опционально -> 09:00)
+    # --- ISO-like: 2025-09-07 13:45 (время опционально -> 09:00)
     m = re.search(r"(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?", s)
     if m:
         y, mo, d = map(int, m.group(1, 2, 3))
         h = int(m.group(4) or 9)
         mi = int(m.group(5) or 0)
-        return datetime(y, mo, d, h, mi, tzinfo=tz)
+        try:
+            return datetime(y, mo, d, h, mi, tzinfo=tz)
+        except ValueError:
+            return None
 
     return None
+
 
 def _create_reminder_quick(uid: str, body: str, due_local: datetime, tz_name: str) -> int:
     """Создаёт запись о напоминании (и в due_utc, и в run_at ISO для совместимости)."""
