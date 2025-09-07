@@ -3198,7 +3198,7 @@ async def reminder_fire(context: ContextTypes.DEFAULT_TYPE):
         db.commit()
 
 def insert_reminder(uid: str, text: str, due_local: datetime, tz_name: str) -> int:
-    """Создаёт запись: и due_utc (epoch), и run_at (ISO Z)."""
+    """Создаёт запись с due_utc (epoch) и run_at (ISO Z)."""
     if due_local.tzinfo is None:
         raise ValueError("due_local must be timezone-aware")
     due_utc = due_local.astimezone(timezone.utc)
