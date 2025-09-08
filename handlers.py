@@ -1001,76 +1001,90 @@ async def maybe_suggest_reminder(update: Update, context: ContextTypes.DEFAULT_T
         text=t["ask"],
         reply_markup=kb
     )
-
+    
 async def reminder_suggest_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     if not q or not q.data.startswith("rs:"):
         return
     await q.answer()
 
-    uid = str(q.from_user.id)
+    uid  = str(q.from_user.id)
     lang = user_languages.get(uid, "ru")
-    t = _rem_suggest_i18n(uid)
+    t    = _rem_suggest_i18n(uid)
 
-    if q.data == "rs:yes":
-        # редактируем в этом же сообщении и дальше
-        context.user_data[UI_MSG_KEY] = q.message.message_id
-
-        # убираем клавиатуру у вопроса
+    # "Нет" — просто убираем кнопки/подтверждаем
+    if q.data == "rs:no":
         try:
-            await q.edit_message_reply_markup(reply_markup=None)
+            await q.edit_message_text("👍")
+        except Exception:
+            pass
+        return
+
+    # ===== "Да": пробуем сразу создать напоминание по последнему тексту =====
+    # работаем в одном UI-сообщении
+    context.user_data[UI_MSG_KEY] = q.message.message_id
+    try:
+        await q.edit_message_reply_markup(reply_markup=None)  # уберём кнопки у вопроса
+    except Exception:
+        pass
+
+    # 1) исходный текст, к которому относилось предложение
+    text_src = context.chat_data.get(f"last_user_text_{uid}")
+    if not text_src:
+        # запасной вариант: если это было reply — возьмём реплайнутый текст
+        try:
+            if q.message and q.message.reply_to_message and q.message.reply_to_message.text:
+                text_src = q.message.reply_to_message.text.strip()
         except Exception:
             pass
 
-        # исходный текст пользователя, который мы сохранили в maybe_suggest_reminder
-        src = (context.chat_data.get(f"rem_src_{uid}") or "").strip()
-
-        # определяем TZ пользователя (или UTC по умолчанию)
-        tz_name = user_timezones.get(uid, "UTC")
-        try:
-            tz = ZoneInfo(tz_name)
-        except Exception:
-            tz = ZoneInfo("UTC")
-            tz_name = "UTC"
-
-        # пробуем распарсить срок
-        due = _quick_parse_due(src, lang, tz)
-        if due:
-            # создаём запись
-            rem_id = _create_reminder_quick(uid, src, due, tz_name)
-
-            # достаём строку и ставим задачу
-            with remind_db() as db:
-                row = db.execute("SELECT * FROM reminders WHERE id=?;", (rem_id,)).fetchone()
-            await _schedule_job_for_reminder(context, row)
-
-            # локальное время для подтверждения
-            when_local = _fmt_local(due, lang)
-            msg = t.get("created", "⏰ Готово! Напоминание создано на *{when}*.").format(when=when_local)
-            try:
-                await q.edit_message_text(msg, parse_mode="Markdown", reply_markup=kb)
-            except Exception:
-                await context.bot.send_message(chat_id=int(uid), text=msg, parse_mode="Markdown", reply_markup=kb)
-            return
-
-        # если парсер не понял — откроем твоё меню
-        try:
-            await q.answer(t.get("parse_fail", "Не понял дату/время — выбери ниже."), show_alert=False)
-        except Exception:
-            pass
+    # если текста нет — открываем меню напоминаний
+    if not text_src:
         u = _shim_update_for_cb(q, context)
         return await reminders_menu_cmd(u, context)
 
-    # rs:no — просто убираем клавиатуру/подтверждаем
-    try:
-        await q.edit_message_reply_markup(reply_markup=None)
-    except Exception:
-        pass
-    try:
-        await q.edit_message_text("👍")
-    except Exception:
-        pass
+    tz = _user_tz(uid)  # ZoneInfo
 
+    # 2) парсим "человеческое" время или HH:MM
+    when_local = parse_natural_time(text_src, lang, tz)
+    if not when_local:
+        m = re.search(r"\b(\d{1,2})[:.](\d{2})\b", text_src)
+        if m:
+            now_local = datetime.now(tz)
+            h = int(m.group(1)); mnt = int(m.group(2))
+            when_local = now_local.replace(hour=h, minute=mnt, second=0, microsecond=0)
+            if when_local <= now_local:
+                when_local += timedelta(days=1)
+
+    # не поняли — откроем меню создания
+    if not when_local:
+        u = _shim_update_for_cb(q, context)
+        return await reminders_menu_cmd(u, context)
+
+    # 3) тихие часы
+    when_local = _apply_quiet_hours(when_local)
+
+    # 4) создаём запись и планируем джобу
+    try:
+        rem_id = insert_reminder(uid, text_src, when_local, str(tz.key))
+        with remind_db() as db:
+            db.row_factory = sqlite3.Row  # чтобы обращаться по именам колонок
+            row = db.execute("SELECT * FROM reminders WHERE id=?;", (rem_id,)).fetchone()
+        await _schedule_job_for_reminder(context, row)
+    except Exception as e:
+        logging.exception(f"Failed to create reminder from suggest: {e}")
+        u = _shim_update_for_cb(q, context)
+        return await reminders_menu_cmd(u, context)
+
+    # 5) подтверждение пользователю + кнопки управления этим напоминанием
+    local_str = _fmt_local(when_local, lang)
+    msg = REMIND_TEXTS.get(lang, REMIND_TEXTS["ru"])["created"].format(time=local_str, text=text_src)
+    kb  = remind_keyboard(rem_id, uid)
+
+    try:
+        await q.edit_message_text(msg, parse_mode="Markdown", reply_markup=kb)
+    except Exception:
+        await context.bot.send_message(chat_id=int(uid), text=msg, parse_mode="Markdown", reply_markup=kb)
 
 async def language_cb(update, context):
     q = update.callback_query
