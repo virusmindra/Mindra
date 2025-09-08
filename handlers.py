@@ -5189,6 +5189,9 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not user_input:
         return
 
+    # 🔖 сохраним последний текст для быстрых напоминаний / сторис
+    context.chat_data[f"last_user_text_{user_id}"] = user_input
+
     # 🌐 язык
     lang_code = user_languages.get(user_id, "ru")
 
