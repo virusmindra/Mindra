@@ -1036,14 +1036,21 @@ async def reminder_suggest_cb(update: Update, context: ContextTypes.DEFAULT_TYPE
         # пробуем распарсить срок
         due = _quick_parse_due(src, lang, tz)
         if due:
-            _create_reminder_quick(uid, src, due, tz_name)
+            # создаём запись
+            rem_id = _create_reminder_quick(uid, src, due, tz_name)
+
+            # достаём строку и ставим задачу
+            with remind_db() as db:
+                row = db.execute("SELECT * FROM reminders WHERE id=?;", (rem_id,)).fetchone()
+            await _schedule_job_for_reminder(context, row)
+
             # локальное время для подтверждения
-            when_local = due.strftime("%Y-%m-%d %H:%M")
+            when_local = _fmt_local(due, lang)
             msg = t.get("created", "⏰ Готово! Напоминание создано на *{when}*.").format(when=when_local)
             try:
-                await q.edit_message_text(msg, parse_mode="Markdown")
+                await q.edit_message_text(msg, parse_mode="Markdown", reply_markup=kb)
             except Exception:
-                await context.bot.send_message(chat_id=int(uid), text=msg, parse_mode="Markdown")
+                await context.bot.send_message(chat_id=int(uid), text=msg, parse_mode="Markdown", reply_markup=kb)
             return
 
         # если парсер не понял — откроем твоё меню
