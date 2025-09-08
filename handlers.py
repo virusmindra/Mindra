@@ -3047,33 +3047,92 @@ async def feat_router(update, context):
 
 def parse_natural_time(text: str, lang: str, user_tz: ZoneInfo) -> datetime | None:
     """
-    AWARE local datetime (в таймзоне пользователя) или None.
-    Поддержка: RU/UK/EN.
-    Понимает:
-      • «через 15 мин/час/день», «in 30 minutes/hours/days»
-      • «сегодня в 18:30», «today at 6:30pm»
-      • «завтра в 9», «tomorrow at 9»
-      • «в пт в 19», «on fri at 7pm»
-      • «в 2 ночи/утра/дня/вечера» (RU/UK), а также AM/PM (EN)
+    Возвращает AWARE local datetime (в таймзоне пользователя) или None.
+    Поддержка:
+      RU/UK: «через 15 мин/минуту/минут/ч/час/часа/часов/день/дня/дней», «сегодня в 18:30», «завтра в 9», «в пт в 19»
+      EN:    “in 30 min/minute/minutes/hour/hours/day/days”, “today at 6:30pm”, “tomorrow at 9”, “on fri at 7”
     """
     s = re.sub(r"\s+", " ", text.lower().strip())
     now_local = datetime.now(user_tz)
 
-    # EN: in X ...
-    m = re.search(r"\bin\s+(\d+)\s*(min|mins|minutes|hour|hours|day|days)\b", s)
+    # ===== EN: "in X ..." =====
+    m = re.search(r"\bin\s+(\d+)\s*(min|mins|minute|minutes|hour|hours|day|days)\b", s)
     if m:
         n = int(m.group(1)); unit = m.group(2)
-        if "min" in unit:  return now_local + timedelta(minutes=n)
-        if "hour" in unit: return now_local + timedelta(hours=n)
-        if "day" in unit:  return now_local + timedelta(days=n)
+        if unit in ("min", "mins", "minute", "minutes"):
+            return now_local + timedelta(minutes=n)
+        if unit in ("hour", "hours"):
+            return now_local + timedelta(hours=n)
+        if unit in ("day", "days"):
+            return now_local + timedelta(days=n)
 
-    # RU/UK: через X ...
-    m = re.search(r"\bчерез\s+(\d+)\s*(мин|минут|хв|хвилин|час|часа|часов|годин|день|дня|дней|дн)\b", s)
+    # ===== RU/UK: "через X ..." =====
+    # Минуты: мин, минуты, минуту, минут / Хвилини: хв, хвилини, хвилину
+    # Часы: час, часа, часов / Години: година, години
+    # Дни: день, дня, дней, дн / Дні: день, дні
+    m = re.search(
+        r"\bчерез\s+(\d+)\s*(мин|минуты|минуту|минут|хв|хвилини|хвилину|час|часа|часов|година|години|день|дня|дней|дн|дні)\b",
+        s
+    )
     if m:
         n = int(m.group(1)); unit = m.group(2)
-        if unit.startswith(("мин","хв")):     return now_local + timedelta(minutes=n)
-        if unit.startswith(("час","годин")):  return now_local + timedelta(hours=n)
-        if unit.startswith(("д","дн")):       return now_local + timedelta(days=n)
+        # минуты
+        if unit in ("мин", "минуты", "минуту", "минут", "хв", "хвилини", "хвилину"):
+            return now_local + timedelta(minutes=n)
+        # часы
+        if unit in ("час", "часа", "часов", "година", "години"):
+            return now_local + timedelta(hours=n)
+        # дни
+        if unit in ("день", "дня", "дней", "дн", "дні"):
+            return now_local + timedelta(days=n)
+
+    # ===== today / сегодня / сьогодні =====
+    if "today" in s or "сегодня" in s or "сьогодні" in s:
+        base = now_local
+        tm = re.search(r"\bв\s*(\d{1,2})(?::(\d{2}))?|\bat\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?", s)
+        if tm:
+            h = int(tm.group(1) or tm.group(3)); mnt = int((tm.group(2) or tm.group(4) or "0"))
+            ampm = (tm.group(5) or "").lower()
+            if ampm == "pm" and h < 12: h += 12
+            return base.replace(hour=h, minute=mnt, second=0, microsecond=0)
+        return now_local + timedelta(hours=1)
+
+    # ===== tomorrow / завтра =====
+    if "tomorrow" in s or "завтра" in s:
+        base = now_local + timedelta(days=1)
+        tm = re.search(r"\bв\s*(\d{1,2})(?::(\d{2}))?|\bat\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?", s)
+        if tm:
+            h = int(tm.group(1) or tm.group(3)); mnt = int((tm.group(2) or tm.group(4) or "0"))
+            ampm = (tm.group(5) or "").lower()
+            if ampm == "pm" and h < 12: h += 12
+            return base.replace(hour=h, minute=mnt, second=0, microsecond=0)
+        return base.replace(hour=9, minute=0, second=0, microsecond=0)
+
+    # ===== weekday (ru/uk/en) [+ time] =====
+    wd_map = WEEKDAYS_EN | WEEKDAYS_RU | WEEKDAYS_UK
+    for name, idx in wd_map.items():
+        if re.search(rf"\b(в|на|on)\s*{name}\b", s):
+            base = _next_weekday(now_local, idx)
+            tm = re.search(r"\bв\s*(\d{1,2})(?::(\d{2}))?|\bat\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?", s)
+            if tm:
+                h = int(tm.group(1) or tm.group(3)); mnt = int((tm.group(2) or tm.group(4) or "0"))
+                ampm = (tm.group(5) or "").lower()
+                if ampm == "pm" and h < 12: h += 12
+                return base.replace(hour=h, minute=mnt, second=0, microsecond=0)
+            return base.replace(hour=9, minute=0, second=0, microsecond=0)
+
+    # ===== bare "в 18:30" / "at 6:30pm" =====
+    tm = re.search(r"\bв\s*(\d{1,2})(?::(\d{2}))?|\bat\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?", s)
+    if tm:
+        h = int(tm.group(1) or tm.group(3)); mnt = int((tm.group(2) or tm.group(4) or "0"))
+        ampm = (tm.group(5) or "").lower()
+        if ampm == "pm" and h < 12: h += 12
+        cand = now_local.replace(hour=h, minute=mnt, second=0, microsecond=0)
+        if cand <= now_local:
+            cand += timedelta(days=1)
+        return cand
+
+    return None
 
     # helper: фикс AM/PM и суффиксов "утра/дня/вечера/ночи"
     def _apply_daypart(h: int, tail: str) -> int:
