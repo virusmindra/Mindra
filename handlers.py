@@ -255,6 +255,12 @@ PREMIUM_URL = "https://example.com/pay"
 FREE_TRACKER_LIMIT  = {"goal": 1, "habit": 1}  # Free
 PLUS_TRACKER_LIMIT  = {"goal": 5, "habit": 5}  # Mindra+
 
+# ---- настройки лимитов (можно вынести в конфиг)
+FREE_ACTIVE_CAP   = globals().get("FREE_ACTIVE_CAP", 1)   # максимум активных у free
+FREE_DAILY_CAP    = globals().get("FREE_DAILY_CAP", 3)    # максимум созданий в сутки у free
+QUIET_BYPASS_MIN  = globals().get("QUIET_BYPASS_MIN", 90) # до скольки минут «короткое» относительное
+
+
 # ==== Sleep (ambient only) ====
 _sleep_prefs: dict[str, dict] = {}
 CB = "ui:"
