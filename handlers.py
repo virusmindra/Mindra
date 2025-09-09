@@ -3320,7 +3320,6 @@ def insert_reminder(uid: str, text: str, due_local: datetime, tz_name: str, urge
         return rem_id
 
 
-# ========== Команды ==========
 async def remind_command(update, context: ContextTypes.DEFAULT_TYPE):
     ensure_remind_db()
     uid  = str(update.effective_user.id)
@@ -3329,7 +3328,32 @@ async def remind_command(update, context: ContextTypes.DEFAULT_TYPE):
     tz   = _user_tz(uid)  # ZoneInfo
     tz_name = getattr(tz, "key", "UTC")
 
-    # нет аргументов → подсказка
+    # ---- хелперы внутри (чтобы ничего не ломать глобально)
+    def _looks_relative_hint(s: str) -> bool:
+        s = (s or "").lower()
+        # EN: "in 10 min/hour/day"
+        if re.search(r"\bin\s+\d+\s*(min|mins|minutes|hour|hours|day|days)\b", s):
+            return True
+        # RU/UK: "через 10 мин/час/день", "за 10 хв/годин"
+        if re.search(r"\bчерез\s+\d+\b", s) or re.search(r"\bза\s+\d+\s*(хв|хвилин|годин)\b", s):
+            return True
+        # голые "10 мин", "30 хв", "2 часа"
+        if re.search(r"\b\d+\s*(мин|минут|хв|хвилин|час|часа|часов|годин|день|дня|дней)\b", s):
+            return True
+        return False
+
+    def _is_quiet_local(dt) -> bool:
+        # Если у тебя есть глобальная функция _is_quiet_hour — используй её
+        try:
+            return _is_quiet_hour(dt)
+        except Exception:
+            # Фолбэк: используем QUIET_START/QUIET_END, если заданы
+            qs = globals().get("QUIET_START", 22)  # 22:00
+            qe = globals().get("QUIET_END", 8)     # 08:00
+            h = int(dt.astimezone(tz).hour)
+            return (h >= qs or h < qe)
+
+    # ---- без аргументов → помощь
     if not context.args:
         msg = "⏰ " + t["create_help"] + "\n\n" + t["usage"]
         await update.message.reply_text(msg, parse_mode="Markdown")
@@ -3337,18 +3361,39 @@ async def remind_command(update, context: ContextTypes.DEFAULT_TYPE):
 
     raw = " ".join(context.args).strip()
 
-    # лимит для free: 1 активное
+    # ---- лимиты для free
     if not is_premium(uid):
+        # 1) активные
         with remind_db() as db:
-            cnt = db.execute(
+            active_cnt = db.execute(
                 "SELECT COUNT(*) FROM reminders WHERE user_id=? AND status='scheduled';",
                 (uid,)
             ).fetchone()[0]
-        if cnt >= 1:
+        if active_cnt >= FREE_ACTIVE_CAP:
             await update.message.reply_text(t["limit"] + "\n\n" + t["usage"], parse_mode="Markdown")
             return
 
-    # 1) старый формат: HH:MM(.|:) текст
+        # 2) дневной лимит созданий (UTC сутки)
+        utc_now = datetime.now(timezone.utc)
+        day_start = utc_now.replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end   = day_start + timedelta(days=1)
+        with remind_db() as db:
+            created_today = db.execute(
+                "SELECT COUNT(*) FROM reminders WHERE user_id=? AND created_at>=? AND created_at<?;",
+                (uid, _to_iso_z(day_start), _to_iso_z(day_end))
+            ).fetchone()[0]
+
+        if created_today >= FREE_DAILY_CAP:
+            daily_msg = {
+                "ru": f"Сегодня лимит по напоминаниям исчерпан (до {FREE_DAILY_CAP} в день в бесплатной версии).",
+                "uk": f"Сьогодні ліміт нагадувань вичерпано (до {FREE_DAILY_CAP} на день у безкоштовній версії).",
+                "en": f"Daily reminder limit reached (up to {FREE_DAILY_CAP}/day on the free plan).",
+            }.get(lang, f"Сегодня лимит по напоминаниям исчерпан (до {FREE_DAILY_CAP} в день).")
+            await update.message.reply_text(daily_msg + "\n\n" + t["usage"], parse_mode="Markdown")
+            return
+
+    # ---- парсинг времени
+    # 1) явный формат HH:MM(.|:) текст
     m = re.match(r"^\s*(\d{1,2})[:.](\d{2})\s+(.+)$", raw)
     dt_local = None
     text     = raw
@@ -3359,6 +3404,7 @@ async def remind_command(update, context: ContextTypes.DEFAULT_TYPE):
         mnt = int(m.group(2))
         text = m.group(3).strip()
         dt_local = now_local.replace(hour=h, minute=mnt, second=0, microsecond=0)
+        # если уже прошло — на завтра
         if dt_local <= now_local:
             dt_local += timedelta(days=1)
     else:
@@ -3370,29 +3416,34 @@ async def remind_command(update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(t["not_understood"] + "\n\n" + t["usage"], parse_mode="Markdown")
         return
 
-    # тихие часы
-    dt_local = _apply_quiet_hours(dt_local)
+    # ---- тихие часы: переносим в утро, НО короткие «относительные» не переносим
+    now_local = datetime.now(tz)
+    is_rel = _looks_relative_hint(raw)
+    delta_min = max(0.0, (dt_local - now_local).total_seconds() / 60.0)
+    bypass_quiet = is_rel and (delta_min <= QUIET_BYPASS_MIN)
 
-    # ✅ создаём запись единым способом
+    if (not bypass_quiet) and _is_quiet_local(dt_local):
+        dt_local = _apply_quiet_hours(dt_local)  # твоя функция «переноса в утро»
+
+    # ---- создаём запись и планируем
     try:
-        rem_id = insert_reminder(uid, text, dt_local, tz_name)
+        rem_id = insert_reminder(uid, text, dt_local, tz_name, urgent=bypass_quiet)
     except Exception as e:
         logging.exception("insert_reminder failed: %s", e)
         await update.message.reply_text("Не удалось сохранить напоминание 😔")
         return
 
-    # достанем строку и поставим джобу
     with remind_db() as db:
         row = db.execute("SELECT * FROM reminders WHERE id=?;", (rem_id,)).fetchone()
     await _schedule_job_for_reminder(context, row)
 
-    # ответ
+    # ---- ответ пользователю
     local_str = _fmt_local(dt_local, lang)
     await update.message.reply_text(
         t["created"].format(time=local_str, text=text),
         reply_markup=remind_keyboard(rem_id, uid)
     )
-
+    
 async def reminders_list(update, context: ContextTypes.DEFAULT_TYPE):
     ensure_remind_db()
     uid = str(update.effective_user.id)
