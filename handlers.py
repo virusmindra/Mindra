@@ -224,9 +224,10 @@ VOICE_TEXTS = VOICE_UI_TEXTS
 
 
 # Тихие часы по локальному времени пользователя
-QUIET_START = 22  # не тревожить с 22:00
-QUIET_END   = 9   # до 09:00
+QUIET_START = 23  # не тревожить с 22:00
+QUIET_END   = 8   # до 09:00
 STORY_COOLDOWN_HOURS = 4 
+QUIET_BYPASS_MIN = 120
 
 _story_last_suggest: dict[str, datetime] = {}   # uid -> utc time
 _story_optout_until: dict[str, datetime] = {}   # uid -> utc time
