@@ -19,6 +19,7 @@ REMIND_DB_PATH = os.getenv("REMIND_DB_PATH", os.path.join(DATA_DIR, "reminders.s
 
 def ensure_remind_db():
     with sqlite3.connect(REMIND_DB_PATH) as db:
+        # Базовая схема (run_at допускает NULL — удобнее для миграций)
         db.execute("""
             CREATE TABLE IF NOT EXISTS reminders (
                 id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -29,28 +30,32 @@ def ensure_remind_db():
                 status     TEXT    NOT NULL DEFAULT 'scheduled',
                 created_at TEXT    NOT NULL DEFAULT (datetime('now')),
                 updated_at TEXT,
-                due_utc    INTEGER NOT NULL DEFAULT 0   -- epoch seconds (UTC)
+                due_utc    INTEGER NOT NULL DEFAULT 0,   -- epoch (UTC)
+                urgent     INTEGER NOT NULL DEFAULT 0    -- 1 = не переносить в тихие часы
             );
         """)
 
+        # Миграции недостающих колонок
         cols = {row[1] for row in db.execute("PRAGMA table_info(reminders);")}
         def add(col, ddl):
             if col not in cols:
                 db.execute(f"ALTER TABLE reminders ADD COLUMN {ddl};")
 
-        # на случай старых баз
-        add("tz",        "tz TEXT")
-        add("status",    "status TEXT NOT NULL DEFAULT 'scheduled'")
-        add("created_at","created_at TEXT NOT NULL DEFAULT (datetime('now'))")
-        add("updated_at","updated_at TEXT")
-        add("due_utc",   "due_utc INTEGER NOT NULL DEFAULT 0")
-        # run_at теперь допускаем NULL, чтобы можно было восстановить из due_utc
+        add("tz",         "tz TEXT")
+        add("status",     "status TEXT NOT NULL DEFAULT 'scheduled'")
+        add("created_at", "created_at TEXT NOT NULL DEFAULT (datetime('now'))")
+        add("updated_at", "updated_at TEXT")
+        add("due_utc",    "due_utc INTEGER NOT NULL DEFAULT 0")
+        add("urgent",     "urgent INTEGER NOT NULL DEFAULT 0")
 
-        # индексы
-        db.execute("CREATE INDEX IF NOT EXISTS idx_rem_user_due   ON reminders(user_id, due_utc);")
-        db.execute("CREATE INDEX IF NOT EXISTS idx_rem_status_due ON reminders(status,  due_utc);")
+        # Индексы
+        db.execute("CREATE INDEX IF NOT EXISTS idx_reminders_user_due   ON reminders(user_id, due_utc);")
+        db.execute("CREATE INDEX IF NOT EXISTS idx_reminders_status_due ON reminders(status,  due_utc);")
 
-        # миграции значений: заполняем пустые run_at из due_utc
+        # Нормализация статусов
+        db.execute("UPDATE reminders SET status='scheduled' WHERE status IS NULL;")
+
+        # Заполнить пустой run_at из due_utc
         db.execute("""
             UPDATE reminders
                SET run_at = strftime('%Y-%m-%dT%H:%M:%SZ', due_utc, 'unixepoch')
@@ -58,29 +63,34 @@ def ensure_remind_db():
                AND due_utc > 0;
         """)
 
-        # и наоборот: если due_utc = 0, но run_at есть — посчитаем epoch
-        cur = db.execute("SELECT id, run_at FROM reminders WHERE (due_utc IS NULL OR due_utc = 0) AND run_at IS NOT NULL;")
-        rows = cur.fetchall()
-        for _id, iso in rows:
+        # Заполнить пустой/нулевой due_utc из run_at
+        cur = db.execute("""
+            SELECT id, run_at
+              FROM reminders
+             WHERE (due_utc IS NULL OR due_utc = 0)
+               AND run_at IS NOT NULL AND run_at <> '';
+        """)
+        for _id, iso in cur.fetchall():
             try:
                 dt = datetime.fromisoformat(iso.replace("Z", "+00:00"))
                 db.execute("UPDATE reminders SET due_utc=? WHERE id=?", (int(dt.timestamp()), _id))
             except Exception:
+                # игнорируем некорректные строки времени
                 pass
 
-        # нормализуем статусы
-        db.execute("UPDATE reminders SET status='scheduled' WHERE status IS NULL;")
         db.commit()
+
 
 @contextmanager
 def remind_db():
     ensure_remind_db()
     conn = sqlite3.connect(REMIND_DB_PATH)
-    conn.row_factory = sqlite3.Row
+    conn.row_factory = sqlite3.Row  # строки как dict-подобные объекты
     try:
         yield conn
     finally:
         conn.close()
+
 
 def ensure_premium_db():
     os.makedirs(DATA_DIR, exist_ok=True)
