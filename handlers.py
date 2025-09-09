@@ -1034,18 +1034,20 @@ async def reminder_suggest_cb(update: Update, context: ContextTypes.DEFAULT_TYPE
             pass
         return
 
-    # ===== "Да": пробуем сразу создать напоминание по последнему тексту =====
+    # ===== "Да" =====
     # работаем в одном UI-сообщении
     context.user_data[UI_MSG_KEY] = q.message.message_id
     try:
-        await q.edit_message_reply_markup(reply_markup=None)  # уберём кнопки у вопроса
+        # уберём кнопки у вопроса
+        await q.edit_message_reply_markup(reply_markup=None)
     except Exception:
         pass
 
-    # 1) исходный текст, к которому относилось предложение
+    # 1) Исходный текст пользователя (мы кладём его в chat())
     text_src = context.chat_data.get(f"last_user_text_{uid}")
+
+    # запасной вариант: если это было reply на сообщение с текстом
     if not text_src:
-        # запасной вариант: если это было reply — возьмём реплайнутый текст
         try:
             if q.message and q.message.reply_to_message and q.message.reply_to_message.text:
                 text_src = q.message.reply_to_message.text.strip()
@@ -1059,30 +1061,64 @@ async def reminder_suggest_cb(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     tz = _user_tz(uid)  # ZoneInfo
 
-    # 2) парсим "человеческое" время или HH:MM
+    # 2) Парсим «естественное» время или HH:MM внутри текста
     when_local = parse_natural_time(text_src, lang, tz)
     if not when_local:
         m = re.search(r"\b(\d{1,2})[:.](\d{2})\b", text_src)
         if m:
             now_local = datetime.now(tz)
-            h = int(m.group(1)); mnt = int(m.group(2))
+            h   = int(m.group(1))
+            mnt = int(m.group(2))
             when_local = now_local.replace(hour=h, minute=mnt, second=0, microsecond=0)
             if when_local <= now_local:
                 when_local += timedelta(days=1)
 
-    # не поняли — откроем меню создания
+    # Не поняли — откроем меню создания
     if not when_local:
         u = _shim_update_for_cb(q, context)
         return await reminders_menu_cmd(u, context)
 
-    # 3) тихие часы
-    when_local = _apply_quiet_hours(when_local)
+    # ---- Вспомогательные локальные функции для «тихих часов» ----
+    def _looks_rel_local(s: str) -> bool:
+        """Пытаемся определить относительную формулировку. Если есть глобальная _looks_relative — используем её."""
+        try:
+            return bool(_looks_relative(s))  # если у тебя определена глобальная
+        except Exception:
+            s = (s or "").lower()
+            if re.search(r"\bin\s+\d+\s*(min|mins|minutes|hour|hours|day|days)\b", s):  # en
+                return True
+            if re.search(r"\bчерез\s+\d+\b", s):  # ru
+                return True
+            if re.search(r"\bза\s+\d+\s*(хв|хвилин|годин)\b", s):  # uk
+                return True
+            if re.search(r"\b\d+\s*(мин|минут|хв|хвилин|час|часа|часов|годин|день|дня|дней)\b", s):
+                return True
+            return False
 
-    # 4) создаём запись и планируем джобу
+    def _is_quiet_local(dt) -> bool:
+        """Если есть глобальная _is_quiet_hour — используем её; иначе фолбэк на QUIET_START/END."""
+        try:
+            return bool(_is_quiet_hour(dt))
+        except Exception:
+            qs = globals().get("QUIET_START", 22)  # 22:00
+            qe = globals().get("QUIET_END", 8)     # 08:00
+            h = int(dt.astimezone(tz).hour)
+            return (h >= qs or h < qe)
+
+    # 3) Тихие часы: переносим в утро, НО короткие «относительные» — не переносим
+    QUIET_BYPASS_MIN = globals().get("QUIET_BYPASS_MIN", 90)  # до сколько минут считаем «коротким»
+    now_local = datetime.now(tz)
+    is_rel    = _looks_rel_local(text_src)
+    delta_min = max(0.0, (when_local - now_local).total_seconds() / 60.0)
+    bypass_quiet = is_rel and (delta_min <= QUIET_BYPASS_MIN)
+
+    if (not bypass_quiet) and _is_quiet_local(when_local):
+        when_local = _apply_quiet_hours(when_local)
+
+    # 4) Создаём запись и планируем джобу
     try:
-        rem_id = insert_reminder(uid, text_src, when_local, str(tz.key))
+        rem_id = insert_reminder(uid, text_src, when_local, str(tz.key), urgent=bypass_quiet)
         with remind_db() as db:
-            db.row_factory = sqlite3.Row  # чтобы обращаться по именам колонок
             row = db.execute("SELECT * FROM reminders WHERE id=?;", (rem_id,)).fetchone()
         await _schedule_job_for_reminder(context, row)
     except Exception as e:
@@ -1090,7 +1126,7 @@ async def reminder_suggest_cb(update: Update, context: ContextTypes.DEFAULT_TYPE
         u = _shim_update_for_cb(q, context)
         return await reminders_menu_cmd(u, context)
 
-    # 5) подтверждение пользователю + кнопки управления этим напоминанием
+    # 5) Подтверждение пользователю + кнопки управления
     local_str = _fmt_local(when_local, lang)
     msg = REMIND_TEXTS.get(lang, REMIND_TEXTS["ru"])["created"].format(time=local_str, text=text_src)
     kb  = remind_keyboard(rem_id, uid)
