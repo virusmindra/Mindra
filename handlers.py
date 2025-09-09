@@ -3259,8 +3259,8 @@ async def reminder_fire(context: ContextTypes.DEFAULT_TYPE):
         tz = ZoneInfo(row["tz"])
         now_local = datetime.now(tz)
 
-        # Тихие часы → переносим
-        if QUIET_START <= now_local.hour or now_local.hour < QUIET_END:
+        # Тихие часы → переносим, НО не для urgent
+        if row["urgent"] != 1 and _is_quiet_hour(now_local):
             new_local = _apply_quiet_hours(now_local)
             new_utc = new_local.astimezone(timezone.utc)
             db.execute("UPDATE reminders SET due_utc=? WHERE id=?;", (_to_epoch(new_utc), rem_id))
