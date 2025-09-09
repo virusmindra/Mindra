@@ -260,7 +260,14 @@ _sleep_prefs: dict[str, dict] = {}
 CB = "ui:"
 CHALLENGE_POINTS = int(os.getenv("CHALLENGE_POINTS", 25)) 
 
+def _is_quiet_hour(dt_local: datetime) -> bool:
+    # те же QUIET_START / QUIET_END, что использует _apply_quiet_hours
+    return (dt_local.hour >= QUIET_START) or (dt_local.hour < QUIET_END)
 
+def _looks_relative(text: str) -> bool:
+    s = text.lower()
+    return ("через " in s) or (s.startswith("через")) or (" in " in s) or s.startswith("in ")
+    
 def _is_unlimited_tracker(uid: str) -> bool:
     # фича Pro / безлимит — подхватываем любые из этих флагов
     for feat in ("tracker_unlimited", "pro", "unlimited"):
