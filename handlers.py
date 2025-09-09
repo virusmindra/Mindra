@@ -266,6 +266,35 @@ _sleep_prefs: dict[str, dict] = {}
 CB = "ui:"
 CHALLENGE_POINTS = int(os.getenv("CHALLENGE_POINTS", 25)) 
 
+def reminders_active_count(uid: str) -> int:
+    with remind_db() as db:
+        row = db.execute(
+            "SELECT COUNT(*) FROM reminders WHERE user_id=? AND status='scheduled';",
+            (uid,)
+        ).fetchone()
+    try:
+        return int(row[0] if isinstance(row, tuple) else row[0])
+    except Exception:
+        return 0
+
+def reminders_active_limit(uid: str) -> int:
+    # Сначала пробуем через твою систему квот
+    try:
+        lim = int(quota(uid, "reminders_active"))
+        if lim > 0:
+            return lim
+    except Exception:
+        pass
+    # Фолбэк по тарифам: free=1, Mindra+=5, Pro=безлим (если есть фича)
+    if has_feature(uid, "reminders_unlimited"):
+        return 10**9
+    return 5 if is_premium(uid) else 1
+
+def _limit_text(lang: str, limit: int) -> str:
+    t = REMIND_TEXTS.get(lang, REMIND_TEXTS["ru"])
+    base = t.get("limit", "⚠️ Достигнут лимит активных напоминаний ({n}).")
+    return base.replace("{n}", str(limit))
+
 def _is_quiet_hour(dt_local: datetime) -> bool:
     # те же QUIET_START / QUIET_END, что использует _apply_quiet_hours
     return (dt_local.hour >= QUIET_START) or (dt_local.hour < QUIET_END)
