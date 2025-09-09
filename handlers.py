@@ -3427,16 +3427,14 @@ async def remind_command(update, context: ContextTypes.DEFAULT_TYPE):
     raw = " ".join(context.args).strip()
 
     # ---- лимиты для free
-    if not is_premium(uid):
-        # 1) активные
-        with remind_db() as db:
-            active_cnt = db.execute(
-                "SELECT COUNT(*) FROM reminders WHERE user_id=? AND status='scheduled';",
-                (uid,)
-            ).fetchone()[0]
-        if active_cnt >= FREE_ACTIVE_CAP:
-            await update.message.reply_text(t["limit"] + "\n\n" + t["usage"], parse_mode="Markdown")
-            return
+    limit = reminders_active_limit(uid)
+    cnt   = reminders_active_count(uid)
+    if cnt >= limit:
+        await update.message.reply_text(
+            _limit_text(lang, limit) + "\n\n" + t["usage"],
+            parse_mode="Markdown"
+        )
+        return
 
         # 2) дневной лимит созданий (UTC сутки)
         utc_now = datetime.now(timezone.utc)
