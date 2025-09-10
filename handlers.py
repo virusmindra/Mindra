@@ -1063,19 +1063,16 @@ async def reminder_suggest_cb(update: Update, context: ContextTypes.DEFAULT_TYPE
             pass
         return
 
-    # ===== "Да" =====
+    # ===== "Да": пробуем сразу создать напоминание =====
     # работаем в одном UI-сообщении
     context.user_data[UI_MSG_KEY] = q.message.message_id
     try:
-        # уберём кнопки у вопроса
-        await q.edit_message_reply_markup(reply_markup=None)
+        await q.edit_message_reply_markup(reply_markup=None)  # убрать кнопки у вопроса
     except Exception:
         pass
 
-    # 1) Исходный текст пользователя (мы кладём его в chat())
+    # 1) исходный текст пользователя
     text_src = context.chat_data.get(f"last_user_text_{uid}")
-
-    # запасной вариант: если это было reply на сообщение с текстом
     if not text_src:
         try:
             if q.message and q.message.reply_to_message and q.message.reply_to_message.text:
@@ -1083,14 +1080,14 @@ async def reminder_suggest_cb(update: Update, context: ContextTypes.DEFAULT_TYPE
         except Exception:
             pass
 
-    # если текста нет — открываем меню напоминаний
+    # нет текста — откроем меню
     if not text_src:
         u = _shim_update_for_cb(q, context)
         return await reminders_menu_cmd(u, context)
 
     tz = _user_tz(uid)  # ZoneInfo
 
-    # 2) Парсим «естественное» время или HH:MM внутри текста
+    # 2) парсим «естественное» время или HH:MM
     when_local = parse_natural_time(text_src, lang, tz)
     if not when_local:
         m = re.search(r"\b(\d{1,2})[:.](\d{2})\b", text_src)
@@ -1102,10 +1099,51 @@ async def reminder_suggest_cb(update: Update, context: ContextTypes.DEFAULT_TYPE
             if when_local <= now_local:
                 when_local += timedelta(days=1)
 
-    # Не поняли — откроем меню создания
+    # не поняли — открываем меню создания
     if not when_local:
         u = _shim_update_for_cb(q, context)
         return await reminders_menu_cmd(u, context)
+
+    # 3) лимит активных напоминаний (по тарифу)
+    limit = reminders_active_limit(uid)
+    cnt   = reminders_active_count(uid)
+    if cnt >= limit:
+        msg = _limit_text(lang, limit)
+        try:
+            await q.edit_message_text(msg, parse_mode="Markdown")
+        except Exception:
+            await context.bot.send_message(chat_id=int(uid), text=msg, parse_mode="Markdown")
+        return
+
+    # 4) тихие часы + “срочные” короткие относительные не переносим
+    now_local    = datetime.now(tz)
+    is_rel       = _looks_relative(text_src)
+    delta_min    = (when_local - now_local).total_seconds() / 60.0
+    bypass_quiet = is_rel and (delta_min <= QUIET_BYPASS_MIN)
+
+    if (not bypass_quiet) and _is_quiet_hour(when_local):
+        when_local = _apply_quiet_hours(when_local)
+
+    # 5) создаём запись и планируем джобу
+    try:
+        rem_id = insert_reminder(uid, text_src, when_local, str(tz.key), urgent=bypass_quiet)
+        with remind_db() as db:
+            row = db.execute("SELECT * FROM reminders WHERE id=?;", (rem_id,)).fetchone()
+        await _schedule_job_for_reminder(context, row)
+    except Exception as e:
+        logging.exception(f"Failed to create reminder from suggest: {e}")
+        u = _shim_update_for_cb(q, context)
+        return await reminders_menu_cmd(u, context)
+
+    # 6) подтверждаем пользователю
+    local_str = _fmt_local(when_local, lang)
+    msg = REMIND_TEXTS.get(lang, REMIND_TEXTS["ru"])["created"].format(time=local_str, text=text_src)
+    kb  = remind_keyboard(rem_id, uid)
+
+    try:
+        await q.edit_message_text(msg, parse_mode="Markdown", reply_markup=kb)
+    except Exception:
+        await context.bot.send_message(chat_id=int(uid), text=msg, parse_mode="Markdown", reply_markup=kb)
 
     # ---- Вспомогательные локальные функции для «тихих часов» ----
     def _looks_rel_local(s: str) -> bool:
