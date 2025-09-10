@@ -4087,19 +4087,71 @@ async def points_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid  = str(update.effective_user.id)
     lang = user_languages.get(uid, "ru")
 
-    points = get_user_points(uid)
-    title  = get_user_title(points, lang)
-    next_title, to_next = get_next_title_info(points, lang)  # ← как ты и писал
-    ladder = build_titles_ladder(lang)
+    # безопасные геттеры
+    try:
+        points = int(get_user_points(uid))
+    except Exception:
+        points = 0
 
-    text = POINTS_HELP_TEXTS.get(lang, POINTS_HELP_TEXTS["ru"]).format(
-        points=points,
+    def _fmt(n: int) -> str:
+        try:
+            return f"{int(n):,}".replace(",", " ")
+        except Exception:
+            return str(n)
+
+    # текущий и следующий титул/ступень
+    try:
+        title = get_user_title(points, lang) or ""
+    except Exception:
+        title = ""
+
+    try:
+        next_title, to_next = get_next_title_info(points, lang)
+        next_title = next_title or ""
+        to_next = max(0, int(to_next or 0))
+    except Exception:
+        next_title, to_next = "", 0
+
+    # лесенка званий (может быть длинной — подрежем)
+    try:
+        ladder_full = (build_titles_ladder(lang) or "").strip()
+        # слегка подчистим чрезмерную длину, чтобы Telegram не ругался
+        ladder = "\n".join(ladder_full.splitlines()[:30])
+    except Exception:
+        ladder = ""
+
+    # прогресс-бар: если известен «сколько до следующего», построим долю
+    if to_next > 0:
+        # оценочная доля: чем больше очков, тем ближе к 1; не требуем знания порога
+        frac = min(0.95, points / (points + to_next))
+    else:
+        frac = 1.0 if next_title == "" else 0.0
+
+    bar_len = 20
+    filled = max(0, min(bar_len, int(round(frac * bar_len))))
+    bar = "█" * filled + "░" * (bar_len - filled)
+
+    # текст
+    base = POINTS_HELP_TEXTS.get(lang, POINTS_HELP_TEXTS["ru"])
+    safe_next = next_title if next_title else ({"ru": "максимальное звание", "uk": "максимальне звання", "en": "top rank"}.get(lang, "максимальное звание"))
+    safe_to_next = _fmt(to_next) if to_next > 0 else {"ru": "—", "uk": "—", "en": "—"}.get(lang, "—")
+
+    text = base.format(
+        points=_fmt(points),
         title=title,
-        next_title=next_title,
-        to_next=to_next,
+        next_title=safe_next,
+        to_next=safe_to_next,
         ladder=ladder,
     )
-    await ui_show_from_command(update, context, text, reply_markup=_kb_back_home(uid), parse_mode="Markdown")
+
+    # добавим строку прогресса аккуратно сверху
+    text = f"*{title}* · {_fmt(points)} pts\n`{bar}`\n\n" + text
+
+    await ui_show_from_command(
+        update, context, text,
+        reply_markup=_kb_back_home(uid),
+        parse_mode="Markdown"
+    )
 
 async def show_habits(update, context):
     # Универсальная поддержка и команды, и callback
