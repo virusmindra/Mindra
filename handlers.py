@@ -2990,14 +2990,16 @@ def _to_epoch(dt):
 def _from_epoch(sec: int) -> datetime:
     return datetime.fromtimestamp(sec, tz=timezone.utc)
 
-def _apply_quiet_hours(local_dt: datetime) -> datetime:
-    """Если внутри тихих часов — переносим на ближайшие 09:00 локально."""
-    hour = local_dt.hour
-    if QUIET_START <= hour or hour < QUIET_END:
-        if hour >= QUIET_START:
-            return (local_dt + timedelta(days=1)).replace(hour=QUIET_END, minute=0, second=0, microsecond=0)
-        return local_dt.replace(hour=QUIET_END, minute=0, second=0, microsecond=0)
-    return local_dt
+def _apply_quiet_hours(dt_local):
+    """Если попали в «тихий диапазон», переносим на ближайшее QUIET_END локального дня."""
+    if not _is_quiet_hour(dt_local):
+        return dt_local
+    # До QUIET_END — переносим на сегодня к QUIET_END
+    if dt_local.hour < QUIET_END:
+        return dt_local.replace(hour=QUIET_END, minute=0, second=0, microsecond=0)
+    # После/включая QUIET_START — переносим на завтра к QUIET_END
+    nxt = (dt_local + timedelta(days=1)).replace(hour=QUIET_END, minute=0, second=0, microsecond=0)
+    return nxt
 
 def _fmt_local(dt_local: datetime, lang: str) -> str:
     if lang == "en":
