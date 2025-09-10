@@ -87,18 +87,30 @@ def schedule_custom_reminders(job_queue, app):
     _ensure_single_job(job_queue, CUSTOM_JOB_NAME)
     job_queue.run_repeating(
         lambda context: asyncio.create_task(check_custom_reminders(app)),
-        interval=60,
-        first=5,
-        name=CUSTOM_JOB_NAME,
+        interval=60, first=5, name=CUSTOM_JOB_NAME
     )
 
 def schedule_idle_reminders(job_queue, app):
     _ensure_single_job(job_queue, "idle_reminders")
     job_queue.run_repeating(
         lambda context: asyncio.create_task(send_idle_reminders_compatible(app)),
-        interval=60,
-        first=10,
-        name="idle_reminders",
+        interval=60, first=10, name="idle_reminders"
+    )
+
+def schedule_evening_checkin(job_queue):
+    _ensure_single_job(job_queue, "evening_checkin")
+    job_queue.run_daily(
+        send_evening_checkin,
+        time=time(hour=21, minute=0, tzinfo=pytz.timezone("Europe/Kiev")),
+        name="evening_checkin"
+    )
+
+def schedule_daily_task(job_queue):
+    _ensure_single_job(job_queue, "daily_task_job")
+    job_queue.run_daily(
+        send_daily_task,
+        time=time(hour=10, minute=0, tzinfo=pytz.timezone("Europe/Kiev")),
+        name="daily_task_job"
     )
 
 def schedule_support_messages(job_queue):
@@ -107,23 +119,7 @@ def schedule_support_messages(job_queue):
         send_random_support,
         interval=timedelta(hours=4),
         first=timedelta(minutes=5),
-        name="support_messages",
-    )
-
-def schedule_daily_task(job_queue):
-    _ensure_single_job(job_queue, "daily_task_job")
-    job_queue.run_daily(
-        send_daily_task,
-        time=time(hour=10, minute=0, tzinfo=pytz.timezone("Europe/Kiev")),
-        name="daily_task_job",
-    )
-
-def schedule_evening_checkin(job_queue):
-    _ensure_single_job(job_queue, "evening_checkin")
-    job_queue.run_daily(
-        send_evening_checkin,
-        time=time(hour=21, minute=0, tzinfo=pytz.timezone("Europe/Kiev")),
-        name="evening_checkin",
+        name="support_messages"
     )
 
 def schedule_random_poll(job_queue):
@@ -134,7 +130,7 @@ def schedule_random_poll(job_queue):
         first=datetime.now(pytz.timezone("Europe/Kiev")).replace(
             hour=12, minute=0, second=0, microsecond=0
         ).astimezone(pytz.utc),
-        name="random_poll",
+        name="random_poll"
     )
 
 def schedule_weekly_report(job_queue):
@@ -142,8 +138,8 @@ def schedule_weekly_report(job_queue):
     job_queue.run_daily(
         send_weekly_report,
         time=time(hour=14, minute=0, tzinfo=pytz.timezone("Europe/Kiev")),
-        days=(6,),  # 6 = воскресенье
-        name="weekly_report",
+        days=(6,),  # воскресенье
+        name="weekly_report"
     )
 
 def schedule_daily_reminder(job_queue):
@@ -151,14 +147,16 @@ def schedule_daily_reminder(job_queue):
     job_queue.run_daily(
         send_daily_reminder,
         time=time(hour=8, minute=0, tzinfo=pytz.timezone("Europe/Kiev")),
-        name="daily_reminder",
+        name="daily_reminder"
     )
-# ============================================================================
+# ---------------------------------------------------------------------------
+
 
 async def error_handler(update, context):
     logging.error(msg="Exception while handling an update:", exc_info=context.error)
     if update and update.effective_message:
         await update.effective_message.reply_text("😵 Ой, что-то пошло не так. Я уже разбираюсь с этим.")
+
 
 async def main():
     # Клиент с расширенными таймаутами
@@ -170,7 +168,7 @@ async def main():
     )
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).request(request).build()
 
-    # БД и миграции до старта
+    # Базы/миграции ДО старта
     ensure_remind_db()
     ensure_premium_db()
     ensure_premium_challenges()
@@ -183,11 +181,11 @@ async def main():
         app.add_handler(handler)
     app.add_error_handler(error_handler)
 
-    # === ВАЖНО: ручной жизненный цикл, без run_polling внутри ===
+    # === Ручной жизненный цикл без run_polling ===
     await app.initialize()
     await app.start()
 
-    # Планирование задач (после start(), чтобы не плодились tentatively logs)
+    # Планирование джоб (после start)
     schedule_idle_reminders(app.job_queue, app)
     schedule_custom_reminders(app.job_queue, app)
     schedule_evening_checkin(app.job_queue)
@@ -197,19 +195,26 @@ async def main():
     schedule_weekly_report(app.job_queue)
     schedule_daily_reminder(app.job_queue)
 
-    # Восстановление напоминаний из БД
+    # Восстановить все запланированные напоминания
     await restore_reminder_jobs(app.job_queue)
 
+    # Запуск long-polling
+    await app.updater.start_polling()
     logging.info("🤖 Бот запущен!")
 
-    # Стартуем polling и ждём завершения
-    await app.updater.start_polling()
+    # Блокируемся до сигнала остановки
+    stop_event = asyncio.Event()
     try:
-        await app.updater.wait()
+        await stop_event.wait()   # будет отменено SIGTERM/SIGINT средой деплоя
     finally:
-        # Аккуратная остановка
+        # Корректная остановка
+        try:
+            await app.updater.stop()
+        except Exception:
+            pass
         await app.stop()
         await app.shutdown()
+
 
 if __name__ == "__main__":
     import asyncio
