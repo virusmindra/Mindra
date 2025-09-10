@@ -5681,20 +5681,44 @@ async def send_random_support(context: ContextTypes.DEFAULT_TYPE):
     global user_last_support, user_support_daily_count, user_support_daily_date
     global user_last_seen, user_languages, user_timezones
 
+    # -------- безопасные дефолты (если глобали не заданы) --------
+    start            = int(globals().get("SUPPORT_WINDOW_START", os.getenv("SUPPORT_WINDOW_START", 9)))
+    end              = int(globals().get("SUPPORT_WINDOW_END",   os.getenv("SUPPORT_WINDOW_END",   21)))
+    max_per_day      = int(globals().get("SUPPORT_MAX_PER_DAY",  os.getenv("SUPPORT_MAX_PER_DAY",  2)))
+    min_between_h    = float(globals().get("SUPPORT_MIN_HOURS_BETWEEN", os.getenv("SUPPORT_MIN_HOURS_BETWEEN", 6)))
+    min_since_active = float(globals().get("MIN_HOURS_SINCE_ACTIVE",     os.getenv("MIN_HOURS_SINCE_ACTIVE",     4)))
+    chance           = float(globals().get("SUPPORT_RANDOM_CHANCE",      os.getenv("SUPPORT_RANDOM_CHANCE",      0.5)))
+    tz_fallback_name = globals().get("SUPPORT_TZ", os.getenv("SUPPORT_TZ", "Europe/Kiev"))
+
+    def _safe_local_now(user_id: str):
+        # пробуем твою функцию
+        try:
+            return _local_now_for(user_id)
+        except Exception:
+            tzname = user_timezones.get(user_id, tz_fallback_name)
+            try:
+                tz = ZoneInfo(tzname)
+            except Exception:
+                tz = ZoneInfo("UTC")
+            return datetime.now(tz)
+
     now_utc = _now_utc()
 
-    # Кого знаем — тем и шлём (подставь свой источник, если у тебя иначе)
     candidate_user_ids = list(user_last_seen.keys())
 
     for user_id in candidate_user_ids:
         # 0) не трогаем, если был активен последние N часов
         last_seen = user_last_seen.get(user_id)
-        if _hours_since(last_seen, now_utc) < MIN_HOURS_SINCE_ACTIVE:
+        try:
+            hours_inactive = _hours_since(last_seen, now_utc)
+        except Exception:
+            hours_inactive = 9999
+        if hours_inactive < min_since_active:
             continue
 
         # 1) локальное окно времени
-        local_now = _local_now_for(user_id)
-        if not (SUPPORT_WINDOW_START <= local_now.hour < SUPPORT_WINDOW_END):
+        local_now = _safe_local_now(user_id)
+        if not (start <= local_now.hour < end):
             continue
 
         # 2) дневной лимит по ЛОКАЛЬНОЙ дате пользователя
@@ -5703,31 +5727,39 @@ async def send_random_support(context: ContextTypes.DEFAULT_TYPE):
             user_support_daily_date[user_id] = local_date_str
             user_support_daily_count[user_id] = 0
 
-        if user_support_daily_count[user_id] >= SUPPORT_MAX_PER_DAY:
+        daily_cnt = int(user_support_daily_count.get(user_id, 0))
+        if daily_cnt >= max_per_day:
             continue
 
-        # 3) пауза между сообщениями (UTC-aware)
+        # 3) пауза между сообщениями
         last_support = user_last_support.get(user_id)
-        if _hours_since(last_support, now_utc) < SUPPORT_MIN_HOURS_BETWEEN:
-            continue
+        if last_support:
+            try:
+                if _hours_since(last_support, now_utc) < min_between_h:
+                    continue
+            except Exception:
+                pass  # если что-то не так с датой — считаем, что пауза выдержана
 
         # 4) рандом (смягчаем частоту)
-        if random.random() > SUPPORT_RANDOM_CHANCE:
+        if random.random() > chance:
             continue
 
         # 5) отправка
         try:
             lang = user_languages.get(user_id, "ru")
-            msg = random.choice(SUPPORT_MESSAGES_BY_LANG.get(lang, SUPPORT_MESSAGES_BY_LANG["ru"]))
+            pool = SUPPORT_MESSAGES_BY_LANG.get(lang, SUPPORT_MESSAGES_BY_LANG["ru"])
+            if not pool:
+                continue
+            msg = random.choice(pool)
             await context.bot.send_message(chat_id=int(user_id), text=msg)
 
-            user_last_support[user_id] = now_utc         # сохраняем aware UTC
-            user_support_daily_count[user_id] += 1
+            user_last_support[user_id] = now_utc
+            user_support_daily_count[user_id] = daily_cnt + 1
 
             logging.info(f"✅ Support sent to {user_id} ({lang}) at {local_now.isoformat()}")
         except Exception as e:
             logging.exception(f"❌ Support send failed for {user_id}: {e}")
-
+            
 async def send_random_poll(context: ContextTypes.DEFAULT_TYPE):
     now_utc = _now_utc()
 
