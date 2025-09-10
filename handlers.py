@@ -3006,9 +3006,25 @@ def _apply_quiet_hours(dt_local):
     nxt = (dt_local + timedelta(days=1)).replace(hour=QUIET_END, minute=0, second=0, microsecond=0)
     return nxt
 
+
+# ── ЛОКАЛЬНОЕ ФОРМАТИРОВАНИЕ ДАТЫ/ВРЕМЕНИ ─────────────────────────────────────
 def _fmt_local(dt_local: datetime, lang: str) -> str:
+    """
+    Возвращает строку локального времени.
+    en -> 12h (AM/PM), остальные -> 24h. Формат: "HH:MM, YYYY-MM-DD".
+    Делает безопасный фолбэк для Windows (%#I) вместо %-I.
+    """
+    def _strftime_safe(dt: datetime, primary: str, fallback: str) -> str:
+        try:
+            return dt.strftime(primary)
+        except Exception:
+            return dt.strftime(fallback)
+
     if lang == "en":
-        return dt_local.strftime("%-I:%M %p, %Y-%m-%d")
+        # пример: "2:05 PM, 2025-09-10"
+        return _strftime_safe(dt_local, "%-I:%M %p, %Y-%m-%d", "%#I:%M %p, %Y-%m-%d")
+
+    # пример: "14:05, 2025-09-10"
     return dt_local.strftime("%H:%M, %Y-%m-%d")
 
 # ========== Natural language parsing (ru/uk/en) ==========
