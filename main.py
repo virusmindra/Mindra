@@ -74,12 +74,9 @@ from handlers import (
 )
 from config import TELEGRAM_BOT_TOKEN
 
-logging.basicConfig(level=logging.INFO)
-
 CUSTOM_JOB_NAME = "custom_rem_check"
 
 def _ensure_single_job(job_queue, name: str):
-    """Удаляет уже запланированные джобы с таким именем, чтобы не было дублей."""
     try:
         for j in job_queue.get_jobs_by_name(name):
             j.schedule_removal()
@@ -156,7 +153,7 @@ def schedule_daily_reminder(job_queue):
         time=time(hour=8, minute=0, tzinfo=pytz.timezone("Europe/Kiev")),
         name="daily_reminder",
     )
-# ============================================================================ 
+# ============================================================================
 
 async def error_handler(update, context):
     logging.error(msg="Exception while handling an update:", exc_info=context.error)
@@ -164,7 +161,7 @@ async def error_handler(update, context):
         await update.effective_message.reply_text("😵 Ой, что-то пошло не так. Я уже разбираюсь с этим.")
 
 async def main():
-    # 👇 Кастомные таймауты Telegram-клиента
+    # Клиент с расширенными таймаутами
     request = HTTPXRequest(
         connect_timeout=30,
         read_timeout=60,
@@ -173,20 +170,24 @@ async def main():
     )
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).request(request).build()
 
-    # ✅ гарантируем все БД до старта
+    # БД и миграции до старта
     ensure_remind_db()
     ensure_premium_db()
     ensure_premium_challenges()
     migrate_premium_from_stats(load_stats)
 
-    # === handlers ===
+    # Хендлеры
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
     app.add_handler(MessageHandler(filters.VOICE, handle_voice))
     for handler in handlers:
         app.add_handler(handler)
     app.add_error_handler(error_handler)
 
-    # === jobs (без дублей) ===
+    # === ВАЖНО: ручной жизненный цикл, без run_polling внутри ===
+    await app.initialize()
+    await app.start()
+
+    # Планирование задач (после start(), чтобы не плодились tentatively logs)
     schedule_idle_reminders(app.job_queue, app)
     schedule_custom_reminders(app.job_queue, app)
     schedule_evening_checkin(app.job_queue)
@@ -196,12 +197,19 @@ async def main():
     schedule_weekly_report(app.job_queue)
     schedule_daily_reminder(app.job_queue)
 
-    # 🔁 восстановить напоминания из БД
+    # Восстановление напоминаний из БД
     await restore_reminder_jobs(app.job_queue)
 
     logging.info("🤖 Бот запущен!")
-    # ВАЖНО: не закрываем цикл событий внутри run_polling
-    await app.run_polling(close_loop=False)
+
+    # Стартуем polling и ждём завершения
+    await app.updater.start_polling()
+    try:
+        await app.updater.wait()
+    finally:
+        # Аккуратная остановка
+        await app.stop()
+        await app.shutdown()
 
 if __name__ == "__main__":
     import asyncio
