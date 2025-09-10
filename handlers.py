@@ -1235,10 +1235,28 @@ async def language_cb(update, context):
 
 
 def upsell_fmt(uid_lang: str, key: str, **kw) -> str:
-    t = UPSELL_TEXTS.get(uid_lang, UPSELL_TEXTS["ru"])
-    s = t.get(key, "")
-    return s.format(plus=PLAN_LABEL["plus"], pro=PLAN_LABEL["pro"], **kw)
+    """
+    Достаёт текст апселла по ключу из UPSELL_TEXTS[lang][key] и подставляет
+    локализованные названия планов из PLAN_LABELS[lang] (fallback -> 'ru').
+    Никогда не кидает KeyError, даже если часть ключей отсутствует.
+    """
+    # текст
+    t_lang = UPSELL_TEXTS.get(uid_lang, UPSELL_TEXTS.get("ru", {}))
+    s = t_lang.get(key) or UPSELL_TEXTS.get("ru", {}).get(key, "") or ""
 
+    # лейблы планов (ожидается структура: PLAN_LABELS[lang] = {"plus": "...", "pro": "..."}
+    labels_by_lang = globals().get("PLAN_LABELS") or globals().get("PLAN_LABEL") or {}
+    labels = labels_by_lang.get(uid_lang, labels_by_lang.get("ru", {}))
+    plus_label = labels.get("plus", "Plus")
+    pro_label  = labels.get("pro",  "Pro")
+
+    # форматируем, подставляя любые доп. параметры из **kw
+    try:
+        return s.format(plus=plus_label, pro=pro_label, **kw)
+    except Exception:
+        # если какие-то параметры не передали — вернём без падения
+        return s.replace("{plus}", str(plus_label)).replace("{pro}", str(pro_label))
+        
 def _plan_lang(uid: str):
     return user_languages.get(uid, "ru")
 
