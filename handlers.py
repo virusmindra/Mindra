@@ -295,13 +295,15 @@ def _limit_text(lang: str, limit: int) -> str:
     base = t.get("limit", "⚠️ Достигнут лимит активных напоминаний ({n}).")
     return base.replace("{n}", str(limit))
 
-def _is_quiet_hour(dt_local: datetime) -> bool:
-    # те же QUIET_START / QUIET_END, что использует _apply_quiet_hours
-    return (dt_local.hour >= QUIET_START) or (dt_local.hour < QUIET_END)
+def _is_quiet_hour(dt_local) -> bool:
+    """dt_local — AWARE локальное время пользователя."""
+    h = dt_local.hour
+    return (h >= QUIET_START) or (h < QUIET_END)
 
 def _looks_relative(text: str) -> bool:
-    s = text.lower()
-    return ("через " in s) or (s.startswith("через")) or (" in " in s) or s.startswith("in ")
+    """Грубо определяем фразу вида «через N … / in N …»."""
+    s = (text or "").strip().lower()
+    return bool(_REL_RU_UK.search(s) or _REL_EN.search(s))
     
 def _is_unlimited_tracker(uid: str) -> bool:
     # фича Pro / безлимит — подхватываем любые из этих флагов
