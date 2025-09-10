@@ -384,12 +384,19 @@ def add_referral(user_id, referrer_id):
 
 # ==== USER PROGRESS ====
 
-def add_points(user_id: str, amount: int = 1):
+def add_points(user_id: str, amount: int = 1, reason: str | None = None, **kwargs):
+    """Начисляет очки. Параметр reason и любые лишние kwargs игнорируются (для совместимости)."""
     stats = load_stats()
-    user_id = str(user_id)
-    user = stats.get(user_id, {})
-    user["points"] = user.get("points", 0) + amount
-    stats[user_id] = user
+    uid = str(user_id)
+
+    user = stats.get(uid, {})
+    user["points"] = int(user.get("points", 0)) + int(amount)
+
+    # (опционально) короткий лог — можно убрать
+    if reason:
+        logging.info(f"add_points: +{amount} to {uid} (reason={reason})")
+
+    stats[uid] = user
     save_stats(stats)
     return user["points"]
 
