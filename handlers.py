@@ -224,10 +224,12 @@ VOICE_TEXTS = VOICE_UI_TEXTS
 
 
 # Тихие часы по локальному времени пользователя
-QUIET_START = 23  # не тревожить с 22:00
-QUIET_END   = 8   # до 09:00
+QUIET_START = int(os.getenv("QUIET_START_H", 23))   # включительно
+QUIET_END   = int(os.getenv("QUIET_END_H", 8))      # исключительно
 STORY_COOLDOWN_HOURS = 4 
-QUIET_BYPASS_MIN = 120
+# Если пользователь просит «через N минут/часов» и N маленькое,
+# то НЕ переносим на утро. В минутах:
+QUIET_BYPASS_MIN = int(os.getenv("QUIET_BYPASS_MIN", 30))
 
 _story_last_suggest: dict[str, datetime] = {}   # uid -> utc time
 _story_optout_until: dict[str, datetime] = {}   # uid -> utc time
@@ -260,6 +262,9 @@ FREE_ACTIVE_CAP   = globals().get("FREE_ACTIVE_CAP", 1)   # максимум а�
 FREE_DAILY_CAP    = globals().get("FREE_DAILY_CAP", 3)    # максимум созданий в сутки у free
 QUIET_BYPASS_MIN  = globals().get("QUIET_BYPASS_MIN", 90) # до скольки минут «короткое» относительное
 
+
+_REL_RU_UK = re.compile(r"\bчерез\s+\d+\s*(мин|минут|хв|хвилин|час|часа|часов|день|дня|дней|дн)\b", re.I)
+_REL_EN    = re.compile(r"\bin\s+\d+\s*(min|mins|minute|minutes|hour|hours|day|days)\b", re.I)
 
 # ==== Sleep (ambient only) ====
 _sleep_prefs: dict[str, dict] = {}
