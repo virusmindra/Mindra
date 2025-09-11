@@ -722,36 +722,35 @@ async def menu_cb(update, context):
         return await show_timezone_menu(q.message, origin="settings")
 
     elif q.data == "m:set:feedback":
-    tfb = _fb_i18n(uid)          # тексты /feedback (с примером)
-    tm  = _menu_i18n(uid)        # тексты меню
+        tfb = _fb_i18n(uid)          # тексты /feedback (с примером)
+        tm  = _menu_i18n(uid)        # тексты меню
 
-    msg = (tm.get("feedback_ask", "Напиши отзыв — я передам разработчику 💜")
-           + "\n\n"
-           + tfb.get("howto", ""))
+        msg = (tm.get("feedback_ask", "Напиши отзыв — я передам разработчику 💜")
+               + "\n\n"
+               + tfb.get("howto", ""))
 
-    try:
-        await q.edit_message_text(
-            msg,
-            parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton(tm.get("back", "⬅️ Назад"),
+        try:
+            await q.edit_message_text(
+                msg,
+                parse_mode="Markdown",
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton(tm.get("back", "⬅️ Назад"),
                                        callback_data="m:nav:settings")]]
+                )
             )
-        )
-    except Exception:
+        except Exception:
         # запасной вариант, если редактирование не удалось
-        await context.bot.send_message(
-            chat_id=q.message.chat.id,
-            text=msg,
-            parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton(tm.get("back", "⬅️ Назад"),
-                                       callback_data="m:nav:settings")]]
+            await context.bot.send_message(
+                chat_id=q.message.chat.id,
+                text=msg,
+                parse_mode="Markdown",
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton(tm.get("back", "⬅️ Назад"),
+                                           callback_data="m:nav:settings")]]
+                )
             )
-        )
-
-    waiting_feedback.add(uid)
-    return
+        waiting_feedback.add(uid)
+        return
 
     # ---------- общий результат ----------
     if ok is False:
