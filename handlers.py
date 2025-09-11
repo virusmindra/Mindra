@@ -729,12 +729,28 @@ async def menu_cb(update, context):
            + "\n\n"
            + tfb.get("howto", ""))
 
-    await q.edit_message_text(
-        msg,
-        parse_mode="Markdown",
-        reply_markup=InlineKeyboardMarkup(
-                                  reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(t["back"], callback_data="m:nav:settings")]]))
-        waiting_feedback.add(uid)
+    try:
+        await q.edit_message_text(
+            msg,
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton(tm.get("back", "⬅️ Назад"),
+                                       callback_data="m:nav:settings")]]
+            )
+        )
+    except Exception:
+        # запасной вариант, если редактирование не удалось
+        await context.bot.send_message(
+            chat_id=q.message.chat.id,
+            text=msg,
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton(tm.get("back", "⬅️ Назад"),
+                                       callback_data="m:nav:settings")]]
+            )
+        )
+
+    waiting_feedback.add(uid)
     return
 
     # ---------- общий результат ----------
