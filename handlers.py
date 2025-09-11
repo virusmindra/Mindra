@@ -577,6 +577,10 @@ async def show_main_menu(msg):
         parse_mode="Markdown",
     )
 
+def _fb_i18n(uid: str) -> dict:
+    lang = user_languages.get(uid, "ru")
+    return FEEDBACK_TEXTS.get(lang, FEEDBACK_TEXTS["ru"])
+
 async def _try_call(names, update, context) -> bool:
     """Пробует вызвать ПЕРВУЮ найденную функцию из списка names. Возвращает True при успехе."""
     import inspect, sys
@@ -904,10 +908,6 @@ def _premium_text(uid: str) -> str:
     t = _menu_i18n(uid)
     # шапку «премиум до…» возьмём из общего заголовка
     return _menu_header_text(uid).replace(t["title"], t["prem_title"])
-
-def _fb_i18n(uid: str) -> dict:
-    lang = user_languages.get(uid, "ru")
-    return FEEDBACK_TEXTS.get(lang, FEEDBACK_TEXTS["ru"])
 
 def _profile_kb(uid: str) -> InlineKeyboardMarkup:
     t = _menu_i18n(uid)
