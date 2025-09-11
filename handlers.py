@@ -905,6 +905,9 @@ def _premium_text(uid: str) -> str:
     # шапку «премиум до…» возьмём из общего заголовка
     return _menu_header_text(uid).replace(t["title"], t["prem_title"])
 
+def _fb_i18n(uid: str) -> dict:
+    lang = user_languages.get(uid, "ru")
+    return FEEDBACK_TEXTS.get(lang, FEEDBACK_TEXTS["ru"])
 
 def _profile_kb(uid: str) -> InlineKeyboardMarkup:
     t = _menu_i18n(uid)
