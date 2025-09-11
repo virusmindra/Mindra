@@ -718,11 +718,20 @@ async def menu_cb(update, context):
         return await show_timezone_menu(q.message, origin="settings")
 
     elif q.data == "m:set:feedback":
-        await q.edit_message_text(t["feedback_ask"],
-                                  parse_mode="Markdown",
+    tfb = _fb_i18n(uid)          # тексты /feedback (с примером)
+    tm  = _menu_i18n(uid)        # тексты меню
+
+    msg = (tm.get("feedback_ask", "Напиши отзыв — я передам разработчику 💜")
+           + "\n\n"
+           + tfb.get("howto", ""))
+
+    await q.edit_message_text(
+        msg,
+        parse_mode="Markdown",
+        reply_markup=InlineKeyboardMarkup(
                                   reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(t["back"], callback_data="m:nav:settings")]]))
         waiting_feedback.add(uid)
-        return
+    return
 
     # ---------- общий результат ----------
     if ok is False:
