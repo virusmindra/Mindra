@@ -251,24 +251,38 @@ def mark_trial_given(user_id) -> None:
         )
         db.commit()
 
-def get_premium_until(user_id: str | int) -> str | None:
+
+def _premium_has_new_schema(db) -> bool:
+    try:
+        cols = {r[1] for r in db.execute("PRAGMA table_info(premium);")}
+        return "plus_until" in cols and "pro_until" in cols
+    except Exception:
+        return False
+
+def get_premium_until(user_id: str | int, tier: str | None = None) -> str | None:
     """
-    Back-compat: возвращает ISO до какого момента есть какой-либо премиум (max(plus, pro)).
+    Если tier указан ('plus' | 'pro') — вернуть ISO конца именно этого уровня.
+    Если tier=None — вернуть ISO максимального из (plus, pro) (совместимость со старым кодом).
+    Поддерживает новую (epoch) и старую ('until' TEXT) схему таблицы.
     """
     uid = str(user_id)
     with premium_db() as db:
-        row = db.execute("SELECT plus_until, pro_until FROM premium WHERE user_id=?;", (uid,)).fetchone()
-        if not row:
-            # very old schema? попробуем "until"
-            try:
-                row2 = db.execute("SELECT until FROM premium WHERE user_id=?;", (uid,)).fetchone()
-                if row2 and row2[0]:
-                    return _parse_any_dt(row2[0]).isoformat()
-            except Exception:
+        if _premium_has_new_schema(db):
+            if tier:
+                col = "plus_until" if tier != "pro" else "pro_until"
+                row = db.execute(f"SELECT {col} FROM premium WHERE user_id=?;", (uid,)).fetchone()
+                if row and int(row[0] or 0) > 0:
+                    return datetime.fromtimestamp(int(row[0]), tz=timezone.utc).isoformat()
                 return None
-            return None
-        ep = max(int(row["plus_until"] or 0), int(row["pro_until"] or 0))
-        return datetime.fromtimestamp(ep, tz=timezone.utc).isoformat() if ep > 0 else None
+            else:
+                row = db.execute("SELECT plus_until, pro_until FROM premium WHERE user_id=?;", (uid,)).fetchone()
+                if not row:
+                    return None
+                ep = max(int(row["plus_until"] or 0), int(row["pro_until"] or 0))
+                return datetime.fromtimestamp(ep, tz=timezone.utc).isoformat() if ep > 0 else None
+        # fallback: старая колонка 'until' (ISO)
+        row = db.execute("SELECT until FROM premium WHERE user_id=?;", (uid,)).fetchone()
+        return row[0] if row else None
 
 def _set_premium_until_iso(uid: str, until_iso: str) -> None:
     """Back-compat: устанавливаем как Mindra+ (plus_until)."""
@@ -281,54 +295,100 @@ def _set_premium_until_iso(uid: str, until_iso: str) -> None:
             db.execute("INSERT INTO premium (user_id, plus_until, pro_until) VALUES (?, ?, 0);", (uid, ep))
         db.commit()
 
-def set_premium_until(user_id, until, add_days: bool = False) -> None:
+
+def set_premium_until(user_id: str | int, until, tier: str | None = None, add_days: bool = False) -> None:
     """
-    Back-compat API: работает через plus_until (Mindra+).
+    Устанавливает дату окончания подписки.
+    - 'until' может быть datetime или ISO-строка.
+    - tier: 'plus' | 'pro' | None(=> 'plus' для совместимости).
+    - add_days=True (режим старого API): 'until' трактуется как дата в будущем, и добавляются соответствующие дни.
+    Работает и с новой, и со старой схемой.
     """
     uid = str(user_id)
-    if add_days and isinstance(until, datetime):
-        now = datetime.now(timezone.utc)
-        if until.tzinfo is None:
-            until = until.replace(tzinfo=timezone.utc)
-        else:
-            until = until.astimezone(timezone.utc)
-        delta_days = max(0, int((until - now).total_seconds() // 86400))
-        if delta_days > 0:
-            extend_premium_days(uid, delta_days)
-        else:
-            _set_premium_until_iso(uid, until.isoformat())
-        return
-
+    # нормализуем dt -> aware UTC
     if isinstance(until, datetime):
-        if until.tzinfo is None:
-            until = until.replace(tzinfo=timezone.utc)
-        else:
-            until = until.astimezone(timezone.utc)
-        _set_premium_until_iso(uid, until.isoformat())
+        dt_utc = until if until.tzinfo else until.replace(tzinfo=timezone.utc)
+        dt_utc = dt_utc.astimezone(timezone.utc)
     else:
-        _set_premium_until_iso(uid, str(until))
+        try:
+            dt_utc = datetime.fromisoformat(str(until).replace("Z", "+00:00"))
+        except Exception:
+            dt_utc = datetime.now(timezone.utc)
+        if dt_utc.tzinfo is None:
+            dt_utc = dt_utc.replace(tzinfo=timezone.utc)
+        dt_utc = dt_utc.astimezone(timezone.utc)
 
-def set_premium_until_dt(user_id: str | int, dt_utc: datetime) -> None:
+    if add_days:
+        days = max(0, int((dt_utc - datetime.now(timezone.utc)).total_seconds() // 86400))
+        if days > 0:
+            extend_premium_days(uid, days, tier=tier or "plus")
+            return
+
+    epoch = int(dt_utc.timestamp())
+    with premium_db() as db:
+        if _premium_has_new_schema(db):
+            col = "plus_until" if (tier or "plus") != "pro" else "pro_until"
+            exists = db.execute("SELECT 1 FROM premium WHERE user_id=?;", (uid,)).fetchone()
+            if exists:
+                db.execute(f"UPDATE premium SET {col}=? WHERE user_id=?;", (epoch, uid))
+            else:
+                if col == "plus_until":
+                    db.execute("INSERT INTO premium (user_id, plus_until, pro_until) VALUES (?, ?, 0);", (uid, epoch))
+                else:
+                    db.execute("INSERT INTO premium (user_id, plus_until, pro_until) VALUES (?, 0, ?);", (uid, epoch))
+        else:
+            db.execute(
+                "INSERT INTO premium(user_id, until) VALUES(?, ?) "
+                "ON CONFLICT(user_id) DO UPDATE SET until=excluded.until;",
+                (uid, dt_utc.isoformat()),
+            )
+        db.commit()
+
+
+def set_premium_until_dt(user_id: str | int, dt_utc: datetime, tier: str | None = None) -> None:
     if dt_utc.tzinfo is None:
         dt_utc = dt_utc.replace(tzinfo=timezone.utc)
     else:
         dt_utc = dt_utc.astimezone(timezone.utc)
-    _set_premium_until_iso(str(user_id), dt_utc.isoformat())
+    set_premium_until(user_id, dt_utc, tier=tier or "plus")
 
-def extend_premium_days(user_id: str | int, days: int) -> str:
-    now = datetime.now(timezone.utc)
-    cur = get_premium_until(user_id)
-    base = now
-    if cur:
+def extend_premium_days(user_id: str | int, days: int, tier: str | None = None) -> str:
+    """
+    Продлевает подписку на N дней. Возвращает ISO (UTC).
+    Работает и с новой (epoch), и со старой ('until' TEXT) схемой.
+    """
+    uid = str(user_id)
+    now_epoch = int(datetime.now(timezone.utc).timestamp())
+    with premium_db() as db:
+        if _premium_has_new_schema(db):
+            col = "plus_until" if (tier or "plus") != "pro" else "pro_until"
+            row = db.execute(f"SELECT {col} FROM premium WHERE user_id=?;", (uid,)).fetchone()
+            base = max(now_epoch, int(row[0]) if row and row[0] else 0)
+            new_until = base + int(days) * 86400
+            if row:
+                db.execute(f"UPDATE premium SET {col}=? WHERE user_id=?;", (new_until, uid))
+            else:
+                if col == "plus_until":
+                    db.execute("INSERT INTO premium (user_id, plus_until, pro_until) VALUES (?, ?, 0);", (uid, new_until))
+                else:
+                    db.execute("INSERT INTO premium (user_id, plus_until, pro_until) VALUES (?, 0, ?);", (uid, new_until))
+            db.commit()
+            return datetime.fromtimestamp(new_until, tz=timezone.utc).isoformat()
+
+        # старая схема: 'until' (ISO)
+        cur_iso = get_premium_until(uid) or datetime.now(timezone.utc).isoformat()
         try:
-            dt = _parse_any_dt(cur)
-            if dt > now:
-                base = dt
+            base_dt = datetime.fromisoformat(cur_iso.replace("Z", "+00:00"))
+            if base_dt.tzinfo is None:
+                base_dt = base_dt.replace(tzinfo=timezone.utc)
+            if base_dt < datetime.now(timezone.utc):
+                base_dt = datetime.now(timezone.utc)
         except Exception:
-            pass
-    new_until = base + timedelta(days=int(days))
-    set_premium_until_dt(user_id, new_until)
-    return new_until.isoformat()
+            base_dt = datetime.now(timezone.utc)
+
+        new_dt = base_dt + timedelta(days=int(days))
+        set_premium_until(uid, new_dt)  # по умолчанию — как Mindra+
+        return new_dt.isoformat()
 
 def grant_trial_if_eligible(user_id, days: int) -> str | None:
     """
