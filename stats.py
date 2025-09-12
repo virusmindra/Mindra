@@ -78,6 +78,28 @@ def _parse_any_dt(val: str) -> datetime:
 def _to_utc(dt: datetime) -> datetime:
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
+# --- Premium Challenges ---
+def ensure_premium_challenges():
+    """Создаёт таблицу weekly-челленджей Mindra+, если её нет."""
+    os.makedirs(DATA_DIR, exist_ok=True)
+    with sqlite3.connect(PREMIUM_DB_PATH) as db:
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS premium_challenges (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id    TEXT    NOT NULL,
+                week_start TEXT    NOT NULL,         -- ISO-8601 (YYYY-MM-DD), понедельник
+                text       TEXT    NOT NULL,         -- формулировка челленджа
+                done       INTEGER NOT NULL DEFAULT 0,
+                created_at INTEGER NOT NULL          -- epoch seconds (UTC)
+            );
+        """)
+        db.execute("""
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_ch_user_week
+            ON premium_challenges(user_id, week_start);
+        """)
+        db.commit()
+
+
 # =========================================================
 # ================  REMINDERS (SQLite)  ===================
 # =========================================================
