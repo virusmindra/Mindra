@@ -464,6 +464,54 @@ def _quick_parse_due(text: str, lang: str, tz: ZoneInfo) -> datetime | None:
 
     return None
 
+# === Onboarding referral finalize helper ===
+async def _finalize_onboarding_referral(context, uid: str, lang: str):
+    """
+    Завершает реферальную логику онбординга:
+      - фиксирует рефералку (inviter <- invitee)
+      - даёт Mindra+ приглашённому (+7 дней)
+      - при успехе уведомляет пригласившего
+    """
+    try:
+        # 1) Кто пригласил (берём payload из /start, который ты клал в user_ref_args)
+        raw_payload = None
+        try:
+            raw_payload = user_ref_args.pop(uid, None)  # может быть None
+        except Exception:
+            pass
+
+        referrer_id = None
+        if raw_payload:
+            s = str(raw_payload).strip()
+            if s.isdigit():
+                referrer_id = s
+
+        granted_to_referrer = False
+        if referrer_id and referrer_id != uid:
+            try:
+                # даём бонус пригласившему (именно Mindra+), один раз на invitee
+                granted_to_referrer = process_referral(referrer_id, uid, days=7)
+            except Exception as e:
+                logging.warning("process_referral failed: %s", e)
+
+        # 2) Бонус приглашённому (Mindra+ на 7 дней)
+        try:
+            # если у тебя уже где-то выдаётся +7 приглашённому — закомментируй grant_plus_days
+            grant_plus_days(uid, 7)
+            bonus_text = REFERRAL_BONUS_TEXT.get(lang, REFERRAL_BONUS_TEXT["ru"])
+            await context.bot.send_message(chat_id=int(uid), text=bonus_text, parse_mode="Markdown")
+        except Exception as e:
+            logging.warning("grant_plus_days for invitee failed: %s", e)
+
+        # 3) Уведомление пригласившему (только если реально записали реферал)
+        if granted_to_referrer and referrer_id:
+            try:
+                notify_text = REFERRER_NOTIFY_TEXT.get(lang, REFERRER_NOTIFY_TEXT["ru"])
+                await context.bot.send_message(chat_id=int(referrer_id), text=notify_text, parse_mode="Markdown")
+            except Exception:
+                pass
+    except Exception as e:
+        logging.warning("referral finalize block failed: %s", e)
 
 def _create_reminder_quick(uid: str, body: str, due_local: datetime, tz_name: str) -> int:
     return insert_reminder(uid, body, due_local, tz_name)
