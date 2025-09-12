@@ -1308,6 +1308,16 @@ def set_plan(uid: str, plan: str, days: int | None = None):
     if plan == PLAN_PRO:
         return grant_pro_days(uid, days or 0)
 
+def _resolve_referrer_id(ref_payload: str | None) -> str | None:
+    """Пытаемся извлечь id пригласившего из пейлоада /start.
+    Поддержим варианты: '123456', 'ref_123456', 'u123456', 'abc_123456_def' и т.п."""
+    if not ref_payload:
+        return None
+    p = ref_payload.strip()
+    if p.isdigit():
+        return p
+    m = re.search(r"(\d{6,})", p)  # ищем длинную цифровую подпоследовательность
+    return m.group(1) if m else None
 
 def _resolve_asset_path(rel_path: str | None) -> str | None:
     """Преобразует относительный путь из BGM_PRESETS в абсолютный (на всякий)."""
