@@ -92,32 +92,63 @@ def remind_db():
         conn.close()
 
 
+
 def ensure_premium_db():
+    """Создаёт/мигрирует схему premium + referrals под PLUS/PRO."""
     os.makedirs(DATA_DIR, exist_ok=True)
     with sqlite3.connect(PREMIUM_DB_PATH) as db:
+        # --- основная таблица подписок ---
         db.execute("""
             CREATE TABLE IF NOT EXISTS premium (
                 user_id    TEXT PRIMARY KEY,
-                until      TEXT NOT NULL,          -- ISO8601 (UTC)
-                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+                plus_until INTEGER NOT NULL DEFAULT 0,  -- Mindra+
+                pro_until  INTEGER NOT NULL DEFAULT 0   -- Mindra Pro
             );
         """)
+        cols = {r[1] for r in db.execute("PRAGMA table_info(premium);")}
+        # миграция со старой схемы: была колонка until (ISO)
+        if "until" in cols:
+            # добавим новые колонки, если вдруг нет
+            if "plus_until" not in cols:
+                db.execute("ALTER TABLE premium ADD COLUMN plus_until INTEGER NOT NULL DEFAULT 0;")
+            if "pro_until" not in cols:
+                db.execute("ALTER TABLE premium ADD COLUMN pro_until  INTEGER NOT NULL DEFAULT 0;")
+            # перенесём значения until -> plus_until
+            for row in db.execute("SELECT user_id, until FROM premium;").fetchall():
+                ep = _iso_to_epoch_maybe(row[1])
+                if ep > 0:
+                    db.execute("UPDATE premium SET plus_until=? WHERE user_id=?;", (ep, row[0]))
+        else:
+            # на всякий — гарантируем наличие колонок
+            if "plus_until" not in cols:
+                db.execute("ALTER TABLE premium ADD COLUMN plus_until INTEGER NOT NULL DEFAULT 0;")
+            if "pro_until" not in cols:
+                db.execute("ALTER TABLE premium ADD COLUMN pro_until  INTEGER NOT NULL DEFAULT 0;")
+
+        # --- вспомогательная таблица флагов (оставляем твою) ---
         db.execute("""
             CREATE TABLE IF NOT EXISTS user_flags (
-                user_id    TEXT PRIMARY KEY,
+                user_id     TEXT PRIMARY KEY,
                 trial_given INTEGER NOT NULL DEFAULT 0,
-                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+                created_at  TEXT  NOT NULL DEFAULT (datetime('now'))
             );
         """)
+
+        # --- referrals ---
+        # Нормальная схема:
         db.execute("""
             CREATE TABLE IF NOT EXISTS referrals (
-                invited_user_id TEXT PRIMARY KEY,
-                inviter_user_id TEXT NOT NULL,
-                granted_days    INTEGER NOT NULL,
-                created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+                invitee_id TEXT PRIMARY KEY,   -- кто пришёл
+                inviter_id TEXT NOT NULL,      -- кто пригласил
+                created_at INTEGER NOT NULL    -- epoch
             );
         """)
+
+        # А если у тебя уже есть старая таблица с другими именами колонок — оставим её.
+        # Дальше process_referral сам определит, в какую писать.
+
         db.commit()
+
 
 # --- Premium Challenges ---
 def ensure_premium_challenges():
@@ -141,11 +172,32 @@ def ensure_premium_challenges():
         db.commit()
 
 
+
+def _now_epoch() -> int:
+    return int(datetime.now(timezone.utc).timestamp())
+
+def _iso_to_epoch_maybe(s: str) -> int:
+    """Преобразуем ISO8601/Z в epoch, безопасно."""
+    if not s:
+        return 0
+    try:
+        # поддержим '...Z' и '+00:00'
+        dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+        return int(dt.timestamp())
+    except Exception:
+        return 0
+
+@contextmanager
 def premium_db():
     """Единая точка подключения к premium.sqlite3."""
-    con = sqlite3.connect(PREMIUM_DB_PATH)
-    con.row_factory = sqlite3.Row
-    return con
+    ensure_premium_db()
+    conn = sqlite3.connect(PREMIUM_DB_PATH)
+    conn.row_factory = sqlite3.Row
+    try:
+        yield conn
+    finally:
+        conn.close()
+
     
 def _to_utc(dt: datetime) -> datetime:
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
