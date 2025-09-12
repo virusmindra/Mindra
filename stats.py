@@ -17,6 +17,11 @@ DATA_DIR = os.getenv("DATA_DIR", "data")
 os.makedirs(DATA_DIR, exist_ok=True)
 REMIND_DB_PATH = os.getenv("REMIND_DB_PATH", os.path.join(DATA_DIR, "reminders.sqlite3"))
 
+PLAN_FREE = "free"
+PLAN_PLUS = "plus"
+PLAN_PRO  = "pro"
+ALL_PLANS = {PLAN_FREE, PLAN_PLUS, PLAN_PRO}
+
 def ensure_remind_db():
     with sqlite3.connect(REMIND_DB_PATH) as db:
         # Базовая схема (run_at допускает NULL — удобнее для миграций)
@@ -94,58 +99,39 @@ def remind_db():
 
 
 def ensure_premium_db():
-    """Создаёт/мигрирует схему premium + referrals под PLUS/PRO."""
-    os.makedirs(DATA_DIR, exist_ok=True)
     with sqlite3.connect(PREMIUM_DB_PATH) as db:
-        # --- основная таблица подписок ---
+        # основная таблица подписки: два поля-эпохи (сек) для Mindra+ и Pro
         db.execute("""
             CREATE TABLE IF NOT EXISTS premium (
                 user_id    TEXT PRIMARY KEY,
-                plus_until INTEGER NOT NULL DEFAULT 0,  -- Mindra+
-                pro_until  INTEGER NOT NULL DEFAULT 0   -- Mindra Pro
+                plus_until INTEGER NOT NULL DEFAULT 0,
+                pro_until  INTEGER NOT NULL DEFAULT 0
             );
         """)
+        # совместимость со старой колонкой "until" (если была)
         cols = {r[1] for r in db.execute("PRAGMA table_info(premium);")}
-        # миграция со старой схемы: была колонка until (ISO)
-        if "until" in cols:
-            # добавим новые колонки, если вдруг нет
-            if "plus_until" not in cols:
-                db.execute("ALTER TABLE premium ADD COLUMN plus_until INTEGER NOT NULL DEFAULT 0;")
-            if "pro_until" not in cols:
-                db.execute("ALTER TABLE premium ADD COLUMN pro_until  INTEGER NOT NULL DEFAULT 0;")
-            # перенесём значения until -> plus_until
-            for row in db.execute("SELECT user_id, until FROM premium;").fetchall():
-                ep = _iso_to_epoch_maybe(row[1])
-                if ep > 0:
-                    db.execute("UPDATE premium SET plus_until=? WHERE user_id=?;", (ep, row[0]))
-        else:
-            # на всякий — гарантируем наличие колонок
-            if "plus_until" not in cols:
-                db.execute("ALTER TABLE premium ADD COLUMN plus_until INTEGER NOT NULL DEFAULT 0;")
-            if "pro_until" not in cols:
-                db.execute("ALTER TABLE premium ADD COLUMN pro_until  INTEGER NOT NULL DEFAULT 0;")
+        if "plus_until" not in cols:
+            db.execute("ALTER TABLE premium ADD COLUMN plus_until INTEGER NOT NULL DEFAULT 0;")
+        if "pro_until" not in cols:
+            db.execute("ALTER TABLE premium ADD COLUMN pro_until  INTEGER NOT NULL DEFAULT 0;")
 
-        # --- вспомогательная таблица флагов (оставляем твою) ---
+        # флаги пользователя (триал, и пр.)
         db.execute("""
             CREATE TABLE IF NOT EXISTS user_flags (
                 user_id     TEXT PRIMARY KEY,
                 trial_given INTEGER NOT NULL DEFAULT 0,
-                created_at  TEXT  NOT NULL DEFAULT (datetime('now'))
+                created_at  INTEGER NOT NULL DEFAULT (strftime('%s','now'))
             );
         """)
 
-        # --- referrals ---
-        # Нормальная схема:
+        # учёт рефералов (по одному за приглашённого)
         db.execute("""
             CREATE TABLE IF NOT EXISTS referrals (
-                invitee_id TEXT PRIMARY KEY,   -- кто пришёл
-                inviter_id TEXT NOT NULL,      -- кто пригласил
-                created_at INTEGER NOT NULL    -- epoch
+                invitee_id TEXT PRIMARY KEY,
+                inviter_id TEXT NOT NULL,
+                created_at INTEGER NOT NULL
             );
         """)
-
-        # А если у тебя уже есть старая таблица с другими именами колонок — оставим её.
-        # Дальше process_referral сам определит, в какую писать.
 
         db.commit()
 
@@ -174,7 +160,7 @@ def ensure_premium_challenges():
 
 
 def _now_epoch() -> int:
-    return int(datetime.now(timezone.utc).timestamp())
+    return int(time.time())
 
 def _iso_to_epoch_maybe(s: str) -> int:
     """Преобразуем ISO8601/Z в epoch, безопасно."""
@@ -189,7 +175,6 @@ def _iso_to_epoch_maybe(s: str) -> int:
 
 @contextmanager
 def premium_db():
-    """Единая точка подключения к premium.sqlite3."""
     ensure_premium_db()
     conn = sqlite3.connect(PREMIUM_DB_PATH)
     conn.row_factory = sqlite3.Row
