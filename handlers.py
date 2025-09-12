@@ -816,19 +816,52 @@ def _menu_i18n(uid: str) -> dict:
 
 def _menu_header_text(uid: str) -> str:
     t = _menu_i18n(uid)
-    until = get_premium_until(uid)
-    if not until:
+
+    # текущий план: free / plus / pro
+    plan = plan_of(uid)
+
+    # бесплатный — короткий заголовок
+    if plan == PLAN_FREE:
         return f"*{t['title']}*\n{t['premium_none']}"
+
+    # читаем срок из новой таблицы premium (epoch сек)
+    until_epoch = 0
     try:
-        dt = datetime.fromisoformat(until)
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-        tz_name = user_timezones.get(uid, "Europe/Kyiv")
-        dt_local = dt.astimezone(ZoneInfo(tz_name))
-        until_str = dt_local.strftime("%Y-%m-%d %H:%M")
+        with premium_db() as db:
+            row = db.execute(
+                "SELECT plus_until, pro_until FROM premium WHERE user_id=?;",
+                (str(uid),)
+            ).fetchone()
+            if row:
+                until_epoch = row["pro_until"] if plan == PLAN_PRO else row["plus_until"]
     except Exception:
-        until_str = until
-    return f"*{t['title']}*\n{t['premium_until'].format(until=until_str)}"
+        until_epoch = 0
+
+    # локаль и лейбл плана
+    lang = user_languages.get(uid, "ru")
+    tz_name = user_timezones.get(uid, "Europe/Kyiv")
+    plan_label = PLAN_LABELS.get(lang, PLAN_LABELS["ru"]).get(plan, plan)
+
+    # форматируем дату локально пользователю (если есть)
+    until_str = "—"
+    if until_epoch and int(until_epoch) > 0:
+        try:
+            dt_local = datetime.fromtimestamp(int(until_epoch), tz=timezone.utc).astimezone(ZoneInfo(tz_name))
+            until_str = dt_local.strftime("%Y-%m-%d %H:%M")
+        except Exception:
+            try:
+                until_str = datetime.utcfromtimestamp(int(until_epoch)).strftime("%Y-%m-%d %H:%M")
+            except Exception:
+                until_str = str(until_epoch)
+
+    # если в i18n есть ключ с планом — используем его; иначе — старый ключ
+    if "premium_until_plan" in t:
+        body = t["premium_until_plan"].format(plan=plan_label, until=until_str)
+    else:
+        # fallback без названия плана
+        body = t.get("premium_until", "{until}").format(until=until_str)
+
+    return f"*{t['title']}*\n{body}"
 
 def _engine_label(uid: str) -> str:
     eng = _vp(uid).get("engine", "gTTS")
