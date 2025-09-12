@@ -143,53 +143,27 @@ from storage import delete_goal, load_goals, save_goals, add_goal, get_goals, ge
 from random import randint, choice
 from stats import (
     # --- constants ---
-    ADMIN_USER_IDS,
-    OWNER_ID,
-    STATS_FILE,
-    GOALS_FILE,
-    HABITS_FILE,
-    DATA_DIR,
-    REMIND_DB_PATH,
-    PREMIUM_DB_PATH,
+    ADMIN_USER_IDS, OWNER_ID,
+    STATS_FILE, GOALS_FILE, HABITS_FILE,
+    DATA_DIR, REMIND_DB_PATH, PREMIUM_DB_PATH,
 
     # --- reminders DB ---
-    ensure_remind_db,
-    remind_db,
-    premium_db,
+    ensure_remind_db, remind_db, premium_db,
 
     # --- premium/subscription ---
-    ensure_premium_db,
-    migrate_premium_from_stats,
-    ensure_premium_challenges,
-    get_premium_until,
-    set_premium_until,
-    set_premium_until_dt,
-    extend_premium_days,
-    is_premium_db,
-    _parse_any_dt,
+    ensure_premium_db, ensure_premium_challenges, migrate_premium_from_stats,
+    get_premium_until, set_premium_until, set_premium_until_dt, extend_premium_days,
+    is_premium, is_premium_db, plan_of, has_plus, has_pro, has_feature, quota,
+    grant_plus_days, grant_pro_days, reminders_active_limit,
 
-    # --- trials & referrals ---
-    grant_trial_if_eligible,
-    process_referral,
-    got_trial,
-    set_trial,
-    got_referral,
-    set_referral,
-    add_referral,
+    # --- trials & referrals (новые) ---
+    trial_was_given, mark_trial_given, grant_trial_if_eligible, process_referral,
 
     # --- points & titles ---
-    add_points,
-    get_user_points,
-    get_user_title,
-    get_next_title_info,
-    build_titles_ladder,
+    add_points, get_user_points, get_user_title, get_next_title_info, build_titles_ladder,
 
     # --- user stats ---
-    load_stats,
-    save_stats,
-    get_stats,
-    get_user_stats,
-    _collect_activity_dates,
+    load_stats, save_stats, get_stats, get_user_stats, _collect_activity_dates,
 )
 global user_timezones
 from zoneinfo import ZoneInfo
