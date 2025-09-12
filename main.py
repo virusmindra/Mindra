@@ -153,10 +153,23 @@ def schedule_daily_reminder(job_queue):
 
 
 async def error_handler(update, context):
-    logging.error(msg="Exception while handling an update:", exc_info=context.error)
-    if update and update.effective_message:
-        await update.effective_message.reply_text("😵 Ой, что-то пошло не так. Я уже разбираюсь с этим.")
+    err = context.error
 
+    # мягко игнорируем типичные сетевые обрывы long-poll
+    if isinstance(err, (NetworkError, TimedOut)):
+        msg = str(err) or ""
+        if "httpx.ReadError" in msg or "Timed out" in msg:
+            # тихий лог на уровне info
+            logging.info(f"Network glitch during getUpdates: {msg}")
+            return
+
+    # остальное логируем как ошибку и уведомляем пользователя (если уместно)
+    logging.error("Exception while handling an update:", exc_info=err)
+    try:
+        if update and update.effective_message:
+            await update.effective_message.reply_text("😵 Ой, что-то пошло не так. Я уже разбираюсь с этим.")
+    except Exception:
+        pass
 
 async def main():
     # Клиент с расширенными таймаутами
