@@ -282,18 +282,6 @@ def reminders_active_count(uid: str) -> int:
     except Exception:
         return 0
 
-def reminders_active_limit(uid: str) -> int:
-    # Сначала пробуем через твою систему квот
-    try:
-        lim = int(quota(uid, "reminders_active"))
-        if lim > 0:
-            return lim
-    except Exception:
-        pass
-    # Фолбэк по тарифам: free=1, Mindra+=5, Pro=безлим (если есть фича)
-    if has_feature(uid, "reminders_unlimited"):
-        return 10**9
-    return 5 if is_premium(uid) else 1
 
 def _limit_text(lang: str, limit: int) -> str:
     t = REMIND_TEXTS.get(lang, REMIND_TEXTS["ru"])
