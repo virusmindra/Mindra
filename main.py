@@ -91,12 +91,33 @@ def _ensure_single_job(job_queue, name: str):
     except Exception:
         pass
 
-def schedule_custom_reminders(job_queue, app):
-    _ensure_single_job(job_queue, CUSTOM_JOB_NAME)
-    job_queue.run_repeating(
-        lambda context: asyncio.create_task(check_custom_reminders(app)),
-        interval=60, first=5, name=CUSTOM_JOB_NAME
-    )
+def schedule_custom_reminders(job_queue, app=None):
+    """
+    Регистрирует периодическую задачу check_custom_reminders.
+    Поддерживает оба варианта:
+      - schedule_custom_reminders(app.job_queue)             # без app
+      - schedule_custom_reminders(app.job_queue, app)        # с app (для обёртки)
+    """
+    # убрать возможные дубли по имени
+    for j in job_queue.get_jobs_by_name(CUSTOM_JOB_NAME):
+        j.schedule_removal()
+
+    # Если check_custom_reminders ожидает app (как раньше) — обернём лямбдой.
+    if app is not None:
+        job_queue.run_repeating(
+            lambda context: asyncio.create_task(check_custom_reminders(app)),
+            interval=60,
+            first=5,
+            name=CUSTOM_JOB_NAME,
+        )
+    else:
+        # Если check_custom_reminders уже принимает context — можно вызывать напрямую.
+        job_queue.run_repeating(
+            check_custom_reminders,
+            interval=60,
+            first=5,
+            name=CUSTOM_JOB_NAME,
+        )
 
 def schedule_idle_reminders(job_queue, app):
     _ensure_single_job(job_queue, "idle_reminders")
