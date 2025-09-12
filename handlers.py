@@ -1331,13 +1331,6 @@ def set_plan(uid: str, plan: str, days: int | None = None):
     db.commit()
     db.close()
 
-def has_feature(uid: str, feature: str) -> bool:
-    return FEATURE_MATRIX.get(current_plan(uid), {}).get(feature, False)
-
-def quota(uid: str, key: str) -> int:
-    return QUOTAS.get(current_plan(uid), {}).get(key, 0)
-    
-
 def _resolve_asset_path(rel_path: str | None) -> str | None:
     """Преобразует относительный путь из BGM_PRESETS в абсолютный (на всякий)."""
     if not rel_path:
