@@ -558,3 +558,128 @@ def get_user_stats(user_id: str):
         "completed_habits": completed_habits,
         "completed_habits_today": completed_habits_today,
     }
+
+
+def grant_plus_days(uid: str, days: int) -> str:
+    """Продлевает Mindra+ на N дней. Возвращает ISO (UTC) окончания."""
+    uid = str(uid)
+    with premium_db() as db:
+        row = db.execute("SELECT plus_until FROM premium WHERE user_id=?;", (uid,)).fetchone()
+        now = _now_epoch()
+        base = max(now, (row["plus_until"] if row else 0))
+        new_until = base + days * 86400
+        if row:
+            db.execute("UPDATE premium SET plus_until=? WHERE user_id=?;", (new_until, uid))
+        else:
+            db.execute("INSERT INTO premium (user_id, plus_until, pro_until) VALUES (?, ?, 0);", (uid, new_until))
+        db.commit()
+    return datetime.fromtimestamp(new_until, tz=timezone.utc).isoformat()
+
+def grant_pro_days(uid: str, days: int) -> str:
+    uid = str(uid)
+    with premium_db() as db:
+        row = db.execute("SELECT pro_until FROM premium WHERE user_id=?;", (uid,)).fetchone()
+        now = _now_epoch()
+        base = max(now, (row["pro_until"] if row else 0))
+        new_until = base + days * 86400
+        if row:
+            db.execute("UPDATE premium SET pro_until=? WHERE user_id=?;", (new_until, uid))
+        else:
+            db.execute("INSERT INTO premium (user_id, plus_until, pro_until) VALUES (?, 0, ?);", (uid, new_until))
+        db.commit()
+    return datetime.fromtimestamp(new_until, tz=timezone.utc).isoformat()
+
+def has_plus(uid: str) -> bool:
+    with premium_db() as db:
+        row = db.execute("SELECT plus_until FROM premium WHERE user_id=?;", (str(uid),)).fetchone()
+    return bool(row and row["plus_until"] > _now_epoch())
+
+def has_pro(uid: str) -> bool:
+    with premium_db() as db:
+        row = db.execute("SELECT pro_until FROM premium WHERE user_id=?;", (str(uid),)).fetchone()
+    return bool(row and row["pro_until"] > _now_epoch())
+
+def is_premium(uid: str, tier: str = "any") -> bool:
+    """tier: 'plus' | 'pro' | 'any'"""
+    if tier == "plus":
+        return has_plus(uid)
+    if tier == "pro":
+        return has_pro(uid)
+    return has_plus(uid) or has_pro(uid)
+
+def plan_of(uid: str) -> str:
+    """Возвращает PLAN_FREE / PLAN_PLUS / PLAN_PRO."""
+    if has_pro(uid):
+        return PLAN_PRO
+    if has_plus(uid):
+        return PLAN_PLUS
+    return PLAN_FREE
+
+# Хелперы для твоих ограничений
+def has_feature(uid: str, feature_key: str) -> bool:
+    plan = plan_of(uid)
+    return bool(FEATURE_MATRIX.get(plan, {}).get(feature_key, False))
+
+def quota(uid: str, key: str) -> int:
+    plan = plan_of(uid)
+    return int(QUOTAS.get(plan, {}).get(key, 0))
+
+# (если используешь в разных местах удобные геттеры)
+def reminders_active_limit(uid: str) -> int:
+    return quota(uid, "reminders_max") or 0
+
+def _referrals_table_shape(db) -> str:
+    """Определяем, какая таблица рефералок есть: 'new' | 'old' | 'none'."""
+    tbs = {r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table';")}
+    if "referrals" in tbs:
+        cols = {r[1] for r in db.execute("PRAGMA table_info(referrals);")}
+        if {"invitee_id", "inviter_id", "created_at"} <= cols:
+            return "new"
+    if "referrals" in tbs:
+        cols = {r[1] for r in db.execute("PRAGMA table_info(referrals);")}
+        if {"invited_user_id", "inviter_user_id", "granted_days"}.issubset(cols):
+            return "old"
+    return "none"
+
+def process_referral(inviter_id: str, invitee_id: str, days: int = 7) -> bool:
+    """
+    Фиксирует факт приглашения один раз на invitee и даёт пригласившему +days Mindra+.
+    Возвращает True, если зачисление выполнено (не было ранее).
+    """
+    inviter_id = str(inviter_id); invitee_id = str(invitee_id)
+    if not inviter_id or not invitee_id or inviter_id == invitee_id:
+        return False
+
+    with premium_db() as db:
+        shape = _referrals_table_shape(db)
+        if shape == "new":
+            exists = db.execute("SELECT 1 FROM referrals WHERE invitee_id=?;", (invitee_id,)).fetchone()
+            if exists:
+                return False
+            db.execute("INSERT INTO referrals (invitee_id, inviter_id, created_at) VALUES (?, ?, ?);",
+                       (invitee_id, inviter_id, _now_epoch()))
+        elif shape == "old":
+            exists = db.execute("SELECT 1 FROM referrals WHERE invited_user_id=?;", (invitee_id,)).fetchone()
+            if exists:
+                return False
+            db.execute("INSERT INTO referrals (invited_user_id, inviter_user_id, granted_days) VALUES (?, ?, ?);",
+                       (invitee_id, inviter_id, days))
+        else:
+            # если таблицы не оказалось (маловероятно) — создадим новую и продолжим
+            db.execute("""
+                CREATE TABLE IF NOT EXISTS referrals (
+                    invitee_id TEXT PRIMARY KEY,
+                    inviter_id TEXT NOT NULL,
+                    created_at INTEGER NOT NULL
+                );
+            """)
+            db.execute("INSERT INTO referrals (invitee_id, inviter_id, created_at) VALUES (?, ?, ?);",
+                       (invitee_id, inviter_id, _now_epoch()))
+        db.commit()
+
+    # Бонус — именно Mindra+ (не Pro)
+    try:
+        grant_plus_days(inviter_id, days)
+    except Exception as e:
+        logging.warning("grant_plus_days (referral) failed: %s", e)
+    return True
