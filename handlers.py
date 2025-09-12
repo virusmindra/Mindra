@@ -4068,16 +4068,15 @@ async def tz_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # ==== ВАРИАНТ: ОНБОРДИНГ (с бонусами/рефералом/приветствием)
     try:
-        try:
-            await q.edit_message_text(
+        await q.edit_message_text(
             t["saved"].format(tz=tz, local_time=local_str),
-            parse_mode="Markdown"
+            parse_mode="Markdown",
         )
     except BadRequest:
         await context.bot.send_message(
             chat_id=int(uid),
             text=t["saved"].format(tz=tz, local_time=local_str),
-            parse_mode="Markdown"
+            parse_mode="Markdown",
         )
     finally:
         # После установки часового пояса освобождаем UI-сообщение,
@@ -4141,9 +4140,6 @@ async def tz_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     first_name = q.from_user.first_name or {"ru":"друг","uk":"друже","en":"friend"}.get(lang, "друг")
     welcome_text = WELCOME_TEXTS.get(lang, WELCOME_TEXTS["ru"]).format(first_name=first_name)
     await context.bot.send_message(chat_id=int(uid), text=welcome_text, parse_mode="Markdown")
-
-except Exception as e:
-    logging.exception(f"onboarding finalize error: {e}")
 
 async def show_timezone_menu(msg, origin: str = "settings"):
     uid = str(msg.chat.id)
