@@ -1286,38 +1286,28 @@ def upsell_for(uid: str, feature_key: str, extra: dict | None = None) -> tuple[s
 
 
 def current_plan(uid: str) -> str:
-    try:
-        db = sqlite3.connect(DB_PATH)
-        row = db.execute("SELECT plan, expires_utc FROM subscriptions WHERE user_id=?",
-                         (uid,)).fetchone()
-        db.close()
-        if not row:
-            return PLAN_FREE
-        plan, exp = row
-        if plan in (PLAN_PLUS, PLAN_PRO) and exp:
-            try:
-                if datetime.fromisoformat(exp) < datetime.now(timezone.utc):
-                    return PLAN_FREE
-            except Exception:
-                pass
-        return plan if plan in ALL_PLANS else PLAN_FREE
-    except Exception:
-        return PLAN_FREE
+    if has_pro(uid):  return PLAN_PRO
+    if has_plus(uid): return PLAN_PLUS
+    return PLAN_FREE
 
 def set_plan(uid: str, plan: str, days: int | None = None):
-    plan = plan if plan in ALL_PLANS else PLAN_FREE
-    exp = None
-    if plan in (PLAN_PLUS, PLAN_PRO) and days:
-        exp = (datetime.now(timezone.utc) + timedelta(days=days)).isoformat()
-    now = datetime.now(timezone.utc).isoformat()
-    db = sqlite3.connect(DB_PATH)
-    db.execute("""
-        INSERT INTO subscriptions(user_id, plan, expires_utc, updated_at)
-        VALUES(?,?,?,?)
-        ON CONFLICT(user_id) DO UPDATE SET plan=excluded.plan, expires_utc=excluded.expires_utc, updated_at=excluded.updated_at
-    """, (uid, plan, exp, now))
-    db.commit()
-    db.close()
+    """Обёртка над новой моделью. days можно 0/None — тогда просто сброс/продление без дней."""
+    uid = str(uid)
+    plan = plan if plan in (PLAN_FREE, PLAN_PLUS, PLAN_PRO) else PLAN_FREE
+    if plan == PLAN_FREE:
+        with premium_db() as db:
+            db.execute("""
+                INSERT INTO premium(user_id, plus_until, pro_until)
+                VALUES(?, 0, 0)
+                ON CONFLICT(user_id) DO UPDATE SET plus_until=0, pro_until=0;
+            """, (uid,))
+            db.commit()
+        return
+    if plan == PLAN_PLUS:
+        return grant_plus_days(uid, days or 0)
+    if plan == PLAN_PRO:
+        return grant_pro_days(uid, days or 0)
+
 
 def _resolve_asset_path(rel_path: str | None) -> str | None:
     """Преобразует относительный путь из BGM_PRESETS в абсолютный (на всякий)."""
