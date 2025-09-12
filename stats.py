@@ -246,28 +246,6 @@ def referral_already_claimed(invited_id) -> bool:
         row = db.execute("SELECT 1 FROM referrals WHERE invited_user_id=?;", (str(invited_id),)).fetchone()
         return row is not None
 
-def process_referral(inviter_id, invited_id, days: int = 7) -> bool:
-    """Выдаёт приглашённому trial на N дней (если возможно) и помечает рефералку.
-       Возвращает True, если зачли рефералку (даже если trial не выдали из-за ранее выданного)."""
-    inviter_id = str(inviter_id); invited_id = str(invited_id)
-    if inviter_id == invited_id:
-        return False
-    if referral_already_claimed(invited_id):
-        return False
-
-    # пробуем выдать приглашённому 7-дневный триал
-    try:
-        grant_trial_if_eligible(invited_id, int(days))
-    except Exception as e:
-        logging.warning("Referral grant failed for %s: %s", invited_id, e)
-
-    with sqlite3.connect(PREMIUM_DB_PATH) as db:
-        db.execute(
-            "INSERT INTO referrals(invited_user_id, inviter_user_id, granted_days) VALUES(?,?,?);",
-            (invited_id, inviter_id, int(days))
-        )
-        db.commit()
-    return True
 
 def _parse_any_dt(val: str) -> datetime:
     v = str(val).strip()
