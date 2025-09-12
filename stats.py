@@ -390,6 +390,10 @@ def extend_premium_days(user_id: str | int, days: int, tier: str | None = None) 
         set_premium_until(uid, new_dt)  # по умолчанию — как Mindra+
         return new_dt.isoformat()
 
+def is_premium_db(user_id) -> bool:
+    """Совместимость со старым импортом — прокси на новую is_premium()."""
+    return is_premium(user_id, tier="any")
+
 def grant_trial_if_eligible(user_id, days: int) -> str | None:
     """
     Даёт триал Mindra+ (если ещё не давали и нет активного премиума).
