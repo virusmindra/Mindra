@@ -955,12 +955,6 @@ def _vm_i18n(uid: str) -> dict:
     lang = user_languages.get(uid, "ru")
     return VOICE_UI_TEXTS.get(lang, VOICE_UI_TEXTS["ru"])
 
-def is_premium(user_id) -> bool:
-    # админы — всегда премиум
-    if str(user_id) in ADMIN_USER_IDS:
-        return True
-    return is_premium_db(user_id)
-
 def _rem_suggest_i18n(uid: str) -> dict:
     lang = user_languages.get(uid, "ru")
     return REMIND_SUGGEST_TEXTS.get(lang, REMIND_SUGGEST_TEXTS["ru"])
