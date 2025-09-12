@@ -631,7 +631,15 @@ def quota(uid: str, key: str) -> int:
 
 # (если используешь в разных местах удобные геттеры)
 def reminders_active_limit(uid: str) -> int:
-    return quota(uid, "reminders_max") or 0
+    try:
+        lim = int(quota(uid, "reminders_active"))
+        if lim > 0:
+            return lim
+    except Exception:
+        pass
+    if has_feature(uid, "reminders_unlimited"):
+        return 10**9
+    return 5 if is_premium(uid) else 1
 
 def _referrals_table_shape(db) -> str:
     """Определяем, какая таблица рефералок есть: 'new' | 'old' | 'none'."""
