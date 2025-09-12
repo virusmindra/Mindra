@@ -3,6 +3,7 @@ import logging
 import asyncio
 import pytz
 from datetime import datetime, timezone, timedelta, time
+from telegram.error import NetworkError, TimedOut
 from telegram.ext import (
     ApplicationBuilder,
     MessageHandler,
@@ -179,35 +180,38 @@ async def error_handler(update, context):
         pass
 
 async def main():
-    # Клиент с расширенными таймаутами
+    # HTTPX с расширенными таймаутами (для голосовых и т.п.)
     request = HTTPXRequest(
         connect_timeout=30,
         read_timeout=60,
         write_timeout=60,
         pool_timeout=60,
     )
-    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).request(request).build()
 
-    # Базы/миграции ДО старта
+    app = (
+        ApplicationBuilder()
+        .token(TELEGRAM_BOT_TOKEN)
+        .request(request)
+        .build()
+    )
+
+    # --- БД/миграции до старта (однократно при запуске) ---
     ensure_remind_db()
     ensure_premium_db()
     ensure_premium_challenges()
     migrate_premium_from_stats(load_stats)
 
-    # Хендлеры
+    # --- Хендлеры ---
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
     app.add_handler(MessageHandler(filters.VOICE, handle_voice))
-    for handler in handlers:
-        app.add_handler(handler)
+    for h in handlers:
+        app.add_handler(h)
     app.add_error_handler(error_handler)
 
-    # === Ручной жизненный цикл без run_polling ===
-    await app.initialize()
-    await app.start()
-
-    # Планирование джоб (после start)
-    schedule_idle_reminders(app.job_queue, app)
-    schedule_custom_reminders(app.job_queue, app)
+    # --- Планирование задач через JobQueue (можно до run_polling) ---
+    # (!) Если сигнатуры у тебя другие — оставь свои вызовы.
+    schedule_idle_reminders(app.job_queue, app)   # твой helper
+    schedule_custom_reminders(app.job_queue)      # твой helper с CUSTOM_JOB_NAME
     schedule_evening_checkin(app.job_queue)
     schedule_daily_task(app.job_queue)
     schedule_support_messages(app.job_queue)
@@ -215,27 +219,13 @@ async def main():
     schedule_weekly_report(app.job_queue)
     schedule_daily_reminder(app.job_queue)
 
-    # Восстановить все запланированные напоминания
+    # Восстановление всех напоминаний из БД
     await restore_reminder_jobs(app.job_queue)
 
-    # Запуск long-polling
-    await app.updater.start_polling()
+    # --- Старт long-polling (Application сам управляет loop) ---
+    import logging
     logging.info("🤖 Бот запущен!")
-
-    # Блокируемся до сигнала остановки
-    stop_event = asyncio.Event()
-    try:
-        await stop_event.wait()   # будет отменено SIGTERM/SIGINT средой деплоя
-    finally:
-        # Корректная остановка
-        try:
-            await app.updater.stop()
-        except Exception:
-            pass
-        await app.stop()
-        await app.shutdown()
-
+    await app.run_polling(close_loop=False)
 
 if __name__ == "__main__":
-    import asyncio
     asyncio.run(main())
