@@ -4066,66 +4066,48 @@ async def tz_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="Markdown",
         )
 
-# ==== ВАРИАНТ: ОНБОРДИНГ (с бонусами/рефералом/приветствием)
-    try:
-        await q.edit_message_text(
-            t["saved"].format(tz=tz, local_time=local_str),
-            parse_mode="Markdown",
-        )
-    except BadRequest:
-        await context.bot.send_message(
-            chat_id=int(uid),
-            text=t["saved"].format(tz=tz, local_time=local_str),
-            parse_mode="Markdown",
-        )
-    finally:
-        # После установки часового пояса освобождаем UI-сообщение,
-        # чтобы команда /menu выводила новое меню отдельным сообщением.
-        context.user_data.pop(UI_MSG_KEY, None)
+# === ФИНАЛ ОНБОРДИНГА: реферал или триал ===
+try:
+    # 1) Вытащим реферера из /start payload
+    raw_payload = user_ref_args.pop(uid, None)
+    referrer_id = _resolve_referrer_id(raw_payload)
 
-    # === РЕФЕРАЛКА + MINDRA+ ===
-    try:
+    if referrer_id and referrer_id != uid:
+        # --- СЦЕНАРИЙ: пользователь пришёл по приглашению ---
         granted_to_referrer = False
-
-        # кто пригласил (из /start payload, мог быть ref_... и т.п.)
-        raw_payload = user_ref_args.pop(uid, None)
-        referrer_id = _resolve_referrer_id(raw_payload)
-
-        if referrer_id and referrer_id != uid:
-            try:
-                # зачисляем ИМЕННО Mindra+ пригласившему (внутри process_referral → grant_plus_days)
-                granted_to_referrer = process_referral(referrer_id, uid, days=7)
-            except Exception as e:
-                logging.warning("process_referral failed: %s", e)
-
-        # бонус приглашённому — Mindra+
         try:
-            grant_plus_days(uid, 7)  # если уже выдано где-то ещё — эта функция может быть идемпотентной
+            # пригласившему — +7 дней Mindra+
+            granted_to_referrer = process_referral(referrer_id, uid, days=7)
+        except Exception as e:
+            logging.warning("process_referral failed: %s", e)
+
+        # приглашённому — +7 дней Mindra+
+        try:
+            iso_until = grant_plus_days(uid, 7)
             bonus_text = REFERRAL_BONUS_TEXT.get(lang, REFERRAL_BONUS_TEXT["ru"])
             await context.bot.send_message(chat_id=int(uid), text=bonus_text, parse_mode="Markdown")
         except Exception as e:
             logging.warning("grant_plus_days for invitee failed: %s", e)
 
-        # уведомляем приглашавшего, если начисление прошло
+        # уведомим пригласившего, если всё ок
         if granted_to_referrer:
             try:
                 notify_text = REFERRER_NOTIFY_TEXT.get(lang, REFERRER_NOTIFY_TEXT["ru"])
                 await context.bot.send_message(chat_id=int(referrer_id), text=notify_text, parse_mode="Markdown")
             except Exception:
                 pass
-    except Exception as e:
-        logging.warning("referral finalize block failed: %s", e)
 
-    # 2) Триал
-    try:
-        granted_until_iso = grant_trial_if_eligible(uid, days=3)
-        if granted_until_iso:
-            txt = TRIAL_INFO_TEXT.get(lang, TRIAL_INFO_TEXT["ru"]).format(until=granted_until_iso)
-            await context.bot.send_message(chat_id=int(uid), text=txt, parse_mode="Markdown")
-    except Exception as e:
-        logging.warning("Trial grant failed: %s", e)
+    else:
+        # --- СЦЕНАРИЙ: пользователь без приглашения — даём триал 3 дня Mindra+ (один раз) ---
+        try:
+            granted_until_iso = grant_trial_if_eligible(uid, days=3)
+            if granted_until_iso:
+                txt = TRIAL_INFO_TEXT.get(lang, TRIAL_INFO_TEXT["ru"]).format(until=granted_until_iso)
+                await context.bot.send_message(chat_id=int(uid), text=txt, parse_mode="Markdown")
+        except Exception as e:
+            logging.warning("Trial grant failed: %s", e)
 
-    # 3) Инициализация system prompt/истории
+    # (дальше — твоя инициализация промпта/истории и welcome)
     try:
         mode = "support"
         lang_prompt = LANG_PROMPTS.get(lang, LANG_PROMPTS["ru"])
@@ -4136,10 +4118,12 @@ async def tz_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logging.warning("history init failed: %s", e)
 
-    # 4) Welcome
     first_name = q.from_user.first_name or {"ru":"друг","uk":"друже","en":"friend"}.get(lang, "друг")
     welcome_text = WELCOME_TEXTS.get(lang, WELCOME_TEXTS["ru"]).format(first_name=first_name)
     await context.bot.send_message(chat_id=int(uid), text=welcome_text, parse_mode="Markdown")
+
+except Exception as e:
+    logging.exception(f"onboarding finalize error: {e}")
 
 async def show_timezone_menu(msg, origin: str = "settings"):
     uid = str(msg.chat.id)
