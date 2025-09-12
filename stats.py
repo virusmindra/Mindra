@@ -599,13 +599,18 @@ def has_pro(uid: str) -> bool:
         row = db.execute("SELECT pro_until FROM premium WHERE user_id=?;", (str(uid),)).fetchone()
     return bool(row and row["pro_until"] > _now_epoch())
 
-def is_premium(uid: str, tier: str = "any") -> bool:
-    """tier: 'plus' | 'pro' | 'any'"""
+def is_premium(user_id, tier: str = "any") -> bool:
+    """tier: 'plus' | 'pro' | 'any'."""
+    uid = str(user_id)
+    # админы — всегда премиум
+    if uid in ADMIN_USER_IDS:
+        return True
     if tier == "plus":
         return has_plus(uid)
     if tier == "pro":
         return has_pro(uid)
     return has_plus(uid) or has_pro(uid)
+
 
 def plan_of(uid: str) -> str:
     """Возвращает PLAN_FREE / PLAN_PLUS / PLAN_PRO."""
