@@ -6500,7 +6500,10 @@ handlers = [
     CommandHandler("start", start),
     CommandHandler("menu", menu_cmd),
     CallbackQueryHandler(menu_cb, pattern=r"^m:"),
-
+    CommandHandler("diag", diag_command),
+    CommandHandler("fixkb", fixkb_command),
+    CommandHandler("plan", plan_command),
+    
     # --- Язык / Настройки
     CommandHandler("language", language_command),
     CallbackQueryHandler(language_callback, pattern=r"^lang_"),
