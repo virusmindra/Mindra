@@ -269,35 +269,48 @@ CB = "ui:"
 CHALLENGE_POINTS = int(os.getenv("CHALLENGE_POINTS", 25)) 
 
 
-# Лейбл кнопки меню внизу (по языкам)
-MENU_BTN_LABELS = {
-    "ru": "🏠 Меню",
-    "uk": "🏠 Меню",
-    "en": "🏠 Menu",
-    "md": "🏠 Meniu",
-    "be": "🏠 Меню",
-    "kk": "🏠 Мәзір",
-    "kg": "🏠 Меню",
-    "hy": "🏠 Մենիու",
-    "ka": "🏠 მენიუ",
-    "ce": "🏠 Меню",
-}
-
-def main_reply_kb(uid: str) -> ReplyKeyboardMarkup:
-    lang = user_languages.get(uid, "ru")
-    label = MENU_BTN_LABELS.get(lang, MENU_BTN_LABELS["ru"])
-    return ReplyKeyboardMarkup(
-        [[KeyboardButton(label)]],
-        resize_keyboard=True,
-        one_time_keyboard=False,
-        selective=False,
-        input_field_placeholder=None,
-    )
+HOUSE = "🏠"
 
 def menu_button_label(uid: str) -> str:
     lang = user_languages.get(uid, "ru")
-    return MENU_BTN_LABELS.get(lang, MENU_BTN_LABELS["ru"])
+    return {
+        "ru": f"{HOUSE} Меню",
+        "uk": f"{HOUSE} Меню",
+        "md": f"{HOUSE} Meniu",
+        "be": f"{HOUSE} Меню",
+        "kk": f"{HOUSE} Мәзір",
+        "kg": f"{HOUSE} Меню",
+        "hy": f"{HOUSE} Մենյու",
+        "ka": f"{HOUSE} მენიუ",
+        "ce": f"{HOUSE} Меню",
+        "en": f"{HOUSE} Menu",
+    }.get(lang, f"{HOUSE} Menu")
 
+
+def main_reply_kb(uid: str) -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        [[KeyboardButton(menu_button_label(uid))]],
+        resize_keyboard=True,
+        one_time_keyboard=False,
+        selective=False,
+        input_field_placeholder=menu_button_label(uid),
+    )
+
+# Нормализация текста, чтобы понять, что пользователь нажал «меню»
+_MENU_WORDS = {"menu","меню","meniu","мəzір","мэзір","մենյու","მენიუ"}  # хватит с запасом
+
+def _normalize_menu_text(s: str) -> str:
+    if not s:
+        return ""
+    # убрать домик/эмодзи/двойные пробелы/знаки препинания
+    s = re.sub(r"[\U0001F3E0]", "", s)        # домик
+    s = re.sub(r"[^\w\s]", "", s)             # пунктуация
+    s = re.sub(r"\s+", " ", s).strip().lower()
+    return s
+
+def is_menu_request(text: str) -> bool:
+    t = _normalize_menu_text(text)
+    return t in _MENU_WORDS or t == "menu"  # на всякий
 
 
 
