@@ -757,28 +757,32 @@ FEATURE_MATRIX = {
 # ==== QUOTAS (числовые лимиты по планам) ====
 QUOTAS = {
     PLAN_FREE: {
-        "daily_messages": 10,
-        "goals_max": 3,
-        "habits_max": 3,
-        "reminders_max": 3,
-        "sleep_max_minutes": 15,    # максимум длительность /sleep
-        "story_max_paras": 5,       # «short»
+        "daily_messages": 10,   # хватит «познакомиться», но быстро кончится
+        "goals_max": 2,
+        "habits_max": 2,
+        "reminders_active": 1,  # одновременно активных
+        "reminders_max": 3,     # если где-то считаешь общее число
+        "sleep_max_minutes": 10,
+        "story_max_paras": 4,   # короткие истории
     },
     PLAN_PLUS: {
-        "daily_messages": 100,
-        "goals_max": 20,
-        "habits_max": 20,
+        "daily_messages": 50,   # комфортно для повседневки (можно 60–75, если щедрее)
+        "goals_max": 10,
+        "habits_max": 10,
+        "reminders_active": 20,
         "reminders_max": 50,
-        "sleep_max_minutes": 90,
-        "story_max_paras": 8,       # medium
+        "sleep_max_minutes": 60,
+        "story_max_paras": 8,   # medium
     },
     PLAN_PRO: {
-        "daily_messages": 1000,
-        "goals_max": 100,
-        "habits_max": 100,
+        # «почти безлимит», но оставим технический потолок, чтобы себя защитить
+        "daily_messages": 500,  # для пользователя это ≈безлим
+        "goals_max": 50,
+        "habits_max": 50,
+        "reminders_active": 100,
         "reminders_max": 200,
         "sleep_max_minutes": 240,
-        "story_max_paras": 12,      # long
+        "story_max_paras": 12,  # long
     },
 }
 
