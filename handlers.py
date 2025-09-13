@@ -5621,6 +5621,13 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # 🌐 язык
     lang_code = user_languages.get(user_id, "ru")
 
+    # ── Переход в меню по кнопке "🏠 Меню" (ReplyKeyboard)
+    try:
+        if user_input.strip() == menu_button_label(user_id):
+            return await menu_cmd(update, context)
+    except Exception as e:
+        logging.debug(f"menu button check skipped: {e}")
+
     # === РАННИЙ ПЕРЕХВАТ НАМЕРЕНИЯ «НАПОМНИ» ===
     try:
         if _has_remind_intent(user_input, lang_code):
@@ -5715,6 +5722,7 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             ERROR_MESSAGES_BY_LANG.get(lang_code, ERROR_MESSAGES_BY_LANG["ru"])
         )
+
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
