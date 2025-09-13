@@ -268,6 +268,39 @@ _sleep_prefs: dict[str, dict] = {}
 CB = "ui:"
 CHALLENGE_POINTS = int(os.getenv("CHALLENGE_POINTS", 25)) 
 
+
+# Лейбл кнопки меню внизу (по языкам)
+MENU_BTN_LABELS = {
+    "ru": "🏠 Меню",
+    "uk": "🏠 Меню",
+    "en": "🏠 Menu",
+    "md": "🏠 Meniu",
+    "be": "🏠 Меню",
+    "kk": "🏠 Мәзір",
+    "kg": "🏠 Меню",
+    "hy": "🏠 Մենիու",
+    "ka": "🏠 მენიუ",
+    "ce": "🏠 Меню",
+}
+
+def main_reply_kb(uid: str) -> ReplyKeyboardMarkup:
+    lang = user_languages.get(uid, "ru")
+    label = MENU_BTN_LABELS.get(lang, MENU_BTN_LABELS["ru"])
+    return ReplyKeyboardMarkup(
+        [[KeyboardButton(label)]],
+        resize_keyboard=True,
+        one_time_keyboard=False,
+        selective=False,
+        input_field_placeholder=None,
+    )
+
+def menu_button_label(uid: str) -> str:
+    lang = user_languages.get(uid, "ru")
+    return MENU_BTN_LABELS.get(lang, MENU_BTN_LABELS["ru"])
+
+
+
+
 def reminders_active_count(uid: str) -> int:
     with remind_db() as db:
         row = db.execute(
