@@ -4196,7 +4196,7 @@ async def tz_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # welcome
     first_name = q.from_user.first_name or {"ru":"друг","uk":"друже","en":"friend"}.get(lang, "друг")
     welcome_text = WELCOME_TEXTS.get(lang, WELCOME_TEXTS["ru"]).format(first_name=first_name)
-    await context.bot.send_message(chat_id=int(uid), text=welcome_text, parse_mode="Markdown")
+    await context.bot.send_message(chat_id=int(uid), text=welcome_text, parse_mode="Markdown", reply_markup=main_reply_kb(uid))
 
 async def show_timezone_menu(msg, origin: str = "settings"):
     uid = str(msg.chat.id)
