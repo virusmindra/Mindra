@@ -201,7 +201,7 @@ async def error_handler(update, context):
         pass
 
 async def main():
-    # HTTPX с расширенными таймаутами (для голосовых и т.п.)
+    # HTTPX-клиент с увеличенными таймаутами (важно для голосовых и длинных ответов)
     request = HTTPXRequest(
         connect_timeout=30,
         read_timeout=60,
@@ -209,30 +209,29 @@ async def main():
         pool_timeout=60,
     )
 
-    app = (
-        ApplicationBuilder()
-        .token(TELEGRAM_BOT_TOKEN)
-        .request(request)
-        .build()
-    )
+    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).request(request).build()
 
-    # --- БД/миграции до старта (однократно при запуске) ---
+    # === БД/миграции ДО старта приложения
     ensure_remind_db()
     ensure_premium_db()
     ensure_premium_challenges()
     migrate_premium_from_stats(load_stats)
 
-    # --- Хендлеры ---
+    # === Регистрация хендлеров
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
     app.add_handler(MessageHandler(filters.VOICE, handle_voice))
     for h in handlers:
         app.add_handler(h)
     app.add_error_handler(error_handler)
 
-    # --- Планирование задач через JobQueue (можно до run_polling) ---
-    # (!) Если сигнатуры у тебя другие — оставь свои вызовы.
-    schedule_idle_reminders(app.job_queue, app)   # твой helper
-    schedule_custom_reminders(app.job_queue)      # твой helper с CUSTOM_JOB_NAME
+    # === РУЧНОЙ жизненный цикл (без run_polling — чтобы не было "event loop is already running")
+    await app.initialize()
+    await app.start()
+
+    # Планировщики/джобы (после start):
+    # Если твои schedule_* ожидают (job_queue, app) — передаём оба.
+    schedule_idle_reminders(app.job_queue, app)
+    schedule_custom_reminders(app.job_queue, app)   # поддерживает и один аргумент, см. нашу правку
     schedule_evening_checkin(app.job_queue)
     schedule_daily_task(app.job_queue)
     schedule_support_messages(app.job_queue)
@@ -240,13 +239,26 @@ async def main():
     schedule_weekly_report(app.job_queue)
     schedule_daily_reminder(app.job_queue)
 
-    # Восстановление всех напоминаний из БД
+    # Восстановление задач напоминаний из БД
     await restore_reminder_jobs(app.job_queue)
 
-    # --- Старт long-polling (Application сам управляет loop) ---
-    import logging
+    # Запускаем long-polling
+    await app.updater.start_polling(drop_pending_updates=True)
     logging.info("🤖 Бот запущен!")
-    await app.run_polling(close_loop=False)
+
+    # Держим процесс живым, пока нас не остановят
+    stop_event = asyncio.Event()
+    try:
+        await stop_event.wait()
+    finally:
+        # Аккуратно останавливаем всё
+        try:
+            await app.updater.stop()
+        except Exception:
+            pass
+        await app.stop()
+        await app.shutdown()
 
 if __name__ == "__main__":
+    # ВАЖНО: без nest_asyncio, без app.run_polling()
     asyncio.run(main())
