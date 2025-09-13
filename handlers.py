@@ -313,6 +313,83 @@ def is_menu_request(text: str) -> bool:
     return t in _MENU_WORDS or t == "menu"  # на всякий
 
 
+# --- /diag: кто я, план, квоты, счётчики ---
+async def diag_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    lang = user_languages.get(uid, "ru")
+    tz   = user_timezones.get(uid, "UTC")
+    plan = plan_of(uid)
+
+    # премиум даты
+    try:
+        plus_until = get_premium_until(uid, "plus")
+    except Exception:
+        plus_until = None
+    try:
+        pro_until = get_premium_until(uid, "pro")
+    except Exception:
+        pro_until = None
+
+    # квоты
+    try:
+        dm_cap = quota(uid, "daily_messages")
+        r_cap  = quota(uid, "reminders_max")
+        g_cap  = quota(uid, "goals_max")
+        h_cap  = quota(uid, "habits_max")
+    except Exception:
+        dm_cap = r_cap = g_cap = h_cap = 0
+
+    # активные напоминания
+    try:
+        with remind_db() as db:
+            active_cnt = db.execute(
+                "SELECT COUNT(*) FROM reminders WHERE user_id=? AND status='scheduled';",
+                (uid,)
+            ).fetchone()[0]
+    except Exception:
+        active_cnt = "?"
+
+    text = (
+        f"*Diag*\n"
+        f"User: `{uid}`\n"
+        f"Lang: `{lang}`\n"
+        f"TZ: `{tz}`\n"
+        f"Plan: `{plan}`\n"
+        f"Plus until: `{plus_until or '-'}`\n"
+        f"Pro  until: `{pro_until or '-'}`\n"
+        f"\n*Quotas*\n"
+        f"daily_messages = {dm_cap}\n"
+        f"reminders_max  = {r_cap}\n"
+        f"goals_max      = {g_cap}\n"
+        f"habits_max     = {h_cap}\n"
+        f"\nActive reminders: {active_cnt}"
+    )
+    await update.message.reply_text(text, parse_mode="Markdown")
+
+# --- /fixkb: переустановить нижнюю кнопку на текущем языке ---
+async def fixkb_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    try:
+        await context.bot.send_message(
+            chat_id=int(uid),
+            text=" ",
+            reply_markup=main_reply_kb(uid)
+        )
+    except Exception:
+        pass
+    await update.message.reply_text("✅ Keyboard set.", reply_markup=_menu_kb_home(uid))
+
+# --- /plan: быстрый просмотр текущего плана и дат ---
+async def plan_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    plan = plan_of(uid)
+    pu = get_premium_until(uid, "plus")
+    pr = get_premium_until(uid, "pro")
+    await update.message.reply_text(
+        f"Plan: *{plan}*\nPlus until: `{pu or '-'}`\nPro until: `{pr or '-'}`",
+        parse_mode="Markdown"
+    )
+
 
 def reminders_active_count(uid: str) -> int:
     with remind_db() as db:
