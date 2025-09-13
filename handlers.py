@@ -5607,18 +5607,18 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_last_seen[user_id_int] = datetime.now(timezone.utc)
     logging.info(f"✅ user_last_seen обновлён в chat для {user_id_int}")
 
-    # 📌 текст пользователя
+   # 📌 текст пользователя
     user_input = (update.message.text or "").strip()
     if not user_input:
         return
 
-    # ── Переход в меню по кнопке ReplyKeyboard И без расхода лимита
-    try:
-        label = menu_button_label(user_id)  # твоя функция локализации "🏠 Меню"
-    except Exception:
-        label = "🏠 Меню"
-    if user_input == label or user_input.lower() in ("/menu", "menu", "меню"):
+    # ⛳️ НАЖАТИЕ НИЖНЕЙ КНОПКИ «МЕНЮ» — ОТКРЫВАЕМ МЕНЮ И НЕ ТРАТИМ ЛИМИТ
+    if is_menu_request(user_input):
         return await menu_cmd(update, context)
+
+    # 🔖 сохраним последний текст для быстрых напоминаний / сторис
+    context.chat_data[f"last_user_text_{user_id}"] = user_input
+
 
     # 🔥 дневной учёт сообщений (сброс по дню)
     today = str(date.today())
