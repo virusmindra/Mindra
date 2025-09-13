@@ -437,43 +437,53 @@ def _quick_parse_due(text: str, lang: str, tz: ZoneInfo) -> datetime | None:
             return None
 
     return None
-
-async def _finalize_onboarding_referral(context, uid: str, lang: str):
-    """Если есть валидный реферал — обоим +7; если нет — триал +3 (один раз)."""
-    # достаём одноразовый payload, если был
+    
+async def _finalize_onboarding_referral(context: ContextTypes.DEFAULT_TYPE, uid: str, invitee_lang: str):
+    """
+    Вызывается после онбординга (после сохранения TZ).
+    uid — id приглашённого (текущего юзера).
+    invitee_lang — язык приглашённого (для его сообщений).
+    """
+    # 1) достаём «сырой» payload из /start, превращаем в referrer_id
     raw_payload = user_ref_args.pop(uid, None)
-    referrer_id = _resolve_referrer_id(raw_payload, uid)
+    referrer_id = _resolve_referrer_id(raw_payload)
 
-    if referrer_id:
-        # пригласившему — +7 (один раз на каждого invitee)
+    # Если есть реферер и это не сам пользователь — сценарий «по приглашению»
+    if referrer_id and referrer_id != uid:
         granted_to_referrer = False
+
+        # 1.1. Начисляем пригласившему +7 дней Mindra+
         try:
             granted_to_referrer = process_referral(referrer_id, uid, days=7)
         except Exception as e:
             logging.warning("process_referral failed: %s", e)
 
-        # приглашённому — +7
+        # 1.2. Сообщаем приглашённому про его бонус (+7 дней Mindra+)
         try:
-            _ = grant_plus_days(uid, 7)
-            bonus_text = REFERRAL_BONUS_TEXT.get(lang, REFERRAL_BONUS_TEXT["ru"])
-            await context.bot.send_message(chat_id=int(uid), text=bonus_text, parse_mode="Markdown")
+            # если у тебя уже отдельно выдаётся +7 приглашённому — эту строку можно убрать
+            extend_premium_days(uid, 7, tier="plus")
+            invitee_msg = REFERRAL_BONUS_TEXT.get(invitee_lang, REFERRAL_BONUS_TEXT["ru"])
+            await context.bot.send_message(chat_id=int(uid), text=invitee_msg, parse_mode="Markdown")
         except Exception as e:
-            logging.warning("grant_plus_days for invitee failed: %s", e)
+            logging.warning("invitee bonus notify failed: %s", e)
 
-        # уведомим пригласившего, если ему реально начислили
+        # 1.3. Уведомляем пригласившего (ТОЛЬКО если ему реально начислили бонус)
         if granted_to_referrer:
             try:
-                notify_text = REFERRER_NOTIFY_TEXT.get(lang, REFERRER_NOTIFY_TEXT["ru"])
+                inviter_lang = user_languages.get(str(referrer_id), "ru")
+                notify_text = REFERRER_NOTIFY_TEXT.get(inviter_lang, REFERRER_NOTIFY_TEXT["ru"])
                 await context.bot.send_message(chat_id=int(referrer_id), text=notify_text, parse_mode="Markdown")
-            except Exception:
-                pass
-        return
+            except Exception as e:
+                # сюда часто попадает 403: bot was blocked by the user — просто логируем
+                logging.warning("referrer notify failed for %s: %s", referrer_id, e)
 
-    # без реферала → триал Mindra+ на 3 дня (строго один раз)
+        return  # сценарий по приглашению завершён
+
+    # ==== Сценарий: пользователь пришёл БЕЗ приглашения → триал Mindra+ на 3 дня (один раз) ====
     try:
         granted_until_iso = grant_trial_if_eligible(uid, days=3)
         if granted_until_iso:
-            txt = TRIAL_INFO_TEXT.get(lang, TRIAL_INFO_TEXT["ru"]).format(until=granted_until_iso)
+            txt = TRIAL_INFO_TEXT.get(invitee_lang, TRIAL_INFO_TEXT["ru"]).format(until=granted_until_iso)
             await context.bot.send_message(chat_id=int(uid), text=txt, parse_mode="Markdown")
     except Exception as e:
         logging.warning("Trial grant failed: %s", e)
