@@ -5453,8 +5453,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     txt = (update.message.text or "").strip() if update.message else ""
     logging.info(f"/start: user_id={uid}, text={txt}")
 
-    # === 1) Разбор payload из полного текста сообщения ===
-    # /start <payload>  -> payload = "<payload>"
+    # === 1) Разбор payload из полного текста ===
     payload = None
     if txt:
         parts = txt.split(maxsplit=1)
@@ -5462,13 +5461,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             payload = parts[1].strip() or None
 
     if payload:
-        # запомним одноразово для онбординга (дальше заберём в tz_callback/_finalize_onboarding_referral)
-        user_ref_args[uid] = payload
+        user_ref_args[uid] = payload         # используем позже в онбординге
     else:
-        # если пришли без payload — очистим возможный старый хвост
-        user_ref_args.pop(uid, None)
+        user_ref_args.pop(uid, None)         # чистим старые хвосты
 
-    # === 2) Выбор языка (если ещё не выбран) ===
+    # === 2) Выбор языка ===
     if uid not in user_languages:
         context.user_data["onb_waiting_lang"] = True
         keyboard = [
@@ -5498,19 +5495,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["onb_waiting_tz"] = True
         return await show_timezone_menu(update.message, origin="onboarding")
 
-    # === 4) Всё есть → сначала выставим нижнюю кнопку (однократно), затем покажем меню ===
+    # === 4) Всё есть → СНАЧАЛА выставим нижнюю кнопку (один раз), затем меню ===
     if not context.user_data.get("reply_kb_set"):
         try:
             await context.bot.send_message(
                 chat_id=int(uid),
-                text=" ",                      # пустое/пробельное сообщение
+                text=" ",                      # служебное пустое
                 reply_markup=main_reply_kb(uid)
             )
         except Exception as e:
             logging.debug(f"reply_kb send skipped: {e}")
         finally:
-            # ставим флаг, чтобы не дублировать «пустое» сообщение
-            context.user_data["reply_kb_set"] = True
+            context.user_data["reply_kb_set"] = True  # больше не дублируем
 
     await ui_show_from_command(
         update,
