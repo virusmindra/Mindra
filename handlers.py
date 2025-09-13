@@ -5594,6 +5594,19 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_last_seen[user_id_int] = datetime.now(timezone.utc)
     logging.info(f"✅ user_last_seen обновлён в chat для {user_id_int}")
 
+    # 📌 текст пользователя
+    user_input = (update.message.text or "").strip()
+    if not user_input:
+        return
+
+    # ── Переход в меню по кнопке ReplyKeyboard И без расхода лимита
+    try:
+        label = menu_button_label(user_id)  # твоя функция локализации "🏠 Меню"
+    except Exception:
+        label = "🏠 Меню"
+    if user_input == label or user_input.lower() in ("/menu", "menu", "меню"):
+        return await menu_cmd(update, context)
+
     # 🔥 дневной учёт сообщений (сброс по дню)
     today = str(date.today())
     if user_id not in user_message_count:
@@ -5621,13 +5634,8 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     await update.message.reply_text(lock_msg)
             return
 
-    # +1 к счётчику (после проверки лимита)
+    # +1 к счётчику (после проверки лимита и после проверки кнопки меню)
     user_message_count[user_id]["count"] += 1
-
-    # 📌 текст пользователя
-    user_input = (update.message.text or "").strip()
-    if not user_input:
-        return
 
     # 🔖 сохраним последний текст для быстрых напоминаний / сторис
     context.chat_data[f"last_user_text_{user_id}"] = user_input
@@ -5635,17 +5643,9 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # 🌐 язык
     lang_code = user_languages.get(user_id, "ru")
 
-    # ── Переход в меню по кнопке "🏠 Меню" (ReplyKeyboard)
-    try:
-        if user_input.strip() == menu_button_label(user_id):
-            return await menu_cmd(update, context)
-    except Exception as e:
-        logging.debug(f"menu button check skipped: {e}")
-
     # === РАННИЙ ПЕРЕХВАТ НАМЕРЕНИЯ «НАПОМНИ» ===
     try:
         if _has_remind_intent(user_input, lang_code):
-            # показать карточку «Сделать напоминание?» и НЕ вызывать LLM
             await maybe_suggest_reminder(update, context)
             return
     except Exception as e:
@@ -5690,7 +5690,6 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     }.get(lang_code, "Если пользователь просит сказку — не пиши её здесь; предложи кнопки «Сказка».")
     system_prompt = f"{lang_prompt}\n\n{mode_prompt}\n\n{guard}"
 
-    # 💾 история
     if user_id not in conversation_history:
         conversation_history[user_id] = [{"role": "system", "content": system_prompt}]
     else:
@@ -5700,34 +5699,28 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     trimmed_history = trim_history(conversation_history[user_id])
 
     try:
-        # ✨ “печатает…”
         await context.bot.send_chat_action(
             chat_id=update.effective_chat.id,
             action=ChatAction.TYPING
         )
 
-        # 🤖 LLM-ответ
         resp = client.chat.completions.create(
             model="gpt-4o",
             messages=trimmed_history
         )
         reply = (resp.choices[0].message.content or "").strip() or "…"
 
-        # сохранить в историю
         conversation_history[user_id].append({"role": "assistant", "content": reply})
         save_history(conversation_history)
 
-        # 💜 эмпатичный префикс
         reaction = detect_emotion_reaction(user_input, lang_code) + detect_topic_and_react(user_input, lang_code)
         final_text = reaction + reply
 
-        # 📝 ответ текстом
         await update.message.reply_text(
             final_text,
             reply_markup=generate_post_response_buttons()
         )
 
-        # 🔊 авто-озвучка (если включена)
         if is_premium(user_id) and user_voice_mode.get(user_id, False):
             await send_voice_response(context, user_id_int, final_text, lang_code)
 
