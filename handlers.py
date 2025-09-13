@@ -4102,11 +4102,11 @@ async def tz_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 pass
             return await show_timezone_menu(q.message, origin="settings")
 
-    # сохраняем
+    # сохраняем TZ
     user_timezones[uid] = tz
     local_str = _format_local_time_now(tz, lang)
 
-    # ===== РЕЖИМ НАСТРОЕК (не онбординг) =====
+    # ===== РЕЖИМ НАСТРОЕК =====
     if not is_onboarding:
         try:
             await q.answer(f"✅ {tz} · {local_str}", show_alert=False)
@@ -4119,7 +4119,7 @@ async def tz_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
     # ===== РЕЖИМ ОНБОРДИНГА =====
-    # Сообщаем, что таймзона сохранена
+    # сообщаем «сохранено»
     try:
         try:
             await q.edit_message_text(
@@ -4133,14 +4133,13 @@ async def tz_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="Markdown"
             )
     finally:
-        # Освобождаем «UI-сообщение», чтобы /menu рисовало свежую карточку
+        # освободим UI-сообщение, чтобы /menu рисовало новую карточку
         context.user_data.pop(UI_MSG_KEY, None)
 
-    # --- Реферал / Триал / Уведомления ---
-    # ВАЖНО: это ВНУТРИ async-функции, поэтому await легален
+    # ✅ TZ сохранён, UI_MSG_KEY очищен — оформляем реферал/триал (именно тут!)
     await _finalize_onboarding_referral(context, uid, lang)
 
-    # --- Инициализация system prompt/истории ---
+    # инициализация system prompt/истории
     try:
         mode = "support"
         lang_prompt = LANG_PROMPTS.get(lang, LANG_PROMPTS["ru"])
@@ -4151,7 +4150,7 @@ async def tz_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logging.warning("history init failed: %s", e)
 
-    # --- Welcome ---
+    # welcome
     first_name = q.from_user.first_name or {"ru":"друг","uk":"друже","en":"friend"}.get(lang, "друг")
     welcome_text = WELCOME_TEXTS.get(lang, WELCOME_TEXTS["ru"]).format(first_name=first_name)
     await context.bot.send_message(chat_id=int(uid), text=welcome_text, parse_mode="Markdown")
