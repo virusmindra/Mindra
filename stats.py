@@ -13,6 +13,7 @@ import os
 import sqlite3
 import logging
 import time
+from texts import QUOTAS
 from datetime import datetime, timedelta, timezone
 from contextlib import contextmanager
 
