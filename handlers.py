@@ -5474,7 +5474,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["onb_waiting_tz"] = True
         return await show_timezone_menu(update.message, origin="onboarding")
 
-    # === 4) Всё есть → показываем главное меню в одном UI-сообщении ===
+    # === 4) Всё есть → сначала выставим нижнюю кнопку (однократно), затем покажем меню ===
+    if not context.user_data.get("reply_kb_set"):
+        try:
+            await context.bot.send_message(
+                chat_id=int(uid),
+                text=" ",                      # пустое/пробельное сообщение
+                reply_markup=main_reply_kb(uid)
+            )
+        except Exception as e:
+            logging.debug(f"reply_kb send skipped: {e}")
+        finally:
+            # ставим флаг, чтобы не дублировать «пустое» сообщение
+            context.user_data["reply_kb_set"] = True
+
     await ui_show_from_command(
         update,
         context,
@@ -5482,6 +5495,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=_menu_kb_home(uid),
         parse_mode="Markdown",
     )
+
 
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
