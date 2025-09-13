@@ -471,7 +471,7 @@ async def _finalize_onboarding_referral(context: ContextTypes.DEFAULT_TYPE, uid:
         if granted_to_referrer:
             try:
                 inviter_lang = user_languages.get(str(referrer_id), "ru")
-                notify_text = REFERRER_NOTIFY_TEXT.get(inviter_lang, REFERRER_NOTIFY_TEXT["ru"])
+                notify_text = REFERRER_NOTIFY_TEXT.get(inviter_lang, REFERRER_BONUS_TEXT["ru"])
                 await context.bot.send_message(chat_id=int(referrer_id), text=notify_text, parse_mode="Markdown")
             except Exception as e:
                 # сюда часто попадает 403: bot was blocked by the user — просто логируем
