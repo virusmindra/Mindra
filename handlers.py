@@ -5393,24 +5393,27 @@ def get_random_daily_task(user_id: str) -> str:
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
-    logging.info(f"/start: user_id={uid}, args={context.args}, text={update.message.text}")
+    txt = (update.message.text or "").strip() if update.message else ""
+    logging.info(f"/start: user_id={uid}, text={txt}")
 
-    # 1) Сохраняем реф-пейлоад из deep-link (/start ref_XXXX)
-    ref_payload = None
-    if context.args:
-        a0 = context.args[0]
-        if isinstance(a0, str):
-            if a0.startswith("ref_"):
-                ref_payload = a0[4:]
-            elif a0.startswith("ref"):
-                ref_payload = a0[3:]
-    if ref_payload:
-        # используем позже в tz_callback (только для on-boarding)
-        user_ref_args[uid] = ref_payload
+    # === 1) Разбор payload из полного текста сообщения ===
+    # /start <payload>  -> payload = "<payload>"
+    payload = None
+    if txt:
+        parts = txt.split(maxsplit=1)
+        if len(parts) == 2 and parts[0] == "/start":
+            payload = parts[1].strip() or None
 
-    # 2) Если язык ещё не выбран — показываем выбор ЯЗЫКА и выходим
+    if payload:
+        # запомним одноразово для онбординга (дальше заберём в tz_callback/_finalize_onboarding_referral)
+        user_ref_args[uid] = payload
+    else:
+        # если пришли без payload — очистим возможный старый хвост
+        user_ref_args.pop(uid, None)
+
+    # === 2) Выбор языка (если ещё не выбран) ===
     if uid not in user_languages:
-        context.user_data["onb_waiting_lang"] = True  # флаг онбординга для language_callback
+        context.user_data["onb_waiting_lang"] = True
         keyboard = [
             [InlineKeyboardButton("Русский 🇷🇺",       callback_data="lang_ru"),
              InlineKeyboardButton("Українська 🇺🇦",    callback_data="lang_uk")],
@@ -5423,7 +5426,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("Нохчийн мотт 🏴",   callback_data="lang_ce"),
              InlineKeyboardButton("English 🇬🇧",       callback_data="lang_en")],
         ]
-        # By default show the language prompt in English for first-time users
         choose_lang = SETTINGS_TEXTS.get("en", {}).get(
             "choose_lang", "🌐 Please select the language of communication:"
         )
@@ -5431,19 +5433,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             choose_lang,
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
-        context.user_data[UI_MSG_KEY] = sent.message_id  # дальше будем редачить это сообщение
+        context.user_data[UI_MSG_KEY] = sent.message_id
         return
 
-    # 3) Если язык выбран, но TZ ещё нет — открываем TZ в режиме онбординга
+    # === 3) Выбор часового пояса в онбординге ===
     if uid not in user_timezones:
-        # покажем экран таймзоны, кнопки с префиксом onb:tz:...
         context.user_data["onb_waiting_tz"] = True
-        # эта функция должна внутри вызвать _tz_keyboard(prefix="onb:tz:", include_back=False)
         return await show_timezone_menu(update.message, origin="onboarding")
 
-    # 4) Оба параметра уже есть → показываем главное меню в одном UI-сообщении
+    # === 4) Всё есть → показываем главное меню в одном UI-сообщении ===
     await ui_show_from_command(
-        update, context,
+        update,
+        context,
         _menu_home_text(uid),
         reply_markup=_menu_kb_home(uid),
         parse_mode="Markdown",
