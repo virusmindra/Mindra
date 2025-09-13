@@ -4566,8 +4566,18 @@ async def language_callback(update, context):
     code = q.data.split("_", 1)[1]
     user_languages[uid] = code
 
-    # тост
-    name = SETTINGS_TEXTS["ru"]["lang_name"].get(code, code)
+    # ⬇️ СРАЗУ обновим нижнюю Reply-клавиатуру под выбранный язык
+    try:
+        await context.bot.send_message(
+            chat_id=int(uid),
+            text=" ",                      # служебное пустое сообщение
+            reply_markup=main_reply_kb(uid)
+        )
+    except Exception:
+        pass
+
+    # тост с названием языка
+    name = SETTINGS_TEXTS.get("ru", {}).get("lang_name", {}).get(code, code)
     try:
         await q.answer(f"✅ {name}", show_alert=False)
     except Exception:
@@ -4584,6 +4594,7 @@ async def language_callback(update, context):
         reply_markup=_menu_kb_settings(uid),
         parse_mode="Markdown",
     )
+
 
 # ✨ Сначала редактируем старое сообщение
 async def habit_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
