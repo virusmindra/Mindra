@@ -117,7 +117,7 @@ from texts import (
     P_TEXTS
 )
 from datetime import datetime, timedelta, timezone, date
-from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ContextTypes, CommandHandler, MessageHandler, CallbackQueryHandler, filters, CallbackContext
 from telegram.constants import ChatAction, ParseMode
 from config import client, TELEGRAM_BOT_TOKEN, ELEVEN_API_KEY, BASE_DIR, DATA_DIR, PREMIUM_DB_PATH, REMIND_DB_PATH
