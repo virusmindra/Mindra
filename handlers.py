@@ -5895,74 +5895,67 @@ async def handle_reaction_button(update: Update, context: ContextTypes.DEFAULT_T
 # Обработчик текстовых сообщений
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global user_last_seen, user_message_count
-    user_id_int = update.effective_user.id
-    user_id = str(user_id_int)
+    uid_int = update.effective_user.id
+    uid = str(uid_int)
 
     # 🕒 активность
-    user_last_seen[user_id_int] = datetime.now(timezone.utc)
-    logging.info(f"✅ user_last_seen обновлён в chat для {user_id_int}")
+    user_last_seen[uid_int] = datetime.now(timezone.utc)
+    logging.info(f"✅ user_last_seen обновлён в chat для {uid_int}")
 
-   # 📌 текст пользователя
+    # 📌 текст пользователя
     user_input = (update.message.text or "").strip()
     if not user_input:
         return
 
-    # ⛳️ НАЖАТИЕ НИЖНЕЙ КНОПКИ «МЕНЮ» — ОТКРЫВАЕМ МЕНЮ И НЕ ТРАТИМ ЛИМИТ
+    # ⛳️ нижняя кнопка «Меню» — сразу открываем меню и НЕ тратим лимит
     if is_menu_request(user_input):
         return await menu_cmd(update, context)
 
-    # 🔖 сохраним последний текст для быстрых напоминаний / сторис
-    context.chat_data[f"last_user_text_{user_id}"] = user_input
-
+    # 🔖 сохраним последний текст для быстрых напоминаний/сторис
+    context.chat_data[f"last_user_text_{uid}"] = user_input
 
     # 🔥 дневной учёт сообщений (сброс по дню)
     today = str(date.today())
-    if user_id not in user_message_count:
-        user_message_count[user_id] = {"date": today, "count": 0}
-    elif user_message_count[user_id]["date"] != today:
-        user_message_count[user_id] = {"date": today, "count": 0}
+    if uid not in user_message_count or user_message_count[uid]["date"] != today:
+        user_message_count[uid] = {"date": today, "count": 0}
 
     # 📈 лимит по тарифу
     try:
-        cap = quota(user_id, "daily_messages")
+        cap = quota(uid, "daily_messages")
     except Exception:
         cap = 10
 
-    if (user_id_int not in ADMIN_USER_IDS) and (user_id_int != OWNER_ID):
-            if (user_id_int not in ADMIN_USER_IDS) and (user_id_int != OWNER_ID):
-            if user_message_count[user_id]["count"] >= cap:
+    if (uid_int not in ADMIN_USER_IDS) and (uid_int != OWNER_ID):
+        if user_message_count[uid]["count"] >= cap:
             # покажем апселл + кнопку «⭐ Upgrade» (up:menu)
-                lang = user_languages.get(user_id, "ru")
-                try:
-                    title, body = upsell_for(user_id, "feature_quota_msg", {"n": cap})
-                    kb = InlineKeyboardMarkup([[
-                        InlineKeyboardButton(
-                            MENU_LABELS.get(lang, MENU_LABELS["ru"])["upgrade"],
-                            callback_data="up:menu"
-                        )
-                    ]])
-                    await update.message.reply_text(
-                        f"*{title}*\n\n{body}",
-                        parse_mode="Markdown",
-                        reply_markup=kb,
+            lang = user_languages.get(uid, "ru")
+            try:
+                title, body = upsell_for(uid, "feature_quota_msg", {"n": cap})
+                kb = InlineKeyboardMarkup([[
+                    InlineKeyboardButton(
+                        MENU_LABELS.get(lang, MENU_LABELS["ru"])["upgrade"],
+                        callback_data="up:menu"
                     )
+                ]])
+                await update.message.reply_text(
+                    f"*{title}*\n\n{body}",
+                    parse_mode="Markdown",
+                    reply_markup=kb,
+                )
+            except Exception:
+                # запасной текст, если что-то пошло не так
+                lock_msg = LOCK_MESSAGES_BY_LANG.get(lang, LOCK_MESSAGES_BY_LANG["ru"])
+                try:
+                    await update.message.reply_text(lock_msg.format(n=cap))
                 except Exception:
-                    # запасной текст, если что-то пошло не так
-                    lock_msg = LOCK_MESSAGES_BY_LANG.get(lang, LOCK_MESSAGES_BY_LANG["ru"])
-                    try:
-                        await update.message.reply_text(lock_msg.format(n=cap))
-                    except Exception:
-                        await update.message.reply_text(lock_msg)
-                return
+                    await update.message.reply_text(lock_msg)
+            return
 
     # +1 к счётчику (после проверки лимита и после проверки кнопки меню)
-    user_message_count[user_id]["count"] += 1
-
-    # 🔖 сохраним последний текст для быстрых напоминаний / сторис
-    context.chat_data[f"last_user_text_{user_id}"] = user_input
+    user_message_count[uid]["count"] += 1
 
     # 🌐 язык
-    lang_code = user_languages.get(user_id, "ru")
+    lang_code = user_languages.get(uid, "ru")
 
     # === РАННИЙ ПЕРЕХВАТ НАМЕРЕНИЯ «НАПОМНИ» ===
     try:
@@ -5974,11 +5967,11 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # === РАННИЙ ПЕРЕХВАТ ЗАПРОСА СКАЗКИ ===
     try:
-        if _looks_like_story_intent(user_input, lang_code, user_id):
-            if is_premium(user_id):
-                topic_guess = user_input
-                context.chat_data[f"story_pending_{user_id}"] = topic_guess[:200]
-                t = _s_i18n(user_id)
+        if _looks_like_story_intent(user_input, lang_code, uid):
+            if is_premium(uid):
+                topic_guess = user_input[:200]
+                context.chat_data[f"story_pending_{uid}"] = topic_guess
+                t = _s_i18n(uid)
                 kb = InlineKeyboardMarkup([[
                     InlineKeyboardButton(t["btn_ok"],  callback_data="st:confirm"),
                     InlineKeyboardButton(t["btn_no"],  callback_data="st:close"),
@@ -5989,11 +5982,11 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     reply_markup=kb
                 )
             else:
-                tpay = _p_i18n(user_id)
+                tpay = _p_i18n(uid)
                 await update.message.reply_text(
                     f"*{tpay['upsell_title']}*\n\n{tpay['upsell_body']}",
                     parse_mode="Markdown",
-                    reply_markup=_premium_kb(user_id)
+                    reply_markup=_premium_kb(uid)
                 )
             return
     except Exception as e:
@@ -6001,7 +5994,7 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # === Обычный ответ ассистента ===
     lang_prompt = LANG_PROMPTS.get(lang_code, LANG_PROMPTS["ru"])
-    mode = user_modes.get(user_id, "support")
+    mode = user_modes.get(uid, "support")
     mode_prompt = MODES.get(mode, MODES["support"]).get(lang_code, MODES["support"]["ru"])
 
     guard = {
@@ -6011,46 +6004,52 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     }.get(lang_code, "Если пользователь просит сказку — не пиши её здесь; предложи кнопки «Сказка».")
     system_prompt = f"{lang_prompt}\n\n{mode_prompt}\n\n{guard}"
 
-    if user_id not in conversation_history:
-        conversation_history[user_id] = [{"role": "system", "content": system_prompt}]
+    # 💾 история
+    if uid not in conversation_history:
+        conversation_history[uid] = [{"role": "system", "content": system_prompt}]
     else:
-        conversation_history[user_id][0] = {"role": "system", "content": system_prompt}
+        conversation_history[uid][0] = {"role": "system", "content": system_prompt}
 
-    conversation_history[user_id].append({"role": "user", "content": user_input})
-    trimmed_history = trim_history(conversation_history[user_id])
+    conversation_history[uid].append({"role": "user", "content": user_input})
+    trimmed_history = trim_history(conversation_history[uid])
 
     try:
+        # ✨ “печатает…”
         await context.bot.send_chat_action(
             chat_id=update.effective_chat.id,
             action=ChatAction.TYPING
         )
 
+        # 🤖 LLM-ответ
         resp = client.chat.completions.create(
             model="gpt-4o",
             messages=trimmed_history
         )
         reply = (resp.choices[0].message.content or "").strip() or "…"
 
-        conversation_history[user_id].append({"role": "assistant", "content": reply})
+        # сохранить в историю
+        conversation_history[uid].append({"role": "assistant", "content": reply})
         save_history(conversation_history)
 
+        # 💜 эмпатичный префикс
         reaction = detect_emotion_reaction(user_input, lang_code) + detect_topic_and_react(user_input, lang_code)
         final_text = reaction + reply
 
+        # 📝 ответ текстом
         await update.message.reply_text(
             final_text,
             reply_markup=generate_post_response_buttons()
         )
 
-        if is_premium(user_id) and user_voice_mode.get(user_id, False):
-            await send_voice_response(context, user_id_int, final_text, lang_code)
+        # 🔊 авто-озвучка (если включена)
+        if is_premium(uid) and user_voice_mode.get(uid, False):
+            await send_voice_response(context, uid_int, final_text, lang_code)
 
     except Exception as e:
         logging.error(f"❌ Ошибка в chat(): {e}")
         await update.message.reply_text(
             ERROR_MESSAGES_BY_LANG.get(lang_code, ERROR_MESSAGES_BY_LANG["ru"])
         )
-
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
