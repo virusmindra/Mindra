@@ -1149,6 +1149,11 @@ def _menu_kb_plus(uid: str) -> InlineKeyboardMarkup:
     ]
     return InlineKeyboardMarkup(rows)
 
+def _menu_label(uid: str, key: str) -> str:
+    lang = user_languages.get(uid, "ru")
+    base = MENU_LABELS.get("ru", {})
+    return MENU_LABELS.get(lang, base).get(key, base.get(key, key))
+
 def _menu_kb_premium(uid: str) -> InlineKeyboardMarkup:
     t = _menu_i18n(uid)
     rows = [
