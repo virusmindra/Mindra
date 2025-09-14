@@ -28,6 +28,8 @@ from texts import (
     MENU_TEXTS,
     FEATURE_MATRIX,
     PLAN_FREE,
+    UPGRADE_TEXTS,
+    MENU_LABELS,
     PLAN_PLUS,
     PLAN_PRO,
     PLAN_LABEL,
