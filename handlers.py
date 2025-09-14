@@ -1608,6 +1608,10 @@ def _plan_lang(uid: str):
 def _plan_label(uid: str, plan: str) -> str:
     return PLAN_LABELS.get(_plan_lang(uid), PLAN_LABELS["ru"]).get(plan, plan)
 
+def _plan_name(uid: str, tier: str) -> str:
+    lang = user_languages.get(uid, "ru")
+    return PLAN_LABELS.get(lang, PLAN_LABELS["ru"]).get(tier, tier)
+    
 def upsell_for(uid: str, feature_key: str, extra: dict | None = None) -> tuple[str, str]:
     """Возвращает (title, body) локализованно для конкретной фичи."""
     lang = _plan_lang(uid)
