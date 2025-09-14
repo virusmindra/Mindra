@@ -18,6 +18,7 @@ import pytz
 import stripe
 import telegram
 import shutil
+from functools import partial
 from elevenlabs import ElevenLabs 
 from collections import defaultdict
 from texts import (
