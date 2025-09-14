@@ -5929,18 +5929,31 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         cap = 10
 
     if (user_id_int not in ADMIN_USER_IDS) and (user_id_int != OWNER_ID):
-        if user_message_count[user_id]["count"] >= cap:
-            try:
-                title, body = upsell_for(user_id, "feature_quota_msg", {"n": cap})
-                await update.message.reply_text(f"*{title}*\n\n{body}", parse_mode="Markdown")
-            except Exception:
+            if (user_id_int not in ADMIN_USER_IDS) and (user_id_int != OWNER_ID):
+            if user_message_count[user_id]["count"] >= cap:
+            # покажем апселл + кнопку «⭐ Upgrade» (up:menu)
                 lang = user_languages.get(user_id, "ru")
-                lock_msg = LOCK_MESSAGES_BY_LANG.get(lang, LOCK_MESSAGES_BY_LANG["ru"])
                 try:
-                    await update.message.reply_text(lock_msg.format(n=cap))
+                    title, body = upsell_for(user_id, "feature_quota_msg", {"n": cap})
+                    kb = InlineKeyboardMarkup([[
+                        InlineKeyboardButton(
+                            MENU_LABELS.get(lang, MENU_LABELS["ru"])["upgrade"],
+                            callback_data="up:menu"
+                        )
+                    ]])
+                    await update.message.reply_text(
+                        f"*{title}*\n\n{body}",
+                        parse_mode="Markdown",
+                        reply_markup=kb,
+                    )
                 except Exception:
-                    await update.message.reply_text(lock_msg)
-            return
+                    # запасной текст, если что-то пошло не так
+                    lock_msg = LOCK_MESSAGES_BY_LANG.get(lang, LOCK_MESSAGES_BY_LANG["ru"])
+                    try:
+                        await update.message.reply_text(lock_msg.format(n=cap))
+                    except Exception:
+                        await update.message.reply_text(lock_msg)
+                return
 
     # +1 к счётчику (после проверки лимита и после проверки кнопки меню)
     user_message_count[user_id]["count"] += 1
