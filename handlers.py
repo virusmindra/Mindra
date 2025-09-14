@@ -1154,10 +1154,20 @@ def _menu_kb_premium(uid: str) -> InlineKeyboardMarkup:
     rows = [
         [InlineKeyboardButton(t["premium_days"], callback_data="m:premium:days")],
         [InlineKeyboardButton(t["invite"],       callback_data="m:premium:invite")],
-        # Заменишь URL на свою страницу оплаты
-        [InlineKeyboardButton(t["premium_buy"],  url="https://example.com/pay")],
-        [InlineKeyboardButton(t["back"],         callback_data="m:nav:home")],
     ]
+
+    # показать “Upgrade” только если юзер не Pro
+    try:
+        if plan_of(uid) != PLAN_PRO:
+            rows.append([InlineKeyboardButton(_menu_label(uid, "upgrade"), callback_data="up:menu")])
+    except Exception:
+        rows.append([InlineKeyboardButton(_menu_label(uid, "upgrade"), callback_data="up:menu")])
+
+    # (опционально) оставить внешнюю оплату как запасной вариант
+    # заменишь url на свой лендинг оплаты
+    rows.append([InlineKeyboardButton(t["premium_buy"], url="https://example.com/pay")])
+
+    rows.append([InlineKeyboardButton(t["back"], callback_data="m:nav:home")])
     return InlineKeyboardMarkup(rows)
 
 def _menu_kb_settings(uid: str) -> InlineKeyboardMarkup:
