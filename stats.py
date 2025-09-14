@@ -178,9 +178,17 @@ def remind_db():
 # ====================  PREMIUM DB  =======================
 # =========================================================
 
+
 def ensure_premium_db():
     os.makedirs(DATA_DIR, exist_ok=True)
     with sqlite3.connect(PREMIUM_DB_PATH) as db:
+        # На всякий случай включим Foreign Keys (не критично, но полезно на будущее)
+        try:
+            db.execute("PRAGMA foreign_keys = ON;")
+        except Exception:
+            pass
+
+        # === premium ==========================================================
         db.execute("""
             CREATE TABLE IF NOT EXISTS premium (
                 user_id    TEXT PRIMARY KEY,
@@ -190,25 +198,32 @@ def ensure_premium_db():
         """)
 
         cols = {r[1] for r in db.execute("PRAGMA table_info(premium);")}
-        # совместимость со старой колонкой "until" — мигрируем в plus_until
+        # миграция со старой колонки "until" -> в plus_until
         if "until" in cols:
             try:
-                rows = db.execute("SELECT user_id, until FROM premium WHERE until IS NOT NULL AND until <> ''").fetchall()
+                rows = db.execute("""
+                    SELECT user_id, until
+                    FROM premium
+                    WHERE until IS NOT NULL AND until <> ''
+                """).fetchall()
                 for uid, until in rows:
                     ep = _iso_to_epoch_maybe(until)
-                    if ep > 0:
+                    if ep and ep > 0:
                         prev = db.execute("SELECT plus_until FROM premium WHERE user_id=?;", (uid,)).fetchone()
-                        prev_ep = int(prev[0]) if prev else 0
+                        prev_ep = int(prev[0]) if prev and prev[0] is not None else 0
                         if ep > prev_ep:
                             db.execute("UPDATE premium SET plus_until=? WHERE user_id=?;", (ep, uid))
             except Exception as e:
                 logging.warning("premium.until migration skipped: %s", e)
 
+        # гарантируем наличие новых колонок
+        cols = {r[1] for r in db.execute("PRAGMA table_info(premium);")}
         if "plus_until" not in cols:
             db.execute("ALTER TABLE premium ADD COLUMN plus_until INTEGER NOT NULL DEFAULT 0;")
         if "pro_until" not in cols:
             db.execute("ALTER TABLE premium ADD COLUMN pro_until  INTEGER NOT NULL DEFAULT 0;")
 
+        # === user_flags =======================================================
         db.execute("""
             CREATE TABLE IF NOT EXISTS user_flags (
                 user_id     TEXT PRIMARY KEY,
@@ -217,6 +232,7 @@ def ensure_premium_db():
             );
         """)
 
+        # === referrals ========================================================
         db.execute("""
             CREATE TABLE IF NOT EXISTS referrals (
                 invitee_id TEXT PRIMARY KEY,
@@ -225,8 +241,54 @@ def ensure_premium_db():
             );
         """)
 
-        db.commit()
+        # === payments =========================================================
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS payments (
+                id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id         TEXT    NOT NULL,
+                provider        TEXT    NOT NULL,                  -- 'stripe' | 'paypal'
+                tier            TEXT    NOT NULL,                  -- 'plus' | 'pro'
+                mode            TEXT    NOT NULL DEFAULT 'sub',    -- 'sub' | 'one_time'
+                session_id      TEXT,
+                subscription_id TEXT,
+                status          TEXT    NOT NULL DEFAULT 'created',-- created|paid|active|canceled
+                amount_cents    INTEGER,
+                currency        TEXT,
+                created_at      INTEGER NOT NULL,
+                updated_at      INTEGER NOT NULL
+            );
+        """)
 
+        # миграция столбцов для payments (если схема уже существовала и чего-то не хватает)
+        pay_cols = {r[1] for r in db.execute("PRAGMA table_info(payments);")}
+        alter_stmts = []
+        if "mode" not in pay_cols:
+            alter_stmts.append("ALTER TABLE payments ADD COLUMN mode TEXT NOT NULL DEFAULT 'sub';")
+        if "session_id" not in pay_cols:
+            alter_stmts.append("ALTER TABLE payments ADD COLUMN session_id TEXT;")
+        if "subscription_id" not in pay_cols:
+            alter_stmts.append("ALTER TABLE payments ADD COLUMN subscription_id TEXT;")
+        if "status" not in pay_cols:
+            alter_stmts.append("ALTER TABLE payments ADD COLUMN status TEXT NOT NULL DEFAULT 'created';")
+        if "amount_cents" not in pay_cols:
+            alter_stmts.append("ALTER TABLE payments ADD COLUMN amount_cents INTEGER;")
+        if "currency" not in pay_cols:
+            alter_stmts.append("ALTER TABLE payments ADD COLUMN currency TEXT;")
+        if "created_at" not in pay_cols:
+            alter_stmts.append("ALTER TABLE payments ADD COLUMN created_at INTEGER NOT NULL DEFAULT (strftime('%s','now'));")
+        if "updated_at" not in pay_cols:
+            alter_stmts.append("ALTER TABLE payments ADD COLUMN updated_at INTEGER NOT NULL DEFAULT (strftime('%s','now'));")
+
+        for stmt in alter_stmts:
+            db.execute(stmt)
+
+        # индексы для payments
+        db.execute("CREATE INDEX IF NOT EXISTS idx_pay_user    ON payments(user_id);")
+        db.execute("CREATE INDEX IF NOT EXISTS idx_pay_session ON payments(session_id);")
+        db.execute("CREATE INDEX IF NOT EXISTS idx_pay_sub     ON payments(subscription_id);")
+
+        db.commit()
+        
 @contextmanager
 def premium_db():
     ensure_premium_db()
