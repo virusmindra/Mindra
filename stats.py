@@ -52,6 +52,24 @@ ALL_PLANS = {PLAN_FREE, PLAN_PLUS, PLAN_PRO}
 OWNER_ID = os.getenv("OWNER_ID", "7775321566")
 ADMIN_USER_IDS = [OWNER_ID]  # можно расширить
 
+def record_payment_session(uid: str, provider: str, tier: str, session_id: str, mode: str = "sub"):
+    with premium_db() as db:
+        db.execute(
+            "INSERT INTO payments (user_id, provider, tier, mode, session_id, status, created_at, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, 'created', strftime('%s','now'), strftime('%s','now'));",
+            (str(uid), provider, tier, mode, session_id)
+        )
+        db.commit()
+
+def mark_payment_active_by_session(session_id: str, subscription_id: str | None = None):
+    with premium_db() as db:
+        db.execute(
+            "UPDATE payments SET status='active', subscription_id=COALESCE(?, subscription_id), updated_at=strftime('%s','now') "
+            "WHERE session_id=?;",
+            (subscription_id, session_id)
+        )
+        db.commit()
+
 # ====== УТИЛЫ ВРЕМЕНИ ======
 def _now_epoch() -> int:
     return int(time.time())
