@@ -7,3 +7,4 @@ pytz
 nest_asyncio
 gTTS==2.5.1
 elevenlabs
+stripe>=6,<7
