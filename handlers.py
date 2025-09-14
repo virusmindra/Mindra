@@ -313,13 +313,14 @@ def _up_i18n(uid: str):
     lang = user_languages.get(uid, "ru")
     return UPGRADE_TEXTS.get(lang, UPGRADE_TEXTS["ru"])
 
-def _kb_upgrade_main(uid: str):
+def _upgrade_menu_kb(uid: str) -> InlineKeyboardMarkup:
     t = _up_i18n(uid)
-    return InlineKeyboardMarkup([
-        [InlineKeyboardButton("⭐ " + PLAN_LABELS.get(user_languages.get(uid,"ru"), PLAN_LABELS["ru"])["plus"], callback_data="up:choose:plus")],
-        [InlineKeyboardButton("💎 " + PLAN_LABELS.get(user_languages.get(uid,"ru"), PLAN_LABELS["ru"])["pro"],  callback_data="up:choose:pro")],
-        [InlineKeyboardButton(t["back"], callback_data="m:home")]  # возврат в меню
-    ])
+    rows = [
+        [InlineKeyboardButton(_plan_name(uid,"plus"), callback_data="up:tier:plus")],
+        [InlineKeyboardButton(_plan_name(uid,"pro"),  callback_data="up:tier:pro")],
+        [InlineKeyboardButton(t["back"], callback_data="m:nav:premium")],
+    ]
+    return InlineKeyboardMarkup(rows)
 
 def _kb_upgrade_pay(uid: str, tier: str):
     t = _up_i18n(uid)
@@ -328,6 +329,23 @@ def _kb_upgrade_pay(uid: str, tier: str):
         [InlineKeyboardButton("🅿️ PayPal", callback_data=f"up:pay:paypal:{tier}")],
         [InlineKeyboardButton(t["back"], callback_data="up:menu")]
     ])
+
+def _upgrade_durations_kb(uid: str, tier: str) -> InlineKeyboardMarkup:
+    t = _up_i18n(uid); P = t["period"]
+    rows = [
+        [InlineKeyboardButton(f"{P['1m']}",  callback_data=f"up:buy:{tier}:1m")],
+        [InlineKeyboardButton(f"{P['3m']}",  callback_data=f"up:buy:{tier}:3m")],
+        [InlineKeyboardButton(f"{P['6m']}",  callback_data=f"up:buy:{tier}:6m")],
+        [InlineKeyboardButton(f"{P['12m']}", callback_data=f"up:buy:{tier}:12m")],
+        [InlineKeyboardButton(f"{P['life']}",callback_data=f"up:buy:{tier}:life")],
+        [InlineKeyboardButton(t["back"],     callback_data="up:menu")],
+    ]
+    return InlineKeyboardMarkup(rows)
+
+async def _send_upgrade_menu(qmsg, uid: str):
+    t = _up_i18n(uid)
+    text = f"*{t['title']}*\n\n{t['choose']}"
+    await qmsg.edit_text(text, parse_mode="Markdown", reply_markup=_upgrade_menu_kb(uid))
 
 async def upgrade_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
