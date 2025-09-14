@@ -291,6 +291,64 @@ def _kb_upgrade_pay(uid: str, tier: str):
         [InlineKeyboardButton(t["back"], callback_data="up:menu")]
     ])
 
+async def upgrade_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    t = _up_i18n(uid)
+    text = f"*{t['title']}*\n\n{t['choose']}"
+    await ui_show_from_command(update, context, text, reply_markup=_kb_upgrade_main(uid), parse_mode="Markdown")
+
+async def upgrade_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    if not q or not q.data.startswith("up:"):
+        return
+    await q.answer()
+    uid = str(q.from_user.id)
+    t = _up_i18n(uid)
+
+    parts = q.data.split(":")  # up:...
+    action = parts[1]
+
+    if action == "menu":
+        text = f"*{t['title']}*\n\n{t['choose']}"
+        return await q.edit_message_text(text, parse_mode="Markdown", reply_markup=_kb_upgrade_main(uid))
+
+    if action == "choose":
+        tier = parts[2]  # plus|pro
+        title = t["plus_title"] if tier == "plus" else t["pro_title"]
+        bullets = t["plus_bullets"] if tier == "plus" else t["pro_bullets"]
+        text = f"*{title}*\n{bullets}\n\n*{t['pay_title']}*\n{t['pay_methods']}"
+        return await q.edit_message_text(text, parse_mode="Markdown", reply_markup=_kb_upgrade_pay(uid, tier))
+
+    if action == "pay":
+        provider = parts[2]     # stripe|paypal
+        tier = parts[3]         # plus|pro
+
+        # создаём ссылку
+        try:
+            if provider == "stripe":
+                url = await _create_stripe_checkout_session(uid, tier)
+            else:
+                url = _paypal_link(tier)  # простая ссылка (MVP)
+        except Exception as e:
+            logging.exception("create checkout failed: %s", e)
+            return await q.edit_message_text("😵 Payment init failed. Try again later.", reply_markup=_kb_upgrade_pay(uid, tier))
+
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton(t["open_payment"], url=url)],
+            [InlineKeyboardButton(t["check_payment"], callback_data=f"up:check:{tier}")],
+            [InlineKeyboardButton(t["back"], callback_data="up:menu")]
+        ])
+        await q.edit_message_text(t["pending"], reply_markup=kb, parse_mode="Markdown")
+        return
+
+    if action == "check":
+        # ручная проверка (на случай, если вебхук задержался)
+        if plan_of(uid) in ("plus" if has_plus(uid) else ""):  # просто используем твои хелперы
+            # если плюс или про активны — ок
+            if has_plus(uid) or has_pro(uid):
+                return await q.edit_message_text(t["active_now"], reply_markup=_menu_kb_home(uid))
+        return await q.answer(t["no_active"], show_alert=True)
+
 
 HOUSE = "🏠"
 
@@ -6603,6 +6661,8 @@ handlers = [
     CallbackQueryHandler(sleep_cb, pattern=r"^sleep:"),
 
     # --- Разное
+    CommandHandler("upgrade", upgrade_cmd),
+    CallbackQueryHandler(upgrade_callback, pattern=r"^up:"),
     CommandHandler("timezone", set_timezone),
     CommandHandler("feedback", feedback),
     CommandHandler("quote", quote),
