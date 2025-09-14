@@ -15,6 +15,7 @@ import textwrap
 import uuid
 import asyncio
 import pytz
+import stripe
 import telegram
 import shutil
 from elevenlabs import ElevenLabs 
@@ -271,6 +272,42 @@ CB = "ui:"
 CHALLENGE_POINTS = int(os.getenv("CHALLENGE_POINTS", 25)) 
 
 
+
+async def _create_stripe_checkout_session(uid: str, tier: str) -> str:
+    stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
+    if not stripe.api_key:
+        raise RuntimeError("STRIPE_SECRET_KEY is not set")
+
+    price_id = os.environ.get("STRIPE_PRICE_PLUS_MONTHLY") if tier == "plus" else os.environ.get("STRIPE_PRICE_PRO_MONTHLY")
+    if not price_id:
+        raise RuntimeError("Stripe price id env is missing")
+
+    domain = os.environ.get("DOMAIN_URL", "https://example.com")
+    success = f"{domain}/pay/success?uid={uid}&tier={tier}"
+    cancel  = f"{domain}/pay/cancel?uid={uid}"
+
+    session = stripe.checkout.Session.create(
+        mode="subscription",
+        line_items=[{"price": price_id, "quantity": 1}],
+        success_url=success,
+        cancel_url=cancel,
+        metadata={"uid": uid, "tier": tier}
+    )
+
+    # сохраним сессию (для аудита/резервной активации)
+    try:
+        record_payment_session(uid, "stripe", tier, session.id, mode="sub")
+    except Exception as e:
+        logging.warning("record_payment_session failed: %s", e)
+
+    return session.url
+
+def _paypal_link(tier: str) -> str:
+    if tier == "plus":
+        return os.environ.get("PAYPAL_PLUS_URL", "https://www.paypal.com/pay?plus_stub")
+    else:
+        return os.environ.get("PAYPAL_PRO_URL", "https://www.paypal.com/pay?pro_stub")
+        
 def _up_i18n(uid: str):
     lang = user_languages.get(uid, "ru")
     return UPGRADE_TEXTS.get(lang, UPGRADE_TEXTS["ru"])
