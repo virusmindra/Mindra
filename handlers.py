@@ -352,7 +352,59 @@ async def upgrade_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     t = _up_i18n(uid)
     text = f"*{t['title']}*\n\n{t['choose']}"
     await ui_show_from_command(update, context, text, reply_markup=_kb_upgrade_main(uid), parse_mode="Markdown")
+# ——— Stripe helpers ———
+def _checkout_mode(term: str) -> str:
+    return "payment" if term == "life" else "subscription"
 
+def _success_url(session_id: str) -> str:
+    # deep-link в чат после оплаты (не обязательно, но красиво)
+    return f"https://t.me/{BOT_USERNAME}?start=paid_{session_id}"
+
+def _cancel_url() -> str:
+    return f"https://t.me/{BOT_USERNAME}?start=cancel"
+
+async def _create_checkout_session(uid: str, tier: str, term: str):
+    price = PRICE_IDS.get(tier, {}).get(term)
+    if not price:
+        raise RuntimeError("Unknown price mapping")
+    mode = _checkout_mode(term)
+    import stripe
+    sess = stripe.checkout.Session.create(
+        mode = mode,
+        line_items=[{"price": price, "quantity": 1}],
+        success_url = _success_url("{CHECKOUT_SESSION_ID}"),
+        cancel_url  = _cancel_url(),
+        metadata = {"uid": uid, "tier": tier, "term": term},
+        allow_promotion_codes=True,
+    )
+    return sess
+
+async def _check_and_activate(uid: str, session_id: str) -> bool:
+    import stripe
+    sess = stripe.checkout.Session.retrieve(session_id, expand=["subscription","payment_intent"])
+    if (sess.get("status") != "complete") or (sess.get("payment_status") != "paid"):
+        return False
+
+    tier  = (sess.get("metadata") or {}).get("tier","plus")
+    term  = (sess.get("metadata") or {}).get("term","1m")
+
+    if sess.get("mode") == "subscription" and sess.get("subscription"):
+        sub = stripe.Subscription.retrieve(sess["subscription"])
+        period_end = int(sub["current_period_end"])
+        dt = datetime.fromtimestamp(period_end, tz=timezone.utc)
+        set_premium_until(uid, dt, tier=("pro" if tier=="pro" else "plus"))
+        return True
+
+    # lifetime — one-time
+    if sess.get("mode") == "payment":
+        # выдаём «пожизненно»: просто на очень большой срок (например, 60 лет)
+        days = 365 * 60
+        extend_premium_days(uid, days, tier=("pro" if tier=="pro" else "plus"))
+        return True
+
+    return False
+
+# ——— Callbacks ———
 async def upgrade_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     if not q or not q.data.startswith("up:"):
@@ -361,51 +413,54 @@ async def upgrade_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(q.from_user.id)
     t = _up_i18n(uid)
 
-    parts = q.data.split(":")  # up:...
-    action = parts[1]
+    parts = q.data.split(":")
+    # up:menu
+    if q.data == "up:menu":
+        return await _send_upgrade_menu(q.message, uid)
 
-    if action == "menu":
-        text = f"*{t['title']}*\n\n{t['choose']}"
-        return await q.edit_message_text(text, parse_mode="Markdown", reply_markup=_kb_upgrade_main(uid))
-
-    if action == "choose":
-        tier = parts[2]  # plus|pro
-        title = t["plus_title"] if tier == "plus" else t["pro_title"]
-        bullets = t["plus_bullets"] if tier == "plus" else t["pro_bullets"]
-        text = f"*{title}*\n{bullets}\n\n*{t['pay_title']}*\n{t['pay_methods']}"
-        return await q.edit_message_text(text, parse_mode="Markdown", reply_markup=_kb_upgrade_pay(uid, tier))
-
-    if action == "pay":
-        provider = parts[2]     # stripe|paypal
-        tier = parts[3]         # plus|pro
-
-        # создаём ссылку
-        try:
-            if provider == "stripe":
-                url = await _create_stripe_checkout_session(uid, tier)
-            else:
-                url = _paypal_link(tier)  # простая ссылка (MVP)
-        except Exception as e:
-            logging.exception("create checkout failed: %s", e)
-            return await q.edit_message_text("😵 Payment init failed. Try again later.", reply_markup=_kb_upgrade_pay(uid, tier))
-
-        kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton(t["open_payment"], url=url)],
-            [InlineKeyboardButton(t["check_payment"], callback_data=f"up:check:{tier}")],
-            [InlineKeyboardButton(t["back"], callback_data="up:menu")]
-        ])
-        await q.edit_message_text(t["pending"], reply_markup=kb, parse_mode="Markdown")
+    # up:tier:<plus|pro>
+    if len(parts) == 3 and parts[1] == "tier":
+        tier = parts[2]
+        title = t["plus_title"] if tier=="plus" else t["pro_title"]
+        await q.message.edit_text(
+            f"*{title}*\n\n{t['choose']}",
+            parse_mode="Markdown",
+            reply_markup=_upgrade_durations_kb(uid, tier)
+        )
         return
 
-    if action == "check":
-        # ручная проверка (на случай, если вебхук задержался)
-        if plan_of(uid) in ("plus" if has_plus(uid) else ""):  # просто используем твои хелперы
-            # если плюс или про активны — ок
-            if has_plus(uid) or has_pro(uid):
-                return await q.edit_message_text(t["active_now"], reply_markup=_menu_kb_home(uid))
-        return await q.answer(t["no_active"], show_alert=True)
+    # up:buy:<tier>:<term>
+    if len(parts) == 4 and parts[1] == "buy":
+        tier, term = parts[2], parts[3]
+        try:
+            sess = await _create_checkout_session(uid, tier, term)
+        except Exception as e:
+            logging.exception(f"stripe session failed: {e}")
+            return await q.message.edit_text("⚠️ Ошибка создания оплаты. Попробуй ещё раз позже.")
 
+        # экран ожидания
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton(t["open_payment"], url=sess.url)],
+            [InlineKeyboardButton(t["check_payment"], callback_data=f"up:chk:{sess.id}")],
+            [InlineKeyboardButton(t["back"], callback_data="up:menu")],
+        ])
+        await q.message.edit_text(t["pending"], reply_markup=kb)
+        return
 
+    # up:chk:<session_id>
+    if len(parts) == 3 and parts[1] == "chk":
+        session_id = parts[2]
+        ok = False
+        try:
+            ok = await _check_and_activate(uid, session_id)
+        except Exception as e:
+            logging.exception(f"stripe check failed: {e}")
+        if ok:
+            await q.message.edit_text(t["active_now"], reply_markup=_menu_kb_premium(uid))
+        else:
+            await q.answer(t["no_active"], show_alert=True)
+        return
+        
 HOUSE = "🏠"
 
 def menu_button_label(uid: str) -> str:
