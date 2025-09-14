@@ -271,6 +271,27 @@ CB = "ui:"
 CHALLENGE_POINTS = int(os.getenv("CHALLENGE_POINTS", 25)) 
 
 
+def _up_i18n(uid: str):
+    lang = user_languages.get(uid, "ru")
+    return UPGRADE_TEXTS.get(lang, UPGRADE_TEXTS["ru"])
+
+def _kb_upgrade_main(uid: str):
+    t = _up_i18n(uid)
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("⭐ " + PLAN_LABELS.get(user_languages.get(uid,"ru"), PLAN_LABELS["ru"])["plus"], callback_data="up:choose:plus")],
+        [InlineKeyboardButton("💎 " + PLAN_LABELS.get(user_languages.get(uid,"ru"), PLAN_LABELS["ru"])["pro"],  callback_data="up:choose:pro")],
+        [InlineKeyboardButton(t["back"], callback_data="m:home")]  # возврат в меню
+    ])
+
+def _kb_upgrade_pay(uid: str, tier: str):
+    t = _up_i18n(uid)
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("💳 Stripe", callback_data=f"up:pay:stripe:{tier}")],
+        [InlineKeyboardButton("🅿️ PayPal", callback_data=f"up:pay:paypal:{tier}")],
+        [InlineKeyboardButton(t["back"], callback_data="up:menu")]
+    ])
+
+
 HOUSE = "🏠"
 
 def menu_button_label(uid: str) -> str:
