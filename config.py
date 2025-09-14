@@ -5,6 +5,7 @@ import openai
 TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 ELEVEN_API_KEY = os.getenv("ELEVEN_API_KEY", "").strip()
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "")
 
 openai.api_key = OPENAI_API_KEY  # Инициализируем ключ для OpenAI API
 
