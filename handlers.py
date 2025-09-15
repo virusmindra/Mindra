@@ -7,6 +7,7 @@ import math
 import logging
 import openai
 import tempfile
+import time
 import aiohttp
 import subprocess
 import ffmpeg
@@ -293,6 +294,41 @@ def _load_price_ids() -> dict:
 
 PRICE_IDS = _load_price_ids()
 
+_PENDING_CHECKOUT_TTL = 60 * 60 * 24  # 24 hours
+_pending_checkouts: dict[str, dict] = {}
+
+
+def _cleanup_pending_checkouts(now: float | None = None) -> None:
+    if not _pending_checkouts:
+        return
+    if now is None:
+        now = time.time()
+    expired = [token for token, data in _pending_checkouts.items() if now - data.get("ts", 0) > _PENDING_CHECKOUT_TTL]
+    for token in expired:
+        _pending_checkouts.pop(token, None)
+
+
+def _store_pending_checkout(uid: str, session_id: str) -> str:
+    _cleanup_pending_checkouts()
+    token = uuid.uuid4().hex[:16]
+    while token in _pending_checkouts:
+        token = uuid.uuid4().hex[:16]
+    _pending_checkouts[token] = {"session_id": session_id, "uid": uid, "ts": time.time()}
+    return token
+
+
+def _resolve_pending_checkout(uid: str, token: str) -> str | None:
+    _cleanup_pending_checkouts()
+    data = _pending_checkouts.get(token)
+    if not data or data.get("uid") != uid:
+        return None
+    return data.get("session_id")
+
+
+def _clear_pending_checkout(token: str) -> None:
+    _pending_checkouts.pop(token, None)
+
+
 async def _create_stripe_checkout_session(uid: str, tier: str) -> str:
     stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
     if not stripe.api_key:
@@ -468,9 +504,10 @@ async def upgrade_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return await q.message.edit_text("⚠️ Ошибка создания оплаты. Попробуй ещё раз позже.")
 
         # экран ожидания
+        token = _store_pending_checkout(uid, sess.id)
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton(t["open_payment"], url=sess.url)],
-            [InlineKeyboardButton(t["check_payment"], callback_data=f"up:chk:{sess.id}")],
+            [InlineKeyboardButton(t["check_payment"], callback_data=f"up:chk:{token}")],
             [InlineKeyboardButton(t["back"], callback_data="up:menu")],
         ])
         await q.message.edit_text(t["pending"], reply_markup=kb)
@@ -478,13 +515,18 @@ async def upgrade_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # up:chk:<session_id>
     if len(parts) == 3 and parts[1] == "chk":
-        session_id = parts[2]
+        token = parts[2]
+        session_id = _resolve_pending_checkout(uid, token)
+        if not session_id:
+            await q.answer(t["no_active"], show_alert=True)
+            return
         ok = False
         try:
             ok = await _check_and_activate(uid, session_id)
         except Exception as e:
             logging.exception(f"stripe check failed: {e}")
         if ok:
+            _clear_pending_checkout(token)
             await q.message.edit_text(t["active_now"], reply_markup=_menu_kb_premium(uid))
         else:
             await q.answer(t["no_active"], show_alert=True)
