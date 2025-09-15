@@ -274,16 +274,25 @@ _sleep_prefs: dict[str, dict] = {}
 CB = "ui:"
 CHALLENGE_POINTS = int(os.getenv("CHALLENGE_POINTS", 25)) 
 
+# Ключ Stripe
+stripe.api_key = STRIPE_SECRET_KEY or os.getenv("STRIPE_SECRET_KEY", "")
+
 def _load_price_ids() -> dict:
+    """Читает JSON из env PRICE_IDS и возвращает dict {'plus': {...}, 'pro': {...}}."""
     raw = os.getenv("PRICE_IDS", "").strip()
     if not raw:
         logging.warning("PRICE_IDS env is empty")
         return {}
     try:
-        return json.loads(raw)
+        data = json.loads(raw)
+        if not isinstance(data, dict):
+            raise ValueError("PRICE_IDS must be a JSON object")
+        return data
     except Exception as e:
-        logging.error("PRICE_IDS parse failed: %s; raw(head)=%r", e, raw[:120])
+        logging.error("Failed to parse PRICE_IDS: %s | raw(head)=%r", e, raw[:120])
         return {}
+
+PRICE_IDS = _load_price_ids()
 
 async def _create_stripe_checkout_session(uid: str, tier: str) -> str:
     stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
