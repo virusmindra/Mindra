@@ -273,7 +273,16 @@ _sleep_prefs: dict[str, dict] = {}
 CB = "ui:"
 CHALLENGE_POINTS = int(os.getenv("CHALLENGE_POINTS", 25)) 
 
-
+def _load_price_ids() -> dict:
+    raw = os.getenv("PRICE_IDS", "").strip()
+    if not raw:
+        logging.warning("PRICE_IDS env is empty")
+        return {}
+    try:
+        return json.loads(raw)
+    except Exception as e:
+        logging.error("PRICE_IDS parse failed: %s; raw(head)=%r", e, raw[:120])
+        return {}
 
 async def _create_stripe_checkout_session(uid: str, tier: str) -> str:
     stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
