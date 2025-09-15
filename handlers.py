@@ -374,20 +374,30 @@ def _cancel_url() -> str:
     return f"https://t.me/{BOT_USERNAME}?start=cancel"
 
 async def _create_checkout_session(uid: str, tier: str, term: str):
+    global PRICE_IDS
+    if not PRICE_IDS:
+        PRICE_IDS = _load_price_ids()
+
     price = PRICE_IDS.get(tier, {}).get(term)
     if not price:
-        raise RuntimeError("Unknown price mapping")
-    mode = _checkout_mode(term)
-    import stripe
-    sess = stripe.checkout.Session.create(
-        mode = mode,
+        raise RuntimeError(f"Unknown price mapping for {tier}/{term}")
+
+    # (на всякий случай) подтянем ключ ещё раз
+    stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "")
+
+    domain = os.getenv("DOMAIN_URL", "https://example.com")
+    success_url = f"{domain}/pay/success?cs={{CHECKOUT_SESSION_ID}}"
+    cancel_url  = f"{domain}/pay/cancel"
+
+    session = stripe.checkout.Session.create(
+        mode=_checkout_mode(term),
         line_items=[{"price": price, "quantity": 1}],
-        success_url = _success_url("{CHECKOUT_SESSION_ID}"),
-        cancel_url  = _cancel_url(),
-        metadata = {"uid": uid, "tier": tier, "term": term},
+        success_url=success_url,
+        cancel_url=cancel_url,
+        metadata={"uid": uid, "tier": tier, "term": term},
         allow_promotion_codes=True,
     )
-    return sess
+    return session
 
 async def _check_and_activate(uid: str, session_id: str) -> bool:
     import stripe
