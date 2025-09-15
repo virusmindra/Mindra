@@ -192,7 +192,6 @@ user_voice_mode = {}  # {user_id: bool}
 user_voice_prefs = {}
 waiting_feedback: set[str] = set()
 _last_action = {}
-PRICE_IDS = _load_price_ids() 
 
 MIN_HOURS_SINCE_LAST_POLL = 96  # минимум 4 дня между опросами для одного юзера
 MIN_HOURS_SINCE_ACTIVE = 8      # не отправлять, если был онлайн последние 8 часов
