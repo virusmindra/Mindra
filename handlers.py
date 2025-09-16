@@ -48,6 +48,8 @@ from texts import (
     STORY_TEXTS,
     LANG_TO_TTS,
     VOICE_MODE_TEXTS,
+    ELEVEN_LIMIT_INFO_TEXTS,
+    ELEVEN_LIMIT_REACHED_TEXTS,
     CHALLENGE_BANK,
     GH_TEXTS,
     SETTINGS_TEXTS,
@@ -192,6 +194,12 @@ user_last_evening: dict[str, datetime] = {}
 user_timezones = {}
 user_voice_mode = {}  # {user_id: bool}
 user_voice_prefs = {}
+user_eleven_daily_usage: dict[str, dict[str, float]] = {}
+
+
+class ElevenQuotaExceeded(Exception):
+    """Raised when ElevenLabs daily quota is exhausted."""
+
 waiting_feedback: set[str] = set()
 _last_action = {}
 
@@ -2047,20 +2055,51 @@ ENGINE_GTTS   = "gtts"
 
 # профайл пользователя
 def _vp(uid: str):
+    allow_eleven = has_feature(uid, "eleven_tts") and _has_eleven()
     if uid not in user_voice_prefs:
-        user_voice_prefs[uid] = {
-            "engine": ENGINE_ELEVEN if _has_eleven() else ENGINE_GTTS,
-            "voice_id": DEFAULT_ELEVEN_FEMALE if _has_eleven() else "",
-            "voice_name": "Female (Eleven)" if _has_eleven() else "gTTS",
-            "speed": 1.0,
-            "voice_only": False,
-            "auto_story_voice": True,
-            "accent": "com",
-            "bgm_kind": "off",
-            "bgm_gain_db": -20,
-            "auto_bgm_for_stories": True,
-        }
-    return user_voice_prefs[uid]
+        if allow_eleven:
+            user_voice_prefs[uid] = {
+                "engine": ENGINE_ELEVEN,
+                "voice_id": DEFAULT_ELEVEN_FEMALE,
+                "voice_name": "Female (Eleven)",
+                "speed": 1.0,
+                "voice_only": False,
+                "auto_story_voice": True,
+                "accent": "com",
+                "bgm_kind": "off",
+                "bgm_gain_db": -20,
+                "auto_bgm_for_stories": True,
+            }
+        else:
+            user_voice_prefs[uid] = {
+                "engine": ENGINE_GTTS,
+                "voice_id": "",
+                "voice_name": "gTTS",
+                "speed": 1.0,
+                "voice_only": False,
+                "auto_story_voice": True,
+                "accent": "com",
+                "bgm_kind": "off",
+                "bgm_gain_db": -20,
+                "auto_bgm_for_stories": True,
+            }
+
+    prefs = user_voice_prefs[uid]
+
+    if not allow_eleven:
+        if str(prefs.get("engine", "")).lower() == ENGINE_ELEVEN:
+            prefs["engine"] = ENGINE_GTTS
+        if prefs.get("voice_id"):
+            prefs["voice_id"] = ""
+        if not prefs.get("voice_name") or "eleven" in str(prefs.get("voice_name", "")).lower():
+            prefs["voice_name"] = "gTTS"
+    else:
+        if str(prefs.get("engine", "")).lower() == ENGINE_ELEVEN and not prefs.get("voice_id"):
+            prefs["voice_id"] = DEFAULT_ELEVEN_FEMALE
+        if str(prefs.get("engine", "")).lower() == ENGINE_ELEVEN and not prefs.get("voice_name"):
+            prefs["voice_name"] = "Female (Eleven)"
+
+    return prefs
     
 
 def _build_story_patterns(words_dict: dict[str, list[str]]) -> dict[str, re.Pattern]:
@@ -2150,7 +2189,8 @@ def _voice_kb(uid: str, tab: str = "engine", back_to: str = "plus") -> InlineKey
     p = _vp(uid)
     rows: list[list[InlineKeyboardButton]] = []
     can_eleven = has_feature(uid, "eleven_tts")
-
+    has_eleven_key = _has_eleven()
+    
     try:
         eff_engine = _effective_tts_engine(uid).lower()
     except Exception:
@@ -2165,11 +2205,15 @@ def _voice_kb(uid: str, tab: str = "engine", back_to: str = "plus") -> InlineKey
 
     if tab == "engine":
         row = []
-        if can_eleven:
-            row.append(InlineKeyboardButton(
-                _check(p.get("engine","").lower() == "eleven") + t["engine_eleven"],
-                callback_data="v:engine:eleven"
-            ))
+        eleven_label = t["engine_eleven"]
+        if can_eleven and has_eleven_key:
+            eleven_label = _check(p.get("engine", "").lower() == "eleven") + eleven_label
+        else:
+            eleven_label = f"🔒 {eleven_label}"
+        row.append(InlineKeyboardButton(
+            eleven_label,
+            callback_data="v:engine:eleven"
+        ))
         row.append(InlineKeyboardButton(
             _check(eff_engine == "gtts") + t["engine_gtts"],
             callback_data="v:engine:gTTS"             # callback оставляю как у тебя
@@ -2181,10 +2225,13 @@ def _voice_kb(uid: str, tab: str = "engine", back_to: str = "plus") -> InlineKey
         cur_engine = (p.get("engine") or "").lower()
         cur_voice  = p.get("voice_id", "")
         for i, (name, eng_k, vid) in enumerate(presets):
-            if eng_k.lower() == "eleven" and (not can_eleven or not _has_eleven()):
-                continue
+            locked = eng_k.lower() == "eleven" and (not can_eleven or not has_eleven_key)
             selected = (eng_k.lower() == cur_engine) and ((vid == cur_voice) or (eng_k.lower() == "gtts"))
-            rows.append([InlineKeyboardButton(_check(selected) + name, callback_data=f"v:voice:{i}")])
+            if locked:
+                label = f"🔒 {name}"
+            else:
+                label = _check(selected) + name
+            rows.append([InlineKeyboardButton(label, callback_data=f"v:voice:{i}")])
 
     elif tab == "speed":
         speeds = [0.8, 0.9, 1.0, 1.1, 1.2]
@@ -2236,6 +2283,42 @@ def _voice_kb(uid: str, tab: str = "engine", back_to: str = "plus") -> InlineKey
     rows.append([InlineKeyboardButton(_menu_i18n(uid)["back"], callback_data=back_cb)])
 
     return InlineKeyboardMarkup(rows)
+
+def _eleven_limit_info(uid: str) -> str:
+    lang = user_languages.get(uid, "ru")
+    template = ELEVEN_LIMIT_INFO_TEXTS.get(lang) or ELEVEN_LIMIT_INFO_TEXTS.get("en", "")
+    return template.format(plus=_plan_label(uid, PLAN_PLUS), pro=_plan_label(uid, PLAN_PRO))
+
+
+def _eleven_limit_reached(uid: str) -> str:
+    lang = user_languages.get(uid, "ru")
+    template = ELEVEN_LIMIT_REACHED_TEXTS.get(lang) or ELEVEN_LIMIT_REACHED_TEXTS.get("en", "")
+    return template.format(plus=_plan_label(uid, PLAN_PLUS), pro=_plan_label(uid, PLAN_PRO))
+
+
+def _eleven_locked_message(uid: str) -> str:
+    try:
+        _, body = upsell_for(uid, "feature_eleven")
+        return body.strip()
+    except Exception:
+        return _eleven_limit_info(uid)
+
+
+def _eleven_usage_today(uid: str) -> dict[str, float]:
+    today = date.today().isoformat()
+    entry = user_eleven_daily_usage.get(uid)
+    if not entry or entry.get("date") != today:
+        entry = {"date": today, "seconds": 0.0}
+        user_eleven_daily_usage[uid] = entry
+    return entry
+
+
+def _eleven_limit_seconds(uid: str) -> int | None:
+    try:
+        limit = int(quota(uid, "eleven_daily_seconds"))
+    except Exception:
+        return None
+    return limit if limit > 0 else None
 
 def _voice_mode_menu_text(uid: str) -> str:
     t_mode = _v_i18n(uid)
@@ -2422,11 +2505,7 @@ async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
         new_engine = parts[2]
         if new_engine.lower() == "eleven":
             if not has_feature(uid, "eleven_tts"):
-                try:
-                    title, _ = upsell_for(uid, "feature_eleven")
-                    await q.answer(title, show_alert=True)
-                except Exception:
-                    pass
+                await q.answer(_eleven_locked_message(uid), show_alert=True)
                 return await _voice_refresh(q, uid, "engine")
             if not _has_eleven():
                 await q.answer(_v_ui_i18n(uid).get("no_eleven_key","ElevenLabs key not set"), show_alert=True)
@@ -2440,7 +2519,10 @@ async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if 0 <= idx < len(presets):
             name, eng_k, vid = presets[idx]
             if eng_k.lower() == "eleven":
-                if not has_feature(uid, "eleven_tts") or not _has_eleven():
+                if not has_feature(uid, "eleven_tts"):
+                    await q.answer(_eleven_locked_message(uid), show_alert=True)
+                    return await _voice_refresh(q, uid, "engine")
+                if not _has_eleven():
                     await q.answer(_v_ui_i18n(uid).get("no_eleven_key","ElevenLabs not available"), show_alert=True)
                     return await _voice_refresh(q, uid, "engine")
             p["engine"] = eng_k
@@ -2513,7 +2595,15 @@ def _to_ogg_from_mp3(mp3_path: str, speed: float=1.0) -> str:
     except: pass
     return out_path
 
+def _audio_duration_seconds(path: str) -> float:
+    try:
+        info = ffmpeg.probe(path)
+        fmt = info.get("format", {}) if isinstance(info, dict) else {}
+        return float(fmt.get("duration", 0.0))
+    except Exception:
+        return 0.0
 
+    
 def _mix_with_bgm(voice_ogg_path: str, bg_path: str | None, gain_db: int = -20) -> str:
     """
     Миксуем голос (OGG/Opus) + фон (MP3/WAV) с нормализацией.
@@ -2604,22 +2694,40 @@ def synthesize_to_ogg(text: str, lang: str, uid: str) -> str:
             and has_feature(uid, "eleven_tts")     # у тарифа есть право на Eleven
         )
 
+        limit_seconds = _eleven_limit_seconds(uid)
+        usage = _eleven_usage_today(uid)
+
+        if use_eleven and limit_seconds is not None and usage.get("seconds", 0.0) >= limit_seconds:
+            raise ElevenQuotaExceeded(_eleven_limit_reached(uid))
+        
         if use_eleven:
             # speed из профиля: 0.8..1.2 ок; твоя реализация _tts_elevenlabs_to_ogg уже есть
-            return _tts_elevenlabs_to_ogg(
+            path =_tts_elevenlabs_to_ogg(
                 text,
                 p["voice_id"],
                 p.get("speed", 1.0)
             )
-
-        # gTTS (акцент по tld, скорость если поддержана в твоей _tts_gtts_to_ogg)
+            if limit_seconds is not None:
+                duration = _audio_duration_seconds(path)
+                if usage.get("seconds", 0.0) + duration > limit_seconds:
+                    usage["seconds"] = float(limit_seconds)
+                    try:
+                        if path and os.path.exists(path):
+                            os.remove(path)
+                    except Exception:
+                        pass
+                    raise ElevenQuotaExceeded(_eleven_limit_reached(uid))
+                usage["seconds"] = usage.get("seconds", 0.0) + duration
+            return path
+            # gTTS (акцент по tld, скорость если поддержана в твоей _tts_gtts_to_ogg)
         return _tts_gtts_to_ogg(
             text,
             lang,
             tld=p.get("accent", "com"),
             speed=p.get("speed", 1.0),
         )
-
+    except ElevenQuotaExceeded:
+        raise    
     except Exception as e:
         logging.exception(f"TTS primary failed ({p.get('engine')}), fallback to gTTS: {e}")
         # надёжный фолбэк
@@ -2868,19 +2976,32 @@ async def send_voice_response(context, chat_id: int, text: str, lang: str, bgm_k
     uid = str(chat_id)
     ogg_path = None
     mixed_path = None
+    prefs = _vp(uid)
     try:
         # синтез (внутри synthesize_to_ogg можно читать speed/voice из _vp(uid))
-        ogg_path = synthesize_to_ogg(text, lang, uid)  # ElevenLabs → gTTS фолбэк внутри
+        try:
+            ogg_path = synthesize_to_ogg(text, lang, uid)  # ElevenLabs → gTTS фолбэк внутри
+        except ElevenQuotaExceeded as quota_err:
+            notice = str(quota_err) or _eleven_limit_reached(uid)
+            try:
+                await context.bot.send_message(chat_id=chat_id, text=notice)
+            except Exception:
+                pass
+            ogg_path = _tts_gtts_to_ogg(
+                text,
+                lang,
+                tld=prefs.get("accent", "com"),
+                speed=prefs.get("speed", 1.0),
+            )
         path_to_send = ogg_path
 
         # 🎧 фон (если выбран) — только для тарифов с фичей voice_bgm_mix
-        p = _vp(uid)
-        kind = (bgm_kind_override if bgm_kind_override is not None else p.get("bgm_kind", "off")) or "off"
+        kind = (bgm_kind_override if bgm_kind_override is not None else prefs.get("bgm_kind", "off")) or "off"
         if kind != "off" and has_feature(uid, "voice_bgm_mix"):
             bg = BGM_PRESETS.get(kind, {}).get("path")
             if bg and os.path.exists(bg):
                 try:
-                    mixed_path = _mix_with_bgm(ogg_path, bg, p.get("bgm_gain_db", -20))
+                    mixed_path = _mix_with_bgm(ogg_path, bg, prefs.get("bgm_gain_db", -20))
                     if mixed_path:
                         path_to_send = mixed_path
                 except Exception as mix_e:
