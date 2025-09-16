@@ -785,9 +785,9 @@ _FEATURE_MATRIX_FALLBACK = {
     PLAN_PRO:  {"reminders_unlimited": True},
 }
 _QUOTAS_FALLBACK = {
-    PLAN_FREE: {"reminders_active": 1},
-    PLAN_PLUS: {"reminders_active": 5},
-    PLAN_PRO:  {"reminders_active": 200},
+    PLAN_FREE: {"reminders_active": 1, "eleven_daily_seconds": 0},
+    PLAN_PLUS: {"reminders_active": 5, "eleven_daily_seconds": 8 * 60},
+    PLAN_PRO:  {"reminders_active": 200, "eleven_daily_seconds": 0},
 }
 
 def has_feature(uid: str, feature_key: str) -> bool:
