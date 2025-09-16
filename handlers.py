@@ -127,6 +127,7 @@ from datetime import datetime, timedelta, timezone, date
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ContextTypes, CommandHandler, MessageHandler, CallbackQueryHandler, filters, CallbackContext
 from telegram.constants import ChatAction, ParseMode
+from telegram.error import BadRequest
 from config import client, TELEGRAM_BOT_TOKEN, ELEVEN_API_KEY, BASE_DIR, DATA_DIR, PREMIUM_DB_PATH, REMIND_DB_PATH, STRIPE_SECRET_KEY
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "")
 from history import load_history, save_history, trim_history
