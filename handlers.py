@@ -1083,6 +1083,10 @@ async def menu_cb(update, context):
         ok = await _try_call(["test_mood", "test_mood_cmd"], u, context)
 
     # ---------- Премиум-функции ----------
+    elif q.data == "m:plus:voicemode":
+        await voice_mode_menu(update, context)
+        return
+        
     elif q.data == "m:plus:voice":
         ok = await _try_call(["voice_settings", "voice_settings_cmd"], u, context)
 
