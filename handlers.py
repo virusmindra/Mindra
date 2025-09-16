@@ -2256,6 +2256,68 @@ def _voice_mode_kb(uid: str, include_back: bool = True) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(rows)
 
 
+@wraps
+def _noop(f):  # just to silence linters if needed
+    return f
+
+
+async def require_premium_message(update, context, uid: str | None):
+    # Локализация + апселл-кнопки
+    t = _p_i18n(uid or "ru")
+    msg = f"*{t['upsell_title']}*\n\n{t['upsell_body']}"
+    kb = _premium_kb(uid or "0")
+
+    # Если это callback-кнопка — попробуем редактировать это же сообщение
+    q = getattr(update, "callback_query", None)
+    if q:
+        try:
+            await q.answer("💎 Mindra+", show_alert=False)
+        except Exception:
+            pass
+        try:
+            return await q.message.edit_text(msg, reply_markup=kb, parse_mode="Markdown")
+        except Exception:
+            return await context.bot.send_message(
+                chat_id=q.message.chat.id, text=msg, reply_markup=kb, parse_mode="Markdown"
+            )
+
+    # Иначе — обычная команда
+    m = getattr(update, "message", None)
+    if m:
+        return await m.reply_text(msg, reply_markup=kb, parse_mode="Markdown")
+
+    # Фолбэк
+    return await context.bot.send_message(
+        chat_id=update.effective_chat.id, text=msg, reply_markup=kb, parse_mode="Markdown"
+    )
+
+
+def require_premium(func):
+    @wraps(func)
+    async def wrapper(update, context, *args, **kwargs):
+        # UID может отсутствовать в некоторых редких апдейтах — берём аккуратно
+        uid = None
+        try:
+            uid = str(update.effective_user.id)
+        except Exception:
+            pass
+
+        # Разрешение
+        try:
+            allowed = is_premium(uid)
+        except Exception:
+            allowed = False
+
+        if allowed:
+            return await func(update, context, *args, **kwargs)
+
+        # Нет премиума — показать апселл
+        return await require_premium_message(update, context, uid)
+
+    return wrapper
+
+
+
 @require_premium
 async def voice_mode_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
@@ -2842,67 +2904,6 @@ async def send_voice_response(context, chat_id: int, text: str, lang: str, bgm_k
                     os.remove(pth)
             except Exception:
                 pass
-
-                
-
-@wraps
-def _noop(f):  # just to silence linters if needed
-    return f
-
-
-async def require_premium_message(update, context, uid: str | None):
-    # Локализация + апселл-кнопки
-    t = _p_i18n(uid or "ru")
-    msg = f"*{t['upsell_title']}*\n\n{t['upsell_body']}"
-    kb = _premium_kb(uid or "0")
-
-    # Если это callback-кнопка — попробуем редактировать это же сообщение
-    q = getattr(update, "callback_query", None)
-    if q:
-        try:
-            await q.answer("💎 Mindra+", show_alert=False)
-        except Exception:
-            pass
-        try:
-            return await q.message.edit_text(msg, reply_markup=kb, parse_mode="Markdown")
-        except Exception:
-            return await context.bot.send_message(
-                chat_id=q.message.chat.id, text=msg, reply_markup=kb, parse_mode="Markdown"
-            )
-
-    # Иначе — обычная команда
-    m = getattr(update, "message", None)
-    if m:
-        return await m.reply_text(msg, reply_markup=kb, parse_mode="Markdown")
-
-    # Фолбэк
-    return await context.bot.send_message(
-        chat_id=update.effective_chat.id, text=msg, reply_markup=kb, parse_mode="Markdown"
-    )
-
-def require_premium(func):
-    @wraps(func)
-    async def wrapper(update, context, *args, **kwargs):
-        # UID может отсутствовать в некоторых редких апдейтах — берём аккуратно
-        uid = None
-        try:
-            uid = str(update.effective_user.id)
-        except Exception:
-            pass
-
-        # Разрешение
-        try:
-            allowed = is_premium(uid)
-        except Exception:
-            allowed = False
-
-        if allowed:
-            return await func(update, context, *args, **kwargs)
-
-        # Нет премиума — показать апселл
-        return await require_premium_message(update, context, uid)
-    return wrapper
-# ---- end premium gate ----
 
 # ---- helpers ----
 def _engine_label_for(uid: str, engine_key: str) -> str:
