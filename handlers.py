@@ -188,6 +188,7 @@ user_ref_args: dict[str, str] = {}
 user_last_polled = {}
 user_last_report_sent = {}  # user_id: date (ISO)
 user_last_daily_sent = {}  # user_id: date (iso)
+user_last_evening: dict[str, datetime] = {}
 user_timezones = {}
 user_voice_mode = {}  # {user_id: bool}
 user_voice_prefs = {}
@@ -6982,4 +6983,5 @@ __all__ = [
     "check_and_send_warm_messages",
     "user_last_seen",
     "user_last_prompted",
+    "user_last_evening",
 ]
