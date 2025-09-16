@@ -2470,64 +2470,126 @@ async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     if not q or not q.data.startswith("v:"):
         return
-    await q.answer()
+   
     context.user_data[UI_MSG_KEY] = q.message.message_id   # <<< важно для единого сообщения
 
     uid = str(q.from_user.id)
     p = _vp(uid)
     parts = q.data.split(":")
-    kind = parts[1]
+    kind = parts[1] if len(parts) > 1 else ""
     current_tab = "engine"
-
+    answered = False
+    
     if kind == "tab":
-        return await _voice_refresh(q, uid, parts[2])
+        if len(parts) > 2:
+            await _voice_refresh(q, uid, parts[2])
+        if not answered:
+            await _safe_answer(q)
+        return
 
     # ←← ДОБАВЛЕННЫЙ БЛОК ДЛЯ /voice_mode (кнопки v:mode:on|off)
     elif kind == "mode":
-        desired = (parts[2] or "").lower()   # "on" | "off"
+        desired = (parts[2] if len(parts) > 2 else "").lower()   # "on" | "off"
         if not is_premium(uid):
             try:
                 title, _ = upsell_for(uid, "feature_voice_mode")
                 await q.answer(title, show_alert=True)
+                answered = True
             except Exception:
                 pass
-            return await _voice_refresh(q, uid, "engine")
+            await _voice_refresh(q, uid, "engine")
+            if not answered:
+                await _safe_answer(q)
+            return
 
         user_voice_mode[uid] = (desired == "on")
         t_mode = _v_i18n(uid)
         toast = t_mode.get("on") if user_voice_mode[uid] else t_mode.get("off")
         try:
             await q.answer(f"✅ {toast}" if toast else "✅", show_alert=False)
+            answered = True
         except Exception:
             pass
-        return await _voice_refresh(q, uid, "engine")
+        current_tab = "engine"
 
     elif kind == "engine":
-        new_engine = parts[2]
+        new_engine = parts[2] if len(parts) > 2 else ""
         if new_engine.lower() == "eleven":
             if not has_feature(uid, "eleven_tts"):
-                await q.answer(_eleven_locked_message(uid), show_alert=True)
-                return await _voice_refresh(q, uid, "engine")
+                try:
+                    await q.answer(_eleven_locked_message(uid), show_alert=True)
+                    answered = True
+                except Exception:
+                    pass
+                await _voice_refresh(q, uid, "engine")
+                if not answered:
+                    await _safe_answer(q)
+                return
             if not _has_eleven():
-                await q.answer(_v_ui_i18n(uid).get("no_eleven_key","ElevenLabs key not set"), show_alert=True)
-                return await _voice_refresh(q, uid, "engine")
-        p["engine"] = new_engine
+                try:
+                    await q.answer(_v_ui_i18n(uid).get("no_eleven_key","ElevenLabs key not set"), show_alert=True)
+                    answered = True
+                except Exception:
+                    pass
+                await _voice_refresh(q, uid, "engine")
+                if not answered:
+                    await _safe_answer(q)
+                return
+        if new_engine:
+            p["engine"] = new_engine
+            if new_engine.lower() == "eleven":
+                last_id = p.get("last_eleven_voice_id")
+                last_name = p.get("last_eleven_voice_name")
+                if last_id:
+                    p["voice_id"] = last_id
+                if last_name:
+                    p["voice_name"] = last_name
+                elif not p.get("voice_name"):
+                    p["voice_name"] = "Female (Eleven)"
+            elif new_engine.lower() == "gtts":
+                p["voice_id"] = ""
+                p["voice_name"] = "gTTS"
         current_tab = "engine"
 
     elif kind == "voice":
-        idx = int(parts[2])
+        try:
+            idx = int(parts[2])
+        except Exception:
+            idx = -1
         presets = VOICE_PRESETS.get(user_languages.get(uid, "ru"), VOICE_PRESETS["ru"])
         if 0 <= idx < len(presets):
             name, eng_k, vid = presets[idx]
             if eng_k.lower() == "eleven":
                 if not has_feature(uid, "eleven_tts"):
-                    await q.answer(_eleven_locked_message(uid), show_alert=True)
-                    return await _voice_refresh(q, uid, "engine")
+                    try:
+                        await q.answer(_eleven_locked_message(uid), show_alert=True)
+                        answered = True
+                    except Exception:
+                        pass
+                    await _voice_refresh(q, uid, "engine")
+                    if not answered:
+                        await _safe_answer(q)
+                    return
                 if not _has_eleven():
-                    await q.answer(_v_ui_i18n(uid).get("no_eleven_key","ElevenLabs not available"), show_alert=True)
-                    return await _voice_refresh(q, uid, "engine")
+                    try:
+                        await q.answer(_v_ui_i18n(uid).get("no_eleven_key","ElevenLabs not available"), show_alert=True)
+                        answered = True
+                    except Exception:
+                        pass
+                    await _voice_refresh(q, uid, "engine")
+                    if not answered:
+                        await _safe_answer(q)
+                    return
             p["engine"] = eng_k
-            p["voice_id"] = vid or p.get("voice_id","")
+            if eng_k.lower() == "eleven":
+                if vid:
+                    p["voice_id"] = vid
+                else:
+                    p["voice_id"] = p.get("voice_id", "")
+                p["last_eleven_voice_id"] = p.get("voice_id")
+                p["last_eleven_voice_name"] = name
+            else:
+                p["voice_id"] = vid or ""
             p["voice_name"] = name
         current_tab = "engine"
 
@@ -2539,7 +2601,7 @@ async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
         current_tab = "speed"
 
     elif kind == "beh":
-        sub = parts[2]
+        sub = parts[2] if len(parts) > 2 else ""
         if sub == "voiceonly":
             p["voice_only"] = not p.get("voice_only", False)
         elif sub == "autostory":
@@ -2547,10 +2609,10 @@ async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
         current_tab = "beh"
 
     elif kind == "bg":
-        sub = parts[2]
-        if sub == "set":
+        sub = parts[2] if len(parts) > 2 else ""
+        if sub == "set" and len(parts) > 3:
             p["bgm_kind"] = parts[3]
-        elif sub == "gain":
+        elif sub == "gain" and len(parts) > 3:
             try:
                 p["bgm_gain_db"] = int(parts[3])
             except Exception:
@@ -2558,7 +2620,9 @@ async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
         current_tab = "bg"
 
     await _voice_refresh(q, uid, current_tab)
-
+    if not answered:
+        await _safe_answer(q)
+        
 def _expressive(text: str, lang: str) -> str:
     s = text.replace("...", "…")
     # [sigh] / (вздох)
@@ -2988,6 +3052,18 @@ async def send_voice_response(context, chat_id: int, text: str, lang: str, bgm_k
                 await context.bot.send_message(chat_id=chat_id, text=notice)
             except Exception:
                 pass
+
+            if str(prefs.get("engine", "")).lower() == ENGINE_ELEVEN:
+                prev_voice_id = prefs.get("voice_id")
+                prev_voice_name = prefs.get("voice_name")
+                if prev_voice_id:
+                    prefs["last_eleven_voice_id"] = prev_voice_id
+                if prev_voice_name and prev_voice_name.lower() != "gtts":
+                    prefs["last_eleven_voice_name"] = prev_voice_name
+                prefs["engine"] = ENGINE_GTTS
+                prefs["voice_id"] = ""
+                prefs["voice_name"] = "gTTS"
+
             ogg_path = _tts_gtts_to_ogg(
                 text,
                 lang,
