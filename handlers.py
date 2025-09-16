@@ -1320,6 +1320,7 @@ def _menu_kb_home(uid: str) -> InlineKeyboardMarkup:
 def _menu_kb_plus(uid: str) -> InlineKeyboardMarkup:
     t = _menu_i18n(uid)
     rows = [
+        [InlineKeyboardButton(t["plus_voice_mode"], callback_data="m:plus:voicemode")],
         [InlineKeyboardButton(t["plus_voice"],      callback_data="m:plus:voice")],
         [InlineKeyboardButton(t["plus_sleep"],      callback_data="m:plus:sleep")],
         [InlineKeyboardButton(t["plus_story"],      callback_data="m:plus:story")],
@@ -2145,17 +2146,6 @@ def _voice_kb(uid: str, tab: str = "engine", back_to: str = "plus") -> InlineKey
     rows: list[list[InlineKeyboardButton]] = []
     can_eleven = has_feature(uid, "eleven_tts")
 
-    # ⬇️ новый первый ряд — тумблер и «в меню»
-    state = user_voice_mode.get(uid, False)
-    on_lbl  = t.get("mode_on_btn",  "🔊 Включить")
-    off_lbl = t.get("mode_off_btn", "🔇 Выключить")
-    back_lbl = _menu_i18n(uid)["back"]
-    rows.append([
-        InlineKeyboardButton(("✅ " if state else "") + on_lbl,  callback_data="v:mode:on"),
-        InlineKeyboardButton(("✅ " if not state else "") + off_lbl, callback_data="v:mode:off"),
-        InlineKeyboardButton(back_lbl, callback_data="m:nav:plus"),
-    ])    
-    # ↓↓↓ унифицируем название эффективного движка: 'eleven' | 'gtts'
     try:
         eff_engine = _effective_tts_engine(uid).lower()
     except Exception:
@@ -2241,6 +2231,78 @@ def _voice_kb(uid: str, tab: str = "engine", back_to: str = "plus") -> InlineKey
     rows.append([InlineKeyboardButton(_menu_i18n(uid)["back"], callback_data=back_cb)])
 
     return InlineKeyboardMarkup(rows)
+
+def _voice_mode_menu_text(uid: str) -> str:
+    t_mode = _v_i18n(uid)
+    status = t_mode.get("on") if user_voice_mode.get(uid, False) else t_mode.get("off")
+    engine_line = _v_ui_i18n(uid).get("engine", "Движок: *{engine}*").format(engine=_engine_label(uid))
+    return f"{status}\n{engine_line}"
+
+
+def _voice_mode_kb(uid: str, include_back: bool = True) -> InlineKeyboardMarkup:
+    t = _v_ui_i18n(uid)
+    state = user_voice_mode.get(uid, False)
+    on_lbl = t.get("mode_on_btn", "🔊 Включить")
+    off_lbl = t.get("mode_off_btn", "🔇 Выключить")
+
+    rows: list[list[InlineKeyboardButton]] = [[
+        InlineKeyboardButton(("✅ " if state else "") + on_lbl,  callback_data="vm:on"),
+        InlineKeyboardButton(("✅ " if not state else "") + off_lbl, callback_data="vm:off"),
+    ]]
+
+    if include_back:
+        rows.append([InlineKeyboardButton(_menu_i18n(uid)["back"], callback_data="m:nav:plus")])
+
+    return InlineKeyboardMarkup(rows)
+
+
+@require_premium
+async def voice_mode_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    await ui_show_from_command(
+        update,
+        context,
+        _voice_mode_menu_text(uid),
+        reply_markup=_voice_mode_kb(uid),
+        parse_mode="Markdown",
+    )
+
+
+async def voice_mode_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    if not q or not q.data.startswith("vm:"):
+        return
+
+    context.user_data[UI_MSG_KEY] = q.message.message_id
+
+    uid = str(q.from_user.id)
+    if not is_premium(uid):
+        await require_premium_message(update, context, uid)
+        await _safe_answer(q)
+        return
+
+    action = q.data.split(":", 1)[1] if ":" in q.data else ""
+    answered = False
+    if action in ("on", "off"):
+        user_voice_mode[uid] = (action == "on")
+        t_mode = _v_i18n(uid)
+        toast = t_mode.get("on") if user_voice_mode[uid] else t_mode.get("off")
+        try:
+            await q.answer(f"✅ {toast}" if toast else "✅", show_alert=False)
+            answered = True
+        except Exception:
+            pass
+
+    text = _voice_mode_menu_text(uid)
+    kb = _voice_mode_kb(uid)
+
+    try:
+        await q.edit_message_text(text, parse_mode="Markdown", reply_markup=kb)
+    except BadRequest as e:
+        if "message is not modified" not in str(e).lower():
+            raise
+    if not answered:
+        await _safe_answer(q)
 
 # === /voice_settings ===
 async def voice_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -2880,19 +2942,14 @@ async def voice_mode_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # без аргументов — показать текущее состояние
     if not context.args:
-        state = user_voice_mode.get(uid, False)
-        eng = _engine_label(uid)
-        base = t["on"] if state else t["off"]
-        return await ui_show_from_command(update, context, f"{base}\n🎛 Движок: {eng}", parse_mode="Markdown")
+        return await ui_show_from_command(update, context, _voice_mode_menu_text(uid), parse_mode="Markdown")
 
     arg = (context.args[0] or "").lower()
     if arg not in ("on", "off"):
         return await ui_show_from_command(update, context, f"{t['err']}\n\n{t['help']}", parse_mode="Markdown")
 
     user_voice_mode[uid] = (arg == "on")
-    eng = _engine_label(uid)
-    base = t["on"] if user_voice_mode[uid] else t["off"]
-    await ui_show_from_command(update, context, f"{base}\n🎛 Движок: {eng}", parse_mode="Markdown")
+    await ui_show_from_command(update, context, _voice_mode_menu_text(uid), parse_mode="Markdown")
     
 async def plus_callback(update, context):
     q = update.callback_query
@@ -3597,6 +3654,12 @@ async def plus_router(update, context):
     msg = q.message
     parts = q.data.split(":")            # ["m","plus", ...]
     action = parts[2] if len(parts) >= 3 else ""
+
+    # --- Озвучка сообщений (тумблер авто-ответов голосом)
+    if action == "voicemode":
+        u = _shim_update_for_cb(q, context)
+        await voice_mode_menu(u, context)
+        return
 
     # --- Озвучка
     if action == "voice":
@@ -6862,6 +6925,7 @@ handlers = [
     
     CommandHandler("voice_mode", voice_mode_cmd),
     CommandHandler("voice_settings", voice_settings),
+    CallbackQueryHandler(voice_mode_menu_cb, pattern=r"^vm:"),
     CallbackQueryHandler(voice_settings_cb, pattern=r"^v:"),
     CallbackQueryHandler(plus_router, pattern=r"^m:plus:"),
     CallbackQueryHandler(reminder_suggest_cb, pattern=r"^rs:"),
