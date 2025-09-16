@@ -963,6 +963,7 @@ QUOTAS = {
         "reminders_max": 3,     # если где-то считаешь общее число
         "sleep_max_minutes": 10,
         "story_max_paras": 4,   # короткие истории
+        "eleven_daily_seconds": 0,
     },
     PLAN_PLUS: {
         "daily_messages": 50,   # комфортно для повседневки (можно 60–75, если щедрее)
@@ -972,6 +973,7 @@ QUOTAS = {
         "reminders_max": 50,
         "sleep_max_minutes": 60,
         "story_max_paras": 8,   # medium
+        "eleven_daily_seconds": 8 * 60,
     },
     PLAN_PRO: {
         # «почти безлимит», но оставим технический потолок, чтобы себя защитить
@@ -982,6 +984,7 @@ QUOTAS = {
         "reminders_max": 200,
         "sleep_max_minutes": 240,
         "story_max_paras": 12,  # long
+        "eleven_daily_seconds": 30 * 60,
     },
 }
 
@@ -1350,6 +1353,32 @@ VOICE_UI_TEXTS = {
         "no_eleven_key": "⚠️ ElevenLabs key not set — only gTTS available.",
         "bgm": "Ambience: *{bg}* ({db} dB)",
     },
+}
+
+ELEVEN_LIMIT_INFO_TEXTS = {
+    "ru": "{plus} — до 240 минут ElevenLabs в месяц.\n{pro} — без ограничений ElevenLabs.",
+    "uk": "{plus} — до 240 хв ElevenLabs на місяць.\n{pro} — без обмежень ElevenLabs.",
+    "en": "{plus}: up to 240 min/month of ElevenLabs.\n{pro}: unlimited ElevenLabs.",
+    "md": "{plus}: până la 240 de minute ElevenLabs pe lună.\n{pro}: ElevenLabs nelimitat.",
+    "be": "{plus} — да 240 хвілін ElevenLabs у месяц.\n{pro} — без абмежаванняў ElevenLabs.",
+    "kk": "{plus} — ElevenLabs айына 240 минутқа дейін.\n{pro} — ElevenLabs шектеусіз.",
+    "kg": "{plus} — ElevenLabs айына 240 мүнөткө чейин.\n{pro} — ElevenLabs чексиз.",
+    "hy": "{plus} — ElevenLabs՝ ամսական մինչև 240 րոպե.\n{pro} — ElevenLabs առանց սահմանափակման.",
+    "ka": "{plus} — თვეში მაქსიმუმ 240 წუთი ElevenLabs.\n{pro} — ElevenLabs შეზღუდვების გარეშე.",
+    "ce": "{plus} — ElevenLabs 240 минут/йиш кхечу.\n{pro} — ElevenLabs без лимита.",
+}
+
+ELEVEN_LIMIT_REACHED_TEXTS = {
+    "ru": "⚠️ Лимит ElevenLabs в {plus} — 240 минут в месяц. {pro} даёт безлимит.",
+    "uk": "⚠️ Ліміт ElevenLabs у {plus} — 240 хв на місяць. {pro} — без обмежень.",
+    "en": "⚠️ ElevenLabs on {plus} is limited to 240 min per month. {pro} is unlimited.",
+    "md": "⚠️ În {plus}, ElevenLabs este limitat la 240 de minute pe lună. {pro} este nelimitat.",
+    "be": "⚠️ Ліміт ElevenLabs у {plus} — 240 хвілін у месяц. {pro} — без абмежаванняў.",
+    "kk": "⚠️ {plus} жоспарында ElevenLabs айына 240 минутпен шектеледі. {pro} — шектеусіз.",
+    "kg": "⚠️ {plus} тарифинде ElevenLabs айына 240 мүнөт менен чектелет. {pro} — чексиз.",
+    "hy": "⚠️ {plus}-ում ElevenLabs-ը սահմանափակվում է ամսական 240 րոպեով, {pro}-ում՝ առանց սահմանափակման.",
+    "ka": "⚠️ {plus}-ში ElevenLabs თვეში 240 წუთით არის შეზღუდული. {pro} — შეზღუდვების გარეშე.",
+    "ce": "⚠️ {plus}-да ElevenLabs 240 минут йиш хьоца. {pro}-да — без лимита.",
 }
 
 DEFAULT_ELEVEN_FEMALE = "21m00Tcm4TlvDq8ikWAM"
