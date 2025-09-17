@@ -982,7 +982,7 @@ def _shim_update_for_cb(q: CallbackQuery, context) -> "object":
 
     class _Msg:
         async def reply_text(self, text, **kw):
-            await bot.send_message(chat_id=chat_id, text=text, **kw)
+            return bot.send_message(chat_id=chat_id, text=text, **kw)
 
     class _Upd:
         pass
@@ -3195,6 +3195,93 @@ async def plus_callback(update, context):
                                   parse_mode="Markdown")
     elif action == "code":
         await q.edit_message_text("🔑 Введи код в формате: `/redeem ABCDEF`", parse_mode="Markdown")
+
+async def on_challenge_done(uid: str, cb_id: str | int | None, q: CallbackQuery,
+                            context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Отмечает челлендж выполненным и обновляет карточку."""
+
+    t = _p_i18n(uid)
+
+    try:
+        tz = _user_tz(uid)
+        now_local = datetime.now(tz)
+    except Exception:
+        now_local = datetime.now()
+    week_iso = _week_start_iso(now_local)
+
+    target_id: int | None = None
+    if cb_id is not None:
+        try:
+            target_id = int(cb_id)
+        except (TypeError, ValueError):
+            target_id = None
+
+    row_id: int | None = None
+    row_text: str | None = None
+    was_done = True
+
+    with sqlite3.connect(PREMIUM_DB_PATH) as db:
+        db.row_factory = sqlite3.Row
+
+        row = None
+        if target_id is not None:
+            row = db.execute(
+                "SELECT * FROM premium_challenges WHERE id=? AND user_id=?;",
+                (target_id, uid),
+            ).fetchone()
+
+        if row is None:
+            row = db.execute(
+                "SELECT * FROM premium_challenges WHERE user_id=? AND week_start=?;",
+                (uid, week_iso),
+            ).fetchone()
+
+        if not row:
+            return
+
+        row_id = int(row["id"])
+        row_text = row["text"]
+        was_done = bool(row.get("done", 0))
+
+        if not was_done:
+            db.execute(
+                "UPDATE premium_challenges SET done=1 WHERE id=? AND user_id=?;",
+                (row_id, uid),
+            )
+            db.commit()
+
+    if row_id is None or row_text is None:
+        return
+
+    if not was_done:
+        try:
+            add_points(uid, CHALLENGE_POINTS, reason="premium_challenge_done")
+        except Exception as e:
+            logging.warning("add_points failed: %s", e)
+
+        try:
+            await q.answer(text=f"⭐️ +{CHALLENGE_POINTS}")
+        except Exception:
+            pass
+
+    title = t.get("challenge_title", "🏆 Weekly challenge")
+    cta = t.get("challenge_cta", "Your challenge this week:\n\n“{text}”").format(text=row_text)
+    prefix = t.get("done_ok", "✅ Done")
+
+    lines = [f"*{title}*", "", cta]
+    if prefix:
+        lines = [prefix, "", *lines]
+
+    body = "\n".join(lines)
+    new_btn_label = t.get("btn_new", "🎲 Новый челлендж")
+    kb = InlineKeyboardMarkup([[InlineKeyboardButton(new_btn_label, callback_data="pch:new")]])
+
+    try:
+        await q.edit_message_text(body, parse_mode="Markdown", reply_markup=kb)
+    except BadRequest as e:
+        logging.warning("Failed to update challenge message after completion: %s", e)
+    except Exception:
+        logging.exception("Failed to update challenge message after completion")
 
 async def premium_challenge_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
