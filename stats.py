@@ -13,7 +13,12 @@ import os
 import sqlite3
 import logging
 import time
-from texts import QUOTAS
+try:
+    from texts import QUOTAS, FEATURE_MATRIX
+except Exception:
+    QUOTAS = None
+    FEATURE_MATRIX = None
+    
 from datetime import datetime, timedelta, timezone
 from contextlib import contextmanager
 
@@ -792,12 +797,20 @@ _QUOTAS_FALLBACK = {
 
 def has_feature(uid: str, feature_key: str) -> bool:
     plan = plan_of(uid)
-    fm = globals().get("FEATURE_MATRIX") or _FEATURE_MATRIX_FALLBACK
+    fm = (
+        globals().get("FEATURE_MATRIX")
+        or FEATURE_MATRIX
+        or _FEATURE_MATRIX_FALLBACK
+    )
     return bool(fm.get(plan, {}).get(feature_key, False))
 
 def quota(uid: str, key: str) -> int:
     plan = plan_of(uid)
-    q = globals().get("QUOTAS") or _QUOTAS_FALLBACK
+    q = (
+        globals().get("QUOTAS")
+        or QUOTAS
+        or _QUOTAS_FALLBACK
+    )
     return int(q.get(plan, {}).get(key, 0))
 
 def reminders_active_limit(uid: str) -> int:
