@@ -3222,21 +3222,66 @@ async def premium_challenge_callback(update: Update, context: ContextTypes.DEFAU
     # pch:ACTION[:ID]
     parts = q.data.split(":", 2)
     action = parts[1] if len(parts) > 1 else ""
-    cb_id = parts[2] if len(parts) > 2 else None
+    cb_id = parts[2] if len(parts) > 2 else None  # challenge_id
 
-    # неделя по локальному времени пользователя
+    # неделя по локальному времени пользователя (если нужно для логики)
     try:
         tz = _user_tz(uid)
         now_local = datetime.now(tz)
     except Exception:
         now_local = datetime.now()
-    week_iso = _week_start_iso(now_local)
+    week_iso = _week_start_iso(now_local)  # может использоваться дальше в других ветках
 
     # гарантируем таблицу
     try:
         ensure_premium_challenges()
     except Exception as e:
         logging.warning("ensure_premium_challenges failed: %s", e)
+
+    # === ВЗЯТЬ/СТАРТОВАТЬ ЧЕЛЛЕНДЖ -> отправляем карточку и пиним ===
+    if action in ("take", "start", "accept"):
+        if not cb_id:
+            return  # без id нечего пинить
+
+        # Собираем карточку + кнопку "✅ Выполнил" (можно локализовать при желании)
+        try:
+            card_text = render_challenge_card(uid, cb_id)
+        except Exception:
+            # запасной вариант
+            card_text = t.get("challenge_card_fallback", "📌 Челлендж")
+
+        done_btn_label = t.get("challenge_done_btn", "✅ Выполнил")
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton(done_btn_label, callback_data=f"pch:done:{cb_id}")]
+        ])
+
+        # Отправляем отдельным сообщением (не edit), чтобы надёжно пинить
+        msg = await q.message.reply_text(card_text, parse_mode="Markdown", reply_markup=kb)
+
+        # Пин карточки
+        await _pin_challenge_card(context, q.message.chat_id, msg, uid, cb_id)
+        return
+
+    # === ОТМЕТИТЬ ВЫПОЛНЕНИЕ -> анпин + логика done + похвала (i18n) ===
+    if action == "done" and cb_id:
+        # 1) анпин
+        await _unpin_challenge_card(context, uid, cb_id)
+
+        # 2) твоя логика завершения (очки, статистика и т.д.)
+        try:
+            await on_challenge_done(uid, cb_id, q, context)
+        except Exception as e:
+            logging.exception("on_challenge_done failed: %s", e)
+
+        # 3) похвала + CTA на 10 языках
+        lang = user_languages.get(uid, "ru")
+        txt = PCH_DONE_TOAST_TEXTS.get(lang, PCH_DONE_TOAST_TEXTS["ru"])
+        try:
+            await q.message.reply_text(txt)
+        except Exception:
+            pass
+
+        return
 
     def _kb(done_flag: bool, row_id: int) -> InlineKeyboardMarkup:
         if done_flag:
