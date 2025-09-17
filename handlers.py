@@ -7229,19 +7229,69 @@ def plural_ru(number, one, few, many):
     else:
         return many
 
+PREMIUM_STATUS_TEXTS = {
+    "ru": {
+        "no": "У тебя сейчас нет премиума.",
+        "active": "Подписка: {plan}\nАктивна до: {until}\nОсталось дней: {days}",
+    },
+    "uk": {
+        "no": "У тебе зараз немає преміуму.",
+        "active": "Підписка: {plan}\nАктивна до: {until}\nЗалишилось днів: {days}",
+    },
+    "be": {
+        "no": "У цябе зараз няма прэміуму.",
+        "active": "Падпіска: {plan}\nДзейнічае да: {until}\nЗасталося дзён: {days}",
+    },
+    "kk": {
+        "no": "Қазір сенде премиум жоқ.",
+        "active": "Жазылым: {plan}\nБелсенді: {until} дейін\nҚалған күндер: {days}",
+    },
+    "kg": {
+        "no": "Азыр сенде премиум жок.",
+        "active": "Жазылуу: {plan}\nАктивдүү: {until} чейин\nКалган күндөр: {days}",
+    },
+    "hy": {
+        "no": "Քեզ մոտ հիմա պրեմիումը ակտիվ չէ։",
+        "active": "Բաժանորդագրություն՝ {plan}\nԱկտիվ է մինչև՝ {until}\nՄնացած օրեր՝ {days}",
+    },
+    "ce": {
+        "no": "Хьоьгахь хӀинца премиум дийцар дац.",
+        "active": "Премиум-план: {plan}\nХьалха: {until}\nКху дийн: {days}",
+    },
+    "md": {
+        "no": "Momentan nu ai un abonament premium.",
+        "active": "Abonament: {plan}\nActiv până la: {until}\nZile rămase: {days}",
+    },
+    "ka": {
+        "no": "ახლა შენ არ გაქვს პრემიუმი.",
+        "active": "გამოწერა: {plan}\nაქტიურია ამ თარიღამდე: {until}\nდარჩენილი დღეები: {days}",
+    },
+    "en": {
+        "no": "You don't have an active premium now.",
+        "active": "Subscription: {plan}\nActive until: {until}\nDays left: {days}",
+    },
+}
+
 async def premium_days(update, context):
     uid = str(update.effective_user.id)
     args = context.args or []
-
+    lang = user_languages.get(uid, "ru")
+    premium_texts = PREMIUM_STATUS_TEXTS.get(lang, PREMIUM_STATUS_TEXTS["ru"])
+    
     def _is_admin() -> bool:
         return (update.effective_user.id in ADMIN_USER_IDS) or (update.effective_user.id == OWNER_ID)
 
     try:
         # /premium_days  — показать себе
         if len(args) == 0:
-            until = get_premium_until(uid)
+            plan = plan_of(uid)
+            if plan == PLAN_FREE:
+                return await update.message.reply_text(premium_texts["no"])
+
+            tier = plan
+            until = get_premium_until(uid, tier) or get_premium_until(uid)
             if not until:
-                return await update.message.reply_text("У тебя сейчас нет премиума.")
+                return await update.message.reply_text(premium_texts["no"])
             try:
                 dt = datetime.fromisoformat(until)
                 if dt.tzinfo is None:
@@ -7249,9 +7299,13 @@ async def premium_days(update, context):
             except Exception:
                 dt = datetime.now(timezone.utc)
             left_days = max(0, int((dt - datetime.now(timezone.utc)).total_seconds() // 86400))
-            return await update.message.reply_text(
-                f"Премиум до: {dt.isoformat()}\nОсталось дней: {left_days}"
+            plan_label = _plan_label(uid, plan)
+            text = premium_texts["active"].format(
+                plan=plan_label,
+                until=dt.isoformat(),
+                days=left_days,
             )
+            return await update.message.reply_text(text)
 
         # /premium_days <days> — продлить СЕБЕ (только админ)
         elif len(args) == 1:
