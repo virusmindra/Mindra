@@ -3299,6 +3299,11 @@ async def premium_challenge_callback(update: Update, context: ContextTypes.DEFAU
         return body, _kb(done_flag, row_id)
 
     try:
+        body = None
+        kb = None
+        should_pin = False
+        row_id = None
+        
         with sqlite3.connect(PREMIUM_DB_PATH) as db:
             db.row_factory = sqlite3.Row
 
@@ -3320,7 +3325,7 @@ async def premium_challenge_callback(update: Update, context: ContextTypes.DEFAU
                     (uid, week_iso)
                 ).fetchone()
 
-            row_id   = int(row["id"])
+            row_id = int(row["id"])
             row_text = row["text"]
             row_done = bool(row["done"])
 
@@ -3338,47 +3343,70 @@ async def premium_challenge_callback(update: Update, context: ContextTypes.DEFAU
                     ).fetchone()
                     if r2:
                         row = r2
-                        row_id   = int(row["id"])
+                        row_id = int(row["id"])
                         row_text = row["text"]
                         row_done = bool(row["done"])
 
-                if row_done:
-                    body, kb = _render(row_text, row_id, True, prefix=t.get("done_ok", "✅ Done"))
-                    return await q.edit_message_text(body, parse_mode="Markdown", reply_markup=kb)
+                if not row_done:
+                    db.execute(
+                        "UPDATE premium_challenges SET done=1 WHERE id=? AND user_id=?;",
+                        (row_id, uid)
+                    )
+                    db.commit()
+                    row_done = True
 
-                db.execute("UPDATE premium_challenges SET done=1 WHERE id=? AND user_id=?;", (row_id, uid))
-                db.commit()
+                    # очки за неделю — 1 раз
+                    try:
+                        add_points(uid, CHALLENGE_POINTS, reason="premium_challenge_done")
+                    except Exception as e:
+                        logging.warning("add_points failed: %s", e)
 
-                # очки за неделю — 1 раз
-                try:
-                    add_points(uid, CHALLENGE_POINTS, reason="premium_challenge_done")
-                except Exception as e:
-                    logging.warning("add_points failed: %s", e)
-
-                # тост ⭐️ +N
-                try:
-                    await q.answer(text=f"⭐️ +{CHALLENGE_POINTS}")
-                except Exception:
-                    pass
+                    # тост ⭐️ +N
+                    try:
+                        await q.answer(text=f"⭐️ +{CHALLENGE_POINTS}")
+                    except Exception:
+                        pass
 
                 body, kb = _render(row_text, row_id, True, prefix=t.get("done_ok", "✅ Done"))
-                return await q.edit_message_text(body, parse_mode="Markdown", reply_markup=kb)
+                should_pin = False
 
-            if action == "new":
+            elif action == "new":
                 new_text = random.choice(CHALLENGE_BANK.get(lang, CHALLENGE_BANK["ru"]))
+                prefix = t.get("changed_ok", "🔄 Updated")
                 if row_done:
-                    db.execute("UPDATE premium_challenges SET text=? WHERE id=? AND user_id=?;", (new_text, row_id, uid))
+                    db.execute(
+                        "UPDATE premium_challenges SET text=? WHERE id=? AND user_id=?;",
+                        (new_text, row_id, uid)
+                    )
                     db.commit()
-                    body, kb = _render(new_text, row_id, True, prefix=t.get("changed_ok", "🔄 Updated"))
+                    row_text = new_text
+                    row_done = True
                 else:
-                    db.execute("UPDATE premium_challenges SET text=?, done=0 WHERE id=? AND user_id=?;", (new_text, row_id, uid))
+                    db.execute(
+                        "UPDATE premium_challenges SET text=?, done=0 WHERE id=? AND user_id=?;",
+                        (new_text, row_id, uid)
+                    )
                     db.commit()
-                    body, kb = _render(new_text, row_id, False, prefix=t.get("changed_ok", "🔄 Updated"))
-                return await q.edit_message_text(body, parse_mode="Markdown", reply_markup=kb)
+                    row_text = new_text
+                    row_done = False
+
+                body, kb = _render(row_text, row_id, row_done, prefix=prefix)
+                should_pin = not row_done
 
             # неизвестное действие → просто перерисуем текущее
-            body, kb = _render(row_text, row_id, row_done)
-            return await q.edit_message_text(body, parse_mode="Markdown", reply_markup=kb)
+            else:
+                body, kb = _render(row_text, row_id, row_done)
+                should_pin = not row_done
+
+        result = await q.edit_message_text(body, parse_mode="Markdown", reply_markup=kb)
+
+        if should_pin and q.message:
+            try:
+                await _pin_challenge_card(context, q.message.chat_id, q.message, uid, row_id)
+            except Exception:
+                logging.exception("Failed to pin challenge card from callback")
+
+        return result
 
     except sqlite3.OperationalError as e:
         if "no such table: premium_challenges" in str(e):
@@ -3417,7 +3445,7 @@ async def premium_challenge_callback(update: Update, context: ContextTypes.DEFAU
             ).fetchone()
         return row
 
-    def _handle(db: sqlite3.Connection):
+    def _handle(db: sqlite3.Connection) -> tuple[str, InlineKeyboardMarkup, int, bool]:
         # получаем текущую строку
         row = _ensure_and_get(db)
 
@@ -3434,34 +3462,44 @@ async def premium_challenge_callback(update: Update, context: ContextTypes.DEFAU
             except Exception:
                 pass
 
+        row_id = int(row["id"])
+        row_done = bool(row.get("done", 0))
+        
         if action == "done":
-            db.execute("UPDATE premium_challenges SET done=1 WHERE id=? AND user_id=?;", (row["id"], uid))
+            db.execute(
+                "UPDATE premium_challenges SET done=1 WHERE id=? AND user_id=?;",
+                (row_id, uid)
+            )
             db.commit()
-            body, kb = _render(row["text"], row["id"], prefix=f"✅ {t['done_ok']}")
-            return body, kb
+            row_done = True
+            body, kb = _render(row["text"], row_id, True, prefix=f"✅ {t['done_ok']}")
+            return body, kb, row_id, row_done
 
         if action == "new":
             new_text = random.choice(CHALLENGE_BANK.get(lang, CHALLENGE_BANK["ru"]))
-            db.execute("UPDATE premium_challenges SET text=?, done=0 WHERE id=? AND user_id=?;",
-                       (new_text, row["id"], uid))
+            db.execute(
+                "UPDATE premium_challenges SET text=?, done=0 WHERE id=? AND user_id=?;",
+                (new_text, row_id, uid)
+            )
             db.commit()
-            body, kb = _render(new_text, row["id"], prefix=f"🔄 {t['changed_ok']}")
-            return body, kb
+            row_done = False
+            body, kb = _render(new_text, row_id, row_done, prefix=f"🔄 {t['changed_ok']}")
+            return body, kb, row_id, row_done
 
         # по умолчанию просто показать текущий
-        body, kb = _render(row["text"], row["id"])
-        return body, kb
+        body, kb = _render(row["text"], row_id, row_done)
+        return body, kb, row_id, row_done
 
     try:
         with sqlite3.connect(PREMIUM_DB_PATH) as db:
-            body, kb = _handle(db)
+            body, kb, row_id, row_done = _handle(db)
     except sqlite3.OperationalError as e:
         # если таблицы нет — создаём и повторяем один раз
         if "no such table: premium_challenges" in str(e):
             try:
                 ensure_premium_challenges()
                 with sqlite3.connect(PREMIUM_DB_PATH) as db:
-                    body, kb = _handle(db)
+                    body, kb, row_id, row_done = _handle(db)
             except Exception as ee:
                 logging.exception("premium_challenge_callback retry failed: %s", ee)
                 return
@@ -3471,10 +3509,20 @@ async def premium_challenge_callback(update: Update, context: ContextTypes.DEFAU
 
     try:
         await q.edit_message_text(body, parse_mode="Markdown", reply_markup=kb)
-    except Exception as e:
+        if not row_done and q.message:
+            try:
+                await _pin_challenge_card(context, q.message.chat_id, q.message, uid, row_id)
+            except Exception:
+                logging.exception("Failed to pin challenge card from fallback handler")
+            except Exception as e:
         # если исходное сообщение нельзя редактировать — шлём новое
         logging.warning("edit_message_text failed, sending new: %s", e)
-        await context.bot.send_message(chat_id=int(uid), text=body, parse_mode="Markdown", reply_markup=kb)
+        sent = await context.bot.send_message(chat_id=int(uid), text=body, parse_mode="Markdown", reply_markup=kb)
+        if not row_done:
+            try:
+                await _pin_challenge_card(context, sent.chat_id, sent, uid, row_id)
+            except Exception:
+                logging.exception("Failed to pin challenge card after sending new message")
 
 def _week_start_iso(dt):
     """ISO даты понедельника текущей недели в локальном времени."""
@@ -3602,21 +3650,34 @@ async def premium_report_cmd(update, context):
     )
     await ui_show_from_command(update, context, text, reply_markup=_kb_home(uid), parse_mode="Markdown")
 
-async def _pin_challenge_card(context, chat_id: int, msg, uid: str, challenge_id: str):
+async def _pin_challenge_card(context, chat_id: int, msg, uid: str, challenge_id: str | int):
     """Пинит сообщение и сохраняет связку для последующего анпина."""
+
+    challenge_key = str(challenge_id)
     try:
+        prev = user_pinned_challenges.get(uid, {}).get(challenge_key)
+        if prev and (prev.get("chat_id") != chat_id or prev.get("message_id") != msg.message_id):
+            try:
+                await context.bot.unpin_chat_message(
+                    chat_id=prev["chat_id"],
+                    message_id=prev["message_id"],
+                )
+            except BadRequest as e:
+                logging.warning("Unpin previous challenge message failed: %s", e)
+            except Exception:
+                logging.exception("Failed to unpin previous challenge message")
         await context.bot.pin_chat_message(
             chat_id=chat_id,
             message_id=msg.message_id,
             disable_notification=True  # в приватных и так без звука
         )
-        user_pinned_challenges[uid][challenge_id] = {
+        user_pinned_challenges[uid][challenge_key] = {
             "chat_id": chat_id,
             "message_id": msg.message_id
         }
     except BadRequest as e:
         # например, нет прав в группе
-        import logging; logging.warning("Pin failed: %s", e)
+        logging.warning("Pin failed: %s", e)
 
 async def _unpin_challenge_card(context, uid: str, challenge_id: str):
     meta = user_pinned_challenges.get(uid, {}).pop(challenge_id, None)
@@ -3677,11 +3738,16 @@ async def premium_challenge_cmd(update: Update, context: ContextTypes.DEFAULT_TY
         [InlineKeyboardButton(t["btn_new"],  callback_data="pch:new")],
     ])
 
-    await update.message.reply_text(
+    msg = await update.message.reply_text(
         f"*{t['challenge_title']}*\n\n{t['challenge_cta'].format(text=row['text'])}",
         parse_mode="Markdown",
         reply_markup=kb
     )
+    if not bool(row["done"]):
+        try:
+            await _pin_challenge_card(context, update.effective_chat.id, msg, uid, row["id"])
+        except Exception:
+            logging.exception("Failed to pin premium challenge message")
 
 @require_premium
 async def premium_mode_cmd(update, context):
