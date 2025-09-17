@@ -269,8 +269,8 @@ UI_MSG_KEY = "ui_msg_id"
 # URL страницы оплаты — замени на свою
 PREMIUM_URL = "https://example.com/pay"
 
-FREE_TRACKER_LIMIT  = {"goal": 1, "habit": 1}  # Free
-PLUS_TRACKER_LIMIT  = {"goal": 5, "habit": 5}  # Mindra+
+FREE_TRACKER_LIMIT  = {"goal": 3, "habit": 3}  # Free
+PLUS_TRACKER_LIMIT  = {"goal": 10, "habit": 10}  # Mindra+
 
 # ---- настройки лимитов (можно вынести в конфиг)
 FREE_ACTIVE_CAP   = globals().get("FREE_ACTIVE_CAP", 1)   # максимум активных у free
@@ -613,6 +613,12 @@ async def diag_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         h_cap  = quota(uid, "habits_max")
     except Exception:
         dm_cap = r_cap = g_cap = h_cap = 0
+    def _cap_to_str(val: int) -> str:
+        try:
+            ival = int(val)
+        except Exception:
+            return str(val)
+        return "∞" if ival <= 0 else str(ival)
 
     # активные напоминания
     try:
@@ -633,10 +639,10 @@ async def diag_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"Plus until: `{plus_until or '-'}`\n"
         f"Pro  until: `{pro_until or '-'}`\n"
         f"\n*Quotas*\n"
-        f"daily_messages = {dm_cap}\n"
-        f"reminders_max  = {r_cap}\n"
-        f"goals_max      = {g_cap}\n"
-        f"habits_max     = {h_cap}\n"
+        f"daily_messages = {_cap_to_str(dm_cap)}\n"
+        f"reminders_max  = {_cap_to_str(r_cap)}\n"
+        f"goals_max      = {_cap_to_str(g_cap)}\n"
+        f"habits_max     = {_cap_to_str(h_cap)}\n"
         f"\nActive reminders: {active_cnt}"
     )
     await update.message.reply_text(text, parse_mode="Markdown")
@@ -1292,6 +1298,17 @@ def _engine_label(uid: str) -> str:
     eng = _vp(uid).get("engine", "gTTS")
     return "ElevenLabs" if str(eng).lower() == "eleven" else "gTTS"
 
+SLEEP_ABS_MAX_MINUTES = 240
+
+def _sleep_limit_minutes(uid: str) -> int:
+    try:
+        limit = int(quota(uid, "sleep_max_minutes"))
+    except Exception:
+        limit = 0
+    if limit <= 0:
+        return SLEEP_ABS_MAX_MINUTES
+    return max(1, min(limit, SLEEP_ABS_MAX_MINUTES))
+
 def _sleep_summary(uid: str) -> tuple[str, int, int]:
     try:
         p = _sleep_p(uid)  # твоя новая prefs-функция
@@ -1300,7 +1317,12 @@ def _sleep_summary(uid: str) -> tuple[str, int, int]:
     kind = p.get("kind", "rain")
     meta = BGM_PRESETS.get(kind, {})
     label = meta.get("label", kind)
-    return label, int(p.get("duration_min", 15)), int(p.get("gain_db", -20))
+    limit = _sleep_limit_minutes(uid)
+    duration = int(p.get("duration_min", min(15, limit)))
+    if duration > limit:
+        duration = limit
+        p["duration_min"] = duration
+    return label, duration, int(p.get("gain_db", -20))
 
 def _premium_summary(uid: str, t: dict) -> tuple[str, str]:
     has = is_premium(uid)
@@ -1421,8 +1443,16 @@ def _profile_kb(uid: str) -> InlineKeyboardMarkup:
 def _sleep_p(uid: str) -> dict:
     p = _sleep_prefs.get(uid)
     if not p:
-        p = {"kind": "rain", "duration_min": 20, "gain_db": -20}
+        limit = _sleep_limit_minutes(uid)
+        p = {"kind": "rain", "duration_min": min(20, limit), "gain_db": -20}
         _sleep_prefs[uid] = p
+    else:
+        limit = _sleep_limit_minutes(uid)
+        try:
+            current = int(p.get("duration_min", limit))
+        except Exception:
+            current = limit
+        p["duration_min"] = max(1, min(current, limit))    
     return p
 
 def _sleep_i18n(uid: str) -> dict:
@@ -1822,7 +1852,7 @@ def _render_sleep_ogg(kind: str, minutes: int, gain_db: int = -20) -> str:
     if shutil.which("ffmpeg") is None:
         raise RuntimeError("ffmpeg not found")
 
-    minutes = max(1, min(int(minutes or 1), 240))
+    minutes = max(1, min(int(minutes or 1), SLEEP_ABS_MAX_MINUTES))
     total = minutes * 60
 
     cache_dir = os.path.join(tempfile.gettempdir(), "sleep_cache")
@@ -1899,8 +1929,20 @@ def _sleep_kb(uid: str, tab: str = "kind", back_to: str = "plus") -> InlineKeybo
             rows.append([InlineKeyboardButton(f"{mark}{meta['label']}", callback_data=f"sleep:kind:{key}")])
 
     elif tab == "dur":
-        for row in ((5,10,15),(20,30,45),(60,90,120)):
-            rows.append([InlineKeyboardButton(f"{m}m", callback_data=f"sleep:dur:{m}") for m in row])
+        limit = _sleep_limit_minutes(uid)
+        base_options = (5, 10, 15, 20, 30, 45, 60, 90, 120)
+        options = [m for m in base_options if m <= limit or limit >= SLEEP_ABS_MAX_MINUTES]
+        if limit < SLEEP_ABS_MAX_MINUTES and limit not in options:
+            options.append(limit)
+            options.sort()
+        if not options:
+            options = [limit]
+        for i in range(0, len(options), 3):
+            chunk = options[i:i+3]
+            rows.append([
+                InlineKeyboardButton(f"{m}m", callback_data=f"sleep:dur:{m}")
+                for m in chunk
+            ])
 
     elif tab == "gain":
         for row in ((-30,-25,-20),(-15,-10,-5),(0,5,10)):
@@ -1973,13 +2015,21 @@ async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
             current_tab = "dur"
 
         elif kind == "gain":
-            p["gain_db"] = int(parts[2])
+            limit = _sleep_limit_minutes(uid)
+            try:
+                requested = int(parts[2])
+            except Exception:
+                requested = limit
+            p["duration_min"] = max(1, min(requested, limit))
             current_tab = "gain"
 
         elif kind == "act":
             action = parts[2]
             t = _sleep_i18n(uid)
             if action == "start":
+                limit = _sleep_limit_minutes(uid)
+                if p["duration_min"] > limit:
+                    p["duration_min"] = limit
                 try:
                     ogg_path = _render_sleep_ogg(p["kind"], p["duration_min"], p["gain_db"])
                 except FileNotFoundError:
@@ -2405,6 +2455,9 @@ def require_premium(func):
 @require_premium
 async def voice_mode_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
+    if not has_feature(uid, "voice_tts"):
+        await require_premium_message(update, context, uid)
+        return
     await ui_show_from_command(
         update,
         context,
@@ -2422,7 +2475,7 @@ async def voice_mode_menu_cb(update: Update, context: ContextTypes.DEFAULT_TYPE)
     context.user_data[UI_MSG_KEY] = q.message.message_id
 
     uid = str(q.from_user.id)
-    if not is_premium(uid):
+    if not has_feature(uid, "voice_tts"):
         await require_premium_message(update, context, uid)
         await _safe_answer(q)
         return
@@ -2485,7 +2538,7 @@ async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # ←← ДОБАВЛЕННЫЙ БЛОК ДЛЯ /voice_mode (кнопки v:mode:on|off)
     elif kind == "mode":
         desired = (parts[2] if len(parts) > 2 else "").lower()   # "on" | "off"
-        if not is_premium(uid):
+        if not has_feature(uid, "voice_tts"):
             try:
                 title, _ = upsell_for(uid, "feature_voice_mode")
                 await q.answer(title, show_alert=True)
@@ -3134,9 +3187,11 @@ def _engine_label(uid: str) -> str:
     return labels.get(key, eng)
 
 # ---- /voice_mode ----
-@require_premium
 async def voice_mode_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
+    if not has_feature(uid, "voice_tts"):
+        await require_premium_message(update, context, uid)
+        return
     t = _v_i18n(uid)  # берёт VOICE_MODE_TEXTS[lang]
 
     # без аргументов — показать текущее состояние
@@ -6485,7 +6540,7 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         cap = 10
 
     if (uid_int not in ADMIN_USER_IDS) and (uid_int != OWNER_ID):
-        if user_message_count[uid]["count"] >= cap:
+        if cap > 0 and user_message_count[uid]["count"] >= cap:
             # покажем апселл + кнопку «⭐ Upgrade» (up:menu)
             lang = user_languages.get(uid, "ru")
             try:
@@ -6601,7 +6656,7 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         # 🔊 авто-озвучка (если включена)
-        if is_premium(uid) and user_voice_mode.get(uid, False):
+        if user_voice_mode.get(uid, False) and has_feature(uid, "voice_tts"):
             await send_voice_response(context, uid_int, final_text, lang_code)
 
     except Exception as e:
