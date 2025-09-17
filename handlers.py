@@ -2397,6 +2397,31 @@ def require_premium(func):
         except Exception:
             allowed = False
 
+        # Если премиума нет — попробуем автоматически активировать пробный период
+        if not allowed and uid:
+            try:
+                trial_until = grant_trial_if_eligible(uid, days=3)
+            except Exception as e:
+                logging.warning("auto-trial check failed for %s: %s", uid, e)
+                trial_until = None
+
+            if trial_until:
+                lang = user_languages.get(uid, "ru")
+                msg_template = TRIAL_INFO_TEXT.get(lang, TRIAL_INFO_TEXT.get("ru", ""))
+                if msg_template:
+                    try:
+                        await context.bot.send_message(
+                            chat_id=int(uid),
+                            text=msg_template.format(until=trial_until),
+                            parse_mode="Markdown",
+                        )
+                    except Exception as send_error:
+                        logging.debug("trial notify failed for %s: %s", uid, send_error)
+                try:
+                    allowed = is_premium(uid)
+                except Exception:
+                    allowed = False
+
         if allowed:
             return await func(update, context, *args, **kwargs)
 
