@@ -1628,7 +1628,7 @@ async def reminder_suggest_cb(update: Update, context: ContextTypes.DEFAULT_TYPE
             await context.bot.send_message(chat_id=int(uid), text=msg, parse_mode="Markdown")
         return
 
-        def _looks_relative_safe(s: str) -> bool:
+    def _looks_relative_safe(s: str) -> bool:
         """Определяет относительную формулировку с фолбэком на локальные паттерны."""
         try:
             return bool(_looks_relative(s))
