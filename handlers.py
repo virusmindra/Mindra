@@ -982,7 +982,7 @@ def _shim_update_for_cb(q: CallbackQuery, context) -> "object":
 
     class _Msg:
         async def reply_text(self, text, **kw):
-            return bot.send_message(chat_id=chat_id, text=text, **kw)
+            return await bot.send_message(chat_id=chat_id, text=text, **kw)
 
     class _Upd:
         pass
