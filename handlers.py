@@ -24,6 +24,7 @@ from elevenlabs import ElevenLabs
 from collections import defaultdict
 from texts import (
     VOICE_TEXTS_BY_LANG,
+    PCH_DONE_TOAST_TEXTS,
     REMIND_KEYWORDS,
     REMIND_SUGGEST_TEXTS,
     TRACKER_LIMIT_TEXTS,
