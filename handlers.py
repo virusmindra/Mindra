@@ -3241,7 +3241,7 @@ async def on_challenge_done(uid: str, cb_id: str | int | None, q: CallbackQuery,
 
         row_id = int(row["id"])
         row_text = row["text"]
-        was_done = bool(row.get("done", 0))
+        was_done = bool(row["done"]) if "done" in row.keys() else False
 
         if not was_done:
             db.execute(
