@@ -1628,41 +1628,10 @@ async def reminder_suggest_cb(update: Update, context: ContextTypes.DEFAULT_TYPE
             await context.bot.send_message(chat_id=int(uid), text=msg, parse_mode="Markdown")
         return
 
-    # 4) тихие часы + “срочные” короткие относительные не переносим
-    now_local    = datetime.now(tz)
-    is_rel       = _looks_relative(text_src)
-    delta_min    = (when_local - now_local).total_seconds() / 60.0
-    bypass_quiet = is_rel and (delta_min <= QUIET_BYPASS_MIN)
-
-    if (not bypass_quiet) and _is_quiet_hour(when_local):
-        when_local = _apply_quiet_hours(when_local)
-
-    # 5) создаём запись и планируем джобу
-    try:
-        rem_id = insert_reminder(uid, text_src, when_local, str(tz.key), urgent=bypass_quiet)
-        with remind_db() as db:
-            row = db.execute("SELECT * FROM reminders WHERE id=?;", (rem_id,)).fetchone()
-        await _schedule_job_for_reminder(context, row)
-    except Exception as e:
-        logging.exception(f"Failed to create reminder from suggest: {e}")
-        u = _shim_update_for_cb(q, context)
-        return await reminders_menu_cmd(u, context)
-
-    # 6) подтверждаем пользователю
-    local_str = _fmt_local(when_local, lang)
-    msg = REMIND_TEXTS.get(lang, REMIND_TEXTS["ru"])["created"].format(time=local_str, text=text_src)
-    kb  = remind_keyboard(rem_id, uid)
-
-    try:
-        await q.edit_message_text(msg, parse_mode="Markdown", reply_markup=kb)
-    except Exception:
-        await context.bot.send_message(chat_id=int(uid), text=msg, parse_mode="Markdown", reply_markup=kb)
-
-    # ---- Вспомогательные локальные функции для «тихих часов» ----
-    def _looks_rel_local(s: str) -> bool:
-        """Пытаемся определить относительную формулировку. Если есть глобальная _looks_relative — используем её."""
+        def _looks_relative_safe(s: str) -> bool:
+        """Определяет относительную формулировку с фолбэком на локальные паттерны."""
         try:
-            return bool(_looks_relative(s))  # если у тебя определена глобальная
+            return bool(_looks_relative(s))
         except Exception:
             s = (s or "").lower()
             if re.search(r"\bin\s+\d+\s*(min|mins|minutes|hour|hours|day|days)\b", s):  # en
@@ -1675,8 +1644,8 @@ async def reminder_suggest_cb(update: Update, context: ContextTypes.DEFAULT_TYPE
                 return True
             return False
 
-    def _is_quiet_local(dt) -> bool:
-        """Если есть глобальная _is_quiet_hour — используем её; иначе фолбэк на QUIET_START/END."""
+    def _is_quiet_hour_safe(dt) -> bool:
+        """Проверяет, попадает ли время в «тихие часы», с учётом fallback."""
         try:
             return bool(_is_quiet_hour(dt))
         except Exception:
@@ -1685,17 +1654,16 @@ async def reminder_suggest_cb(update: Update, context: ContextTypes.DEFAULT_TYPE
             h = int(dt.astimezone(tz).hour)
             return (h >= qs or h < qe)
 
-    # 3) Тихие часы: переносим в утро, НО короткие «относительные» — не переносим
-    QUIET_BYPASS_MIN = globals().get("QUIET_BYPASS_MIN", 90)  # до сколько минут считаем «коротким»
+    quiet_bypass_limit = globals().get("QUIET_BYPASS_MIN", QUIET_BYPASS_MIN)
     now_local = datetime.now(tz)
-    is_rel    = _looks_rel_local(text_src)
+    is_rel = _looks_relative_safe(text_src)
     delta_min = max(0.0, (when_local - now_local).total_seconds() / 60.0)
-    bypass_quiet = is_rel and (delta_min <= QUIET_BYPASS_MIN)
+    bypass_quiet = is_rel and (delta_min <= quiet_bypass_limit)
 
-    if (not bypass_quiet) and _is_quiet_local(when_local):
+    if (not bypass_quiet) and _is_quiet_hour_safe(when_local):
         when_local = _apply_quiet_hours(when_local)
 
-    # 4) Создаём запись и планируем джобу
+    # 5) Создаём запись и планируем джобу
     try:
         rem_id = insert_reminder(uid, text_src, when_local, str(tz.key), urgent=bypass_quiet)
         with remind_db() as db:
@@ -1706,7 +1674,7 @@ async def reminder_suggest_cb(update: Update, context: ContextTypes.DEFAULT_TYPE
         u = _shim_update_for_cb(q, context)
         return await reminders_menu_cmd(u, context)
 
-    # 5) Подтверждение пользователю + кнопки управления
+    # 6) Подтверждение пользователю + кнопки управления
     local_str = _fmt_local(when_local, lang)
     msg = REMIND_TEXTS.get(lang, REMIND_TEXTS["ru"])["created"].format(time=local_str, text=text_src)
     kb  = remind_keyboard(rem_id, uid)
