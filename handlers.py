@@ -3514,7 +3514,7 @@ async def premium_challenge_callback(update: Update, context: ContextTypes.DEFAU
                 await _pin_challenge_card(context, q.message.chat_id, q.message, uid, row_id)
             except Exception:
                 logging.exception("Failed to pin challenge card from fallback handler")
-            except Exception as e:
+    except Exception as e:
         # если исходное сообщение нельзя редактировать — шлём новое
         logging.warning("edit_message_text failed, sending new: %s", e)
         sent = await context.bot.send_message(chat_id=int(uid), text=body, parse_mode="Markdown", reply_markup=kb)
