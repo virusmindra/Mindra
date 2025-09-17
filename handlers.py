@@ -196,7 +196,8 @@ user_timezones = {}
 user_voice_mode = {}  # {user_id: bool}
 user_voice_prefs = {}
 user_eleven_daily_usage: dict[str, dict[str, float]] = {}
-
+# uid -> {challenge_id: {"chat_id": int, "message_id": int}}
+user_pinned_challenges: dict[str, dict[str, dict]] = defaultdict(dict)
 
 class ElevenQuotaExceeded(Exception):
     """Raised when ElevenLabs daily quota is exhausted."""
@@ -3554,7 +3555,35 @@ async def premium_report_cmd(update, context):
         f"{t['report_streak'].format(n=active_30)}"
     )
     await ui_show_from_command(update, context, text, reply_markup=_kb_home(uid), parse_mode="Markdown")
-    
+
+async def _pin_challenge_card(context, chat_id: int, msg, uid: str, challenge_id: str):
+    """Пинит сообщение и сохраняет связку для последующего анпина."""
+    try:
+        await context.bot.pin_chat_message(
+            chat_id=chat_id,
+            message_id=msg.message_id,
+            disable_notification=True  # в приватных и так без звука
+        )
+        user_pinned_challenges[uid][challenge_id] = {
+            "chat_id": chat_id,
+            "message_id": msg.message_id
+        }
+    except BadRequest as e:
+        # например, нет прав в группе
+        import logging; logging.warning("Pin failed: %s", e)
+
+async def _unpin_challenge_card(context, uid: str, challenge_id: str):
+    meta = user_pinned_challenges.get(uid, {}).pop(challenge_id, None)
+    if not meta:
+        return
+    try:
+        await context.bot.unpin_chat_message(
+            chat_id=meta["chat_id"],
+            message_id=meta["message_id"]
+        )
+    except BadRequest as e:
+        import logging; logging.warning("Unpin failed: %s", e)
+        
 async def premium_challenge_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
     if _debounce(uid, "pch_cmd"):  # антидубль
