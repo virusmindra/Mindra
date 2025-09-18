@@ -1,5 +1,6 @@
 import json
 import os
+import copy
 from stats import add_points, get_premium_until # добавь в начало goals.py
 from pathlib import Path
 
@@ -238,3 +239,17 @@ DELETE_MESSAGES = {
         "not_found": "⚠️ Can't find such a goal."
     },
 }
+
+NEW_LANG_ALIASES = {
+    "fr": "en",
+    "de": "en",
+    "es": "en",
+    "pl": "en",
+}
+
+for _alias, _base in NEW_LANG_ALIASES.items():
+    for _name, _data in list(globals().items()):
+        if _name in {"NEW_LANG_ALIASES"} or _name.startswith("__"):
+            continue
+        if isinstance(_data, dict) and _base in _data and _alias not in _data:
+            _data[_alias] = copy.deepcopy(_data[_base])
