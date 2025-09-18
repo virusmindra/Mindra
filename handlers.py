@@ -466,7 +466,12 @@ async def _check_and_activate(uid: str, session_id: str) -> bool:
     term  = (sess.get("metadata") or {}).get("term","1m")
 
     if sess.get("mode") == "subscription" and sess.get("subscription"):
-        sub = stripe.Subscription.retrieve(sess["subscription"])
+        subscription = sess.get("subscription")
+        if isinstance(subscription, str):
+            sub = stripe.Subscription.retrieve(subscription)
+        else:
+            # Already expanded object (StripeObject or dict-like)
+            sub = subscription
         period_end = int(sub["current_period_end"])
         dt = datetime.fromtimestamp(period_end, tz=timezone.utc)
         set_premium_until(uid, dt, tier=("pro" if tier=="pro" else "plus"))
