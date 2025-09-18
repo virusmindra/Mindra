@@ -187,7 +187,7 @@ user_reminders = {}
 user_points = {}
 user_message_count = {}
 user_goal_count = {}
-user_languages = {}  # {user_id: 'ru'/'uk'/'md'/'be'/'kk'/'kg'/'hy'/'ka'/'ce'}
+user_languages = {}  # {user_id: 'ru'/'uk'/'md'/'kk'/'hy'/'ka'/'en'/'fr'/'de'/'es'/'pl'}
 user_ref_args: dict[str, str] = {}
 user_last_polled = {}
 user_last_report_sent = {}  # user_id: date (ISO)
@@ -557,13 +557,14 @@ def menu_button_label(uid: str) -> str:
         "ru": f"{HOUSE} Меню",
         "uk": f"{HOUSE} Меню",
         "md": f"{HOUSE} Meniu",
-        "be": f"{HOUSE} Меню",
         "kk": f"{HOUSE} Мәзір",
-        "kg": f"{HOUSE} Меню",
         "hy": f"{HOUSE} Մենյու",
         "ka": f"{HOUSE} მენიუ",
-        "ce": f"{HOUSE} Меню",
         "en": f"{HOUSE} Menu",
+        "fr": f"{HOUSE} Menu",
+        "de": f"{HOUSE} Menü",
+        "es": f"{HOUSE} Menú",
+        "pl": f"{HOUSE} Menu",
     }.get(lang, f"{HOUSE} Menu")
 
 
@@ -577,7 +578,7 @@ def main_reply_kb(uid: str) -> ReplyKeyboardMarkup:
     )
 
 # Нормализация текста, чтобы понять, что пользователь нажал «меню»
-_MENU_WORDS = {"menu","меню","meniu","мəzір","мэзір","մենյու","მენიუ"}  # хватит с запасом
+_MENU_WORDS = {"menu","меню","meniu","menü","menú","мəzір","мэзір","մենյու","მენიუ"}  # хватит с запасом
 
 def _normalize_menu_text(s: str) -> str:
     if not s:
@@ -1151,14 +1152,15 @@ async def menu_cb(update, context):
         kb = [
             [InlineKeyboardButton("Русский 🇷🇺", callback_data="lang_ru"),
              InlineKeyboardButton("Українська 🇺🇦", callback_data="lang_uk")],
-            [InlineKeyboardButton("Moldovenească 🇲🇩", callback_data="lang_md"),
-             InlineKeyboardButton("Беларуская 🇧🇾", callback_data="lang_be")],
-            [InlineKeyboardButton("Қазақша 🇰🇿", callback_data="lang_kk"),
-             InlineKeyboardButton("Кыргызча 🇰🇬", callback_data="lang_kg")],
-            [InlineKeyboardButton("Հայերեն 🇦🇲", callback_data="lang_hy"),
-             InlineKeyboardButton("ქართული 🇬🇪", callback_data="lang_ka")],
-            [InlineKeyboardButton("Нохчийн мотт 🇷🇺", callback_data="lang_ce"),
+            [InlineKeyboardButton("Română 🇷🇴", callback_data="lang_md"),
              InlineKeyboardButton("English 🇬🇧", callback_data="lang_en")],
+            [InlineKeyboardButton("Français 🇫🇷", callback_data="lang_fr"),
+             InlineKeyboardButton("Deutsch 🇩🇪", callback_data="lang_de")],
+            [InlineKeyboardButton("Español 🇪🇸", callback_data="lang_es"),
+             InlineKeyboardButton("Polski 🇵🇱", callback_data="lang_pl")],
+            [InlineKeyboardButton("Қазақша 🇰🇿", callback_data="lang_kk"),
+             InlineKeyboardButton("Հայերեն 🇦🇲", callback_data="lang_hy")],
+            [InlineKeyboardButton("ქართული 🇬🇪", callback_data="lang_ka")],
             [InlineKeyboardButton(t["back"], callback_data="m:nav:settings")],
         ]
         await q.edit_message_text(title, parse_mode="Markdown",
@@ -1500,12 +1502,12 @@ def _has_eleven() -> bool:
 
 # Иконки-флаги по коду (опционально)
 FLAG_BY_CODE = {
-    "ru":"🇷🇺","uk":"🇺🇦","en":"🇬🇧","md":"🇲🇩","be":"🇧🇾",
-    "kk":"🇰🇿","kg":"🇰🇬","hy":"🇦🇲","ka":"🇬🇪","ce":"🏴"
+    "ru":"🇷🇺","uk":"🇺🇦","en":"🇬🇧","md":"🇷🇴","fr":"🇫🇷",
+    "de":"🇩🇪","es":"🇪🇸","pl":"🇵🇱","kk":"🇰🇿","hy":"🇦🇲","ka":"🇬🇪"
 }
 
 # Порядок отображения
-LANG_ORDER = ["ru","uk","en","md","be","kk","kg","hy","ka","ce"]
+LANG_ORDER = ["ru","uk","en","md","fr","de","es","pl","kk","hy","ka"]
 
 def _settings_i18n(uid: str) -> dict:
     lang = user_languages.get(uid, "ru")
@@ -2679,7 +2681,7 @@ async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def _expressive(text: str, lang: str) -> str:
     s = text.replace("...", "…")
     # [sigh] / (вздох)
-    if lang in ("ru","uk","md","be","kk","kg","hy","ka","ce"):
+    if lang in ("ru","uk","md","kk","hy","ka"):
         s = re.sub(r"\[(sigh|вздох)\]", "эх… ", s, flags=re.I)
         s = re.sub(r"\((вздох)\)", "эх… ", s, flags=re.I)
     else:
@@ -2691,7 +2693,7 @@ def _expressive(text: str, lang: str) -> str:
         return f"{dots} "
     s = re.sub(r"\[pause(\d{2,4})\]", _pause, s, flags=re.I)
     # Whisper
-    if lang in ("ru","uk","md","be","kk","kg","hy","ka","ce"):
+    if lang in ("ru","uk","md","kk","hy","ka"):
         s = re.sub(r"\[whisper:(.+?)\]", r"(шёпотом) \1", s, flags=re.I)
     else:
         s = re.sub(r"\[whisper:(.+?)\]", r"(whispering) \1", s, flags=re.I)
@@ -4828,9 +4830,9 @@ async def restore_reminder_jobs(job_queue):
 def _settings_lang_keyboard() -> InlineKeyboardMarkup:
     rows = [
         [("Русский 🇷🇺","setlang_ru"),("Українська 🇺🇦","setlang_uk"),("English 🇬🇧","setlang_en")],
-        [("Moldovenească 🇲🇩","setlang_md"),("Беларуская 🇧🇾","setlang_be"),("Қазақша 🇰🇿","setlang_kk")],
-        [("Кыргызча 🇰🇬","setlang_kg"),("Հայերեն 🇦🇲","setlang_hy"),("ქართული 🇬🇪","setlang_ka")],
-        [("Нохчийн мотт 🇷🇺","setlang_ce")],
+        [("Română 🇷🇴","setlang_md"),("Français 🇫🇷","setlang_fr"),("Deutsch 🇩🇪","setlang_de")],
+        [("Español 🇪🇸","setlang_es"),("Polski 🇵🇱","setlang_pl"),("Қазақша 🇰🇿","setlang_kk")],
+        [("Հայերեն 🇦🇲","setlang_hy"),("ქართული 🇬🇪","setlang_ka")],
     ]
     return InlineKeyboardMarkup([[InlineKeyboardButton(t, callback_data=cb) for t, cb in row] for row in rows])
 
@@ -4876,7 +4878,7 @@ async def settings_language_callback(update: Update, context: ContextTypes.DEFAU
 
     uid = str(q.from_user.id)
     lang = q.data.split("_", 1)[1]
-    valid = {"ru","uk","md","be","kk","kg","hy","ka","ce","en"}
+    valid = {"ru","uk","md","kk","hy","ka","en","fr","de","es","pl"}
     if lang not in valid:
         lang = "ru"
     user_languages[uid] = lang
@@ -5239,7 +5241,7 @@ async def show_habits(update, context):
                 "md": "Finalizează",
                 "ka": "შესრულება",
                 "en": "Done",
-            }.get(lang, "Выполнить"),
+            }.get(lang, "Done"),
             callback_data="mark_habit_done_choose",
         )],
         [InlineKeyboardButton(t["delete"], callback_data="delete_habit_choose")],
@@ -5271,14 +5273,15 @@ async def set_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
     available_langs = {
         "ru": "Русский",
         "uk": "Українська",
-        "md": "Moldovenească",
-        "be": "Беларуская",
+        "md": "Română",
+        "en": "English",
+        "fr": "Français",
+        "de": "Deutsch",
+        "es": "Español",
+        "pl": "Polski",
         "kk": "Қазақша",
-        "kg": "Кыргызча",
         "hy": "Հայերեն",
         "ka": "ქართული",
-        "ce": "Нохчийн мотт",
-        "en": "English"
     }
 
     if not context.args:
@@ -5369,15 +5372,15 @@ async def show_goals(update, context):
         [InlineKeyboardButton("➕ " + {
             "ru": "Добавить", "uk": "Додати", "be": "Дадаць", "kk": "Қосу", "kg": "Кошуу",
             "hy": "Ավելացնել", "ce": "Хила", "md": "Adaugă", "ka": "დამატება", "en": "Add"
-        }.get(lang, "Добавить"), callback_data="create_goal")],
+        }.get(lang, "Add"), callback_data="create_goal")],
         [InlineKeyboardButton("✅ " + {
             "ru": "Выполнить", "uk": "Виконати", "be": "Выканаць", "kk": "Аяқтау", "kg": "Аткаруу",
             "hy": "Կատարել", "ce": "Батта", "md": "Finalizează", "ka": "შესრულება", "en": "Done"
-        }.get(lang, "Выполнить"), callback_data="mark_goal_done_choose")],
+        }.get(lang, "Done"), callback_data="mark_goal_done_choose")],
         [InlineKeyboardButton("🗑️ " + {
             "ru": "Удалить", "uk": "Видалити", "be": "Выдаліць", "kk": "Өшіру", "kg": "Өчүрүү",
             "hy": "Ջնջել", "ce": "ДӀелла", "md": "Șterge", "ka": "წაშლა", "en": "Delete"
-        }.get(lang, "Удалить"), callback_data="delete_goal_choose")]
+        }.get(lang, "Delete"), callback_data="delete_goal_choose")]
     ]
     buttons.append([InlineKeyboardButton(_menu_i18n(user_id)["back"], callback_data="m:nav:features")])
     reply_markup = InlineKeyboardMarkup(buttons)
@@ -5439,20 +5442,21 @@ async def language_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             InlineKeyboardButton("Українська 🇺🇦", callback_data="lang_uk")
         ],
         [
-            InlineKeyboardButton("Moldovenească 🇲🇩", callback_data="lang_md"),
-            InlineKeyboardButton("Беларуская 🇧🇾", callback_data="lang_be")
+            InlineKeyboardButton("Română 🇷🇴", callback_data="lang_md"),
+            InlineKeyboardButton("English 🇬🇧", callback_data="lang_en")
         ],
         [
-            InlineKeyboardButton("Қазақша 🇰🇿", callback_data="lang_kk"),
-            InlineKeyboardButton("Кыргызча 🇰🇬", callback_data="lang_kg")
+            InlineKeyboardButton("Français 🇫🇷", callback_data="lang_fr"),
+            InlineKeyboardButton("Deutsch 🇩🇪", callback_data="lang_de")
+        ],
+        [
+            InlineKeyboardButton("Español 🇪🇸", callback_data="lang_es"),
+            InlineKeyboardButton("Polski 🇵🇱", callback_data="lang_pl"),
         ],
         [
             InlineKeyboardButton("Հայերեն 🇦🇲", callback_data="lang_hy"),
             InlineKeyboardButton("ქართული 🇬🇪", callback_data="lang_ka"),
-        ],
-        [
-            InlineKeyboardButton("Нохчийн мотт 🇷🇺", callback_data="lang_ce"),
-            InlineKeyboardButton("English 🇬🇧", callback_data="lang_en")
+            InlineKeyboardButton("Қазақша 🇰🇿", callback_data="lang_kk"),
         ]
     ]
 
@@ -6048,7 +6052,7 @@ async def habits_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "ru": "Добавить", "uk": "Додати", "be": "Дадаць", "kk": "Қосу",
                     "kg": "Кошуу", "hy": "Ավելացնել", "ce": "Хила", "md": "Adaugă",
                     "ka": "დამატება", "en": "Add"
-                }.get(lang, "Добавить"),
+                }.get(lang, "Add"),
                 callback_data="create_habit"
             ),
             InlineKeyboardButton(
@@ -6056,7 +6060,7 @@ async def habits_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "ru": "Выполнить", "uk": "Виконати", "be": "Выканаць", "kk": "Аяқтау",
                     "kg": "Аткаруу", "hy": "Կատարել", "ce": "Батта", "md": "Finalizează",
                     "ka": "შესრულება", "en": "Done"
-                }.get(lang, "Выполнить"),
+                }.get(lang, "Done"),
                 callback_data="mark_habit_done_choose"
             ),
             InlineKeyboardButton(
@@ -6064,7 +6068,7 @@ async def habits_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "ru": "Удалить", "uk": "Видалити", "be": "Выдаліць", "kk": "Өшіру",
                     "kg": "Өчүрүү", "hy": "Ջնջել", "ce": "ДӀелла", "md": "Șterge",
                     "ka": "წაშლა", "en": "Delete"
-                }.get(lang, "Удалить"),
+                }.get(lang, "Delete"),
                 callback_data="delete_habit_choose"
             )
         ]
@@ -6378,14 +6382,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard = [
             [InlineKeyboardButton("Русский 🇷🇺",       callback_data="lang_ru"),
              InlineKeyboardButton("Українська 🇺🇦",    callback_data="lang_uk")],
-            [InlineKeyboardButton("Moldovenească 🇲🇩", callback_data="lang_md"),
-             InlineKeyboardButton("Беларуская 🇧🇾",    callback_data="lang_be")],
-            [InlineKeyboardButton("Қазақша 🇰🇿",       callback_data="lang_kk"),
-             InlineKeyboardButton("Кыргызча 🇰🇬",      callback_data="lang_kg")],
-            [InlineKeyboardButton("Հայերեն 🇦🇲",       callback_data="lang_hy"),
-             InlineKeyboardButton("ქართული 🇬🇪",       callback_data="lang_ka")],
-            [InlineKeyboardButton("Нохчийн мотт 🏴",   callback_data="lang_ce"),
+            [InlineKeyboardButton("Română 🇷🇴",        callback_data="lang_md"),
              InlineKeyboardButton("English 🇬🇧",       callback_data="lang_en")],
+            [InlineKeyboardButton("Français 🇫🇷",      callback_data="lang_fr"),
+             InlineKeyboardButton("Deutsch 🇩🇪",       callback_data="lang_de")],
+            [InlineKeyboardButton("Español 🇪🇸",       callback_data="lang_es"),
+             InlineKeyboardButton("Polski 🇵🇱",        callback_data="lang_pl")],
+            [InlineKeyboardButton("Қазақша 🇰🇿",       callback_data="lang_kk"),
+             InlineKeyboardButton("Հայերեն 🇦🇲",       callback_data="lang_hy")],
+            [InlineKeyboardButton("ქართული 🇬🇪",       callback_data="lang_ka")],
         ]
         choose_lang = SETTINGS_TEXTS.get("en", {}).get(
             "choose_lang", "🌐 Please select the language of communication:"
