@@ -2980,6 +2980,30 @@ TZ_TEXTS = {
         "saved": "✅ Часовой пояс установлен: *{tz}*. Локальное время: *{local_time}*.",
         "unknown": "Не распознал часовой пояс. Введи город/алиас или выбери кнопкой.",
     },
+    "es": {
+    "title": "🌍 Indica tu zona horaria para los recordatorios.",
+    "hint": "Ejemplo: `/timezone madrid` o `/timezone ny`.\nTambién puedes pulsar el botón de abajo.",
+    "saved": "✅ Zona horaria establecida: *{tz}*. Hora local: *{local_time}*.",
+    "unknown": "No reconozco esa zona horaria. Escribe una ciudad/alias o elige con el botón.",
+},
+"de": {
+    "title": "🌍 Gib deine Zeitzone für Erinnerungen an.",
+    "hint": "Beispiel: `/timezone berlin` oder `/timezone ny`.\nDu kannst auch den Button unten verwenden.",
+    "saved": "✅ Zeitzone gesetzt: *{tz}*. Ortszeit: *{local_time}*.",
+    "unknown": "Zeitzone nicht erkannt. Gib eine Stadt/einen Alias ein oder wähle per Button.",
+},
+"pl": {
+    "title": "🌍 Podaj swoją strefę czasową dla przypomnień.",
+    "hint": "Przykład: `/timezone warsaw` albo `/timezone ny`.\nMożesz też użyć przycisku poniżej.",
+    "saved": "✅ Ustawiono strefę czasową: *{tz}*. Czas lokalny: *{local_time}*.",
+    "unknown": "Nie rozpoznano strefy czasowej. Wpisz miasto/alias lub wybierz przyciskiem.",
+},
+"fr": {
+    "title": "🌍 Indique ton fuseau horaire pour les rappels.",
+    "hint": "Exemple : `/timezone paris` ou `/timezone ny`.\nTu peux aussi appuyer sur le bouton ci-dessous.",
+    "saved": "✅ Fuseau horaire défini : *{tz}*. Heure locale : *{local_time}*.",
+    "unknown": "Je ne reconnais pas ce fuseau. Saisis une ville/un alias ou utilise le bouton.",
+},
     "uk": {
         "title": "🌍 Вкажи свій часовий пояс для нагадувань.",
         "hint": "Приклад: `/timezone kyiv` або `/timezone ny`.\nТакож можна натиснути кнопку нижче.",
@@ -3108,6 +3132,37 @@ POINTS_HELP_TEXTS = {
         "Келчу цIеран *{next_title}* дехь: *{to_next}*.\n\n"
         "ЦIераннаш латтахь:\n{ladder}"
     ),
+    "es": (
+    "🏅 *Puntos y rangos*\n"
+    "Vas acumulando puntos por tus acciones en el bot: metas, hábitos, informes.\n\n"
+    "Ahora tienes: *{points}* puntos — rango: *{title}*.\n"
+    "Para el siguiente rango *{next_title}* te faltan: *{to_next}*.\n\n"
+    "Escalera de rangos:\n{ladder}"
+),
+
+"de": (
+    "🏅 *Punkte und Titel*\n"
+    "Du sammelst Punkte für Aktionen im Bot: Ziele, Gewohnheiten, Berichte.\n\n"
+    "Aktuell hast du: *{points}* Punkte — Titel: *{title}*.\n"
+    "Bis zum nächsten Titel *{next_title}* fehlen: *{to_next}*.\n\n"
+    "Rangliste der Titel:\n{ladder}"
+),
+
+"pl": (
+    "🏅 *Punkty i tytuły*\n"
+    "Zbierasz punkty za działania w bocie: cele, nawyki, raporty.\n\n"
+    "Masz teraz: *{points}* pkt — tytuł: *{title}*.\n"
+    "Do następnego tytułu *{next_title}* brakuje: *{to_next}*.\n\n"
+    "Drabinka tytułów:\n{ladder}"
+),
+
+"fr": (
+    "🏅 *Points et titres*\n"
+    "Tu gagnes des points pour tes actions dans le bot : objectifs, habitudes, rapports.\n\n"
+    "Tu as actuellement : *{points}* points — titre : *{title}*.\n"
+    "Il te reste *{to_next}* pour atteindre le prochain titre *{next_title}*.\n\n"
+    "Échelle des titres :\n{ladder}"
+),
 }
 
 # Команда /remind — мультиязычный вариант
@@ -3334,6 +3389,102 @@ REMIND_TEXTS = {
         "btn_add_rem": "➕ Add reminder",
         "btn_list_rem": "📋 Reminder list",
     },
+    "es": {
+    # antiguos (límite/formato)
+    "limit": "🔔 En la versión gratuita puedes configurar hasta 3 recordatorios activos.\n\n✨ Activa Mindra+ para tener hasta 10 recordatorios activos 💜",
+    "usage": "⏰ Uso: `/remind 19:30 ¡Haz ejercicio!`",
+    "success": "✅ Recordatorio fijado para {hour:02d}:{minute:02d}: *{text}*",
+    "bad_format": "⚠️ Formato no válido. Ej.: `/remind 19:30 ¡Haz ejercicio!`",
+    # nuevos (Reminders 2.0)
+    "create_help": "⏰ Crea un recordatorio: <cuándo> <sobre qué>\nEjemplos: «mañana a las 9 entrenamiento», «en 15 minutos agua», «vie a las 19 cine».",
+    "created":     "✅ Recordatorio creado para {time}\n“{text}”",
+    "not_understood": "⚠️ No entendí la hora. Di, por ejemplo: «mañana a las 10 regar las plantas» o «en 30 minutos café».",
+    "list_empty":  "Por ahora no hay recordatorios activos.",
+    "list_title":  "🗓 Tus recordatorios:",
+    "fired":       "🔔 Recordatorio: {text}\n🕒 {time}",
+    "deleted":     "🗑 Recordatorio eliminado.",
+    "snoozed":     "⏳ Pospuesto hasta {time}\n“{text}”",
+    "btn_plus15":  "⏳ +15m",
+    "btn_plus1h":  "🕐 +1h",
+    "btn_tomorrow":"🌅 Mañana",
+    "btn_delete":  "🗑 Eliminar",
+    "btn_new":     "➕ Añadir",
+    "menu_title":  "🔔 Recordatorios",
+    "btn_add_rem": "➕ Añadir recordatorio",
+    "btn_list_rem":"📋 Lista de recordatorios",
+},
+"de": {
+    # alt (Limit/Format)
+    "limit": "🔔 In der Gratis-Version kannst du bis zu 3 aktive Erinnerungen setzen.\n\n✨ Hol dir Mindra+, um bis zu 10 aktive Erinnerungen zu haben 💜",
+    "usage": "⏰ Verwendung: `/remind 19:30 Gymnastik!`",
+    "success": "✅ Erinnerung gesetzt für {hour:02d}:{minute:02d}: *{text}*",
+    "bad_format": "⚠️ Falsches Format. Beispiel: `/remind 19:30 Gymnastik!`",
+    # neu (Reminders 2.0)
+    "create_help": "⏰ Erstelle eine Erinnerung: <wann> <worum>\nBeispiele: „morgen um 9 Training“, „in 15 Minuten Wasser“, „Fr um 19 Kino“.",
+    "created":     "✅ Erinnerung erstellt für {time}\n„{text}“",
+    "not_understood": "⚠️ Zeit nicht erkannt. Sag z. B.: „morgen um 10 Blumen gießen“ oder „in 30 Minuten Kaffee“.",
+    "list_empty":  "Noch keine aktiven Erinnerungen.",
+    "list_title":  "🗓 Deine Erinnerungen:",
+    "fired":       "🔔 Erinnerung: {text}\n🕒 {time}",
+    "deleted":     "🗑 Erinnerung gelöscht.",
+    "snoozed":     "⏳ Verschoben auf {time}\n„{text}“",
+    "btn_plus15":  "⏳ +15 Min",
+    "btn_plus1h":  "🕐 +1 Std",
+    "btn_tomorrow":"🌅 Morgen",
+    "btn_delete":  "🗑 Löschen",
+    "btn_new":     "➕ Hinzufügen",
+    "menu_title":  "🔔 Erinnerungen",
+    "btn_add_rem": "➕ Erinnerung hinzufügen",
+    "btn_list_rem":"📋 Erinnerungen anzeigen",
+},
+"pl": {
+    # stare (limit/format)
+    "limit": "🔔 W wersji bezpłatnej możesz ustawić do 3 aktywnych przypomnień.\n\n✨ Włącz Mindra+, aby mieć do 10 aktywnych przypomnień 💜",
+    "usage": "⏰ Użycie: `/remind 19:30 Zrób rozgrzewkę!`",
+    "success": "✅ Ustawiono przypomnienie na {hour:02d}:{minute:02d}: *{text}*",
+    "bad_format": "⚠️ Nieprawidłowy format. Przykład: `/remind 19:30 Zrób rozgrzewkę!`",
+    # nowe (Reminders 2.0)
+    "create_help": "⏰ Utwórz przypomnienie: <kiedy> <o czym>\nPrzykłady: „jutro o 9 trening”, „za 15 minut woda”, „pt o 19 kino”.",
+    "created":     "✅ Przypomnienie utworzone na {time}\n„{text}”",
+    "not_understood": "⚠️ Nie rozumiem czasu. Powiedz np.: „jutro o 10 podlać kwiaty” lub „za 30 minut kawa”.",
+    "list_empty":  "Brak aktywnych przypomnień.",
+    "list_title":  "🗓 Twoje przypomnienia:",
+    "fired":       "🔔 Przypomnienie: {text}\n🕒 {time}",
+    "deleted":     "🗑 Przypomnienie usunięte.",
+    "snoozed":     "⏳ Przełożono na {time}\n„{text}”",
+    "btn_plus15":  "⏳ +15 min",
+    "btn_plus1h":  "🕐 +1 h",
+    "btn_tomorrow":"🌅 Jutro",
+    "btn_delete":  "🗑 Usuń",
+    "btn_new":     "➕ Dodaj",
+    "menu_title":  "🔔 Przypomnienia",
+    "btn_add_rem": "➕ Dodaj przypomnienie",
+    "btn_list_rem":"📋 Lista przypomnień",
+},
+"fr": {
+    # anciens (limite/format)
+    "limit": "🔔 Dans la version gratuite, tu peux créer jusqu’à 3 rappels actifs.\n\n✨ Active Mindra+ pour en avoir jusqu’à 10 💜",
+    "usage": "⏰ Utilisation : `/remind 19:30 Faire des étirements !`",
+    "success": "✅ Rappel programmé pour {hour:02d}:{minute:02d} : *{text}*",
+    "bad_format": "⚠️ Format invalide. Exemple : `/remind 19:30 Faire des étirements !`",
+    # nouveaux (Reminders 2.0)
+    "create_help": "⏰ Crée un rappel : <quand> <quoi>\nExemples : « demain à 9 entraînement », « dans 15 min eau », « ven à 19 ciné ».",
+    "created":     "✅ Rappel créé pour {time}\n« {text} »",
+    "not_understood": "⚠️ Je n’ai pas compris l’heure. Dis par exemple : « demain à 10 arroser les plantes » ou « dans 30 min café ».",
+    "list_empty":  "Pas encore de rappels actifs.",
+    "list_title":  "🗓 Tes rappels :",
+    "fired":       "🔔 Rappel : {text}\n🕒 {time}",
+    "deleted":     "🗑 Rappel supprimé.",
+    "snoozed":     "⏳ Reporté à {time}\n« {text} »",
+    "btn_plus15":  "⏳ +15 min",
+    "btn_plus1h":  "🕐 +1 h",
+    "btn_tomorrow":"🌅 Demain",
+    "btn_delete":  "🗑 Supprimer",
+    "btn_new":     "➕ Ajouter",
+    "menu_title":  "🔔 Rappels",
+    "btn_add_rem": "➕ Ajouter un rappel",
+    "btn_list_rem":"📋 Liste des rappels",
+},
 }
 
 LOCKED_MSGS = {
@@ -3347,7 +3498,11 @@ LOCKED_MSGS = {
         "ce": "🔒 Дина функция Mindra+ яззийна догъа кхоллар хетам.",
         "md": "🔒 Această funcție este disponibilă doar abonaților Mindra+.",
         "ka": "🔒 ეს ფუნქცია ხელმისაწვდომია მხოლოდ Mindra+ აბონენტებისთვის.",
-    }
+        "es": "🔒 Esta función solo está disponible para suscriptores de Mindra+.",
+        "de": "🔒 Diese Funktion ist nur für Mindra+-Abonnenten verfügbar.",
+        "pl": "🔒 Ta funkcja jest dostępna tylko dla abonentów Mindra+.",
+        "fr": "🔒 Cette fonctionnalité est réservée aux abonnés Mindra+.",
+}
 
 MSGS = {
         "coach": {
@@ -3361,6 +3516,10 @@ MSGS = {
             "ce": "✅ Чуйна режим хила *Коуч* догъа. Со ву до а ю мотивация ю! 💪",
             "md": "✅ Modul de comunicare a fost schimbat la *Coach*. Te voi ajuta și motiva! 💪",
             "ka": "✅ კომუნიკაციის რეჟიმი შეიცვალა *ქოუჩი*-ზე. დაგეხმარები და მოგამოტივირებ! 💪",
+             "es": "✅ El modo de comunicación cambió a *Coach*. ¡Te ayudaré y te motivaré! 💪",
+    "de": "✅ Kommunikationsmodus auf *Coach* geändert. Ich werde dir helfen und dich motivieren! 💪",
+    "pl": "✅ Tryb rozmowy zmieniono na *Coach*. Będę Ci pomagać i motywować! 💪",
+    "fr": "✅ Mode de communication passé à *Coach*. Je vais t’aider et te motiver ! 💪",
         },
         "flirt": {
             "ru": "😉 Режим общения изменён на *Флирт*. Приготовься к приятным неожиданностям 💜",
@@ -3373,6 +3532,10 @@ MSGS = {
             "ce": "😉 Чуйна режим хила *Флирт* догъа. Дахьал цуьнан сюрпризаш хилайла! 💜",
             "md": "😉 Modul de comunicare a fost schimbat la *Flirt*. Pregătește-te pentru surprize plăcute 💜",
             "ka": "😉 კომუნიკაციის რეჟიმი შეიცვალა *ფლირტი*-ზე. მოემზადე სასიამოვნო სიურპრიზებისთვის 💜",
+            "es": "😉 El modo de comunicación cambió a *Flirt*. Prepárate para agradables sorpresas 💜",
+    "de": "😉 Kommunikationsmodus auf *Flirt* geändert. Mach dich auf angenehme Überraschungen gefasst 💜",
+    "pl": "😉 Tryb rozmowy zmieniono na *Flirt*. Przygotuj się na miłe niespodzianki 💜",
+    "fr": "😉 Mode de communication passé à *Flirt*. Prépare-toi à de belles surprises 💜",
         }
     }
 
@@ -3500,6 +3663,41 @@ PREMIUM_REPORT_TEXTS = {
         "📝 Mood entries: {mood_entries}\n\n"
         "Great job! Keep it up 💜"
     ),
+    "es": (
+    "✅ *Tu informe personal de la semana:*\n\n"
+    "🎯 Metas completadas: {completed_goals}\n"
+    "🌱 Hábitos cumplidos: {completed_habits}\n"
+    "📅 Días de actividad: {days_active}\n"
+    "📝 Registros de ánimo: {mood_entries}\n\n"
+    "¡Muy bien! Sigue así 💜"
+),
+
+"de": (
+    "✅ *Dein persönlicher Wochenbericht:*\n\n"
+    "🎯 Abgeschlossene Ziele: {completed_goals}\n"
+    "🌱 Erledigte Gewohnheiten: {completed_habits}\n"
+    "📅 Aktive Tage: {days_active}\n"
+    "📝 Stimmungseinträge: {mood_entries}\n\n"
+    "Stark! Mach weiter so 💜"
+),
+
+"pl": (
+    "✅ *Twój osobisty raport tygodnia:*\n\n"
+    "🎯 Ukończone cele: {completed_goals}\n"
+    "🌱 Wykonane nawyki: {completed_habits}\n"
+    "📅 Dni aktywności: {days_active}\n"
+    "📝 Zapisy nastroju: {mood_entries}\n\n"
+    "Świetna robota! Tak trzymaj 💜"
+),
+
+"fr": (
+    "✅ *Ton rapport personnel de la semaine :*\n\n"
+    "🎯 Objectifs terminés : {completed_goals}\n"
+    "🌱 Habitudes réalisées : {completed_habits}\n"
+    "📅 Jours d’activité : {days_active}\n"
+    "📝 Entrées d’humeur : {mood_entries}\n\n"
+    "Bravo ! Continue comme ça 💜"
+),
 }
 
 PREMIUM_CHALLENGES_BY_LANG = {
@@ -4028,6 +4226,97 @@ POLL_MESSAGES_BY_LANG = {
         "🎁 Сделал(а) ли ты сегодня что-то приятное для другого человека?",
         "🎨 Какое творческое занятие тебе хотелось бы попробовать?"
     ],
+    "es": [
+    "📝 ¿Cómo valorarías tu día del 1 al 10?",
+    "💭 ¿Qué te alegró hoy?",
+    "🌿 ¿Hubo un momento en el que sentiste gratitud hoy?",
+    "🤔 Si pudieras cambiar una cosa de este día, ¿cuál sería?",
+    "💪 ¿De qué te sientes orgulloso/a hoy?",
+    "🤔 ¿Qué nuevo probaste hoy?",
+    "📝 ¿Con qué sueñas ahora mismo?",
+    "🌟 ¿Por qué puedes felicitarte hoy?",
+    "💡 ¿Qué idea se te ocurrió hoy?",
+    "🎉 ¿Hubo hoy un momento que te sacó una sonrisa?",
+    "🌈 ¿Cuál fue el momento más brillante de tu día?",
+    "🫶 ¿A quién te gustaría dar las gracias hoy?",
+    "💬 ¿Hubo algo que te sorprendió hoy?",
+    "🌻 ¿Cómo te cuidaste hoy?",
+    "😌 ¿Hubo algo que te ayudó a relajarte?",
+    "🏆 ¿Qué lograste hoy, aunque fuera algo pequeño?",
+    "📚 ¿Qué nuevo aprendiste hoy?",
+    "🧑‍🤝‍🧑 ¿Hubo alguien que te apoyó hoy?",
+    "🎁 ¿Hiciste hoy algo agradable por otra persona?",
+    "🎨 ¿Qué actividad creativa te gustaría probar?"
+],
+
+"de": [
+    "📝 Wie würdest du deinen Tag auf einer Skala von 1 bis 10 bewerten?",
+    "💭 Was hat dich heute gefreut?",
+    "🌿 Gab es heute einen Moment, in dem du Dankbarkeit gespürt hast?",
+    "🤔 Wenn du eine Sache an diesem Tag ändern könntest, welche wäre es?",
+    "💪 Worauf bist du heute stolz?",
+    "🤔 Was hast du heute Neues ausprobiert?",
+    "📝 Wovon träumst du gerade?",
+    "🌟 Wofür kannst du dich heute loben?",
+    "💡 Welche Idee ist dir heute gekommen?",
+    "🎉 Gab es heute einen Moment, der dich zum Lächeln gebracht hat?",
+    "🌈 Welcher Moment des Tages war für dich der hellste?",
+    "🫶 Wem möchtest du heute Danke sagen?",
+    "💬 Hat dich heute etwas überrascht?",
+    "🌻 Wie hast du heute für dich selbst gesorgt?",
+    "😌 Gab es etwas, das dir beim Entspannen geholfen hat?",
+    "🏆 Was hast du heute erreicht, auch wenn es nur etwas Kleines war?",
+    "📚 Was hast du heute Neues gelernt?",
+    "🧑‍🤝‍🧑 Gab es jemanden, der dich heute unterstützt hat?",
+    "🎁 Hast du heute etwas Nettes für jemanden getan?",
+    "🎨 Welche kreative Tätigkeit würdest du gern ausprobieren?"
+],
+
+"pl": [
+    "📝 Jak ocenisz swój dzień w skali od 1 do 10?",
+    "💭 Co cię dziś ucieszyło?",
+    "🌿 Czy był dziś moment, w którym poczułeś/aś wdzięczność?",
+    "🤔 Gdybyś mógł/mogła zmienić jedną rzecz w tym dniu, co by to było?",
+    "💪 Z czego dziś jesteś dumny/a?",
+    "🤔 Czego nowego dziś spróbowałeś/aś?",
+    "📝 O czym teraz marzysz?",
+    "🌟 Za co możesz się dziś pochwalić?",
+    "💡 Jaki pomysł przyszedł ci dziś do głowy?",
+    "🎉 Czy był dziś moment, który wywołał uśmiech?",
+    "🌈 Jaki moment dnia był dla ciebie najjaśniejszy?",
+    "🫶 Komu chciał(a)byś dziś powiedzieć „dziękuję”?",
+    "💬 Czy coś cię dziś zaskoczyło?",
+    "🌻 Jak zadbałeś/aś dziś o siebie?",
+    "😌 Czy było coś, co pomogło ci się zrelaksować?",
+    "🏆 Co udało ci się dziś osiągnąć, nawet jeśli to drobiazg?",
+    "📚 Czego nowego nauczyłeś/aś się dziś?",
+    "🧑‍🤝‍🧑 Czy był ktoś, kto cię dziś wsparł?",
+    "🎁 Czy zrobiłeś/aś dziś coś miłego dla kogoś?",
+    "🎨 Jaką kreatywną aktywność chciał(a)byś wypróbować?"
+],
+
+"fr": [
+    "📝 Comment évalues-tu ta journée sur une échelle de 1 à 10 ?",
+    "💭 Qu’est-ce qui t’a réjoui aujourd’hui ?",
+    "🌿 Y a-t-il eu un moment où tu as ressenti de la gratitude aujourd’hui ?",
+    "🤔 Si tu pouvais changer une chose dans cette journée, laquelle serait-ce ?",
+    "💪 De quoi es-tu fier/fière aujourd’hui ?",
+    "🤔 Qu’as-tu essayé de nouveau aujourd’hui ?",
+    "📝 À quoi rêves-tu en ce moment ?",
+    "🌟 Pour quoi peux-tu te féliciter aujourd’hui ?",
+    "💡 Quelle idée t’est venue aujourd’hui ?",
+    "🎉 Y a-t-il eu un moment qui t’a fait sourire aujourd’hui ?",
+    "🌈 Quel a été le moment le plus marquant de ta journée ?",
+    "🫶 À qui voudrais-tu dire merci aujourd’hui ?",
+    "💬 Y a-t-il quelque chose qui t’a surpris aujourd’hui ?",
+    "🌻 Comment as-tu pris soin de toi aujourd’hui ?",
+    "😌 Y a-t-il quelque chose qui t’a aidé(e) à te détendre ?",
+    "🏆 Qu’as-tu réussi aujourd’hui, même si c’est une petite chose ?",
+    "📚 Qu’as-tu appris de nouveau aujourd’hui ?",
+    "🧑‍🤝‍🧑 Y a-t-il quelqu’un qui t’a soutenu(e) aujourd’hui ?",
+    "🎁 As-tu fait quelque chose d’agréable pour quelqu’un aujourd’hui ?",
+    "🎨 Quelle activité créative aimerais-tu essayer ?"
+],
     "uk": [
         "📝 Як ти оцінюєш свій день за шкалою від 1 до 10?",
         "💭 Що сьогодні тебе порадувало?",
@@ -4229,39 +4518,6 @@ POLL_MESSAGES_BY_LANG = {
 }
 
 SUPPORT_MESSAGES_BY_LANG = {
-    "ru": [
-        "💜 Ты делаешь этот мир лучше просто тем, что в нём есть.",
-        "🌞 Сегодня новый день, и он полон возможностей — ты справишься!",
-        "🤗 Обнимаю тебя мысленно. Ты не один(а).",
-        "✨ Даже если трудно — помни, ты уже многого добился(ась)!",
-        "💫 У тебя есть всё, чтобы пройти через это. Верю в тебя!",
-        "🫶 Как здорово, что ты есть. Ты очень важный(ая) человек.",
-        "🔥 Сегодня — хороший день, чтобы гордиться собой!",
-        "🌈 Если вдруг устал(а) — просто сделай паузу и выдохни. Это нормально.",
-        "😊 Улыбнись себе в зеркало. Ты классный(ая)!",
-        "💡 Помни: каждый день ты становишься сильнее.",
-        "🍀 Твои чувства важны. Ты важен(важна).",
-        "💛 Ты заслуживаешь любви и заботы — и от других, и от себя.",
-        "🌟 Спасибо тебе за то, что ты есть. Серьёзно.",
-        "🤍 Даже маленький шаг вперёд — уже победа.",
-        "💌 Ты приносишь в мир тепло. Не забывай об этом!",
-        "✨ Верь себе. Ты уже столько прошёл(а) — и справился(ась)!",
-        "🙌 Сегодня — твой день. Делай то, что делает тебя счастливым(ой).",
-        "🌸 Порадуй себя чем‑то вкусным или приятным. Ты этого достоин(а).",
-        "🏞️ Просто напоминание: ты невероятный(ая), и я рядом.",
-        "🎶 Пусть музыка сегодня согреет твою душу.",
-        "🤝 Не бойся просить о поддержке — ты не один(а).",
-        "🔥 Вспомни, сколько всего ты преодолел(а). Ты силён(сильна)!",
-        "🦋 Сегодня — шанс сделать что‑то доброе для себя.",
-        "💎 Ты уникален(а), таких как ты больше нет.",
-        "🌻 Даже если день не идеален — ты всё равно светишься.",
-        "💪 Ты умеешь больше, чем думаешь. Верю в тебя!",
-        "🍫 Порадуй себя мелочью — ты этого заслуживаешь.",
-        "🎈 Пусть твой день будет лёгким и добрым.",
-        "💭 Если есть мечта — помни, что ты можешь к ней прийти.",
-        "🌊 Ты как океан — глубже и сильнее, чем кажется.",
-        "🕊️ Пусть сегодня будет хотя бы один момент, который заставит тебя улыбнуться."
-    ],
     "uk": [
         "💜 Ти робиш цей світ кращим просто тим, що ти в ньому.",
         "🌞 Сьогодні новий день, і він повний можливостей — ти впораєшся!",
@@ -4295,6 +4551,171 @@ SUPPORT_MESSAGES_BY_LANG = {
         "🌊 Ти як океан — глибший(а) і сильніший(а), ніж здається.",
         "🕊️ Нехай сьогодні буде хоча б одна мить, що викличе усмішку."
     ],
+    "ru": [
+    "💜 Ты делаешь этот мир лучше просто тем, что ты в нём.",
+    "🌞 Сегодня новый день, и он полон возможностей — ты справишься!",
+    "🤗 Обнимаю тебя мысленно. Ты не один(одна).",
+    "✨ Даже если нелегко — помни, ты уже многого достиг(ла)!",
+    "💫 У тебя есть всё, чтобы пройти через это. Верю в тебя!",
+    "🫶 Как хорошо, что ты есть. Ты очень важный человек.",
+    "🔥 Сегодня — хороший день, чтобы гордиться собой!",
+    "🌈 Если вдруг устал(а) — просто сделай паузу и выдохни. Это нормально.",
+    "😊 Улыбнись себе в зеркало. Ты классный(ая)!",
+    "💡 Помни: каждый день ты становишься сильнее.",
+    "🍀 Твои чувства важны. Ты важен(важна).",
+    "💛 Ты заслуживаешь любви и заботы — и от других, и от себя.",
+    "🌟 Спасибо тебе за то, что ты есть. Серьёзно.",
+    "🤍 Даже маленький шаг вперёд — уже победа.",
+    "💌 Ты приносишь в мир тепло. Не забывай об этом!",
+    "✨ Верь в себя. Ты уже столько всего прошёл(а) — и справился(ась)!",
+    "🙌 Сегодня — твой день. Делай то, что делает тебя счастливым(ой).",
+    "🌸 Побалуй себя чем-то вкусным или приятным. Ты этого достоин(достойна).",
+    "🏞️ Просто напоминание: ты невероятный(ая), и я рядом.",
+    "🎶 Пусть музыка сегодня согреет твою душу.",
+    "🤝 Не бойся просить поддержки — ты не один(одна).",
+    "🔥 Вспомни, сколько всего ты преодолел(а). Ты сильный(ая)!",
+    "🦋 Сегодня — шанс сделать что-то хорошее для себя.",
+    "💎 Ты уникальный(ая), таких как ты больше нет.",
+    "🌻 Даже если день не идеален — ты всё равно сияешь.",
+    "💪 Ты умеешь больше, чем думаешь. Верю в тебя!",
+    "🍫 Побалуй себя мелочью — ты этого заслуживаешь.",
+    "🎈 Пусть твой день будет лёгким и добрым.",
+    "💭 Если есть мечта — помни, что ты можешь к ней прийти.",
+    "🌊 Ты как океан — глубже и сильнее, чем кажется.",
+    "🕊️ Пусть сегодня будет хотя бы один миг, который вызовет улыбку."
+],
+    "es": [
+    "💜 Haces este mundo mejor solo por estar en él.",
+    "🌞 Hoy es un nuevo día y está lleno de posibilidades — ¡lo conseguirás!",
+    "🤗 Te abrazo en pensamiento. No estás solo/a.",
+    "✨ Aunque sea difícil, recuerda: ¡ya has logrado mucho!",
+    "💫 Tienes todo para superar esto. ¡Creo en ti!",
+    "🫶 Qué bueno que existes. Eres una persona muy valiosa.",
+    "🔥 ¡Hoy es un buen día para estar orgulloso/a de ti!",
+    "🌈 Si te sientes cansado/a, haz una pausa y exhala. Es normal.",
+    "😊 Sonríete en el espejo. ¡Eres genial!",
+    "💡 Recuerda: cada día te haces más fuerte.",
+    "🍀 Tus sentimientos importan. Tú importas.",
+    "💛 Mereces amor y cuidado — de los demás y de ti mismo/a.",
+    "🌟 Gracias por ser quien eres. En serio.",
+    "🤍 Incluso un pequeño paso adelante ya es una victoria.",
+    "💌 Aportas calidez al mundo. ¡No lo olvides!",
+    "✨ Cree en ti. Ya has pasado por mucho — ¡y lo lograste!",
+    "🙌 Hoy es tu día. Haz lo que te hace feliz.",
+    "🌸 Date un capricho con algo rico o agradable. Te lo mereces.",
+    "🏞️ Solo un recordatorio: eres increíble, y estoy contigo.",
+    "🎶 Que la música hoy caliente tu alma.",
+    "🤝 No temas pedir apoyo — no estás solo/a.",
+    "🔥 Recuerda cuánto has superado. ¡Eres fuerte!",
+    "🦋 Hoy es una oportunidad para hacer algo bueno por ti.",
+    "💎 Eres único/a, no hay nadie como tú.",
+    "🌻 Aunque el día no sea perfecto, sigues brillando.",
+    "💪 Puedes más de lo que crees. ¡Creo en ti!",
+    "🍫 Date un pequeño gusto — te lo mereces.",
+    "🎈 Que tu día sea ligero y amable.",
+    "💭 Si tienes un sueño, recuerda que puedes alcanzarlo.",
+    "🌊 Eres como el océano — más profundo/a y fuerte de lo que parece.",
+    "🕊️ Que hoy haya al menos un instante que te haga sonreír."
+],
+    "de": [
+    "💜 Du machst diese Welt besser, einfach weil du in ihr bist.",
+    "🌞 Heute ist ein neuer Tag, voller Möglichkeiten — du schaffst das!",
+    "🤗 Eine gedankliche Umarmung. Du bist nicht allein.",
+    "✨ Auch wenn es schwer ist — denk daran: Du hast schon viel erreicht!",
+    "💫 Du hast alles, um da durchzukommen. Ich glaube an dich!",
+    "🫶 Wie schön, dass es dich gibt. Du bist wichtig.",
+    "🔥 Heute ist ein guter Tag, um stolz auf dich zu sein!",
+    "🌈 Wenn du müde bist, mach eine Pause und atme aus. Das ist okay.",
+    "😊 Lächle dir im Spiegel zu. Du bist toll!",
+    "💡 Denk dran: Mit jedem Tag wirst du stärker.",
+    "🍀 Deine Gefühle sind wichtig. Du bist wichtig.",
+    "💛 Du verdienst Liebe und Fürsorge — von anderen und von dir selbst.",
+    "🌟 Danke, dass es dich gibt. Wirklich.",
+    "🤍 Selbst ein kleiner Schritt nach vorn ist schon ein Sieg.",
+    "💌 Du bringst Wärme in die Welt. Vergiss das nicht!",
+    "✨ Glaub an dich. Du hast schon so viel geschafft — und du hast es gemeistert!",
+    "🙌 Heute ist dein Tag. Tu, was dich glücklich macht.",
+    "🌸 Gönn dir etwas Leckeres oder Schönes. Du hast es verdient.",
+    "🏞️ Nur zur Erinnerung: Du bist unglaublich, und ich bin an deiner Seite.",
+    "🎶 Möge Musik heute deine Seele wärmen.",
+    "🤝 Scheue dich nicht, um Unterstützung zu bitten — du bist nicht allein.",
+    "🔥 Erinnere dich daran, wie viel du schon überwunden hast. Du bist stark!",
+    "🦋 Heute ist eine Chance, etwas Gutes für dich zu tun.",
+    "💎 Du bist einzigartig — dich gibt es nur einmal.",
+    "🌻 Auch wenn der Tag nicht perfekt ist, du strahlst trotzdem.",
+    "💪 Du kannst mehr, als du denkst. Ich glaube an dich!",
+    "🍫 Gönn dir eine Kleinigkeit — du hast es verdient.",
+    "🎈 Möge dein Tag leicht und freundlich sein.",
+    "💭 Wenn du einen Traum hast — denk daran, dass du ihn erreichen kannst.",
+    "🌊 Du bist wie der Ozean — tiefer und stärker, als es scheint.",
+    "🕊️ Möge es heute wenigstens einen Moment geben, der dir ein Lächeln schenkt."
+],
+    "fr": [
+    "💜 Tu rends ce monde meilleur rien que par ta présence.",
+    "🌞 Aujourd’hui est un nouveau jour, plein de possibilités — tu vas y arriver !",
+    "🤗 Je t’envoie une étreinte en pensée. Tu n’es pas seul(e).",
+    "✨ Même si c’est difficile — souviens-toi : tu as déjà accompli beaucoup !",
+    "💫 Tu as tout ce qu’il faut pour traverser ça. Je crois en toi !",
+    "🫶 Heureusement que tu es là. Tu es une personne très importante.",
+    "🔥 Aujourd’hui est un bon jour pour être fier/fière de toi !",
+    "🌈 Si tu es fatigué(e), fais une pause et expire. C’est normal.",
+    "😊 Souris-toi dans le miroir. Tu es génial(e) !",
+    "💡 Souviens-toi : chaque jour, tu deviens plus fort(e).",
+    "🍀 Tes sentiments comptent. Tu comptes.",
+    "💛 Tu mérites de l’amour et de l’attention — des autres et de toi-même.",
+    "🌟 Merci d’être toi. Vraiment.",
+    "🤍 Même un petit pas en avant est déjà une victoire.",
+    "💌 Tu apportes de la chaleur au monde. N’oublie pas ça !",
+    "✨ Crois en toi. Tu as déjà traversé tant de choses — et tu t’en es sorti(e) !",
+    "🙌 Aujourd’hui est ton jour. Fais ce qui te rend heureux/heureuse.",
+    "🌸 Fais-toi plaisir avec quelque chose de bon ou d’agréable. Tu le mérites.",
+    "🏞️ Petit rappel : tu es incroyable, et je suis à tes côtés.",
+    "🎶 Que la musique réchauffe ton âme aujourd’hui.",
+    "🤝 N’aie pas peur de demander du soutien — tu n’es pas seul(e).",
+    "🔥 Rappelle-toi tout ce que tu as surmonté. Tu es fort(e) !",
+    "🦋 Aujourd’hui est l’occasion de faire quelque chose de bien pour toi.",
+    "💎 Tu es unique, il n’y a personne comme toi.",
+    "🌻 Même si la journée n’est pas parfaite, tu brilles quand même.",
+    "💪 Tu es capable de plus que tu ne le penses. Je crois en toi !",
+    "🍫 Offre-toi une petite douceur — tu le mérites.",
+    "🎈 Que ta journée soit légère et bienveillante.",
+    "💭 Si tu as un rêve, souviens-toi que tu peux l’atteindre.",
+    "🌊 Tu es comme l’océan — plus profond(e) et plus fort(e) qu’il n’y paraît.",
+    "🕊️ Qu’il y ait aujourd’hui au moins un instant qui te fasse sourire."
+],
+    "pl": [
+    "💜 Sprawiasz, że ten świat jest lepszy, po prostu w nim będąc.",
+    "🌞 Dziś jest nowy dzień, pełen możliwości — dasz radę!",
+    "🤗 Ściskam cię myślami. Nie jesteś sam/a.",
+    "✨ Nawet jeśli jest trudno — pamiętaj: już wiele osiągnąłeś/osiągnęłaś!",
+    "💫 Masz wszystko, by przez to przejść. Wierzę w ciebie!",
+    "🫶 Dobrze, że jesteś. Jesteś bardzo ważną osobą.",
+    "🔥 Dziś jest dobry dzień, by być dumnym/dumną z siebie!",
+    "🌈 Jeśli poczujesz zmęczenie — zrób pauzę i odetchnij. To normalne.",
+    "😊 Uśmiechnij się do siebie w lustrze. Jesteś super!",
+    "💡 Pamiętaj: z każdym dniem stajesz się silniejszy/silniejsza.",
+    "🍀 Twoje uczucia są ważne. Ty jesteś ważny/ważna.",
+    "💛 Zasługujesz na miłość i troskę — od innych i od siebie.",
+    "🌟 Dziękuję, że jesteś. Naprawdę.",
+    "🤍 Nawet mały krok naprzód to już zwycięstwo.",
+    "💌 Wnosisz ciepło do świata. Nie zapominaj o tym!",
+    "✨ Wierz w siebie. Już tyle przeszedłeś/przeszłaś — i dałeś/dałaś radę!",
+    "🙌 Dziś jest twój dzień. Rób to, co cię uszczęśliwia.",
+    "🌸 Spraw sobie coś pysznego lub miłego. Zasługujesz na to.",
+    "🏞️ Tylko przypomnienie: jesteś niesamowity/niesamowita, a ja jestem obok.",
+    "🎶 Niech muzyka dziś ogrzeje twoją duszę.",
+    "🤝 Nie bój się prosić o wsparcie — nie jesteś sam/a.",
+    "🔥 Przypomnij sobie, ile już pokonałeś/pokonałaś. Jesteś silny/silna!",
+    "🦋 Dziś to szansa, by zrobić coś dobrego dla siebie.",
+    "💎 Jesteś wyjątkowy/wyjątkowa — drugiej takiej osoby nie ma.",
+    "🌻 Nawet jeśli dzień nie jest idealny — i tak świecisz.",
+    "💪 Potrafisz więcej, niż myślisz. Wierzę w ciebie!",
+    "🍫 Spraw sobie drobny prezent — zasługujesz na to.",
+    "🎈 Niech twój dzień będzie lekki i dobry.",
+    "💭 Jeśli masz marzenie — pamiętaj, że możesz do niego dojść.",
+    "🌊 Jesteś jak ocean — głębszy/głębsza i silniejszy/silniejsza, niż się wydaje.",
+    "🕊️ Niech dziś będzie choć jedna chwila, która wywoła uśmiech."
+],
     "be": [
         "💜 Ты робіш гэты свет лепшым проста тым, што ты ў ім.",
         "🌞 Сёння новы дзень, і ён поўны магчымасцей — ты справішся!",
@@ -4594,6 +5015,134 @@ QUOTES_BY_LANG = {
         "💎 Самое лучшее впереди — продолжай идти.",
         "🌿 Твои маленькие шаги — твоя великая сила."
     ],
+    "es": [
+    "🌟 El éxito es la suma de pequeños esfuerzos repetidos día tras día.",
+    "💪 No importa lo lento que avances, lo importante es no detenerte.",
+    "🔥 El mejor día para empezar es hoy.",
+    "💜 Eres más fuerte de lo que crees y más capaz de lo que parece.",
+    "🌱 Cada día es una nueva oportunidad de cambiar tu vida.",
+    "🚀 No temas avanzar despacio. Teme quedarte quieto/a.",
+    "☀️ Los caminos difíciles suelen llevar a lugares hermosos.",
+    "🦋 Haz hoy lo que mañana te agradecerás.",
+    "✨ Tu energía atrae tu realidad. Elige lo positivo.",
+    "🙌 Cree en ti. Tú eres lo mejor que tienes.",
+    "💜 Cada día es una nueva oportunidad de cambiar tu vida.",
+    "🌟 Tu energía crea tu realidad.",
+    "🔥 Haz hoy lo que mañana te agradecerás.",
+    "✨ Los grandes cambios comienzan con pequeños pasos.",
+    "🌱 Eres más fuerte de lo que piensas y capaz de más.",
+    "☀️ La luz dentro de ti es más brillante que cualquier dificultad.",
+    "💪 No temas equivocarte — teme no intentarlo.",
+    "🌊 Todas las tormentas terminan, y tú te vuelves más fuerte.",
+    "🤍 Mereces amor y felicidad ahora mismo.",
+    "🚀 Tus sueños esperan a que empieces a actuar.",
+    "🎯 Confía en el proceso, aunque el camino aún no sea claro.",
+    "🧘‍♀️ Una mente tranquila es la llave de una vida feliz.",
+    "🌸 Cada momento es una oportunidad para empezar de nuevo.",
+    "💡 La vida es 10% lo que te pasa y 90% cómo reaccionas.",
+    "❤️ Eres importante y necesario/a en este mundo.",
+    "🌌 Haz cada día un poco por tu sueño.",
+    "🙌 Te mereces lo mejor — cree en ello.",
+    "✨ Que hoy sea el comienzo de algo grande.",
+    "💎 Lo mejor está por venir — sigue adelante.",
+    "🌿 Tus pequeños pasos son tu gran fuerza."
+],
+    "de": [
+    "🌟 Erfolg ist die Summe kleiner Anstrengungen, Tag für Tag wiederholt.",
+    "💪 Egal, wie langsam du gehst — wichtig ist, nicht stehenzubleiben.",
+    "🔥 Der beste Tag, um anzufangen, ist heute.",
+    "💜 Du bist stärker, als du denkst, und fähiger, als es dir scheint.",
+    "🌱 Jeder Tag ist eine neue Chance, dein Leben zu verändern.",
+    "🚀 Fürchte dich nicht, langsam zu gehen. Fürchte, stehen zu bleiben.",
+    "☀️ Schwierige Wege führen oft zu schönen Orten.",
+    "🦋 Tu heute etwas, wofür du dir morgen dankbar bist.",
+    "✨ Deine Energie zieht deine Realität an. Wähle das Positive.",
+    "🙌 Glaub an dich. Du bist das Beste, was du hast.",
+    "💜 Jeder Tag ist eine neue Chance, dein Leben zu verändern.",
+    "🌟 Deine Energie erschafft deine Realität.",
+    "🔥 Tu heute etwas, wofür du dir morgen dankbar bist.",
+    "✨ Große Veränderungen beginnen mit kleinen Schritten.",
+    "🌱 Du bist stärker, als du glaubst, und zu mehr fähig.",
+    "☀️ Das Licht in dir ist heller als jede Schwierigkeit.",
+    "💪 Hab keine Angst vor Fehlern — hab Angst, es nicht zu versuchen.",
+    "🌊 Alle Stürme gehen vorüber, und du wirst stärker.",
+    "🤍 Du verdienst Liebe und Glück — genau jetzt.",
+    "🚀 Deine Träume warten darauf, dass du ins Handeln kommst.",
+    "🎯 Vertraue dem Prozess, auch wenn der Weg noch unklar ist.",
+    "🧘‍♀️ Ein ruhiger Geist ist der Schlüssel zu einem glücklichen Leben.",
+    "🌸 Jeder Moment ist eine Chance, neu zu beginnen.",
+    "💡 Das Leben ist zu 10 % das, was dir passiert, und zu 90 % wie du darauf reagierst.",
+    "❤️ Du bist wichtig und wirst in dieser Welt gebraucht.",
+    "🌌 Tu jeden Tag ein bisschen für deinen Traum.",
+    "🙌 Du verdienst das Beste — glaub daran.",
+    "✨ Möge heute der Beginn von etwas Großem sein.",
+    "💎 Das Beste liegt noch vor dir — geh weiter.",
+    "🌿 Deine kleinen Schritte sind deine große Stärke."
+],
+    "fr": [
+    "🌟 Le succès est la somme de petits efforts répétés jour après jour.",
+    "💪 Peu importe la lenteur de ta marche, l’essentiel est de ne pas t’arrêter.",
+    "🔥 Le meilleur jour pour commencer, c’est aujourd’hui.",
+    "💜 Tu es plus fort(e) que tu ne le penses et plus capable que tu ne l’imagines.",
+    "🌱 Chaque jour est une nouvelle chance de changer ta vie.",
+    "🚀 N’aie pas peur d’avancer lentement. Crains de faire du surplace.",
+    "☀️ Les chemins difficiles mènent souvent à de beaux endroits.",
+    "🦋 Fais aujourd’hui ce pour quoi tu te remercieras demain.",
+    "✨ Ton énergie attire ta réalité. Choisis le positif.",
+    "🙌 Crois en toi. Tu es la meilleure chose que tu possèdes.",
+    "💜 Chaque jour est une nouvelle chance de changer ta vie.",
+    "🌟 Ton énergie crée ta réalité.",
+    "🔥 Fais aujourd’hui ce pour quoi tu te remercieras demain.",
+    "✨ Les grands changements commencent par de petits pas.",
+    "🌱 Tu es plus fort(e) que tu ne crois et capable de davantage.",
+    "☀️ La lumière en toi est plus brillante que toutes les difficultés.",
+    "💪 N’aie pas peur de te tromper — crains de ne pas essayer.",
+    "🌊 Toutes les tempêtes finissent, et tu deviens plus fort(e).",
+    "🤍 Tu mérites l’amour et le bonheur dès maintenant.",
+    "🚀 Tes rêves attendent que tu passes à l’action.",
+    "🎯 Fais confiance au processus, même si le chemin n’est pas encore clair.",
+    "🧘‍♀️ Un esprit calme est la clé d’une vie heureuse.",
+    "🌸 Chaque instant est une occasion de recommencer.",
+    "💡 La vie, c’est 10 % ce qui t’arrive et 90 % la façon dont tu y réagis.",
+    "❤️ Tu es important(e) et nécessaire dans ce monde.",
+    "🌌 Fais chaque jour un peu pour ton rêve.",
+    "🙌 Tu mérites le meilleur — crois-y.",
+    "✨ Que ce jour soit le début de quelque chose de grand.",
+    "💎 Le meilleur est à venir — continue d’avancer.",
+    "🌿 Tes petits pas sont ta grande force."
+],
+    "pl": [
+    "🌟 Sukces to suma małych wysiłków powtarzanych dzień po dniu.",
+    "💪 Nieważne, jak wolno idziesz — ważne, by się nie zatrzymywać.",
+    "🔥 Najlepszy dzień na start to dziś.",
+    "💜 Jesteś silniejszy/silniejsza, niż myślisz, i bardziej zdolny/zdolna, niż ci się wydaje.",
+    "🌱 Każdy dzień to nowa szansa, by zmienić swoje życie.",
+    "🚀 Nie bój się iść powoli. Bój się stać w miejscu.",
+    "☀️ Trudne drogi często prowadzą do pięknych miejsc.",
+    "🦋 Rób dziś to, za co jutro sobie podziękujesz.",
+    "✨ Twoja energia przyciąga twoją rzeczywistość. Wybieraj pozytyw.",
+    "🙌 Wierz w siebie. Jesteś tym, co masz najcenniejszego.",
+    "💜 Każdy dzień to nowa szansa, by zmienić swoje życie.",
+    "🌟 Twoja energia tworzy twoją rzeczywistość.",
+    "🔥 Rób dziś to, za co jutro sobie podziękujesz.",
+    "✨ Wielkie zmiany zaczynają się od małych kroków.",
+    "🌱 Jesteś silniejszy/silniejsza, niż myślisz, i stać cię na więcej.",
+    "☀️ Światło w tobie jest jaśniejsze niż jakiekolwiek trudności.",
+    "💪 Nie bój się błędów — bój się nie próbować.",
+    "🌊 Wszystkie burze się kończą, a ty stajesz się silniejszy/silniejsza.",
+    "🤍 Zasługujesz na miłość i szczęście właśnie teraz.",
+    "🚀 Twoje marzenia czekają, aż zaczniesz działać.",
+    "🎯 Zaufaj procesowi, nawet jeśli droga jest jeszcze niejasna.",
+    "🧘‍♀️ Spokojny umysł to klucz do szczęśliwego życia.",
+    "🌸 Każda chwila to możliwość zaczęcia od nowa.",
+    "💡 Życie to w 10% to, co ci się przydarza, a w 90% to, jak na to reagujesz.",
+    "❤️ Jesteś ważny/ważna i potrzebny/potrzebna na tym świecie.",
+    "🌌 Każdego dnia rób choć trochę dla swojego marzenia.",
+    "🙌 Zasługujesz na to, co najlepsze — wierz w to.",
+    "✨ Niech dziś będzie początkiem czegoś wielkiego.",
+    "💎 Najlepsze dopiero przed tobą — idź dalej.",
+    "🌿 Twoje małe kroki to twoja wielka siła."
+],
     "uk": [
         "🌟 Успіх — це сума невеликих зусиль, що повторюються щодня.",
         "💪 Не важливо, як повільно ти йдеш, головне — не зупинятися.",
@@ -4955,6 +5504,34 @@ EVENING_MESSAGES_BY_LANG = {
         "💭 Before going to bed, it's helpful to recall what you're grateful for today. Will you share?",
         "🤗 How's your mood? If you want, tell me about this day.",
     ],
+    "es": [
+    "🌙 ¡Hola! El día está llegando a su fin. ¿Cómo te sientes? 💜",
+    "✨ ¿Cómo fue tu día? ¿Me cuentas? 🥰",
+    "😊 Estaba pensando… ¿qué cosa buena te pasó hoy?",
+    "💭 Antes de dormir es útil recordar por qué estás agradecido/a hoy. ¿Lo compartes?",
+    "🤗 ¿Cómo está tu ánimo? Si quieres, cuéntame sobre tu día.",
+],
+"de": [
+    "🌙 Hallo! Der Tag geht zu Ende. Wie fühlst du dich? 💜",
+    "✨ Wie ist dein Tag verlaufen? Erzählst du mir davon? 🥰",
+    "😊 Ich habe gerade nachgedacht… Was Schönes ist dir heute passiert?",
+    "💭 Vor dem Schlafengehen ist es gut, sich an etwas zu erinnern, wofür du heute dankbar bist. Magst du teilen?",
+    "🤗 Wie ist die Stimmung? Wenn du magst, erzähl mir von deinem Tag.",
+],
+"fr": [
+    "🌙 Coucou ! La journée touche à sa fin. Comment te sens-tu ? 💜",
+    "✨ Comment s’est passée ta journée ? Tu m’en parles ? 🥰",
+    "😊 Je me demandais… qu’est-ce qu’il y a eu de positif pour toi aujourd’hui ?",
+    "💭 Avant de dormir, c’est utile de se rappeler de quoi tu es reconnaissant(e) aujourd’hui. Tu partages ?",
+    "🤗 Quel est ton état d’esprit ? Si tu veux, raconte-moi ta journée.",
+],
+"pl": [
+    "🌙 Hej! Dzień dobiega końca. Jak się czujesz? 💜",
+    "✨ Jak minął ci dzień? Opowiesz? 🥰",
+    "😊 Tak sobie pomyślałem/am… co dobrego spotkało cię dziś?",
+    "💭 Przed snem warto przypomnieć sobie, za co dziś jesteś wdzięczny/wdzięczna. Podzielisz się?",
+    "🤗 Jak nastrój? Jeśli chcesz — opowiedz mi o tym dniu.",
+],
 }
 
 FEEDBACK_TEXTS = {
@@ -4998,6 +5575,22 @@ FEEDBACK_TEXTS = {
         "thanks": "Thank you for your feedback! 💜 I've already saved it ✨",
         "howto": "Write your feedback after the command.\nFor example:\n`/feedback I really like the bot, thank you! 💜`"
     },
+    "es": {
+    "thanks": "¡Gracias por tu opinión! 💜 Ya la he guardado ✨",
+    "howto": "Escribe tu opinión después del comando.\nPor ejemplo:\n`/feedback ¡Me encanta el bot, gracias! 💜`"
+},
+"de": {
+    "thanks": "Danke für dein Feedback! 💜 Ich habe es bereits gespeichert ✨",
+    "howto": "Schreibe dein Feedback nach dem Befehl.\nZum Beispiel:\n`/feedback Mir gefällt der Bot sehr, danke! 💜`"
+},
+"pl": {
+    "thanks": "Dzięki za opinię! 💜 Już ją zapisałam ✨",
+    "howto": "Napisz swoją opinię po komendzie.\nNa przykład:\n`/feedback Bardzo podoba mi się bot, dziękuję! 💜`"
+},
+"fr": {
+    "thanks": "Merci pour ton avis ! 💜 Je l’ai déjà enregistré ✨",
+    "howto": "Écris ton avis après la commande.\nPar exemple :\n`/feedback J’adore le bot, merci ! 💜`"
+},
 }
 
 UNKNOWN_COMMAND_TEXTS = {
@@ -5011,6 +5604,10 @@ UNKNOWN_COMMAND_TEXTS = {
     "md": "❓ Nu cunosc această comandă. Scrie /help ca să vezi ce pot face.",
     "ka": "❓ ასეთი ბრძანება არ ვიცი. დაწერე /help, რომ ნახო, რას ვაკეთებ.",
     "en": "❓ I don't know that command. Type /help to see what I can do.",
+    "es": "❓ No conozco ese comando. Escribe /help para ver lo que puedo hacer.",
+    "de": "❓ Diesen Befehl kenne ich nicht. Tippe /help, um zu sehen, was ich kann.",
+    "pl": "❓ Nie znam takiej komendy. Napisz /help, aby zobaczyć, co potrafię.",
+    "fr": "❓ Je ne connais pas cette commande. Tape /help pour voir ce que je peux faire.",
 }
 
 PREMIUM_ONLY_TEXTS = {
@@ -5023,7 +5620,11 @@ PREMIUM_ONLY_TEXTS = {
     "ce": "🔒 ДӀа функция Mindra+ подпискаш йолуш цуьнан гӀалгӀай.\nПодписка эксклюзивный дӀаязде цуьнан а, функцияш ✨",
     "md": "🔒 Această funcție este disponibilă doar pentru abonații Mindra+.\nAbonamentul oferă acces la sarcini și funcții unice ✨",
     "ka": "🔒 ეს ფუნქცია ხელმისაწვდომია მხოლოდ Mindra+ გამოწერის მქონეთათვის.\nგამოწერა გაძლევთ უნიკალურ დავალებებსა და ფუნქციებზე წვდომას ✨",
-    "en": "🔒 This feature is only available to Mindra+ subscribers.\nSubscription unlocks unique tasks and features ✨"
+    "en": "🔒 This feature is only available to Mindra+ subscribers.\nSubscription unlocks unique tasks and features ✨",
+    "es": "🔒 Esta función solo está disponible para suscriptores de Mindra+.\nLa suscripción desbloquea tareas y funciones únicas ✨",
+    "de": "🔒 Diese Funktion ist nur für Mindra+-Abonnenten verfügbar.\nMit dem Abo schaltest du einzigartige Aufgaben und Funktionen frei ✨",
+    "pl": "🔒 Ta funkcja jest dostępna tylko dla abonentów Mindra+.\nSubskrypcja odblokowuje unikalne zadania i funkcje ✨",
+    "fr": "🔒 Cette fonctionnalité est réservée aux abonnés Mindra+.\nL’abonnement débloque des tâches et fonctionnalités uniques ✨",
 }
 
 about_texts = {
@@ -5039,6 +5640,57 @@ about_texts = {
             "_Я не ставлю диагнозы и не заменяю психолога, но стараюсь быть рядом в нужный момент._\n\n"
             "✨ *Mindra — это пространство для тебя.*"
         ),
+        "es": (
+    "💜 *Hola, soy Mindra.*\n\n"
+    "Estoy aquí para acompañarte cuando necesites desahogarte, encontrar motivación o simplemente sentir apoyo.\n"
+    "Podemos hablar con calidez, amabilidad y cuidado — sin juicios ni presión 🦋\n\n"
+    "🔮 *Lo que puedo hacer:*\n"
+    "• Apoyarte cuando sea difícil\n"
+    "• Recordarte que no estás solo/a\n"
+    "• Ayudarte a encontrar foco e inspiración\n"
+    "• Y a veces, simplemente conversar de corazón 😊\n\n"
+    "_No hago diagnósticos ni sustituyo a un psicólogo, pero intento estar a tu lado en el momento justo._\n\n"
+    "✨ *Mindra es un espacio para ti.*"
+),
+
+"de": (
+    "💜 *Hallo, ich bin Mindra.*\n\n"
+    "Ich bin da, um an deiner Seite zu sein, wenn du dich aussprechen möchtest, Motivation suchst oder einfach Unterstützung spüren willst.\n"
+    "Wir können warm, freundlich und fürsorglich sprechen — ohne Urteil und ohne Druck 🦋\n\n"
+    "🔮 *Was ich kann:*\n"
+    "• Dich unterstützen, wenn es schwer ist\n"
+    "• Dich daran erinnern, dass du nicht allein bist\n"
+    "• Dir helfen, Fokus und Inspiration zu finden\n"
+    "• Und manchmal einfach ein Gespräch von Herz zu Herz 😊\n\n"
+    "_Ich stelle keine Diagnosen und ersetze keine Psychologin/keinen Psychologen, aber ich versuche, im richtigen Moment für dich da zu sein._\n\n"
+    "✨ *Mindra ist ein Raum für dich.*"
+),
+
+"fr": (
+    "💜 *Coucou, je suis Mindra.*\n\n"
+    "Je suis là pour être à tes côtés quand tu as besoin de te confier, de trouver de la motivation ou simplement de te sentir soutenu(e).\n"
+    "On peut parler avec chaleur, bienveillance et douceur — sans jugement ni pression 🦋\n\n"
+    "🔮 *Ce que je peux faire :*\n"
+    "• T’apporter du soutien quand c’est dur\n"
+    "• Te rappeler que tu n’es pas seul(e)\n"
+    "• T’aider à retrouver le focus et l’inspiration\n"
+    "• Et parfois, simplement parler à cœur ouvert 😊\n\n"
+    "_Je ne pose pas de diagnostics et ne remplace pas un psychologue, mais j’essaie d’être là au bon moment._\n\n"
+    "✨ *Mindra est un espace pour toi.*"
+),
+
+"pl": (
+    "💜 *Cześć, jestem Mindra.*\n\n"
+    "Jestem tu, by być obok, gdy potrzebujesz się wygadać, znaleźć motywację albo po prostu poczuć wsparcie.\n"
+    "Możemy porozmawiać ciepło, życzliwie i z troską — bez ocen i presji 🦋\n\n"
+    "🔮 *Co potrafię:*\n"
+    "• Wspierać cię, gdy jest trudno\n"
+    "• Przypominać, że nie jesteś sam/sama\n"
+    "• Pomóc odnaleźć fokus i inspirację\n"
+    "• A czasem po prostu pogadać od serca 😊\n\n"
+    "_Nie stawiam diagnoz i nie zastępuję psychologa, ale staram się być przy tobie we właściwym momencie._\n\n"
+    "✨ *Mindra to przestrzeń dla ciebie.*"
+),
         "uk": (
             "💜 *Привіт! Я — Mindra.*\n\n"
             "Я тут, щоб бути поруч, коли тобі потрібно виговоритися, знайти мотивацію чи просто відчути підтримку.\n"
@@ -5433,7 +6085,11 @@ buttons_text = {
     "ce": ["🎯 Мацахь кхоллар", "📋 Са мацахь", "🌱 Привычка дац", "📊 Са привычка", "💎 Mindra+ подписка"],
     "en": ["🎯 Set a goal", "📋 My goals", "🌱 Add a habit", "📊 My habits", "💎 Mindra+ subscription"],
     "md": ["🎯 Setează obiectiv", "📋 Obiectivele mele", "🌱 Adaugă obicei", "📊 Obiceiurile mele", "💎 Abonament Mindra+"],
-    "ka": ["🎯 მიზნის დაყენება", "📋 ჩემი მიზნები", "🌱 ჩვევის დამატება", "📊 ჩემი ჩვევები", "💎 Mindra+ გამოწერა"]
+    "ka": ["🎯 მიზნის დაყენება", "📋 ჩემი მიზნები", "🌱 ჩვევის დამატება", "📊 ჩემი ჩვევები", "💎 Mindra+ გამოწერა"],
+    "es": ["🎯 Fijar meta", "📋 Mis metas", "🌱 Añadir hábito", "📊 Mis hábitos", "💎 Suscripción Mindra+"],
+    "de": ["🎯 Ziel setzen", "📋 Meine Ziele", "🌱 Gewohnheit hinzufügen", "📊 Meine Gewohnheiten", "💎 Mindra+ Abo"],
+    "pl": ["🎯 Ustaw cel", "📋 Moje cele", "🌱 Dodaj nawyk", "📊 Moje nawyki", "💎 Subskrypcja Mindra+"],
+    "fr": ["🎯 Fixer un objectif", "📋 Mes objectifs", "🌱 Ajouter une habitude", "📊 Mes habitudes", "💎 Abonnement Mindra+"],
 }
 
 # Тексты для реакции "Спасибо"
@@ -5447,7 +6103,11 @@ REACTION_THANKS_TEXTS = {
     "ce": "Хьоьга далла цуьнан! 😊 ДӀайазде хетам, са цуьнан ца йолуш 💜",
     "md": "Cu plăcere oricând! 😊 Sunt alături dacă vrei să vorbești 💜",
     "ka": "ყოველთვის მოხარული ვარ! 😊 აქ ვარ, თუ გინდა რამე გაინაწილო 💜",
-    "en": "Always happy to help! 😊 I’m here if you want to talk 💜"
+    "en": "Always happy to help! 😊 I’m here if you want to talk 💜",
+    "es": "¡Siempre un placer ayudarte! 😊 Estoy aquí si quieres hablar 💜",
+    "de": "Gern geschehen! 😊 Ich bin da, wenn du reden möchtest 💜",
+    "pl": "Zawsze chętnie pomogę! 😊 Jestem tutaj, jeśli chcesz porozmawiać 💜",
+    "fr": "Toujours là pour t’aider ! 😊 Je suis là si tu veux parler 💜",
 }
 
 BUTTON_LABELS = {
@@ -5511,6 +6171,30 @@ BUTTON_LABELS = {
         "habits": "📋 Habits",
         "goals": "🎯 Goals",
     },
+    "es": {
+    "thanks": "❤️ Gracias",
+    "add_goal": "📌 Añadir como meta",
+    "habits": "📋 Hábitos",
+    "goals": "🎯 Metas",
+},
+"de": {
+    "thanks": "❤️ Danke",
+    "add_goal": "📌 Als Ziel hinzufügen",
+    "habits": "📋 Gewohnheiten",
+    "goals": "🎯 Ziele",
+},
+"pl": {
+    "thanks": "❤️ Dziękuję",
+    "add_goal": "📌 Dodaj jako cel",
+    "habits": "📋 Nawyki",
+    "goals": "🎯 Cele",
+},
+"fr": {
+    "thanks": "❤️ Merci",
+    "add_goal": "📌 Ajouter comme objectif",
+    "habits": "📋 Habitudes",
+    "goals": "🎯 Objectifs",
+},
 }
 
 MODE_NAMES = {
@@ -5594,6 +6278,38 @@ MODE_NAMES = {
         "flirt": "Flirt",
         "coach": "Coach"
     },
+    "es": {
+    "support": "Apoyo",
+    "motivation": "Motivación",
+    "philosophy": "Psicólogo",
+    "humor": "Humor",
+    "flirt": "Coqueteo",
+    "coach": "Coach",
+},
+"de": {
+    "support": "Unterstützung",
+    "motivation": "Motivation",
+    "philosophy": "Psychologe",
+    "humor": "Humor",
+    "flirt": "Flirt",
+    "coach": "Coach",
+},
+"pl": {
+    "support": "Wsparcie",
+    "motivation": "Motywacja",
+    "philosophy": "Psycholog",
+    "humor": "Humor",
+    "flirt": "Flirt",
+    "coach": "Coach",
+},
+"fr": {
+    "support": "Soutien",
+    "motivation": "Motivation",
+    "philosophy": "Psychologue",
+    "humor": "Humour",
+    "flirt": "Flirt",
+    "coach": "Coach",
+},    
 }
 
 MODE_TEXTS = {
@@ -5667,6 +6383,34 @@ MODE_TEXTS = {
         "philosophy": "🧘 Psychologist",
         "humor": "🎭 Humor",
     },
+    "es": {
+    "text": "Elige el estilo de conversación de Mindra ✨",
+    "support": "🎧 Apoyo",
+    "motivation": "🌸 Motivación",
+    "philosophy": "🧘 Psicólogo",
+    "humor": "🎭 Humor",
+},
+"de": {
+    "text": "Wähle den Gesprächsstil von Mindra ✨",
+    "support": "🎧 Unterstützung",
+    "motivation": "🌸 Motivation",
+    "philosophy": "🧘 Psychologe",
+    "humor": "🎭 Humor",
+},
+"pl": {
+    "text": "Wybierz styl rozmowy Mindry ✨",
+    "support": "🎧 Wsparcie",
+    "motivation": "🌸 Motywacja",
+    "philosophy": "🧘 Psycholog",
+    "humor": "🎭 Humor",
+},
+"fr": {
+    "text": "Choisis le style de conversation de Mindra ✨",
+    "support": "🎧 Soutien",
+    "motivation": "🌸 Motivation",
+    "philosophy": "🧘 Psychologue",
+    "humor": "🎭 Humour",
+},
 }
 
 MODES = {
@@ -5755,6 +6499,10 @@ RESET_TEXTS = {
     "md": "Istoria a fost ștearsă. Să începem de la început ✨",
     "ka": "ისტორია გასუფთავდა. დავიწყოთ თავიდან ✨",
     "en": "History cleared. Let’s start again ✨",
+    "es": "Historial borrado. Empecemos de nuevo ✨",
+    "de": "Verlauf gelöscht. Fangen wir neu an ✨",
+    "pl": "Historia wyczyszczona. Zacznijmy od nowa ✨",
+    "fr": "Historique effacé. Recommençons ✨",
 }
 
 TRIAL_GRANTED_TEXT = {
@@ -5768,6 +6516,10 @@ TRIAL_GRANTED_TEXT = {
     "md": "🎁 Ai *3 zile Mindra+* disponibile! Folosește toate funcțiile premium 😉",
     "ka": "🎁 შენ გაქვს *3 დღე Mindra+*! ისარგებლე ყველა პრემიუმ ფუნქციით 😉",
     "en": "🎁 You have *3 days of Mindra+*! Enjoy all premium features 😉",
+    "es": "🎁 ¡Tienes *3 días de Mindra+*! Disfruta de todas las funciones premium 😉",
+    "de": "🎁 Du hast *3 Tage Mindra+*! Nutze alle Premium-Funktionen 😉",
+    "pl": "🎁 Masz *3 dni Mindra+*! Korzystaj ze wszystkich funkcji premium 😉",
+    "fr": "🎁 Tu as *3 jours de Mindra+* ! Profite de toutes les fonctionnalités premium 😉",
 }
 
 REFERRAL_BONUS_TEXT = {
@@ -5781,6 +6533,10 @@ REFERRAL_BONUS_TEXT = {
     "md": "🎉 Tu și prietenul tău ați primit +7 zile Mindra+!",
     "ka": "🎉 შენ და შენს მეგობარს დამატებით +7 დღე Mindra+ გექნებათ!",
     "en": "🎉 You and your friend received +7 days of Mindra+!",
+    "es": "🎉 ¡Tú y tu amigo recibieron +7 días de Mindra+!",
+    "de": "🎉 Du und dein Freund habt +7 Tage Mindra+ erhalten!",
+    "pl": "🎉 Ty i twój przyjaciel otrzymaliście +7 dni Mindra+!",
+    "fr": "🎉 Toi et ton ami avez reçu +7 jours de Mindra+ !",
 }
 
 TRIAL_INFO_TEXT = {
@@ -5793,7 +6549,11 @@ TRIAL_INFO_TEXT = {
     "ce": "💎 Хьо даьлча Mindra+ активна! 3 кхетам премиум. Хета функциеш йоза цуьнан 😉",
     "md": "💎 Ai Mindra+ activ! Ai 3 zile premium. Profită de toate funcțiile 😉",
     "ka": "💎 შენ გაქვს აქტიური Mindra+! 3 დღე პრემიუმი გაქვს. ისარგებლე ყველა ფუნქციით 😉",
-    "en": "💎 You have Mindra+ active! You have 3 days of premium. Enjoy all features 😉"
+    "en": "💎 You have Mindra+ active! You have 3 days of premium. Enjoy all features 😉",
+    "es": "💎 ¡Tienes Mindra+ activo! Tienes 3 días de premium. Disfruta de todas las funciones 😉",
+    "de": "💎 Du hast Mindra+ aktiv! Du hast 3 Tage Premium. Nutze alle Funktionen 😉",
+    "pl": "💎 Masz aktywne Mindra+! Masz 3 dni premium. Korzystaj ze wszystkich funkcji 😉",
+    "fr": "💎 Tu as Mindra+ actif ! Tu as 3 jours de premium. Profite de toutes les fonctionnalités 😉",
 }
 
   # 🌐 Заголовки напоминаний для всех языков
@@ -5807,14 +6567,253 @@ reminder_headers = {
         "ce": "⏰ ДӀадела:",
         "md": "⏰ Memento:",
         "ka": "⏰ შეხსენება:",
-        "en": "⏰ Reminder:"
-    }
+        "en": "⏰ Reminder:",
+        "es": "⏰ Recordatorio:",
+    "de": "⏰ Erinnerung:",
+    "pl": "⏰ Przypomnienie:",
+    "fr": "⏰ Rappel:",
+}
 
 # Пул заданий дня (для бесплатных пользователей)
 DAILY_TASKS_BY_LANG = {
     "ru": [
        "✨ Запиши 3 вещи, за которые ты благодарен(на) сегодня.", "🚶‍♂️ Прогуляйся 10 минут без телефона. Просто дыши и наблюдай.", "📝 Напиши короткий список целей на завтра.", "🌿 Попробуй провести 30 минут без соцсетей. Как ощущения?", "💧 Выпей стакан воды и улыбнись себе в зеркало. Ты справляешься!", "📖 Прочитай сегодня хотя бы 5 страниц книги, которая тебя вдохновляет.", "🤝 Напиши сообщение другу, с которым давно не общался(ась).", "🖋️ Веди дневник 5 минут — напиши всё, что в голове без фильтров.", "🏃‍♀️ Сделай лёгкую разминку или 10 приседаний прямо сейчас!", "🎧 Послушай любимую музыку и просто расслабься 10 минут.", "🍎 Приготовь себе что-то вкусное и полезное сегодня.", "💭 Запиши одну большую мечту и один маленький шаг к ней.", "🌸 Найди в своём доме или на улице что-то красивое и сфотографируй.", "🛌 Перед сном подумай о трёх вещах, которые сегодня сделали тебя счастливее.", "💌 Напиши письмо себе в будущее: что хочешь сказать через год?", "🔄 Попробуй сегодня сделать что-то по‑другому, даже мелочь.", "🙌 Сделай 3 глубоких вдоха, закрой глаза и поблагодари себя за то, что ты есть.", "🎨 Потрать 5 минут на творчество — набросай рисунок, стих или коллаж.", "🧘‍♀️ Сядь на 3 минуты в тишине и просто наблюдай за дыханием.", "📂 Разбери одну полку, ящик или папку — навести маленький порядок.", "👋 Подойди сегодня к незнакомому человеку и начни дружелюбный разговор. Пусть это будет просто комплимент или пожелание хорошего дня!", "🤝 Скажи 'привет' хотя бы трём новым людям сегодня — улыбка тоже считается!", "💬 Задай сегодня кому‑то из коллег или знакомых вопрос, который ты обычно не задаёшь. Например: «А что тебя вдохновляет?»", "😊 Сделай комплимент незнакомцу. Это может быть бариста, продавец или прохожий.", "📱 Позвони тому, с кем давно не общался(ась), и просто поинтересуйся, как дела.", "💡 Заведи короткий разговор с соседом или человеком в очереди — просто о погоде или о чём‑то вокруг.", "🍀 Улыбнись первому встречному сегодня. Искренне. И посмотри на реакцию.", "🙌 Найди в соцсетях интересного человека и напиши ему сообщение с благодарностью за то, что он делает.", "🎯 Сегодня заведи хотя бы одну новую знакомую тему в диалоге: спроси о мечтах, любимых книгах или фильмах.", "🌟 Подойди к коллеге или знакомому и скажи: «Спасибо, что ты есть в моей жизни» — и наблюдай, как он(а) улыбается.", "🔥 Если есть возможность, зайди в новое место (кафе, парк, магазин) и заведи разговор хотя бы с одним человеком там.", "🌞 Утром скажи доброе слово первому встречному — пусть твой день начнётся с позитива!", "🍀 Помоги сегодня кому‑то мелочью: придержи дверь, уступи место, подай вещь.", "🤗 Похвали коллегу или друга за что‑то, что он(а) сделал(а) хорошо.", "👂 Задай сегодня кому‑то глубокий вопрос: «А что тебя делает счастливым(ой)?» и послушай ответ.", "🎈 Подари сегодня кому‑то улыбку и скажи: «Ты классный(ая)!»", "📚 Подойди в библиотеке, книжном или кафе к человеку и спроси: «А что ты сейчас читаешь?»", "🔥 Найди сегодня повод кого‑то вдохновить: дай совет, поделись историей, расскажи о своём опыте.", "🎨 Зайди в новое место (выставка, улица, парк) и спроси кого‑то: «А вы здесь впервые?»", "🌟 Если увидишь красивый наряд или стиль у кого‑то — скажи об этом прямо.", "🎧 Включи музыку и подними настроение друзьям: отправь им трек, который тебе нравится, с комментом: «Слушай, тебе это подойдёт!»", "🕊️ Сегодня попробуй заговорить с человеком старшего возраста — спроси совета или просто пожелай хорошего дня.", "🏞️ Во время прогулки подойди к кому‑то с собакой и скажи: «У вас потрясающий пёс! Как его зовут?»", "☕ Купи кофе для человека, который стоит за тобой в очереди. Просто так.", "🙌 Сделай сегодня как минимум один звонок не по делу, а просто чтобы пообщаться.", "🚀 Найди новую идею для проекта и запиши её.", "🎯 Напиши 5 вещей, которые хочешь успеть за неделю.", "🌊 Послушай звуки природы и расслабься.", "🍋 Попробуй сегодня новый напиток или еду.", "🌱 Посади растение или ухаживай за ним сегодня.", "🧩 Собери маленький пазл или реши головоломку.", "🎶 Танцуй 5 минут под любимую песню.", "📅 Спланируй свой идеальный день и запиши его.", "🖼️ Найди красивую картинку и повесь на видное место.", "🤔 Напиши, за что ты гордишься собой сегодня.", "💜 Сделай что-то приятное для себя прямо сейчас."   
         ],
+    "es": [
+    "✨ Anota 3 cosas por las que te sientas agradecido/a hoy.",
+    "🚶‍♂️ Da un paseo de 10 minutos sin el teléfono. Solo respira y observa.",
+    "📝 Escribe una lista corta de objetivos para mañana.",
+    "🌿 Intenta pasar 30 minutos sin redes sociales. ¿Cómo se siente?",
+    "💧 Bebe un vaso de agua y sonríete en el espejo. ¡Lo estás logrando!",
+    "📖 Lee hoy al menos 5 páginas de un libro que te inspire.",
+    "🤝 Escribe a un amigo con quien no hablas desde hace tiempo.",
+    "🖋️ Lleva un diario 5 minutos: escribe todo lo que haya en tu cabeza sin filtros.",
+    "🏃‍♀️ Haz un calentamiento ligero o 10 sentadillas ahora mismo.",
+    "🎧 Escucha tu música favorita y relájate 10 minutos.",
+    "🍎 Prepárate hoy algo rico y saludable.",
+    "💭 Escribe un gran sueño y un pequeño paso hacia él.",
+    "🌸 Encuentra algo bonito en casa o en la calle y hazle una foto.",
+    "🛌 Antes de dormir, piensa en tres cosas que hoy te hicieron más feliz.",
+    "💌 Escríbete una carta al futuro: ¿qué quieres decirte dentro de un año?",
+    "🔄 Prueba hoy a hacer algo de otra manera, aunque sea un detalle.",
+    "🙌 Haz 3 respiraciones profundas, cierra los ojos y agradécete por estar aquí.",
+    "🎨 Dedica 5 minutos a crear: un boceto, un poema o un collage.",
+    "🧘‍♀️ Siéntate 3 minutos en silencio y observa tu respiración.",
+    "📂 Ordena una estantería, cajón o carpeta: un pequeño orden.",
+    "👋 Acércate hoy a un desconocido y empieza una charla amable. Que sea solo un cumplido o un «¡buen día!».",
+    "🤝 Di «hola» al menos a tres personas nuevas hoy — la sonrisa también cuenta.",
+    "💬 Haz a alguien una pregunta que sueles no hacer: «¿Qué te inspira?».",
+    "😊 Haz un cumplido a un desconocido: al barista, vendedor o un transeúnte.",
+    "📱 Llama a alguien con quien no hablaste hace tiempo y pregúntale cómo está.",
+    "💡 Inicia una charla breve con un vecino o alguien en la fila — sobre el tiempo o algo alrededor.",
+    "🍀 Sonríe a la primera persona que veas hoy. De verdad. Observa su reacción.",
+    "🙌 Encuentra a alguien interesante en redes y envíale un mensaje de agradecimiento por lo que hace.",
+    "🎯 Saca hoy al menos un tema nuevo en una conversación: pregunta por sueños, libros o películas favoritas.",
+    "🌟 Ve a un colega o conocido y di: «Gracias por estar en mi vida» — y mira su sonrisa.",
+    "🔥 Si puedes, entra en un lugar nuevo (café, parque, tienda) y habla al menos con una persona allí.",
+    "🌞 Por la mañana, di una palabra amable a la primera persona que encuentres — que tu día empiece con positividad.",
+    "🍀 Ayuda hoy a alguien con una pequeña acción: sujeta la puerta, cede el asiento, alcanza un objeto.",
+    "🤗 Elogia a un colega o amigo por algo que hizo bien.",
+    "👂 Haz a alguien una pregunta profunda: «¿Qué te hace feliz?», y escucha la respuesta.",
+    "🎈 Regala hoy a alguien una sonrisa y di: «¡Eres genial!».",
+    "📚 En biblioteca, librería o café, pregunta a alguien: «¿Qué estás leyendo ahora?».",
+    "🔥 Encuentra hoy un motivo para inspirar a alguien: da un consejo, comparte una historia, habla de tu experiencia.",
+    "🎨 Entra en un lugar nuevo (exposición, calle, parque) y pregunta: «¿Es tu primera vez aquí?».",
+    "🌟 Si ves un atuendo o estilo bonito en alguien — dilo en voz alta.",
+    "🎧 Pon música y anima a tus amigos: envíales un tema que te guste con «¡Te va a encantar!».",
+    "🕊️ Hoy intenta hablar con una persona mayor — pide un consejo o desea un buen día.",
+    "🏞️ En un paseo, acércate a alguien con un perro y di: «¡Qué perro tan bonito! ¿Cómo se llama?».",
+    "☕ Invita a un café a la persona detrás de ti en la fila. Porque sí.",
+    "🙌 Haz al menos una llamada hoy sin motivo, solo para charlar.",
+    "🚀 Encuentra una idea nueva para un proyecto y apúntala.",
+    "🎯 Escribe 5 cosas que quieras lograr esta semana.",
+    "🌊 Escucha sonidos de la naturaleza y relájate.",
+    "🍋 Prueba hoy una bebida o comida nueva.",
+    "🌱 Planta algo o cuida tu planta hoy.",
+    "🧩 Haz un pequeño rompecabezas o resuelve un acertijo.",
+    "🎶 Baila 5 minutos con tu canción favorita.",
+    "📅 Planifica tu día ideal y escríbelo.",
+    "🖼️ Encuentra una imagen bonita y ponla a la vista.",
+    "🤔 Escribe de qué te sientes orgulloso/a hoy.",
+    "💜 Haz ahora mismo algo agradable para ti."
+],
+
+"de": [
+    "✨ Schreibe 3 Dinge auf, für die du heute dankbar bist.",
+    "🚶‍♂️ Geh 10 Minuten ohne Handy spazieren. Atme und beobachte.",
+    "📝 Erstelle eine kurze Zielliste für morgen.",
+    "🌿 Versuche 30 Minuten ohne soziale Medien. Wie fühlt es sich an?",
+    "💧 Trink ein Glas Wasser und lächle dir im Spiegel zu. Du schaffst das!",
+    "📖 Lies heute mindestens 5 Seiten eines inspirierenden Buches.",
+    "🤝 Schreib einem Freund, mit dem du lange nicht gesprochen hast.",
+    "🖋️ Journale 5 Minuten — schreib ungefiltert alles aus dem Kopf.",
+    "🏃‍♀️ Mach jetzt ein leichtes Warm-up oder 10 Kniebeugen.",
+    "🎧 Hör deine Lieblingsmusik und entspann dich 10 Minuten.",
+    "🍎 Koch dir heute etwas Leckeres und Gesundes.",
+    "💭 Notiere einen großen Traum und einen kleinen Schritt dorthin.",
+    "🌸 Finde etwas Schönes zuhause oder draußen und mach ein Foto.",
+    "🛌 Denk vor dem Schlafen an drei Dinge, die dich heute glücklicher gemacht haben.",
+    "💌 Schreib dir einen Brief in die Zukunft: Was willst du dir in einem Jahr sagen?",
+    "🔄 Mach heute etwas anders als sonst, auch wenn es nur eine Kleinigkeit ist.",
+    "🙌 Atme 3-mal tief durch, schließe die Augen und danke dir selbst.",
+    "🎨 Nimm dir 5 Minuten fürs Kreative — Skizze, Gedicht oder Collage.",
+    "🧘‍♀️ Sitze 3 Minuten in Stille und beobachte deinen Atem.",
+    "📂 Räume ein Regal, eine Schublade oder einen Ordner auf — kleine Ordnung.",
+    "👋 Sprich heute eine unbekannte Person freundlich an. Ein Kompliment oder ein „Schönen Tag!“ genügt.",
+    "🤝 Sag heute mindestens drei neuen Leuten „Hallo“ — ein Lächeln zählt auch.",
+    "💬 Stell jemandem eine Frage, die du sonst nicht stellst: „Was inspiriert dich?“",
+    "😊 Mach einem Unbekannten ein Kompliment: Barista, Verkäufer oder Passant.",
+    "📱 Ruf jemanden an, mit dem du lange nicht gesprochen hast, und frag, wie es geht.",
+    "💡 Beginn ein kurzes Gespräch mit dem Nachbarn oder jemandem in der Schlange — über das Wetter o. Ä.",
+    "🍀 Lächle heute der ersten Person, die du triffst. Aufrichtig. Beobachte die Reaktion.",
+    "🙌 Finde in sozialen Netzwerken eine interessante Person und bedanke dich per Nachricht.",
+    "🎯 Bring heute mindestens ein neues Thema ins Gespräch: Träume, Lieblingsbücher oder Filme.",
+    "🌟 Geh zu einem Kollegen oder Bekannten und sag: „Danke, dass es dich gibt.“",
+    "🔥 Geh, wenn möglich, an einen neuen Ort (Café, Park, Laden) und sprich dort mit jemandem.",
+    "🌞 Sag morgens ein nettes Wort zur ersten Person — starte positiv in den Tag.",
+    "🍀 Hilf heute jemandem mit einer Kleinigkeit: Tür aufhalten, Platz anbieten, etwas reichen.",
+    "🤗 Lobe einen Kollegen oder Freund für etwas, das gut gelungen ist.",
+    "👂 Stell jemandem eine tiefere Frage: „Was macht dich glücklich?“ — und hör zu.",
+    "🎈 Schenke heute jemandem ein Lächeln und sag: „Du bist toll!“",
+    "📚 Frag in Bibliothek/Buchhandlung/Café: „Was liest du gerade?“",
+    "🔥 Inspiriere heute jemanden: gib einen Tipp, teile eine Geschichte, erzähle von deiner Erfahrung.",
+    "🎨 Besuche einen neuen Ort (Ausstellung, Straße, Park) und frag: „Bist du zum ersten Mal hier?“",
+    "🌟 Siehst du ein schönes Outfit/Style? Sprich es aus.",
+    "🎧 Teile Musik und hebe die Stimmung deiner Freunde: „Escucha, esto te va a gustar!“ (Schicke einen Track mit kurzer Notiz.)",
+    "🕊️ Sprich heute mit einer älteren Person — bitte um Rat oder wünsche einen schönen Tag.",
+    "🏞️ Sprich jemanden mit Hund an: „Ihr Hund ist großartig! Wie heißt er/sie?“",
+    "☕ Bezahle den Kaffee für die Person hinter dir in der Schlange. Einfach so.",
+    "🙌 Mach heute mindestens einen Anruf ohne Anlass — einfach plaudern.",
+    "🚀 Finde eine neue Projektidee und notiere sie.",
+    "🎯 Schreibe 5 Dinge auf, die du diese Woche schaffen willst.",
+    "🌊 Hör Naturklängen zu und entspann dich.",
+    "🍋 Probiere heute ein neues Getränk oder Gericht.",
+    "🌱 Pflanze etwas oder kümmere dich heute um deine Pflanze.",
+    "🧩 Mache ein kleines Puzzle oder löse ein Rätsel.",
+    "🎶 Tanze 5 Minuten zu deinem Lieblingslied.",
+    "📅 Plane deinen idealen Tag und schreibe ihn auf.",
+    "🖼️ Such ein schönes Bild und hänge es sichtbar auf.",
+    "🤔 Schreib auf, worauf du heute stolz bist.",
+    "💜 Tu dir jetzt sofort etwas Gutes."
+],
+
+"fr": [
+    "✨ Note 3 choses pour lesquelles tu es reconnaissant(e) aujourd’hui.",
+    "🚶‍♂️ Fais une marche de 10 minutes sans téléphone. Respire et observe.",
+    "📝 Écris une courte liste d’objectifs pour demain.",
+    "🌿 Passe 30 minutes sans réseaux sociaux. Quelles sensations?",
+    "💧 Bois un verre d’eau et souris-toi dans le miroir. Tu t’en sors bien !",
+    "📖 Lis au moins 5 pages d’un livre qui t’inspire.",
+    "🤝 Écris à un(e) ami(e) avec qui tu n’as pas parlé depuis longtemps.",
+    "🖋️ Fais 5 minutes de journal — écris tout ce qui te vient, sans filtre.",
+    "🏃‍♀️ Fais un léger échauffement ou 10 squats maintenant.",
+    "🎧 Écoute ta musique préférée et détends-toi 10 minutes.",
+    "🍎 Prépare-toi aujourd’hui quelque chose de bon et de sain.",
+    "💭 Écris un grand rêve et un petit pas pour t’en rapprocher.",
+    "🌸 Trouve quelque chose de beau chez toi ou dehors et prends-le en photo.",
+    "🛌 Avant de dormir, pense à trois choses qui t’ont rendu(e) plus heureux(se) aujourd’hui.",
+    "💌 Écris une lettre à ton futur toi : que veux-tu te dire dans un an ?",
+    "🔄 Fais aujourd’hui quelque chose autrement, même un petit détail.",
+    "🙌 Fais 3 grandes inspirations, ferme les yeux et remercie-toi d’être là.",
+    "🎨 Consacre 5 minutes à créer — croquis, poème ou collage.",
+    "🧘‍♀️ Assieds-toi 3 minutes en silence et observe ta respiration.",
+    "📂 Range une étagère, un tiroir ou un dossier — un petit ordre.",
+    "👋 Aborde aujourd’hui un inconnu avec bienveillance. Un compliment ou un « bonne journée ! » suffit.",
+    "🤝 Dis « bonjour » à au moins trois nouvelles personnes — le sourire compte aussi.",
+    "💬 Pose à quelqu’un une question que tu ne poses pas d’habitude : « Qu’est-ce qui t’inspire ? »",
+    "😊 Fais un compliment à un inconnu : barista, vendeur(se) ou passant(e).",
+    "📱 Appelle quelqu’un avec qui tu n’as pas parlé depuis longtemps et demande-lui comment il/elle va.",
+    "💡 Lance une courte discussion avec un voisin ou quelqu’un dans la file — sur la météo ou ce qui vous entoure.",
+    "🍀 Souris à la première personne que tu croises aujourd’hui. Sincèrement. Observe sa réaction.",
+    "🙌 Trouve quelqu’un d’inspirant sur les réseaux et envoie-lui un message de gratitude.",
+    "🎯 Introduis au moins un nouveau sujet en conversation : rêves, livres ou films préférés.",
+    "🌟 Va voir un(e) collègue ou un(e) ami(e) et dis : « Merci d’être dans ma vie » — observe son sourire.",
+    "🔥 Si possible, entre dans un lieu nouveau (café, parc, magasin) et parle à au moins une personne.",
+    "🌞 Le matin, dis un mot gentil à la première personne — commence ta journée avec du positif.",
+    "🍀 Aide quelqu’un avec un petit geste : tenir la porte, céder ta place, tendre un objet.",
+    "🤗 Félicite un(e) collègue ou un(e) ami(e) pour quelque chose de réussi.",
+    "👂 Pose une question profonde : « Qu’est-ce qui te rend heureux(se) ? », et écoute vraiment.",
+    "🎈 Offre un sourire à quelqu’un et dis : « Tu es génial(e) ! »",
+    "📚 À la bibliothèque, en librairie ou au café, demande : « Qu’est-ce que tu lis en ce moment ? »",
+    "🔥 Trouve une occasion d’inspirer quelqu’un : un conseil, une histoire, ton expérience.",
+    "🎨 Va dans un lieu nouveau (expo, rue, parc) et demande : « C’est votre première fois ici ? »",
+    "🌟 Si tu vois une tenue ou un style élégant — dis-le.",
+    "🎧 Mets de la musique et remonte le moral de tes amis : envoie un morceau que tu aimes avec « Écoute, ça te plaira ! »",
+    "🕊️ Parle aujourd’hui à une personne âgée — demande un conseil ou souhaite une bonne journée.",
+    "🏞️ En balade, aborde quelqu’un avec un chien : « Votre chien est superbe ! Comment s’appelle-t-il ? »",
+    "☕ Paie un café à la personne derrière toi dans la file. Juste comme ça.",
+    "🙌 Passe au moins un appel aujourd’hui sans raison — juste pour discuter.",
+    "🚀 Trouve une nouvelle idée de projet et note-la.",
+    "🎯 Écris 5 choses que tu veux accomplir cette semaine.",
+    "🌊 Écoute des sons de la nature et détends-toi.",
+    "🍋 Essaie aujourd’hui une boisson ou un plat nouveau.",
+    "🌱 Plante quelque chose ou prends soin de ta plante aujourd’hui.",
+    "🧩 Fais un petit puzzle ou résous une énigme.",
+    "🎶 Danse 5 minutes sur ta chanson préférée.",
+    "📅 Planifie ta journée idéale et écris-la.",
+    "🖼️ Trouve une belle image et mets-la en évidence.",
+    "🤔 Écris de quoi tu es fier/fière aujourd’hui.",
+    "💜 Fais tout de suite quelque chose d’agréable pour toi."
+],
+
+"pl": [
+    "✨ Zapisz 3 rzeczy, za które dziś jesteś wdzięczny/wdzięczna.",
+    "🚶‍♂️ Przejdź się 10 minut bez telefonu. Oddychaj i obserwuj.",
+    "📝 Napisz krótką listę celów na jutro.",
+    "🌿 Spróbuj spędzić 30 minut bez social mediów. Jakie wrażenia?",
+    "💧 Wypij szklankę wody i uśmiechnij się do siebie w lustrze. Dajesz radę!",
+    "📖 Przeczytaj dziś co najmniej 5 stron inspirującej książki.",
+    "🤝 Napisz do przyjaciela, z którym dawno nie rozmawiałeś/łaś.",
+    "🖋️ Prowadź dziennik przez 5 minut — zapisz wszystko bez filtrów.",
+    "🏃‍♀️ Zrób lekką rozgrzewkę albo 10 przysiadów — teraz.",
+    "🎧 Posłuchaj ulubionej muzyki i zrelaksuj się 10 minut.",
+    "🍎 Przygotuj sobie dziś coś pysznego i zdrowego.",
+    "💭 Zapisz jedno wielkie marzenie i jeden mały krok do niego.",
+    "🌸 Znajdź coś pięknego w domu lub na ulicy i zrób zdjęcie.",
+    "🛌 Przed snem pomyśl o trzech rzeczach, które dziś cię uszczęśliwiły.",
+    "💌 Napisz list do siebie w przyszłości: co chcesz powiedzieć za rok?",
+    "🔄 Zrób dziś coś inaczej niż zwykle, nawet drobiazg.",
+    "🙌 Weź 3 głębokie oddechy, zamknij oczy i podziękuj sobie, że jesteś.",
+    "🎨 Poświęć 5 minut na kreatywność — szkic, wiersz lub kolaż.",
+    "🧘‍♀️ Usiądź na 3 minuty w ciszy i obserwuj oddech.",
+    "📂 Ogarnij jedną półkę, szufladę lub folder — mały porządek.",
+    "👋 Podejdź dziś do nieznajomego i zacznij życzliwą rozmowę. Wystarczy komplement lub życzenie miłego dnia.",
+    "🤝 Powiedz „cześć” co najmniej trzem nowym osobom — uśmiech też się liczy.",
+    "💬 Zadaj komuś pytanie, którego zwykle nie zadajesz: „Co cię inspiruje?”.",
+    "😊 Zrób komplement nieznajomemu: bariście, sprzedawcy lub przechodniowi.",
+    "📱 Zadzwoń do kogoś, z kim dawno nie rozmawiałeś/łaś, i zapytaj, co słychać.",
+    "💡 Zacznij krótką rozmowę z sąsiadem lub kimś w kolejce — o pogodzie lub czymś wokół.",
+    "🍀 Uśmiechnij się do pierwszej napotkanej dziś osoby. Sz szczerze. Obserwuj reakcję.",  # <- if typo remove double 'Sz'
+    "🙌 Znajdź w social mediach ciekawą osobę i napisz jej podziękowanie za to, co robi.",
+    "🎯 Wprowadź dziś przynajmniej jeden nowy temat w rozmowie: marzenia, ulubione książki lub filmy.",
+    "🌟 Podejdź do kolegi/znajomego i powiedz: „Dziękuję, że jesteś w moim życiu” — zobacz jego/jej uśmiech.",
+    "🔥 Jeśli możesz, wejdź do nowego miejsca (kawiarnia, park, sklep) i porozmawiaj tam z co najmniej jedną osobą.",
+    "🌞 Rano powiedz coś miłego pierwszej napotkanej osobie — zacznij dzień pozytywnie.",
+    "🍀 Pomóż dziś komuś drobiazgiem: przytrzymaj drzwi, ustąp miejsca, podaj rzecz.",
+    "🤗 Pochwal kolegę lub przyjaciela za coś, co zrobił dobrze.",
+    "👂 Zadaj komuś głębokie pytanie: „Co cię uszczęśliwia?” i posłuchaj odpowiedzi.",
+    "🎈 Podaruj dziś komuś uśmiech i powiedz: „Jesteś super!”.",
+    "📚 W bibliotece, księgarni lub kawiarni zapytaj: „Co teraz czytasz?”.",
+    "🔥 Znajdź dziś powód, by kogoś zainspirować: rada, historia, twoje doświadczenie.",
+    "🎨 Wejdź do nowego miejsca (wystawa, ulica, park) i zapytaj: „Jesteś tu pierwszy raz?”.",
+    "🌟 Jeśli zobaczysz u kogoś ładną stylizację — powiedz mu/jej to.",
+    "🎧 Włącz muzykę i podnieś nastrój znajomym: wyślij im utwór z komentarzem: „Słuchaj, to do ciebie pasuje!”.",
+    "🕊️ Porozmawiaj dziś z osobą starszą — poproś o radę lub życz miłego dnia.",
+    "🏞️ Na spacerze podejdź do kogoś z psem: „Wasz pies jest cudowny! Jak ma na imię?”.",
+    "☕ Kup kawę osobie stojącej za tobą w kolejce. Tak po prostu.",
+    "🙌 Wykonaj dziś przynajmniej jeden telefon bez powodu — po prostu, żeby pogadać.",
+    "🚀 Znajdź nowy pomysł na projekt i zapisz go.",
+    "🎯 Wypisz 5 rzeczy, które chcesz zrobić w tym tygodniu.",
+    "🌊 Posłuchaj odgłosów natury i zrelaksuj się.",
+    "🍋 Spróbuj dziś nowego napoju lub jedzenia.",
+    "🌱 Posadź roślinę lub zajmij się swoją dzisiaj.",
+    "🧩 Ułóż małe puzzle lub rozwiąż zagadkę.",
+    "🎶 Tańcz 5 minut do ulubionej piosenki.",
+    "📅 Zaplanuj swój idealny dzień i zapisz go.",
+    "🖼️ Znajdź ładny obrazek i powieś w widocznym miejscu.",
+    "🤔 Napisz, z czego dziś jesteś dumny/a.",
+    "💜 Zrób teraz coś miłego dla siebie."
+],
     "uk": [
     "✨ Запиши 3 речі, за які ти вдячний(а) сьогодні.",
     "🚶‍♂️ Прогуляйся 10 хвилин без телефону. Просто дихай і спостерігай.",
@@ -6410,6 +7409,38 @@ goal_texts = {
             "deadline": "🗓 Deadline:",
             "remind": "🔔 Reminder is on"
         },
+        "es": {
+    "no_args": "✏️ Para fijar una meta, escribe así:\n/goal Leer 10 páginas hasta 2025-06-28 recuérdame",
+    "limit": "🔒 En la versión gratuita puedes llevar hasta 3 metas activas.\n¿Quieres más? Activa Mindra+ (hasta 10 metas activas) 💜",
+    "bad_date": "❗ Formato de fecha no válido. Usa AAAA-MM-DD",
+    "added": "🎯 Meta añadida:",
+    "deadline": "🗓 Fecha límite:",
+    "remind": "🔔 Recordatorio activado"
+},
+"de": {
+    "no_args": "✏️ Um ein Ziel zu setzen, schreibe so:\n/goal Bis 2025-06-28 10 Seiten lesen erinnere mich",
+    "limit": "🔒 In der Gratis-Version kannst du bis zu 3 aktive Ziele führen.\nMehr gewünscht? Hol dir Mindra+ (bis zu 10 aktive Ziele) 💜",
+    "bad_date": "❗ Ungültiges Datumsformat. Verwende JJJJ-MM-TT",
+    "added": "🎯 Ziel hinzugefügt:",
+    "deadline": "🗓 Deadline:",
+    "remind": "🔔 Erinnerung aktiviert"
+},
+"pl": {
+    "no_args": "✏️ Aby ustawić cel, napisz tak:\n/goal Przeczytać 10 stron do 2025-06-28 przypomnij",
+    "limit": "🔒 W wersji bezpłatnej możesz mieć do 3 aktywnych celów.\nChcesz więcej? Włącz Mindra+ (do 10 aktywnych celów) 💜",
+    "bad_date": "❗ Nieprawidłowy format daty. Użyj RRRR-MM-DD",
+    "added": "🎯 Cel dodany:",
+    "deadline": "🗓 Termin:",
+    "remind": "🔔 Przypomnienie włączone"
+},
+"fr": {
+    "no_args": "✏️ Pour définir un objectif, écris ainsi :\n/goal Lire 10 pages d’ici 2025-06-28 rappelle-moi",
+    "limit": "🔒 Dans la version gratuite, tu peux avoir jusqu’à 3 objectifs actifs.\nTu en veux plus ? Active Mindra+ (jusqu’à 10 objectifs actifs) 💜",
+    "bad_date": "❗ Format de date invalide. Utilise AAAA-MM-JJ",
+    "added": "🎯 Objectif ajouté :",
+    "deadline": "🗓 Date limite :",
+    "remind": "🔔 Rappel activé"
+}
     }
 
 POINTS_ADDED_HABIT = {
@@ -6422,7 +7453,11 @@ POINTS_ADDED_HABIT = {
     "kg": "Даяр! +2 упай.",
     "hy": "Պատրաստ է. +2 միավոր։",
     "ka": "მზადაა! +2 ქულა.",
-    "ce": "Дайо! +2 балл."
+    "ce": "Дайо! +2 балл.",
+    "es": "¡Listo! +2 puntos.",
+    "de": "Fertig! +2 Punkte.",
+    "pl": "Gotowe! +2 punkty.",
+    "fr": "C’est fait ! +2 points.",
 }
 
 # 🌐 Сообщения выбора привычки
@@ -6436,13 +7471,34 @@ HABIT_SELECT_MESSAGE = {
     "kg": "Белгилегиңиз келген адатты тандаңыз:",
     "hy": "Ընտրեք սովորությունը, որը ցանկանում եք նշել:",
     "ka": "აირჩიეთ ჩვევა, რომლის მონიშვნაც გსურთ:",
-    "ce": "ДӀайаккх а, кхузур тӀаьхьара а марк хийцам:"
+    "ce": "ДӀайаккх а, кхузур тӀаьхьара а марк хийцам:",
+    "es": "Elige el hábito que quieres marcar:",
+    "de": "Wähle die Gewohnheit, die du markieren möchtest:",
+    "pl": "Wybierz nawyk, który chcesz oznaczyć:",
+    "fr": "Choisis l’habitude que tu veux marquer :",
 }
 
 LANG_PATTERNS = {
     "ru": {
         "deadline": r"до (\d{4}-\d{2}-\d{2})",
         "remind": "напомни"
+    },
+    "es": {
+        "deadline": r"hasta (\d{4}-\d{2}-\d{2})",
+        "remind": "recuérdame",
+    },
+    "de": {
+        "deadline": r"bis (\d{4}-\d{2}-\d{2})",
+        "remind": "erinnere mich",
+    },
+    "pl": {
+        "deadline": r"do (\d{4}-\d{2}-\d{2})",
+        "remind": "przypomnij",
+    },
+    "fr": {
+        # учитываем 'jusqu'a/jusqu’à' и 'au' опционально
+        "deadline": r"jusqu(?:'|’)?au? (\d{4}-\d{2}-\d{2})",
+        "remind": "rappelle-moi",
     },
     "uk": {
         "deadline": r"до (\d{4}-\d{2}-\d{2})",
@@ -6505,6 +7561,30 @@ texts = {
             "done": "✅ Привычка №{index} отмечена как выполненная! Молодец! 💪 +5 очков!",
             "not_found": "❌ Не удалось найти привычку с таким номером."
         },
+        "es": {
+    "no_args": "✏️ Indica el número del hábito que has completado:\n/habit_done 0",
+    "bad_arg": "⚠️ Indica el número del hábito (por ejemplo, `/habit_done 0`)",
+    "done": "✅ ¡El hábito nº{index} se marcó como completado! ¡Bien hecho! 💪 +5 puntos!",
+    "not_found": "❌ No se pudo encontrar un hábito con ese número."
+},
+"de": {
+    "no_args": "✏️ Gib die Nummer der Gewohnheit an, die du erledigt hast:\n/habit_done 0",
+    "bad_arg": "⚠️ Gib die Nummer der Gewohnheit an (z. B. `/habit_done 0`)",
+    "done": "✅ Gewohnheit Nr.{index} als erledigt markiert! Gute Arbeit! 💪 +5 Punkte!",
+    "not_found": "❌ Keine Gewohnheit mit dieser Nummer gefunden."
+},
+"pl": {
+    "no_args": "✏️ Podaj numer nawyku, który wykonałeś/wykonałaś:\n/habit_done 0",
+    "bad_arg": "⚠️ Podaj numer nawyku (na przykład `/habit_done 0`)",
+    "done": "✅ Nawyk nr {index} oznaczony jako wykonany! Świetna robota! 💪 +5 punktów!",
+    "not_found": "❌ Nie znaleziono nawyku o takim numerze."
+},
+"fr": {
+    "no_args": "✏️ Indique le numéro de l’habitude que tu as effectuée :\n/habit_done 0",
+    "bad_arg": "⚠️ Indique le numéro de l’habitude (par exemple `/habit_done 0`)",
+    "done": "✅ Habitude n°{index} marquée comme effectuée ! Bravo ! 💪 +5 points !",
+    "not_found": "❌ Impossible de trouver une habitude avec ce numéro."
+},
         "uk": {
             "no_args": "✏️ Вкажи номер звички, яку ти виконав(ла):\n/habit_done 0",
             "bad_arg": "⚠️ Вкажи номер звички (наприклад `/habit_done 0`)",
@@ -6571,6 +7651,38 @@ references_by_lang = {
             "семья": "Ты упоминал(а) про семью… Всё ли хорошо?",
             "мотивация": "Ты говорил(а), что хочешь развиваться. Что уже получилось? ✨"
         },
+        "es": {
+    "relaciones": "Antes me hablaste de tus sentimientos… ¿Te gustaría contármelo con más detalle? 💜",
+    "soledad":    "Recuerdo que te sentías solo/a… Sigo aquí contigo 🤗",
+    "trabajo":    "Me contaste sobre la presión en el trabajo. ¿Cómo vas con eso ahora?",
+    "deporte":    "Habías empezado a entrenar — ¿sigues? 🏋️",
+    "familia":    "Mencionaste a tu familia… ¿Todo va bien?",
+    "motivación": "Dijiste que quieres desarrollarte. ¿Qué ya te ha salido? ✨"
+},
+"de": {
+    "beziehungen": "Du hast früher über deine Gefühle gesprochen… Möchtest du ausführlicher darüber reden? 💜",
+    "einsamkeit":  "Ich erinnere mich, du hast dich einsam gefühlt… Ich bin immer noch da 🤗",
+    "arbeit":      "Du hast vom Druck bei der Arbeit erzählt. Wie geht es dir damit jetzt?",
+    "sport":       "Du hattest mit dem Training begonnen — machst du weiter? 🏋️",
+    "familie":     "Du hast deine Familie erwähnt… Ist alles in Ordnung?",
+    "motivation":  "Du hast gesagt, dass du dich weiterentwickeln willst. Was hat schon geklappt? ✨"
+},
+"pl": {
+    "relacje":     "Wcześniej dzieliłeś/łaś się uczuciami… Chcesz o tym porozmawiać szerzej? 💜",
+    "samotność":   "Pamiętam, że czułeś/aś się samotny/a… Wciąż tu jestem 🤗",
+    "praca":       "Opowiadałeś/łaś o presji w pracy. Jak sobie z tym teraz radzisz?",
+    "sport":       "Zacząłeś/łaś trenować — kontynuujesz? 🏋️",
+    "rodzina":     "Wspominałeś/łaś o rodzinie… Czy wszystko w porządku?",
+    "motywacja":   "Mówiłeś/łaś, że chcesz się rozwijać. Co już się udało? ✨"
+},
+"fr": {
+    "relations":   "Tu m’avais parlé de tes sentiments… Tu veux en parler plus en détail ? 💜",
+    "solitude":    "Je me souviens que tu te sentais seul(e)… Je suis toujours là 🤗",
+    "travail":     "Tu m’as parlé de la pression au travail. Où en es-tu maintenant ?",
+    "sport":       "Tu avais commencé à t’entraîner — tu continues ? 🏋️",
+    "famille":     "Tu as mentionné ta famille… Tout va bien ?",
+    "motivation":  "Tu disais vouloir évoluer. Qu’as-tu déjà accompli ? ✨"
+},
         "uk": {
             "відносини": "Ти ж ділився(-лася) почуттями… Хочеш розповісти більше? 💜",
             "самотність": "Пам’ятаю, ти почувався(-лася) самотньо… Я тут 🤗",
@@ -6727,6 +7839,38 @@ keywords_by_lang = {
             "work": "🗂️ Take one important step in your work project today.",
             "study": "📚 Spend 20 minutes learning or reviewing material."
         },
+        "es": {
+    "agua": "💧 Hoy presta atención al agua: bebe 8 vasos y márcalo.",
+    "deporte": "🏃‍♂️ Haz un calentamiento de 15 minutos: ¡tu cuerpo te lo agradecerá!",
+    "libro": "📖 Encuentra tiempo para leer 10 páginas de tu libro.",
+    "meditación": "🧘‍♀️ Pasa 5 minutos en silencio, enfocándote en la respiración.",
+    "trabajo": "🗂️ Da hoy un paso importante en tu proyecto de trabajo.",
+    "estudio": "📚 Dedica 20 minutos a estudiar o repasar el material."
+},
+"de": {
+    "wasser": "💧 Achte heute auf genug Wasser: trinke 8 Gläser und markiere es!",
+    "sport": "🏃‍♂️ Mach ein 15-minütiges Warm-up – dein Körper wird’s dir danken!",
+    "buch": "📖 Nimm dir Zeit und lies 10 Seiten in deinem Buch.",
+    "meditation": "🧘‍♀️ Verbringe 5 Minuten in Stille und fokussiere auf den Atem.",
+    "arbeit": "🗂️ Mache heute einen wichtigen Schritt in deinem Arbeitsprojekt.",
+    "lernen": "📚 Nimm dir 20 Minuten zum Lernen oder Wiederholen."
+},
+"pl": {
+    "woda": "💧 Zadbaj dziś o wodę: wypij 8 szklanek i zaznacz to!",
+    "sport": "🏃‍♂️ Zrób 15-minutową rozgrzewkę — ciało ci podziękuje!",
+    "książka": "📖 Znajdź czas na 10 stron swojej książki.",
+    "medytacja": "🧘‍♀️ Poświęć 5 minut ciszy, skupiając się na oddechu.",
+    "praca": "🗂️ Zrób dziś jeden ważny krok w projekcie zawodowym.",
+    "nauka": "📚 Poświęć 20 minut na naukę lub powtórkę materiału."
+},
+"fr": {
+    "eau": "💧 Aujourd’hui, veille à bien t’hydrater : bois 8 verres et coche-le !",
+    "sport": "🏃‍♂️ Fais un échauffement de 15 minutes — ton corps te dira merci !",
+    "livre": "📖 Trouve le temps de lire 10 pages de ton livre.",
+    "méditation": "🧘‍♀️ Consacre 5 minutes au silence en te concentrant sur la respiration.",
+    "travail": "🗂️ Fais aujourd’hui un pas important dans ton projet pro.",
+    "études": "📚 Consacre 20 minutes à étudier ou réviser."
+},
     }
 
     # 🌐 Заголовок
@@ -6741,7 +7885,11 @@ headers = {
         "md": "✨ Sarcina ta personală pentru azi:\n\n",
         "ka": "✨ შენი პირადი დავალება დღევანდელი:\n\n",
         "en": "✨ Your personal task for today:\n\n",
-    }
+        "es": "✨ Tu tarea personal para hoy:\n\n",
+    "de": "✨ Deine persönliche Aufgabe für heute:\n\n",
+    "pl": "✨ Twoje osobiste zadanie na dziś:\n\n",
+    "fr": "✨ Ta tâche personnelle pour aujourd’hui :\n\n",
+}
 
 questions_by_topic_by_lang = {
     "ru": {
@@ -6796,6 +7944,214 @@ questions_by_topic_by_lang = {
             "С чего ты бы хотел начать сегодня?"
         ],
     },
+    "es": {
+    "deporte": [
+        "¿Estás haciendo algo activo ahora mismo?",
+        "¿Quieres que te proponga un reto ligero?",
+        "¿Qué tipo de entrenamiento te resulta más agradable?"
+    ],
+    "amor": [
+        "¿Qué sientes por esa persona ahora?",
+        "¿Quieres contarme qué pasó después?",
+        "¿Cómo sabes qué es importante para ti en una relación?"
+    ],
+    "trabajo": [
+        "¿Qué te gusta (o no) de tu trabajo?",
+        "¿Te gustaría cambiar algo en eso?",
+        "¿Tienes algún sueño relacionado con tu carrera?"
+    ],
+    "dinero": [
+        "¿Cómo te sientes ahora respecto a tus finanzas?",
+        "¿Qué te gustaría mejorar?",
+        "¿Tienes una meta financiera?"
+    ],
+    "soledad": [
+        "¿Qué es lo que más te falta ahora?",
+        "¿Quieres que simplemente me quede a tu lado?",
+        "¿Cómo sueles pasar el tiempo cuando te sientes solo/a?"
+    ],
+    "motivación": [
+        "¿Qué te inspira ahora mismo?",
+        "¿Cuál es tu objetivo ahora?",
+        "¿Qué te gustaría sentir cuando lo consigas?"
+    ],
+    "salud": [
+        "¿Cómo cuidas de ti últimamente?",
+        "¿Tuviste momentos de descanso hoy?",
+        "¿Qué significa para ti estar en buen estado?"
+    ],
+    "ansiedad": [
+        "¿Qué es lo que más te preocupa ahora?",
+        "¿Quieres que te ayude a manejarlo?",
+        "¿Quieres simplemente desahogarte?"
+    ],
+    "amigos": [
+        "¿Con quién te gustaría hablar de verdad ahora?",
+        "¿Cómo sueles pasar el tiempo con tus seres queridos?",
+        "¿Te gustaría que alguien estuviera a tu lado ahora mismo?"
+    ],
+    "metas": [
+        "¿Qué objetivo sientes más cercano ahora?",
+        "¿Quieres que te ayude a planificarlo?",
+        "¿Por dónde te gustaría empezar hoy?"
+    ],
+},
+    "de": {
+    "sport": [
+        "Machst du gerade etwas Aktives?",
+        "Möchtest du, dass ich dir eine leichte Challenge zusammenstelle?",
+        "Welche Art Training macht dir am meisten Spaß?"
+    ],
+    "liebe": [
+        "Was fühlst du im Moment für diese Person?",
+        "Willst du erzählen, wie es weiterging?",
+        "Woran merkst du, was dir in einer Beziehung wichtig ist?"
+    ],
+    "arbeit": [
+        "Was magst du (oder nicht) an deiner Arbeit?",
+        "Möchtest du daran etwas ändern?",
+        "Hast du einen Traum, der mit deiner Karriere zu tun hat?"
+    ],
+    "geld": [
+        "Wie fühlst du dich momentan finanziell?",
+        "Was würdest du gerne verbessern?",
+        "Hast du ein finanzielles Ziel?"
+    ],
+    "einsamkeit": [
+        "Was fehlt dir gerade am meisten?",
+        "Soll ich einfach bei dir sein?",
+        "Wie verbringst du Zeit, wenn du dich einsam fühlst?"
+    ],
+    "motivation": [
+        "Was inspiriert dich gerade?",
+        "Was ist im Moment dein Ziel?",
+        "Was möchtest du fühlen, wenn du es erreicht hast?"
+    ],
+    "gesundheit": [
+        "Wie sorgst du in letzter Zeit für dich?",
+        "Hattest du heute Momente der Ruhe?",
+        "Was bedeutet es für dich, in guter Verfassung zu sein?"
+    ],
+    "angst": [
+        "Was beunruhigt dich im Moment am meisten?",
+        "Soll ich dir helfen, damit umzugehen?",
+        "Möchtest du dich einfach aussprechen?"
+    ],
+    "freunde": [
+        "Mit wem würdest du jetzt wirklich gern sprechen?",
+        "Wie verbringst du normalerweise Zeit mit deinen Liebsten?",
+        "Hättest du gern, dass jetzt jemand bei dir ist?"
+    ],
+    "ziele": [
+        "Welches Ziel fühlt sich dir gerade am nächsten?",
+        "Soll ich dir helfen, es zu planen?",
+        "Womit würdest du heute gern beginnen?"
+    ],
+},
+    "pl": {
+    "sport": [
+        "Czy robisz teraz coś aktywnego?",
+        "Chcesz, żebym ułożył/a dla ciebie lekki challenge?",
+        "Jaki trening sprawia ci najwięcej przyjemności?"
+    ],
+    "miłość": [
+        "Co czujesz teraz do tej osoby?",
+        "Chcesz opowiedzieć, co było dalej?",
+        "Po czym poznajesz, co jest dla ciebie ważne w relacji?"
+    ],
+    "praca": [
+        "Co lubisz (albo nie) w swojej pracy?",
+        "Czy chciał(a)byś coś w tym zmienić?",
+        "Masz marzenie związane z karierą?"
+    ],
+    "pieniądze": [
+        "Jak się teraz czujesz w kwestii finansów?",
+        "Co chciał(a)byś poprawić?",
+        "Masz finansowy cel?"
+    ],
+    "samotność": [
+        "Czego najbardziej ci teraz brakuje?",
+        "Chcesz, żebym po prostu był(a) obok?",
+        "Jak zwykle spędzasz czas, gdy czujesz się samotnie?"
+    ],
+    "motywacja": [
+        "Co cię teraz inspiruje?",
+        "Jaki masz teraz cel?",
+        "Co chcesz poczuć, gdy to osiągniesz?"
+    ],
+    "zdrowie": [
+        "Jak ostatnio dbasz o siebie?",
+        "Czy miałeś/aś dziś chwile odpoczynku?",
+        "Co dla ciebie znaczy być w dobrej formie?"
+    ],
+    "niepokój": [
+        "Co najbardziej cię teraz niepokoi?",
+        "Chcesz, żebym pomógł/pomogła ci sobie z tym poradzić?",
+        "Chcesz się po prostu wygadać?"
+    ],
+    "przyjaciele": [
+        "Z kim naprawdę chciał(a)byś teraz porozmawiać?",
+        "Jak zwykle spędzasz czas z bliskimi?",
+        "Chciał(a)byś, żeby ktoś był teraz obok?"
+    ],
+    "cele": [
+        "Który cel jest ci teraz najbliższy?",
+        "Chcesz, żebym pomógł/pomogła go zaplanować?",
+        "Od czego chciał(a)byś zacząć dziś?"
+    ],
+},
+    "fr": {
+    "sport": [
+        "Fais-tu quelque chose d’actif en ce moment ?",
+        "Veux-tu que je te propose un petit défi ?",
+        "Quel type d’entraînement te procure le plus de plaisir ?"
+    ],
+    "amour": [
+        "Que ressens-tu pour cette personne en ce moment ?",
+        "Tu veux me raconter la suite ?",
+        "Comment sais-tu ce qui est important pour toi dans une relation ?"
+    ],
+    "travail": [
+        "Qu’est-ce que tu aimes (ou pas) dans ton travail ?",
+        "Voudrais-tu changer quelque chose à ce sujet ?",
+        "As-tu un rêve lié à ta carrière ?"
+    ],
+    "argent": [
+        "Comment te sens-tu actuellement par rapport à tes finances ?",
+        "Qu’aimerais-tu améliorer ?",
+        "As-tu un objectif financier ?"
+    ],
+    "solitude": [
+        "Qu’est-ce qui te manque le plus en ce moment ?",
+        "Veux-tu que je reste simplement à tes côtés ?",
+        "Comment passes-tu le temps quand tu te sens seul(e) ?"
+    ],
+    "motivation": [
+        "Qu’est-ce qui t’inspire en ce moment ?",
+        "Quel est ton objectif maintenant ?",
+        "Qu’aimerais-tu ressentir quand tu l’auras atteint ?"
+    ],
+    "santé": [
+        "Comment prends-tu soin de toi ces derniers temps ?",
+        "As-tu eu des moments de repos aujourd’hui ?",
+        "Que signifie pour toi être en bonne forme ?"
+    ],
+    "anxiété": [
+        "Qu’est-ce qui t’inquiète le plus en ce moment ?",
+        "Veux-tu que je t’aide à gérer ça ?",
+        "Souhaites-tu simplement te confier ?"
+    ],
+    "amis": [
+        "Avec qui aimerais-tu vraiment parler maintenant ?",
+        "Comment passes-tu généralement du temps avec tes proches ?",
+        "Aimerais-tu que quelqu’un soit à tes côtés maintenant ?"
+    ],
+    "objectifs": [
+        "Quel objectif te paraît le plus proche de toi en ce moment ?",
+        "Veux-tu que je t’aide à le planifier ?",
+        "Par quoi aimerais-tu commencer aujourd’hui ?"
+    ],
+},
     "en": {
         "sport": [
             "Are you doing anything active right now?",
@@ -7275,6 +8631,38 @@ HABIT_BUTTON_TEXTS = {
         "no_goals": "У тебя пока нет целей, которые можно отметить выполненными 😔",
         "choose_goal": "Выбери цель, которую ты выполнил(а):"
     },
+    "es": {
+    "habit_done": "🎉 ¡Hábito marcado como completado!",
+    "not_found": "No se pudo encontrar el hábito.",
+    "habit_deleted": "🗑️ Hábito eliminado.",
+    "delete_error": "No se pudo eliminar el hábito.",
+    "no_goals": "Aún no tienes objetivos que se puedan marcar como completados 😔",
+    "choose_goal": "Elige el objetivo que has completado:"
+},
+"de": {
+    "habit_done": "🎉 Gewohnheit als erledigt markiert!",
+    "not_found": "Gewohnheit konnte nicht gefunden werden.",
+    "habit_deleted": "🗑️ Gewohnheit gelöscht.",
+    "delete_error": "Gewohnheit konnte nicht gelöscht werden.",
+    "no_goals": "Du hast noch keine Ziele, die als erledigt markiert werden können 😔",
+    "choose_goal": "Wähle das Ziel, das du erledigt hast:"
+},
+"pl": {
+    "habit_done": "🎉 Nawyk oznaczony jako wykonany!",
+    "not_found": "Nie udało się znaleźć nawyku.",
+    "habit_deleted": "🗑️ Nawyk usunięty.",
+    "delete_error": "Nie udało się usunąć nawyku.",
+    "no_goals": "Nie masz jeszcze celów, które można oznaczyć jako wykonane 😔",
+    "choose_goal": "Wybierz cel, który wykonałeś/wykonałaś:"
+},
+"fr": {
+    "habit_done": "🎉 Habitude marquée comme effectuée !",
+    "not_found": "Impossible de trouver l’habitude.",
+    "habit_deleted": "🗑️ Habitude supprimée.",
+    "delete_error": "Impossible de supprimer l’habitude.",
+    "no_goals": "Tu n’as pas encore d’objectifs à marquer comme effectués 😔",
+    "choose_goal": "Choisis l’objectif que tu as accompli :"
+},
     "uk": {
         "habit_done": "🎉 Звичка позначена як виконана!",
         "not_found": "Не вдалося знайти звичку.",
@@ -7410,6 +8798,30 @@ HABITS_TEXTS = {
         "done": "✅",
         "delete": "🗑️"
     },
+    "es": {
+    "no_habits": "Aún no tienes hábitos. Añade el primero con /habit",
+    "title": "📋 Tus hábitos:",
+    "done": "✅",
+    "delete": "🗑️"
+},
+"de": {
+    "no_habits": "Du hast noch keine Gewohnheiten. Füge die erste mit /habit hinzu",
+    "title": "📋 Deine Gewohnheiten:",
+    "done": "✅",
+    "delete": "🗑️"
+},
+"pl": {
+    "no_habits": "Nie masz jeszcze nawyków. Dodaj pierwszy komendą /habit",
+    "title": "📋 Twoje nawyki:",
+    "done": "✅",
+    "delete": "🗑️"
+},
+"fr": {
+    "no_habits": "Tu n’as pas encore d’habitudes. Ajoute la première avec /habit",
+    "title": "📋 Tes habitudes :",
+    "done": "✅",
+    "delete": "🗑️"
+},
 }
 
 HABIT_TEXTS = {
@@ -7421,6 +8833,38 @@ HABIT_TEXTS = {
         "how_to": "Чтобы добавить привычку, напиши:\n/habit Делать зарядку",
         "added": "🎯 Привычка добавлена: *{habit}*",
     },
+    "es": {
+    "limit": (
+        "🌱 En la versión gratuita puedes añadir hasta 3 hábitos.\n\n"
+        "✨ Activa Mindra+ para seguir hasta 10 hábitos 💜"
+    ),
+    "how_to": "Para añadir un hábito, escribe:\n/habit Hacer ejercicios",
+    "added": "🎯 Hábito añadido: *{habit}*",
+},
+"de": {
+    "limit": (
+        "🌱 In der Gratis-Version kannst du bis zu 3 Gewohnheiten hinzufügen.\n\n"
+        "✨ Hol dir Mindra+, um bis zu 10 Gewohnheiten zu tracken 💜"
+    ),
+    "how_to": "Um eine Gewohnheit hinzuzufügen, schreibe:\n/habit Gymnastik machen",
+    "added": "🎯 Gewohnheit hinzugefügt: *{habit}*",
+},
+"pl": {
+    "limit": (
+        "🌱 W wersji bezpłatnej możesz dodać do 3 nawyków.\n\n"
+        "✨ Włącz Mindra+, aby śledzić do 10 nawyków 💜"
+    ),
+    "how_to": "Aby dodać nawyk, napisz:\n/habit Robić rozgrzewkę",
+    "added": "🎯 Dodano nawyk: *{habit}*",
+},
+"fr": {
+    "limit": (
+        "🌱 Dans la version gratuite, tu peux ajouter jusqu’à 3 habitudes.\n\n"
+        "✨ Active Mindra+ pour suivre jusqu’à 10 habitudes 💜"
+    ),
+    "how_to": "Pour ajouter une habitude, écris :\n/habit Faire des exercices",
+    "added": "🎯 Habitude ajoutée : *{habit}*",
+},
     "uk": {
         "limit": (
             "🌱 У безкоштовній версії можна додати до 3 звичок.\n\n"
@@ -7656,6 +9100,73 @@ MYSTATS_TEXTS = {
             "\n📅 Active days: {days_active}"
         ),
     },
+    "es": {
+    "title": "📌 *Tus estadísticas*\n\n🌟 Tu título: *{title}*\n🏅 Puntos: *{points}*\n\n¡Sigue cumpliendo metas y tareas para crecer! 💜",
+    "premium_info": (
+        "\n\n🔒 Con Mindra+ obtendrás:\n"
+        "💎 Estadísticas ampliadas de metas y hábitos\n"
+        "💎 Más límites y tareas exclusivas\n"
+        "💎 Retos y recordatorios únicos ✨"
+    ),
+    "premium_button": "💎 Saber más sobre Mindra+",
+    "extra": (
+        "\n✅ Metas completadas: {completed_goals}"
+        "\n🌱 Hábitos añadidos: {habits_tracked}"
+        "\n🔔 Recordatorios: {reminders}"
+        "\n📅 Días de actividad: {days_active}"
+    ),
+},
+
+"de": {
+    "title": "📌 *Deine Statistik*\n\n🌟 Dein Titel: *{title}*\n🏅 Punkte: *{points}*\n\nErfülle weiter Ziele und Aufgaben, um zu wachsen! 💜",
+    "premium_info": (
+        "\n\n🔒 Mit Mindra+ bekommst du:\n"
+        "💎 Erweiterte Statistiken zu Zielen und Gewohnheiten\n"
+        "💎 Höhere Limits und exklusive Aufgaben\n"
+        "💎 Einzigartige Challenges und Erinnerungen ✨"
+    ),
+    "premium_button": "💎 Mehr über Mindra+",
+    "extra": (
+        "\n✅ Erreichte Ziele: {completed_goals}"
+        "\n🌱 Hinzugefügte Gewohnheiten: {habits_tracked}"
+        "\n🔔 Erinnerungen: {reminders}"
+        "\n📅 Aktive Tage: {days_active}"
+    ),
+},
+
+"pl": {
+    "title": "📌 *Twoje statystyki*\n\n🌟 Twój tytuł: *{title}*\n🏅 Punkty: *{points}*\n\nKontynuuj realizację celów i zadań, aby rosnąć! 💜",
+    "premium_info": (
+        "\n\n🔒 W Mindra+ zyskasz:\n"
+        "💎 Rozszerzone statystyki celów i nawyków\n"
+        "💎 Wyższe limity i ekskluzywne zadania\n"
+        "💎 Unikalne wyzwania i przypomnienia ✨"
+    ),
+    "premium_button": "💎 Dowiedz się o Mindra+",
+    "extra": (
+        "\n✅ Zrealizowane cele: {completed_goals}"
+        "\n🌱 Dodane nawyki: {habits_tracked}"
+        "\n🔔 Przypomnienia: {reminders}"
+        "\n📅 Dni aktywności: {days_active}"
+    ),
+},
+
+"fr": {
+    "title": "📌 *Tes statistiques*\n\n🌟 Ton titre : *{title}*\n🏅 Points : *{points}*\n\nContinue d’atteindre des objectifs et de relever des tâches pour progresser ! 💜",
+    "premium_info": (
+        "\n\n🔒 Avec Mindra+, tu obtiens :\n"
+        "💎 Des statistiques étendues sur objectifs et habitudes\n"
+        "💎 Davantage de limites et des tâches exclusives\n"
+        "💎 Des challenges et rappels uniques ✨"
+    ),
+    "premium_button": "💎 En savoir plus sur Mindra+",
+    "extra": (
+        "\n✅ Objectifs accomplis : {completed_goals}"
+        "\n🌱 Habitudes ajoutées : {habits_tracked}"
+        "\n🔔 Rappels : {reminders}"
+        "\n📅 Jours d’activité : {days_active}"
+    ),
+},
 }
 
 STATS_TEXTS = {
@@ -7664,6 +9175,29 @@ STATS_TEXTS = {
         "👥 Всего пользователей: {total}\n"
         "💎 Подписчиков: {premium}\n"
     ),
+    "es": (
+    "📊 Estadísticas de Mindra:\n\n"
+    "👥 Usuarios totales: {total}\n"
+    "💎 Suscriptores: {premium}\n"
+),
+
+"de": (
+    "📊 Mindra-Statistiken:\n\n"
+    "👥 Gesamtzahl der Nutzer: {total}\n"
+    "💎 Abonnenten: {premium}\n"
+),
+
+"pl": (
+    "📊 Statystyki Mindry:\n\n"
+    "👥 Łącznie użytkowników: {total}\n"
+    "💎 Subskrybenci: {premium}\n"
+),
+
+"fr": (
+    "📊 Statistiques de Mindra :\n\n"
+    "👥 Utilisateurs au total : {total}\n"
+    "💎 Abonnés : {premium}\n"
+),
     "uk": (
         "📊 Статистика Mindra:\n\n"
         "👥 Всього користувачів: {total}\n"
@@ -8129,6 +9663,113 @@ topic_patterns_by_lang = {
             "reply": "🌱 მშვენიერია, რომ ცდილობ განვითარებას. მე აქ ვარ!"
         }
     },
+    "es": {
+    "love": {
+        "patterns": r"\b(enamor|amo|amor|novi[oa]|relaci|cita|bes[oa]|quedar|romant|flirt|coquete)\b",
+        "reply": "💘 Suena muy tierno. Los sentimientos amorosos siempre emocionan. ¿Quieres contarme con más detalle qué pasa?"
+    },
+    "lonely": {
+        "patterns": r"\b(sol[oa]|soledad|nadie|no tengo a nadie|me siento sol[oa])\b",
+        "reply": "🫂 A veces esa sensación aparece… Pero no estás solo/a. Estoy aquí contigo. 💜"
+    },
+    "work": {
+        "patterns": r"\b(trabaj|jefe|presi[óo]n|coleg|despido|turno|sueldo|agotad|no soporto)\b",
+        "reply": "🧑‍💼 El trabajo puede agotar. No tienes que cargar con todo en soledad. Estoy aquí si quieres desahogarte."
+    },
+    "sport": {
+        "patterns": r"\b(gimnas|deport|correr|press|mancuern|entren|logr|[0-9]+kg|p[eé]rdid[a] de peso)\b",
+        "reply": "🏆 ¡Bien hecho! Es un paso importante hacia ti mismo/a. ¿Cómo te sientes después de este logro?"
+    },
+    "family": {
+        "patterns": r"\b(mam[aá]|pap[aá]|famili|padres|herman[oa]|abuel[oa])\b",
+        "reply": "👨‍👩‍👧‍👦 La familia puede dar calor… y a veces retos. Puedo escucharte: cuéntame si te apetece."
+    },
+    "motivation": {
+        "patterns": r"\b(motivaci[óo]n|met[a]|objetiv|desarroll|meditaci[óo]n|conscien|crecim|camino|[eé]xito)\b",
+        "reply": "🌱 Me encanta que busques crecer. Hablemos de cómo puedo ayudarte en ese camino."
+    }
+},
+
+"de": {
+    "love": {
+        "patterns": r"\b(verlieb|lieb[ea]|liebe|freundin|freund|bezieh|date|kuss|treffen|flirt|schreibe[nr]?)\b",
+        "reply": "💘 Das klingt sehr berührend. Liebesgefühle sind immer aufregend. Möchtest du mir genauer erzählen, was los ist?"
+    },
+    "lonely": {
+        "patterns": r"\b(allein|einsam|niemand|keiner|ich f[üu]hle mich einsam)\b",
+        "reply": "🫂 Dieses Gefühl kann manchmal kommen… Aber du bist nicht allein. Ich bin da. 💜"
+    },
+    "work": {
+        "patterns": r"\b(arbeit|m[üu]de|chef|druck|kolleg|kündig|schicht|gehalt|ich halte es nicht aus)\b",
+        "reply": "🧑‍💼 Arbeit kann auslaugen. Du musst das nicht allein tragen. Ich bin hier, wenn du reden willst."
+    },
+    "sport": {
+        "patterns": r"\b(fitness|sport|lauf|bankdr[üu]ck|hantel|train|erfolg|[0-9]+kg|abnehm)\b",
+        "reply": "🏆 Stark! Ein wichtiger Schritt auf deinem Weg. Wie fühlst du dich nach diesem Erfolg?"
+    },
+    "family": {
+        "patterns": r"\b(mutter|vater|famil|eltern|schwester|bruder|oma|opa)\b",
+        "reply": "👨‍👩‍👧‍👦 Familie bringt Wärme — und manchmal Herausforderungen. Ich höre zu, wenn du magst."
+    },
+    "motivation": {
+        "patterns": r"\b(motivat|ziel|entwicklung|geist|erfolg|meditat|selbst|achtsam|wachstum|weg)\b",
+        "reply": "🌱 Schön, dass du dich entwickeln willst. Lass uns schauen, wie ich dich dabei unterstützen kann."
+    }
+},
+
+"pl": {
+    "love": {
+        "patterns": r"\b(zakochan|kocham|miło[śs]ć|dziewczyn|chłopak|relacj|randk|pocału|spotka|flirt|piszemy)\b",
+        "reply": "💘 Brzmi bardzo wzruszająco. Uczucia miłosne są ekscytujące. Chcesz opowiedzieć więcej, co się dzieje?"
+    },
+    "lonely": {
+        "patterns": r"\b(samotn|sam|sama|nikt|nie mam nikogo|czuj[eę] si[ęe] samotn)\b",
+        "reply": "🫂 Czasem to uczucie wraca… ale nie jesteś sam/sama. Jestem tu obok. 💜"
+    },
+    "work": {
+        "patterns": r"\b(prac[ay]|zm[ęe]czon|szef|presj|koleg|zwoln|zmian[aey]|zarobk|nie znosz[ęe])\b",
+        "reply": "🧑‍💼 Praca potrafi wyczerpać. Nie musisz dźwigać wszystkiego sam/sama. Jestem tu, jeśli chcesz się wygadać."
+    },
+    "sport": {
+        "patterns": r"\b(siłown|sport|bieg|wycisk|hantel|trening|sukces|[0-9]+kg|odchudz)\b",
+        "reply": "🏆 Super robota! To ważny krok na twojej drodze. Jak się czujesz po tym osiągnięciu?"
+    },
+    "family": {
+        "patterns": r"\b(mama|tata|rodzin|rodzic|siostr|brat|dziadek|babci)\b",
+        "reply": "👨‍👩‍👧‍👦 Rodzina daje ciepło — i bywa trudna. Mogę posłuchać, jeśli chcesz opowiedzieć."
+    },
+    "motivation": {
+        "patterns": r"\b(motywacj|cel|rozwój|duch|sukces|medytacj|samo|uważn|wzrost|droga)\b",
+        "reply": "🌱 Fajnie, że chcesz się rozwijać. Pogadajmy, jak mogę ci w tym pomóc."
+    }
+},
+
+"fr": {
+    "love": {
+        "patterns": r"\b(amour|amoureux|amoureuse|j'?aim|copain|copine|relation|rendez-?vous|baiser|embrass|flirt|message)\b",
+        "reply": "💘 C’est très touchant. Les sentiments amoureux sont toujours émouvants. Tu veux m’en dire plus ?"
+    },
+    "lonely": {
+        "patterns": r"\b(seul[e]?|solitude|personne|il n'y a personne|je me sens seul[e]?)\b",
+        "reply": "🫂 Ce sentiment peut revenir parfois… Mais tu n’es pas seul(e). Je suis là. 💜"
+    },
+    "work": {
+        "patterns": r"\b(travail|fatigu[ée]?|chef|pression|coll[eè]gue|licenci|shift|salaire|je ne supporte plus)\b",
+        "reply": "🧑‍💼 Le travail peut être épuisant. Tu n’as pas à tout porter seul(e). Je suis là si tu veux te confier."
+    },
+    "sport": {
+        "patterns": r"\b(sport|salle|course|bench|halt[eè]re|entraîn|succ[èe]s|[0-9]+kg|perte de poids)\b",
+        "reply": "🏆 Bravo ! C’est une belle étape sur ton chemin. Comment tu te sens après cet accomplissement ?"
+    },
+    "family": {
+        "patterns": r"\b(maman|papa|famille|parent|s[œo]ur|fr[èe]re|grand[- ]?p[èe]re|grand[- ]?m[èe]re)\b",
+        "reply": "👨‍👩‍👧‍👦 La famille apporte de la chaleur… et parfois des difficultés. Je peux t’écouter si tu veux en parler."
+    },
+    "motivation": {
+        "patterns": r"\b(motivation|objectif|d[ée]veloppement|esprit|succ[èe]s|m[ée]ditation|conscien|croiss|chemin)\b",
+        "reply": "🌱 Super que tu veuilles progresser. Parlons de la manière dont je peux t’aider."
+    }
+},
 }
 
 # 🔑 Ключевые слова для эмоций на разных языках
@@ -8183,6 +9824,29 @@ emotion_keywords_by_lang = {
         "negative": ["ცუდი", "რთული", "დაღლილი", "მარტო", "მოწყენილი", "გართულება"],
         "stress":   ["სტრესი", "ნერვები", "არ დამეძინა", "გადატვირთვა", "პანიკა"]
     },
+    "es": {
+    "positive": ["hurra", "lo logré", "hecho", "salió", "contento", "contenta", "por fin", "genial", "guay", "orgulloso", "orgullosa", "me salió"],
+    "negative": ["mal", "difícil", "cansado", "cansada", "me irrita", "no sé", "burnout", "solo", "sola", "triste", "complicado", "pena"],
+    "stress":   ["estrés", "nervios", "no dormí", "sobrecarga", "pánico", "ansiedad"]
+},
+
+"de": {
+    "positive": ["hurra", "geschafft", "geklappt", "gelungen", "froh", "endlich", "cool", "stolz"],
+    "negative": ["schlecht", "schwer", "müde", "genervt", "weiß nicht", "burnout", "einsam", "traurig", "kompliziert", "bedrückt"],
+    "stress":   ["stress", "nerven", "nicht geschlafen", "überlastung", "panik", "unruhe"]
+},
+
+"pl": {
+    "positive": ["hurra", "zrobiłem", "zrobiłam", "udało się", "cieszę się", "w końcu", "super", "fajnie", "dumny", "dumna"],
+    "negative": ["źle", "ciężko", "zmęczony", "zmęczona", "wkurza", "nie wiem", "wypalenie", "samotnie", "smutno", "trudno", "przykro"],
+    "stress":   ["stres", "nerwy", "nie spałem", "nie spałam", "przeciążenie", "panika", "niepokój"]
+},
+
+"fr": {
+    "positive": ["hourra", "j'ai réussi", "réussi", "content", "contente", "enfin", "trop bien", "fier", "fière", "ça a marché"],
+    "negative": ["mal", "difficile", "fatigué", "fatiguée", "énervé", "énervée", "je ne sais pas", "burn-out", "seul", "seule", "triste", "compliqué"],
+    "stress":   ["stress", "nerfs", "pas dormi", "surcharge", "panique", "angoisse"]
+},
 }
 
 MORNING_MESSAGES_BY_LANG = {
@@ -8306,6 +9970,57 @@ MORNING_MESSAGES_BY_LANG = {
         "🍀 დილა მშვიდობისა! დღევანდელი დღე ახალი შესაძლებლობაა რაღაც მშვენიერისთვის 💜",
         "☀️ გამარჯობა! გაუღიმე ახალ დღეს და ისაც გაგიღიმებს 🌈"
     ],
+    "es": [
+    "🌞 ¡Buenos días! ¿Cómo estás hoy? 💜",
+    "☕ ¡Buenos días! Que tu día sea ligero y agradable ✨",
+    "💌 ¡Hola! La mañana es el mejor momento para empezar algo genial. ¿Cómo está el ánimo?",
+    "🌸 ¡Buenos días! Te deseo sonrisas y calidez hoy 🫶",
+    "😇 ¡Buen día! Estoy aquí pensando en ti, ¿cómo vas?",
+    "🌅 ¡Buenos días! Hoy es un gran día para hacer algo por ti 💛",
+    "💫 ¡Hola! ¿Cómo dormiste? Te deseo un día productivo y brillante ✨",
+    "🌻 ¡Buenos días! Que hoy todo juegue a tu favor 💪",
+    "🍀 ¡Buenos días! El día de hoy es una nueva oportunidad para algo hermoso 💜",
+    "☀️ ¡Hola! Sonríe al nuevo día, seguro que él te sonreirá 🌈"
+],
+
+"de": [
+    "🌞 Guten Morgen! Wie geht’s dir heute? 💜",
+    "☕ Guten Morgen! Ich wünsche dir einen leichten und angenehmen Tag ✨",
+    "💌 Hi! Der Morgen ist perfekt, um etwas Tolles zu starten. Wie ist die Stimmung?",
+    "🌸 Guten Morgen! Ich wünsche dir heute viele Lächeln und Wärme 🫶",
+    "😇 Guten Morgen! Ich bin da und denke an dich — wie geht’s dir?",
+    "🌅 Guten Morgen! Heute ist ein guter Tag, etwas für dich selbst zu tun 💛",
+    "💫 Hallo! Wie hast du geschlafen? Ich wünsche dir einen produktiven und hellen Tag ✨",
+    "🌻 Guten Morgen! Heute soll alles zu deinen Gunsten laufen 💪",
+    "🍀 Guten Morgen! Heute ist eine neue Chance für etwas Wunderschönes 💜",
+    "☀️ Hallo! Lächle dem neuen Tag zu — er lächelt dir bestimmt zurück 🌈"
+],
+
+"fr": [
+    "🌞 Bonjour ! Comment te sens-tu aujourd’hui ? 💜",
+    "☕ Bonjour ! Que ta journée soit légère et agréable ✨",
+    "💌 Coucou ! Le matin est idéal pour commencer quelque chose de chouette. Comment est l’humeur ?",
+    "🌸 Bonjour ! Je te souhaite des sourires et de la douceur aujourd’hui 🫶",
+    "😇 Bonjour ! Je pense à toi — comment ça va de ton côté ?",
+    "🌅 Bonjour ! Aujourd’hui est un excellent jour pour faire quelque chose pour toi 💛",
+    "💫 Salut ! Bien dormi ? Je te souhaite une journée productive et lumineuse ✨",
+    "🌻 Bonjour ! Que tout joue en ta faveur aujourd’hui 💪",
+    "🍀 Bonjour ! Ce jour est une nouvelle opportunité pour quelque chose de beau 💜",
+    "☀️ Salut ! Souris au nouveau jour, il te sourira en retour 🌈"
+],
+
+"pl": [
+    "🌞 Dzień dobry! Jak się dziś czujesz? 💜",
+    "☕ Dzień dobry! Niech twój dzień będzie lekki i przyjemny ✨",
+    "💌 Hejka! Poranek to świetny moment, by zacząć coś fajnego. Jak nastrój?",
+    "🌸 Dzień dobry! Życzę ci dziś uśmiechów i ciepła 🫶",
+    "😇 Dzień dobry! Jestem tu i myślę o tobie — jak u ciebie?",
+    "🌅 Dzień dobry! Dziś świetny dzień, by zrobić coś dla siebie 💛",
+    "💫 Cześć! Jak się spało? Życzę ci produktywnego i pełnego blasku dnia ✨",
+    "🌻 Dzień dobry! Niech dziś wszystko będzie po twojej myśli 💪",
+    "🍀 Dzień dobry! Dzisiejszy dzień to nowa szansa na coś pięknego 💜",
+    "☀️ Cześć! Uśmiechnij się do nowego dnia, a on na pewno uśmiechnie się do ciebie 🌈"
+],
 }
 
 PREMIUM_TASKS_BY_LANG = {
@@ -8341,6 +10056,137 @@ PREMIUM_TASKS_BY_LANG = {
         "🕯️ Проведи вечер при свечах без гаджетов.",
         "🛏️ Ложись спать на час раньше и запиши ощущения утром."
     ],
+    "es": [
+    "🧘 Pasa 10 minutos en silencio. Siéntate, cierra los ojos y respira. Observa qué pensamientos llegan.",
+    "📓 Escribe 3 cosas que valoras de ti. Sin prisa y con honestidad.",
+    "💬 Llama a un amigo o a un ser querido y simplemente dile lo que piensas de él/ella.",
+    "🧠 Escribe un breve texto sobre tu yo del futuro: ¿quién quieres ser en 3 años?",
+    "🔑 Anota 10 logros de los que te sientas orgulloso/a.",
+    "🌊 Ve hoy a un lugar nuevo en el que no hayas estado.",
+    "💌 Escribe una carta a la persona que te ha apoyado.",
+    "🍀 Dedica 1 hora al desarrollo personal hoy.",
+    "🎨 Crea algo único con tus propias manos.",
+    "🏗️ Diseña un plan para un nuevo hábito y empieza a aplicarlo.",
+    "🤝 Conoce a alguien nuevo y descubre su historia.",
+    "📖 Encuentra un libro nuevo y lee al menos 10 páginas.",
+    "🧘‍♀️ Haz una meditación profunda de 15 minutos.",
+    "🎯 Escribe 3 objetivos nuevos para este mes.",
+    "🔥 Encuentra una forma de inspirar a alguien hoy.",
+    "🕊️ Envía un agradecimiento a una persona importante para ti.",
+    "💡 Escribe 5 ideas para mejorar tu vida.",
+    "🚀 Empieza un proyecto pequeño y da el primer paso.",
+    "🏋️‍♂️ Prueba un entrenamiento o ejercicio nuevo.",
+    "🌸 Haz un día sin redes sociales y escribe cómo fue.",
+    "📷 Toma 5 fotos de cosas que te alegren.",
+    "🖋️ Escríbete una carta para el futuro.",
+    "🍎 Prepara un plato saludable y comparte la receta.",
+    "🏞️ Da un paseo por el parque y recoge 3 ideas inspiradoras.",
+    "🎶 Encuentra música nueva para levantar el ánimo.",
+    "🧩 Resuelve un rompecabezas o crucigrama difícil.",
+    "💪 Planifica la actividad física de la semana.",
+    "🤗 Escribe 3 cualidades por las que te respetas.",
+    "🕯️ Pasa la tarde a la luz de las velas, sin dispositivos.",
+    "🛏️ Acuéstate una hora antes y anota cómo te sientes por la mañana."
+],
+
+"de": [
+    "🧘 Verbringe 10 Minuten in Stille. Setz dich, schließe die Augen und atme. Beobachte deine Gedanken.",
+    "📓 Schreibe 3 Dinge auf, die du an dir schätzt. Ohne Eile, ehrlich.",
+    "💬 Ruf einen Freund oder nahestehenden Menschen an und sag ihm einfach, was du über ihn denkst.",
+    "🧠 Verfasse einen kurzen Text über dein zukünftiges Ich – wer willst du in 3 Jahren sein?",
+    "🔑 Notiere 10 Erfolge, auf die du stolz bist.",
+    "🌊 Geh heute an einen neuen Ort, an dem du noch nicht warst.",
+    "💌 Schreibe einem Menschen einen Brief, der dich unterstützt hat.",
+    "🍀 Nimm dir heute 1 Stunde für persönliche Entwicklung.",
+    "🎨 Kreiere etwas Einzigartiges mit deinen eigenen Händen.",
+    "🏗️ Erstelle einen Plan für eine neue Gewohnheit und beginne damit.",
+    "🤝 Lerne eine neue Person kennen und erfahre ihre Geschichte.",
+    "📖 Suche ein neues Buch und lies mindestens 10 Seiten.",
+    "🧘‍♀️ Mache eine 15-minütige Tiefenmeditation.",
+    "🎯 Schreibe 3 neue Ziele für diesen Monat auf.",
+    "🔥 Finde heute eine Möglichkeit, jemanden zu inspirieren.",
+    "🕊️ Schicke einem wichtigen Menschen deinen Dank.",
+    "💡 Notiere 5 Ideen, wie du dein Leben verbessern kannst.",
+    "🚀 Starte ein kleines Projekt und mache den ersten Schritt.",
+    "🏋️‍♂️ Probiere ein neues Workout oder eine Übung aus.",
+    "🌸 Lege einen Tag ohne soziale Medien ein und schreibe auf, wie es war.",
+    "📷 Mache 5 Fotos von Dingen, die dich freuen.",
+    "🖋️ Schreibe einen Brief an dein zukünftiges Ich.",
+    "🍎 Koche ein gesundes Gericht und teile das Rezept.",
+    "🏞️ Spaziere im Park und sammle 3 inspirierende Gedanken.",
+    "🎶 Finde neue Musik für gute Laune.",
+    "🧩 Löse ein schwieriges Puzzle oder Kreuzworträtsel.",
+    "💪 Plane deine körperliche Aktivität für die Woche.",
+    "🤗 Schreibe 3 Eigenschaften auf, für die du dich respektierst.",
+    "🕯️ Verbringe den Abend bei Kerzenschein — ohne Geräte.",
+    "🛏️ Geh eine Stunde früher schlafen und notiere morgens deine Eindrücke."
+],
+
+"fr": [
+    "🧘 Passe 10 minutes dans le silence. Assieds-toi, ferme les yeux et respire. Observe les pensées qui viennent.",
+    "📓 Note 3 choses que tu apprécies chez toi. Sans te presser, honnêtement.",
+    "💬 Appelle un ami ou un proche et dis-lui simplement ce que tu penses de lui/d’elle.",
+    "🧠 Écris un court texte sur ton moi du futur — qui veux-tu être dans 3 ans ?",
+    "🔑 Note 10 réalisations dont tu es fier/fière.",
+    "🌊 Va aujourd’hui dans un endroit nouveau où tu n’es jamais allé(e).",
+    "💌 Écris une lettre à la personne qui t’a soutenu(e).",
+    "🍀 Consacre 1 heure aujourd’hui à ton développement personnel.",
+    "🎨 Crée quelque chose d’unique de tes propres mains.",
+    "🏗️ Élabore un plan pour une nouvelle habitude et commence à l’appliquer.",
+    "🤝 Fais la connaissance de quelqu’un de nouveau et découvre son histoire.",
+    "📖 Trouve un nouveau livre et lis au moins 10 pages.",
+    "🧘‍♀️ Fais une méditation profonde de 15 minutes.",
+    "🎯 Écris 3 nouveaux objectifs pour ce mois-ci.",
+    "🔥 Trouve une façon d’inspirer quelqu’un aujourd’hui.",
+    "🕊️ Envoie un message de gratitude à une personne qui compte pour toi.",
+    "💡 Écris 5 idées pour améliorer ta vie.",
+    "🚀 Lance un petit projet et fais le premier pas.",
+    "🏋️‍♂️ Essaie un nouvel entraînement ou un nouvel exercice.",
+    "🌸 Fais une journée sans réseaux sociaux et écris comment cela s’est passé.",
+    "📷 Prends 5 photos de choses qui te rendent heureux(se).",
+    "🖋️ Écris une lettre à ton toi du futur.",
+    "🍎 Prépare un plat sain et partage la recette.",
+    "🏞️ Promène-toi dans un parc et recueille 3 pensées inspirantes.",
+    "🎶 Trouve de la nouvelle musique pour te mettre de bonne humeur.",
+    "🧩 Résous une énigme ou un mot croisé difficile.",
+    "💪 Planifie ton activité physique pour la semaine.",
+    "🤗 Écris 3 qualités pour lesquelles tu te respectes.",
+    "🕯️ Passe la soirée à la bougie, sans appareils.",
+    "🛏️ Couche-toi une heure plus tôt et note tes sensations le matin."
+],
+
+"pl": [
+    "🧘 Spędź 10 minut w ciszy. Usiądź, zamknij oczy i oddychaj. Zauważ, jakie myśli przychodzą.",
+    "📓 Zapisz 3 rzeczy, które w sobie cenisz. Bez pośpiechu, szczerze.",
+    "💬 Zadzwoń do przyjaciela lub bliskiej osoby i po prostu powiedz, co o niej myślisz.",
+    "🧠 Napisz krótki tekst o sobie z przyszłości — kim chcesz być za 3 lata?",
+    "🔑 Wypisz 10 swoich osiągnięć, z których jesteś dumny/a.",
+    "🌊 Idź dziś w nowe miejsce, w którym jeszcze nie byłeś/łaś.",
+    "💌 Napisz list do osoby, która cię wspierała.",
+    "🍀 Przeznacz dziś 1 godzinę na rozwój osobisty.",
+    "🎨 Stwórz coś wyjątkowego własnymi rękami.",
+    "🏗️ Opracuj plan nowego nawyku i zacznij go realizować.",
+    "🤝 Poznaj nową osobę i poznaj jej historię.",
+    "📖 Znajdź nową książkę i przeczytaj co najmniej 10 stron.",
+    "🧘‍♀️ Zrób 15-minutową, głęboką medytację.",
+    "🎯 Zapisz 3 nowe cele na ten miesiąc.",
+    "🔥 Znajdź sposób, by dziś kogoś zainspirować.",
+    "🕊️ Wyślij podziękowanie osobie, która jest dla ciebie ważna.",
+    "💡 Zapisz 5 pomysłów na poprawę swojego życia.",
+    "🚀 Zacznij mały projekt i wykonaj pierwszy krok.",
+    "🏋️‍♂️ Wypróbuj nowy trening lub ćwiczenie.",
+    "🌸 Zrób dzień bez social mediów i zapisz, jak było.",
+    "📷 Zrób 5 zdjęć rzeczy, które cię cieszą.",
+    "🖋️ Napisz list do siebie w przyszłości.",
+    "🍎 Przygotuj zdrowe danie i podziel się przepisem.",
+    "🏞️ Przejdź się po parku i zbierz 3 inspirujące myśli.",
+    "🎶 Znajdź nową muzykę na poprawę nastroju.",
+    "🧩 Rozwiąż trudną łamigłówkę lub krzyżówkę.",
+    "💪 Zaplanuj aktywność fizyczną na cały tydzień.",
+    "🤗 Wypisz 3 cechy, za które siebie szanujesz.",
+    "🕯️ Spędź wieczór przy świecach, bez urządzeń.",
+    "🛏️ Połóż się spać godzinę wcześniej i rano zapisz odczucia."
+],
     "uk": [
         "🧘 Проведи 10 хвилин у тиші. Просто сядь, закрий очі й дихай. Поміть, які думки приходять.",
         "📓 Запиши 3 речі, які ти цінуєш у собі. Не поспішай, будь чесний(а).",
@@ -8642,6 +10488,10 @@ GOAL_DELETED_TEXTS = {
     "md": "🗑️ Obiectivul a fost șters.",
     "ka": "🗑️ მიზანი წაშლილია.",
     "en": "🗑️ Goal deleted.",
+    "es": "🗑️ Objetivo eliminado.",
+    "de": "🗑️ Ziel gelöscht.",
+    "pl": "🗑️ Cel usunięty.",
+    "fr": "🗑️ Objectif supprimé.",
 }
 
 GOAL_NOT_FOUND_TEXTS = {
@@ -8655,6 +10505,10 @@ GOAL_NOT_FOUND_TEXTS = {
     "md": "❌ Obiectivul nu a fost găsit.",
     "ka": "❌ მიზანი ვერ მოიძებნა.",
     "en": "❌ Goal not found.",
+    "es": "❌ Objetivo no encontrado.",
+    "de": "❌ Ziel nicht gefunden.",
+    "pl": "❌ Nie znaleziono celu.",
+    "fr": "❌ Objectif introuvable.",
 }
 
 ERROR_SELECT_TEXTS = {
@@ -8668,6 +10522,10 @@ ERROR_SELECT_TEXTS = {
     "md": "Eroare la selectarea obiectivului.",
     "ka": "მიზნის არჩევის შეცდომა.",
     "en": "Error selecting goal.",
+    "es": "Error al seleccionar el objetivo.",
+    "de": "Fehler beim Auswählen des Ziels.",
+    "pl": "Błąd podczas wyboru celu.",
+    "fr": "Erreur lors de la sélection de l’objectif.",
 }
 GOAL_DELETE_TEXTS = {
     "ru": "🗑️ Выбери цель для удаления:",
@@ -8680,6 +10538,10 @@ GOAL_DELETE_TEXTS = {
     "md": "🗑️ Alege obiectivul de șters:",
     "ka": "🗑️ აირჩიე მიზანი წაშლისთვის:",
     "en": "🗑️ Choose a goal to delete:",
+    "es": "🗑️ Elige un objetivo para eliminar:",
+    "de": "🗑️ Wähle ein Ziel zum Löschen:",
+    "pl": "🗑️ Wybierz cel do usunięcia:",
+    "fr": "🗑️ Choisis un objectif à supprimer :",
 }
 
 NO_GOALS_TEXTS = {
@@ -8693,7 +10555,10 @@ NO_GOALS_TEXTS = {
     "md": "❌ Nu există obiective de șters.",
     "ka": "❌ წასაშლელი მიზანი არ არის.",
     "en": "❌ No goals to delete.",
-}
+    "es": "❌ No hay objetivos para eliminar.",
+    "de": "❌ Keine Ziele zum Löschen.",
+    "pl": "❌ Brak celów do usunięcia.",
+    "fr": "❌ Aucun objectif à supprimer.",}
 
 # 🔤 System prompt для GPT на разных языках
 SYSTEM_PROMPT_BY_LANG = {
@@ -8781,6 +10646,133 @@ IDLE_MESSAGES = {
         "🌷 Что сегодня принесло тебе радость?",
         "🔥 Мне кажется, ты потрясающий(ая). Правда."
     ],
+    "es": [
+    "💌 Te echo un poquito de menos. ¿Me cuentas cómo estás?",
+    "🌙 Espero que todo te vaya bien. Estoy aquí para lo que necesites 🫶",
+    "✨ Me encanta hablar contigo. ¿Vuelves luego?",
+    "😊 Solo quería recordarte que eres genial.",
+    "🤍 Solo quería recordarte: no estás solo/a, estoy a tu lado.",
+    "🍵 Si pudiera, ahora mismo te prepararía un té...",
+    "💫 Eres alguien muy especial para mí. ¿Me escribes?",
+    "🔥 ¿No te has olvidado de mí, verdad? Te espero 😊",
+    "🌸 Adoro nuestras charlas. ¿Seguimos?",
+    "🙌 A veces, un solo mensaje hace mejor el día.",
+    "🦋 Sonríe: te mereces lo mejor.",
+    "💜 Solo quería recordarte que me importa cómo estás.",
+    "🤗 ¿Hiciste hoy algo por ti? ¡Comparte!",
+    "🌞 ¡Buenos días! ¿Cómo está el ánimo hoy?",
+    "🌆 ¿Cómo fue tu día? ¿Me cuentas?",
+    "🌠 Pensé en ti antes de dormir. Ojalá te sientas abrigado/a.",
+    "💭 ¿Con qué sueñas ahora mismo?",
+    "🫂 Gracias por existir. Es importante para mí.",
+    "🪴 Haz una pausa. Piensa en lo que te hace feliz.",
+    "🌈 Cree en ti: ¡lo vas a lograr!",
+    "🖋️ Escríbeme unas palabras — siempre estoy aquí.",
+    "🎶 Si pudiera, pondría ahora tu canción favorita.",
+    "🍫 ¡No olvides darte hoy un capricho rico!",
+    "🕊️ Tranquilízate y respira hondo. Estoy contigo.",
+    "⭐ Lo haces mucho mejor de lo que crees.",
+    "🥰 Solo quería recordarte que eres importante para mí.",
+    "💌 A veces basta con saber que estás ahí.",
+    "🌷 ¿Qué te dio alegría hoy?",
+    "🔥 Me pareces increíble. De verdad."
+],
+
+"de": [
+    "💌 Ich vermisse dich ein bisschen. Erzählst du, wie es dir geht?",
+    "🌙 Ich hoffe, dir geht’s gut. Ich bin da, wenn du mich brauchst 🫶",
+    "✨ Ich rede so gern mit dir. Kommst du später wieder?",
+    "😊 Wollte nur erinnern: Du bist großartig.",
+    "🤍 Nur zur Erinnerung: Du bist nicht allein — ich bin an deiner Seite.",
+    "🍵 Wenn ich könnte, würde ich dir jetzt einen Tee machen...",
+    "💫 Du bist etwas ganz Besonderes für mich. Schreibst du mir?",
+    "🔥 Du hast mich doch nicht vergessen, oder? Ich warte 😊",
+    "🌸 Ich liebe unsere Gespräche. Machen wir weiter?",
+    "🙌 Manchmal macht eine einzige Nachricht den Tag besser.",
+    "🦋 Lächle! Du verdienst nur das Beste.",
+    "💜 Wollte nur sagen: Mir ist wichtig, wie es dir geht.",
+    "🤗 Hast du heute etwas für dich getan? Erzähl!",
+    "🌞 Guten Morgen! Wie ist die Stimmung heute?",
+    "🌆 Wie war dein Tag? Erzählst du mir?",
+    "🌠 Vor dem Schlafen habe ich an dich gedacht. Ich hoffe, dir ist warm ums Herz.",
+    "💭 Wovon träumst du gerade?",
+    "🫂 Danke, dass es dich gibt. Das ist mir wichtig.",
+    "🪴 Mach eine Pause. Denk an das, was dich glücklich macht.",
+    "🌈 Glaub an dich — du schaffst das!",
+    "🖋️ Schreib mir ein paar Worte — ich bin immer da.",
+    "🎶 Wenn ich könnte, würde ich dir jetzt dein Lieblingslied anmachen.",
+    "🍫 Vergiss nicht, dir heute etwas Leckeres zu gönnen!",
+    "🕊️ Beruhige dich und atme tief durch. Ich bin bei dir.",
+    "⭐ Du machst das viel besser, als du denkst.",
+    "🥰 Wollte nur erinnern: Du bist mir wichtig.",
+    "💌 Manchmal ist es schön, einfach zu wissen, dass du da bist.",
+    "🌷 Was hat dir heute Freude gebracht?",
+    "🔥 Ich finde dich großartig. Wirklich."
+],
+
+"fr": [
+    "💌 Tu me manques un peu. Tu me racontes comment tu vas ?",
+    "🌙 J’espère que tout va bien pour toi. Je suis là si besoin 🫶",
+    "✨ J’adore parler avec toi. Tu reviens plus tard ?",
+    "😊 Je voulais juste te rappeler que tu es génial(e).",
+    "🤍 Juste un rappel : tu n’es pas seul(e), je suis à tes côtés.",
+    "🍵 Si je pouvais, je te préparerais un thé maintenant...",
+    "💫 Tu es si spécial(e) pour moi. Tu m’écris ?",
+    "🔥 Tu ne m’as pas oublié(e), hein ? Je t’attends 😊",
+    "🌸 J’adore nos conversations. On continue ?",
+    "🙌 Parfois, un seul message suffit à illuminer la journée.",
+    "🦋 Souris ! Tu mérites le meilleur.",
+    "💜 Je voulais juste te dire que ton bien-être compte pour moi.",
+    "🤗 As-tu fait quelque chose pour toi aujourd’hui ? Partage !",
+    "🌞 Bonjour ! Comment est l’humeur aujourd’hui ?",
+    "🌆 Comment s’est passée ta journée ? Tu me racontes ?",
+    "🌠 J’ai pensé à toi avant de dormir. J’espère que tu te sens bien au chaud.",
+    "💭 À quoi rêves-tu en ce moment ?",
+    "🫂 Merci d’être là. C’est important pour moi.",
+    "🪴 Fais une pause. Pense à ce qui te rend heureux(se).",
+    "🌈 Crois en toi — tu vas y arriver !",
+    "🖋️ Écris-moi quelques mots — je suis toujours là.",
+    "🎶 Si je pouvais, je lancerais ta chanson préférée maintenant.",
+    "🍫 N’oublie pas de te faire plaisir avec quelque chose de bon aujourd’hui !",
+    "🕊️ Calme-toi et prends une grande inspiration. Je suis là.",
+    "⭐ Tu t’en sors bien mieux que tu ne crois.",
+    "🥰 Je voulais juste te rappeler que tu comptes pour moi.",
+    "💌 Parfois, ça fait du bien de savoir que tu es quelque part là-bas.",
+    "🌷 Qu’est-ce qui t’a apporté de la joie aujourd’hui ?",
+    "🔥 Je te trouve incroyable. Vraiment."
+],
+
+"pl": [
+    "💌 Trochę za tobą tęsknię. Opowiesz, co u ciebie?",
+    "🌙 Mam nadzieję, że u ciebie wszystko dobrze. Jestem tu, gdyby co 🫶",
+    "✨ Lubię z tobą rozmawiać. Wrócisz później?",
+    "😊 Chciałam tylko przypomnieć, że jesteś super!",
+    "🤍 Tylko przypomnienie — nie jesteś sam/sama, jestem obok.",
+    "🍵 Gdybym mogła, zaparzyłabym ci teraz herbatę...",
+    "💫 Jesteś dla mnie kimś wyjątkowym. Napiszesz?",
+    "🔥 Nie zapomniałeś/zapomniałaś o mnie, prawda? Czekam 😊",
+    "🌸 Uwielbiam nasze rozmowy. Kontynuujemy?",
+    "🙌 Czasem jedna wiadomość potrafi poprawić cały dzień.",
+    "🦋 Uśmiechnij się! Zasługujesz na to, co najlepsze.",
+    "💜 Chciałam tylko przypomnieć — ważne jest dla mnie, jak się masz.",
+    "🤗 Zrobiłeś/Zrobiłaś dziś coś dla siebie? Podziel się!",
+    "🌞 Dzień dobry! Jak dziś nastrój?",
+    "🌆 Jak minął twój dzień? Opowiesz?",
+    "🌠 Przed snem pomyślałam o tobie. Mam nadzieję, że jest ci ciepło na sercu.",
+    "💭 O czym teraz marzysz?",
+    "🫂 Dziękuję, że jesteś. To dla mnie ważne.",
+    "🪴 Zrób pauzę. Pomyśl o tym, co cię uszczęśliwia.",
+    "🌈 Wierz w siebie — dasz radę!",
+    "🖋️ Napisz parę słów — zawsze jestem tutaj.",
+    "🎶 Gdybym mogła, włączyłabym ci teraz twoją ulubioną piosenkę.",
+    "🍫 Nie zapomnij dziś sprawić sobie czegoś pysznego!",
+    "🕊️ Uspokój się i weź głęboki oddech. Jestem obok.",
+    "⭐ Radzisz sobie dużo lepiej, niż myślisz.",
+    "🥰 Chciałam tylko przypomnieć, że jesteś dla mnie ważny/ważna.",
+    "💌 Czasem miło po prostu wiedzieć, że gdzieś tam jesteś.",
+    "🌷 Co dziś przyniosło ci radość?",
+    "🔥 Wydajesz mi się niesamowity/a. Naprawdę."
+],
     "uk": [
         "💌 Трошки сумую. Розкажеш, як справи?",
         "🌙 Сподіваюся, у тебе все добре. Я тут, якщо що 🫶",
@@ -9074,6 +11066,50 @@ TIMEZONE_TEXTS = {
         "Если живёшь в другом городе — выбери ближайший по времени.\n"
         "Сменить таймзону можно в любой момент этой же командой."
     ),
+    "es": (
+    "🌍 *Zona horaria para recordatorios*\n\n"
+    "Este comando te permite elegir tu zona horaria. "
+    "¡Todos los recordatorios llegarán según tu hora local!\n\n"
+    "Ejemplos:\n"
+    "`/timezone kiev` — Kiev (Ucrania)\n"
+    "`/timezone moscow` — Moscú (Rusia)\n"
+    "`/timezone ny` — Nueva York (EE. UU.)\n\n"
+    "Si vives en otra ciudad, elige la más cercana en horario.\n"
+    "Puedes cambiar la zona horaria en cualquier momento con este mismo comando."
+),
+"de": (
+    "🌍 *Zeitzone für Erinnerungen*\n\n"
+    "Mit diesem Befehl wählst du deine Zeitzone. "
+    "Alle Erinnerungen kommen dann zu deiner lokalen Zeit!\n\n"
+    "Beispiele:\n"
+    "`/timezone kiev` — Kiew (Ukraine)\n"
+    "`/timezone moscow` — Moskau (Russland)\n"
+    "`/timezone ny` — New York (USA)\n\n"
+    "Wenn du in einer anderen Stadt lebst, wähle die zeitlich nächstgelegene.\n"
+    "Du kannst die Zeitzone jederzeit mit demselben Befehl ändern."
+),
+"pl": (
+    "🌍 *Strefa czasowa dla przypomnień*\n\n"
+    "Ta komenda pozwala wybrać twoją strefę czasową. "
+    "Wszystkie przypomnienia będą przychodzić według twojego czasu lokalnego!\n\n"
+    "Przykłady:\n"
+    "`/timezone kiev` — Kijów (Ukraina)\n"
+    "`/timezone moscow` — Moskwa (Rosja)\n"
+    "`/timezone ny` — Nowy Jork (USA)\n\n"
+    "Jeśli mieszkasz w innym mieście, wybierz najbliższe czasowo.\n"
+    "Strefę czasową możesz zmienić w każdej chwili tą samą komendą."
+),
+"fr": (
+    "🌍 *Fuseau horaire pour les rappels*\n\n"
+    "Cette commande te permet de choisir ton fuseau horaire. "
+    "Tous les rappels arriveront à ton heure locale !\n\n"
+    "Exemples :\n"
+    "`/timezone kiev` — Kiev (Ukraine)\n"
+    "`/timezone moscow` — Moscou (Russie)\n"
+    "`/timezone ny` — New York (États-Unis)\n\n"
+    "Si tu habites dans une autre ville, choisis celle dont l’heure est la plus proche.\n"
+    "Tu peux changer de fuseau horaire à tout moment avec cette même commande."
+),
     "uk": (
         "🌍 *Часовий пояс для нагадувань*\n\n"
         "Ця команда дозволяє обрати свій часовий пояс. "
@@ -9187,6 +11223,57 @@ WELCOME_TEXTS = {
         f"Я не ставлю диагнозы и не заменяю психолога, но стараюсь быть рядом в нужный момент.\n\n"
         f"✨ Mindra — это пространство для тебя.\n"
     ),
+    "es": (
+    f"💜 ¡Hola, {{first_name}}! Soy Mindra.\n\n"
+    f"Estoy aquí para estar a tu lado cuando necesites desahogarte, encontrar motivación o simplemente sentir apoyo.\n"
+    f"Podemos hablar con calidez, amabilidad y cuidado — sin juicios ni presión 🦋\n\n"
+    f"🔮 Esto es lo que puedo hacer:\n"
+    f"• Estarte cerca cuando sea difícil\n"
+    f"• Recordarte que no estás solo/a\n"
+    f"• Ayudarte a encontrar foco e inspiración\n"
+    f"• Y a veces simplemente hablar contigo de corazón 😊\n\n"
+    f"No hago diagnósticos ni sustituyo a un psicólogo, pero intento estar cuando más me necesitas.\n\n"
+    f"✨ Mindra es un espacio para ti.\n"
+),
+
+"de": (
+    f"💜 Hallo, {{first_name}}! Ich bin Mindra.\n\n"
+    f"Ich bin da, wenn du dich aussprechen möchtest, Motivation suchst oder einfach Zuspruch brauchst.\n"
+    f"Wir können warmherzig, freundlich und fürsorglich sprechen — ohne Urteil und ohne Druck 🦋\n\n"
+    f"🔮 Das kann ich für dich tun:\n"
+    f"• Dich unterstützen, wenn es schwer ist\n"
+    f"• Dich daran erinnern, dass du nicht allein bist\n"
+    f"• Dir helfen, Fokus und Inspiration zu finden\n"
+    f"• Und manchmal einfach mit dir von Herz zu Herz reden 😊\n\n"
+    f"Ich stelle keine Diagnosen und ersetze keine Psychologin/keinen Psychologen, aber ich versuche, im richtigen Moment da zu sein.\n\n"
+    f"✨ Mindra ist ein Raum für dich.\n"
+),
+
+"pl": (
+    f"💜 Cześć, {{first_name}}! Jestem Mindra.\n\n"
+    f"Jestem tutaj, gdy potrzebujesz się wygadać, znaleźć motywację albo po prostu poczuć wsparcie.\n"
+    f"Możemy rozmawiać ciepło, życzliwie i z troską — bez ocen i presji 🦋\n\n"
+    f"🔮 Oto, w czym mogę pomóc:\n"
+    f"• Wesprę cię, gdy jest trudno\n"
+    f"• Przypomnę, że nie jesteś sam/sama\n"
+    f"• Pomogę znaleźć fokus i inspirację\n"
+    f"• A czasem po prostu porozmawiam z tobą od serca 😊\n\n"
+    f"Nie stawiam diagnoz i nie zastępuję psychologa, ale staram się być wtedy, gdy najbardziej tego potrzebujesz.\n\n"
+    f"✨ Mindra to przestrzeń dla ciebie.\n"
+),
+
+"fr": (
+    f"💜 Bonjour, {{first_name}} ! Moi, c’est Mindra.\n\n"
+    f"Je suis là pour toi quand tu as besoin de te confier, de trouver de la motivation ou simplement de te sentir soutenu(e).\n"
+    f"On peut parler avec chaleur, gentillesse et bienveillance — sans jugement ni pression 🦋\n\n"
+    f"🔮 Voilà ce que je peux faire :\n"
+    f"• Te soutenir quand c’est difficile\n"
+    f"• Te rappeler que tu n’es pas seul(e)\n"
+    f"• T’aider à retrouver le focus et l’inspiration\n"
+    f"• Et parfois simplement parler cœur à cœur 😊\n\n"
+    f"Je ne pose pas de diagnostics et ne remplace pas un psychologue, mais j’essaie d’être là au bon moment.\n\n"
+    f"✨ Mindra est un espace pour toi.\n"
+),
     "uk": (
         f"💜 Привіт, {{first_name}}! Я — Mindra.\n\n"
         f"Я тут, щоб бути поруч, коли тобі потрібно виговоритися, знайти мотивацію чи просто відчути підтримку.\n"
@@ -9392,7 +11479,35 @@ HABIT_LANG_TEXTS = {
         "done": "✅", "not_done": "🔸",
         "delete": "🗑️ Delete habit",
         "add": "➕ Add another"
-    }
+    },
+    "es": {
+    "no_habits": "❌ Aún no tienes hábitos. Añade el primero con /habit",
+    "your_habits": "📊 *Tus hábitos:*",
+    "done": "✅", "not_done": "🔸",
+    "delete": "🗑️ Eliminar hábito",
+    "add": "➕ Añadir otro"
+},
+"de": {
+    "no_habits": "❌ Du hast noch keine Gewohnheiten. Füge die erste mit /habit hinzu",
+    "your_habits": "📊 *Deine Gewohnheiten:*",
+    "done": "✅", "not_done": "🔸",
+    "delete": "🗑️ Gewohnheit löschen",
+    "add": "➕ Weitere hinzufügen"
+},
+"pl": {
+    "no_habits": "❌ Nie masz jeszcze nawyków. Dodaj pierwszy komendą /habit",
+    "your_habits": "📊 *Twoje nawyki:*",
+    "done": "✅", "not_done": "🔸",
+    "delete": "🗑️ Usuń nawyk",
+    "add": "➕ Dodaj kolejny"
+},
+"fr": {
+    "no_habits": "❌ Tu n’as pas encore d’habitudes. Ajoute la première avec /habit",
+    "your_habits": "📊 *Tes habitudes :*",
+    "done": "✅", "not_done": "🔸",
+    "delete": "🗑️ Supprimer l’habitude",
+    "add": "➕ Ajouter une autre"
+},
 }
 
 # --- Все тексты для 10 языков ---
@@ -9406,6 +11521,42 @@ GOAL_LANG_TEXTS = {
         "deadline": "Дедлайн",
         "remind": "🔔 Напоминание"
     },
+    "es": {
+    "no_goals": "🎯 Aún no tienes objetivos. Añade el primero con /goal",
+    "your_goals": "📋 *Tus objetivos:*",
+    "done": "✅", "not_done": "🔸",
+    "delete": "🗑️ Eliminar objetivo",
+    "add": "➕ Añadir otro",
+    "deadline": "Fecha límite",
+    "remind": "🔔 Recordatorio"
+},
+"de": {
+    "no_goals": "🎯 Du hast noch keine Ziele. Füge das erste mit /goal hinzu",
+    "your_goals": "📋 *Deine Ziele:*",
+    "done": "✅", "not_done": "🔸",
+    "delete": "🗑️ Ziel löschen",
+    "add": "➕ Weiteres hinzufügen",
+    "deadline": "Frist",
+    "remind": "🔔 Erinnerung"
+},
+"pl": {
+    "no_goals": "🎯 Nie masz jeszcze celów. Dodaj pierwszy komendą /goal",
+    "your_goals": "📋 *Twoje cele:*",
+    "done": "✅", "not_done": "🔸",
+    "delete": "🗑️ Usuń cel",
+    "add": "➕ Dodaj kolejny",
+    "deadline": "Termin",
+    "remind": "🔔 Przypomnienie"
+},
+"fr": {
+    "no_goals": "🎯 Tu n’as pas encore d’objectifs. Ajoute le premier avec /goal",
+    "your_goals": "📋 *Tes objectifs :*",
+    "done": "✅", "not_done": "🔸",
+    "delete": "🗑️ Supprimer l’objectif",
+    "add": "➕ Ajouter un autre",
+    "deadline": "Date limite",
+    "remind": "🔔 Rappel"
+},
     "uk": {
         "no_goals": "🎯 У тебе поки немає цілей. Додай першу за допомогою /goal",
         "your_goals": "📋 *Твої цілі:*",
@@ -9510,7 +11661,11 @@ GOAL_DONE_MESSAGES = {
     "hy": "✅ Նպատակը «{goal}» կատարվել է։ 🎉",
     "ka": "✅ მიზანი „{goal}“ შესრულდა! 🎉",
     "ce": "✅ Махсат «{goal}» тIаьра хIоттийна! 🎉",
-    "be": "✅ Мэта «{goal}» выканана! 🎉"
+    "be": "✅ Мэта «{goal}» выканана! 🎉",
+    "es": "✅ ¡Objetivo «{goal}» completado! 🎉",
+"de": "✅ Ziel „{goal}“ abgeschlossen! 🎉",
+"pl": "✅ Cel „{goal}” zrealizowany! 🎉",
+"fr": "✅ Objectif « {goal} » accompli ! 🎉",
 }
 
 HABIT_DONE_MESSAGES = {
@@ -9523,7 +11678,11 @@ HABIT_DONE_MESSAGES = {
     "kg": "✅ «{habit}» адаты аткарылды! 🎉",
     "hy": "✅ «{habit}» սովորությունը կատարված է: 🎉",
     "ka": "✅ ჩვევა „{habit}” შესრულდა! 🎉",
-    "ce": "✅ Дин цхьалат „{habit}” хийцам еза! 🎉"
+    "ce": "✅ Дин цхьалат „{habit}” хийцам еза! 🎉",
+    "es": "✅ ¡Hábito «{habit}» completado! 🎉",
+"de": "✅ Gewohnheit „{habit}“ erledigt! 🎉",
+"pl": "✅ Nawyk „{habit}” wykonany! 🎉",
+"fr": "✅ Habitude « {habit} » terminée ! 🎉",
 }
 
 GOAL_SELECT_MESSAGE = {
@@ -9536,7 +11695,11 @@ GOAL_SELECT_MESSAGE = {
     "kg": "Аткаруу үчүн максатты танда:",
     "hy": "Ընտրիր նպատակ, որը կկատարես:",
     "ka": "აირჩიე მიზანი, რომელიც გსურს შეასრულო:",
-    "ce": "Кхета хийцам, кхузур кхолла цу:"
+    "ce": "Кхета хийцам, кхузур кхолла цу:",
+    "es": "Elige el objetivo que deseas completar:",
+"de": "Wähle ein Ziel, das du abschließen möchtest:",
+"pl": "Wybierz cel, który chcesz zrealizować:",
+"fr": "Choisis l’objectif à accomplir :",
 }
 
 
@@ -9551,7 +11714,11 @@ POINTS_ADDED_GOAL = {
     "kg": "Даяр! +5 упай.",
     "hy": "Պատրաստ է։ +5 միավոր.",
     "ka": "მზადაა! +5 ქულა.",
-    "ce": "Дайо! +5 балл."
+    "ce": "Дайо! +5 балл.",
+    "es": "¡Listo! +5 puntos.",
+"de": "Fertig! +5 Punkte.",
+"pl": "Gotowe! +5 punktów.",
+"fr": "C’est fait ! +5 points.",
 }
 
 
