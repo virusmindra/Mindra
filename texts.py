@@ -33,6 +33,10 @@ PCH_DONE_TOAST_TEXTS = {
     "hy": "🔥 Հրաշալի է։ Չելենջը ավարտվեց։ Ցանկանու՞մ ես ընտրել հաջորդը։",
     "ka": "🔥 სუპერ! ჩელენჯი დასრულდა. გინდა შემდეგი აირჩიო?",
     "ce": "🔥 Ловзар! Челлендж тӀеьхна. Хочешь выбрать следующий?",
+    "fr": "🔥 Génial ! Défi terminé. Tu veux en choisir le suivant ?",
+    "de": "🔥 Stark! Herausforderung abgeschlossen. Möchtest du die nächste auswählen?",
+    "pl": "🔥 Super! Wyzwanie ukończone. Chcesz wybrać następne?",
+    "es": "🔥 ¡Genial! Desafío completado. ¿Quieres elegir el siguiente?",
 }
 
 REMIND_SUGGEST_TEXTS = {
@@ -106,6 +110,30 @@ TRACKER_LIMIT_TEXTS = {
         "plus_goal":  "⚠️ У Mindra+ ліміт — *{limit}* цілей.\nЗараз: *{current}/{limit}*.\nПерейдіть на *Mindra Pro*, щоб зняти ліміти.",
         "plus_habit": "⚠️ У Mindra+ ліміт — *{limit}* звичок.\nЗараз: *{current}/{limit}*.\nПерейдіть на *Mindra Pro*, щоб зняти ліміти.",
     },
+    "es": {
+        "free_goal":  "⚠️ En el plan gratuito solo está disponible *{limit}* objetivo.\nAhora: *{current}/{limit}*.\nActualiza a *Mindra+* para tener hasta *10 objetivos*.",
+        "free_habit": "⚠️ En el plan gratuito solo está disponible *{limit}* hábito.\nAhora: *{current}/{limit}*.\nActualiza a *Mindra+* para tener hasta *10 hábitos*.",
+        "plus_goal":  "⚠️ En *Mindra+* el límite es de *{limit}* objetivos.\nAhora: *{current}/{limit}*.\nPasa a *Mindra Pro* para eliminar los límites.",
+        "plus_habit": "⚠️ En *Mindra+* el límite es de *{limit}* hábitos.\nAhora: *{current}/{limit}*.\nPasa a *Mindra Pro* para eliminar los límites.",
+    },
+    "de": {
+        "free_goal":  "⚠️ Im Gratis-Tarif ist nur *{limit}* Ziel verfügbar.\nAktuell: *{current}/{limit}*.\nUpgrade auf *Mindra+*, um bis zu *10 Ziele* zu erhalten.",
+        "free_habit": "⚠️ Im Gratis-Tarif ist nur *{limit}* Gewohnheit verfügbar.\nAktuell: *{current}/{limit}*.\nUpgrade auf *Mindra+*, um bis zu *10 Gewohnheiten* zu erhalten.",
+        "plus_goal":  "⚠️ In *Mindra+* beträgt das Limit *{limit}* Ziele.\nAktuell: *{current}/{limit}*.\nWechsle zu *Mindra Pro*, um die Limits aufzuheben.",
+        "plus_habit": "⚠️ In *Mindra+* beträgt das Limit *{limit}* Gewohnheiten.\nAktuell: *{current}/{limit}*.\nWechsle zu *Mindra Pro*, um die Limits aufzuheben.",
+    },
+    "pl": {
+        "free_goal":  "⚠️ W planie bezpłatnym dostępny jest tylko *{limit}* cel.\nTeraz: *{current}/{limit}*.\nZaktualizuj do *Mindra+*, aby mieć do *10 celów*.",
+        "free_habit": "⚠️ W planie bezpłatnym dostępny jest tylko *{limit}* nawyk.\nTeraz: *{current}/{limit}*.\nZaktualizuj do *Mindra+*, aby mieć do *10 nawyków*.",
+        "plus_goal":  "⚠️ W *Mindra+* limit to *{limit}* celów.\nTeraz: *{current}/{limit}*.\nPrzejdź na *Mindra Pro*, aby zdjąć limity.",
+        "plus_habit": "⚠️ W *Mindra+* limit to *{limit}* nawyków.\nTeraz: *{current}/{limit}*.\nPrzejdź na *Mindra Pro*, aby zdjąć limity.",
+    },
+    "fr": {
+        "free_goal":  "⚠️ Dans l’offre gratuite, seul *{limit}* objectif est disponible.\nActuel : *{current}/{limit}*.\nPasse à *Mindra+* pour avoir jusqu’à *10 objectifs*.",
+        "free_habit": "⚠️ Dans l’offre gratuite, seule *{limit}* habitude est disponible.\nActuel : *{current}/{limit}*.\nPasse à *Mindra+* pour avoir jusqu’à *10 habitudes*.",
+        "plus_goal":  "⚠️ Dans *Mindra+*, la limite est de *{limit}* objectifs.\nActuel : *{current}/{limit}*.\nPasse à *Mindra Pro* pour lever les limites.",
+        "plus_habit": "⚠️ Dans *Mindra+*, la limite est de *{limit}* habitudes.\nActuel : *{current}/{limit}*.\nPasse à *Mindra Pro* pour lever les limites.",
+    },
     "en": {
         "free_goal":  "⚠️ Free plan allows only *{limit}* goal.\nNow: *{current}/{limit}*.\nUpgrade to *Mindra+* for up to *10 goals*.",
         "free_habit": "⚠️ Free plan allows only *{limit}* habit.\nNow: *{current}/{limit}*.\nUpgrade to *Mindra+* for up to *10 habits*.",
@@ -157,7 +185,7 @@ TRACKER_LIMIT_TEXTS = {
 }
 
 UPGRADE_TEXTS = {
-  "ru": {
+"ru": {
     "title": "⭐ Обновление",
     "choose": "Выбери подписку и срок:",
     "plus_title": "Mindra+ — комфорт каждый день",
@@ -173,6 +201,74 @@ UPGRADE_TEXTS = {
     "no_active": "Пока не вижу оплаты. Подожди минуту и нажми «Проверить» ещё раз.",
     "active_now": "Готово! ✨ Подписка активна.",
   },
+
+"es": {
+    "title": "⭐ Actualización",
+    "choose": "Elige la suscripción y el período:",
+    "plus_title": "Mindra+ — comodidad cada día",
+    "pro_title":  "Mindra Pro — máximo sin límites",
+    "period": {
+      "1m": "1 mes", "3m": "3 meses", "6m": "6 meses", "12m": "12 meses", "life": "De por vida"
+    },
+    "buy": "Comprar",
+    "back": "⬅️ Atrás",
+    "open_payment": "Abrir pago",
+    "check_payment": "Comprobar el pago ✅",
+    "pending": "Si el pago se ha realizado, la suscripción se activará automáticamente en unos segundos. Si no, pulsa «Comprobar».",
+    "no_active": "Aún no veo el pago. Espera un minuto y pulsa «Comprobar» otra vez.",
+    "active_now": "¡Listo! ✨ Suscripción activa.",
+},
+
+"de": {
+    "title": "⭐ Upgrade",
+    "choose": "Wähle Abo und Laufzeit:",
+    "plus_title": "Mindra+ — Komfort jeden Tag",
+    "pro_title":  "Mindra Pro — Maximum ohne Limits",
+    "period": {
+      "1m": "1 Monat", "3m": "3 Monate", "6m": "6 Monate", "12m": "12 Monate", "life": "Lebenslang"
+    },
+    "buy": "Kaufen",
+    "back": "⬅️ Zurück",
+    "open_payment": "Zahlung öffnen",
+    "check_payment": "Bezahlung prüfen ✅",
+    "pending": "Wenn die Zahlung erfolgreich war, wird das Abo innerhalb weniger Sekunden automatisch aktiviert. Falls nicht, tippe auf „Prüfen“.",
+    "no_active": "Zahlung noch nicht sichtbar. Warte eine Minute und tippe erneut auf „Prüfen“.",
+    "active_now": "Fertig! ✨ Abo ist aktiv.",
+},
+
+"pl": {
+    "title": "⭐ Aktualizacja",
+    "choose": "Wybierz subskrypcję i okres:",
+    "plus_title": "Mindra+ — komfort każdego dnia",
+    "pro_title":  "Mindra Pro — maksimum bez ograniczeń",
+    "period": {
+      "1m": "1 miesiąc", "3m": "3 miesiące", "6m": "6 miesięcy", "12m": "12 miesięcy", "life": "Dożywotnio"
+    },
+    "buy": "Kup",
+    "back": "⬅️ Wstecz",
+    "open_payment": "Otwórz płatność",
+    "check_payment": "Sprawdź płatność ✅",
+    "pending": "Jeśli płatność przeszła, subskrypcja aktywuje się automatycznie w ciągu kilku sekund. Jeśli nie — kliknij „Sprawdź”.",
+    "no_active": "Na razie nie widzę płatności. Poczekaj minutę i kliknij „Sprawdź” ponownie.",
+    "active_now": "Gotowe! ✨ Subskrypcja jest aktywna.",
+},
+
+"fr": {
+    "title": "⭐ Mise à niveau",
+    "choose": "Choisis l’abonnement et la durée :",
+    "plus_title": "Mindra+ — du confort au quotidien",
+    "pro_title":  "Mindra Pro — le maximum sans limites",
+    "period": {
+      "1m": "1 mois", "3m": "3 mois", "6m": "6 mois", "12m": "12 mois", "life": "À vie"
+    },
+    "buy": "Acheter",
+    "back": "⬅️ Retour",
+    "open_payment": "Ouvrir le paiement",
+    "check_payment": "Vérifier le paiement ✅",
+    "pending": "Si le paiement a réussi, l’abonnement s’activera automatiquement en quelques secondes. Sinon, appuie sur « Vérifier ».",
+    "no_active": "Je ne vois pas encore le paiement. Attends une minute puis appuie de nouveau sur « Vérifier ».",
+    "active_now": "C’est fait ! ✨ L’abonnement est actif.",
+},
 
   "uk": {
     "title": "⭐ Оновлення",
@@ -333,6 +429,10 @@ UPGRADE_TEXTS = {
 MENU_LABELS = {
     "ru": {"upgrade": "⭐ Обновить"},
     "uk": {"upgrade": "⭐ Оновити"},
+    "es": {"upgrade": "⭐ Actualizar"},
+    "de": {"upgrade": "⭐ Upgrade"},
+    "pl": {"upgrade": "⭐ Ulepsz"},
+    "fr": {"upgrade": "⭐ Mise à niveau"},
     "en": {"upgrade": "⭐ Upgrade"},
     "md": {"upgrade": "⭐ Actualizare"},
     "be": {"upgrade": "⭐ Абнаўленне"},
@@ -391,6 +491,183 @@ MENU_TEXTS = {
         "feedback_ask": "Напиши сюда отзыв, идею или баг — я передам его разработчику 💜",
         "feedback_thx": "Спасибо за отзыв! ✨",
     },
+
+    # MENU_TEXTS — блоки для новых языков
+"es": {
+    "title": "🏠 Menú principal",
+    "premium_until": "💎 Premium hasta: *{until}*",
+    "premium_none": "💎 Premium: *no*",
+    "features": "🧰 Funciones",
+    "plus_features": "💠 Funciones premium",
+    "premium": "💎 Premium",
+    "settings": "⚙️ Ajustes",
+    "back": "⬅️ Atrás",
+    "close": "✖️ Cerrar",
+
+    "feat_title": "🧰 Funciones",
+    "feat_body": "Elige una sección:",
+    "feat_tracker": "🎯 Tracker (metas y hábitos)",
+    "feat_reminders": "⏰ Recordatorios",
+    "feat_points": "⭐️ Puntos/Título",
+    "feat_mood": "🧪 Test de ánimo",
+    "features_mode": "🎛 Modo de conversación (/mode)",
+
+    "plus_title": "💠 Funciones premium",
+    "plus_body": "Disponible en Mindra+:",
+    "plus_voice_mode": "🔊 Voz para mensajes",
+    "plus_voice": "🎙 Voz",
+    "plus_sleep": "😴 Sonidos para dormir",
+    "plus_story": "📖 Cuento",
+    "plus_pmode": "🟣 Modo Premium",
+    "plus_pstats": "📊 Estadísticas Premium",
+    "plus_preport": "📝 Informe Premium",
+    "plus_pchallenge": "🏆 Desafío Premium",
+
+    "prem_title": "💎 Premium",
+    "premium_days": "¿Cuánto queda?",
+    "invite": "Invitar a un amigo (+7 días)",
+    "premium_buy": "Comprar Mindra+",
+
+    "set_title": "⚙️ Ajustes",
+    "set_body": "¿Qué configurar?",
+    "set_lang": "🌐 Idioma",
+    "set_tz": "🕒 Zona horaria",
+    "set_feedback": "💌 Dejar opinión",
+    "feedback_ask": "Escribe aquí tu opinión, idea o bug — se la pasaré al desarrollador 💜",
+    "feedback_thx": "¡Gracias por tu opinión! ✨",
+},
+
+"de": {
+    "title": "🏠 Hauptmenü",
+    "premium_until": "💎 Premium bis: *{until}*",
+    "premium_none": "💎 Premium: *kein*",
+    "features": "🧰 Funktionen",
+    "plus_features": "💠 Premium-Funktionen",
+    "premium": "💎 Premium",
+    "settings": "⚙️ Einstellungen",
+    "back": "⬅️ Zurück",
+    "close": "✖️ Schließen",
+
+    "feat_title": "🧰 Funktionen",
+    "feat_body": "Wähle einen Bereich:",
+    "feat_tracker": "🎯 Tracker (Ziele & Gewohnheiten)",
+    "feat_reminders": "⏰ Erinnerungen",
+    "feat_points": "⭐️ Punkte/Titel",
+    "feat_mood": "🧪 Stimmungstest",
+    "features_mode": "🎛 Dialogmodus (/mode)",
+
+    "plus_title": "💠 Premium-Funktionen",
+    "plus_body": "Verfügbar in Mindra+:",
+    "plus_voice_mode": "🔊 Sprachausgabe für Nachrichten",
+    "plus_voice": "🎙 Sprachausgabe",
+    "plus_sleep": "😴 Einschlafklänge",
+    "plus_story": "📖 Märchen",
+    "plus_pmode": "🟣 Premium-Modus",
+    "plus_pstats": "📊 Premium-Statistiken",
+    "plus_preport": "📝 Premium-Bericht",
+    "plus_pchallenge": "🏆 Premium-Challenge",
+
+    "prem_title": "💎 Premium",
+    "premium_days": "Wie viel bleibt noch?",
+    "invite": "Freund einladen (+7 Tage)",
+    "premium_buy": "Mindra+ kaufen",
+
+    "set_title": "⚙️ Einstellungen",
+    "set_body": "Was möchtest du einstellen?",
+    "set_lang": "🌐 Sprache",
+    "set_tz": "🕒 Zeitzone",
+    "set_feedback": "💌 Feedback geben",
+    "feedback_ask": "Schreib hier dein Feedback, eine Idee oder einen Bug — ich leite es an den Entwickler weiter 💜",
+    "feedback_thx": "Danke für dein Feedback! ✨",
+},
+
+"pl": {
+    "title": "🏠 Główne menu",
+    "premium_until": "💎 Premium do: *{until}*",
+    "premium_none": "💎 Premium: *brak*",
+    "features": "🧰 Funkcje",
+    "plus_features": "💠 Funkcje premium",
+    "premium": "💎 Premium",
+    "settings": "⚙️ Ustawienia",
+    "back": "⬅️ Wstecz",
+    "close": "✖️ Zamknij",
+
+    "feat_title": "🧰 Funkcje",
+    "feat_body": "Wybierz sekcję:",
+    "feat_tracker": "🎯 Tracker (cele i nawyki)",
+    "feat_reminders": "⏰ Przypomnienia",
+    "feat_points": "⭐️ Punkty/Tytuł",
+    "feat_mood": "🧪 Test nastroju",
+    "features_mode": "🎛 Tryb rozmowy (/mode)",
+
+    "plus_title": "💠 Funkcje premium",
+    "plus_body": "Dostępne w Mindra+:",
+    "plus_voice_mode": "🔊 Głos do wiadomości",
+    "plus_voice": "🎙 Lektor",
+    "plus_sleep": "😴 Dźwięki do snu",
+    "plus_story": "📖 Bajka",
+    "plus_pmode": "🟣 Tryb Premium",
+    "plus_pstats": "📊 Statystyki Premium",
+    "plus_preport": "📝 Raport Premium",
+    "plus_pchallenge": "🏆 Wyzwanie Premium",
+
+    "prem_title": "💎 Premium",
+    "premium_days": "Ile pozostało?",
+    "invite": "Zaproś znajomego (+7 dni)",
+    "premium_buy": "Kup Mindra+",
+
+    "set_title": "⚙️ Ustawienia",
+    "set_body": "Co chcesz ustawić?",
+    "set_lang": "🌐 Język",
+    "set_tz": "🕒 Strefa czasowa",
+    "set_feedback": "💌 Zostaw opinię",
+    "feedback_ask": "Napisz tutaj opinię, pomysł lub błąd — przekażę to deweloperowi 💜",
+    "feedback_thx": "Dzięki za opinię! ✨",
+},
+
+"fr": {
+    "title": "🏠 Menu principal",
+    "premium_until": "💎 Premium jusqu’au : *{until}*",
+    "premium_none": "💎 Premium : *aucun*",
+    "features": "🧰 Fonctions",
+    "plus_features": "💠 Fonctionnalités Premium",
+    "premium": "💎 Premium",
+    "settings": "⚙️ Paramètres",
+    "back": "⬅️ Retour",
+    "close": "✖️ Fermer",
+
+    "feat_title": "🧰 Fonctions",
+    "feat_body": "Choisis une section :",
+    "feat_tracker": "🎯 Suivi (objectifs & habitudes)",
+    "feat_reminders": "⏰ Rappels",
+    "feat_points": "⭐️ Points/Titre",
+    "feat_mood": "🧪 Test d’humeur",
+    "features_mode": "🎛 Mode de conversation (/mode)",
+
+    "plus_title": "💠 Fonctionnalités Premium",
+    "plus_body": "Disponible dans Mindra+ :",
+    "plus_voice_mode": "🔊 Lecture des messages",
+    "plus_voice": "🎙 Voix",
+    "plus_sleep": "😴 Sons pour dormir",
+    "plus_story": "📖 Conte",
+    "plus_pmode": "🟣 Mode Premium",
+    "plus_pstats": "📊 Statistiques Premium",
+    "plus_preport": "📝 Rapport Premium",
+    "plus_pchallenge": "🏆 Défi Premium",
+
+    "prem_title": "💎 Premium",
+    "premium_days": "Combien reste-t-il ?",
+    "invite": "Inviter un ami (+7 jours)",
+    "premium_buy": "Acheter Mindra+",
+
+    "set_title": "⚙️ Paramètres",
+    "set_body": "Que veux-tu configurer ?",
+    "set_lang": "🌐 Langue",
+    "set_tz": "🕒 Fuseau horaire",
+    "set_feedback": "💌 Laisser un avis",
+    "feedback_ask": "Écris ici ton avis, une idée ou un bug — je le transmettrai au développeur 💜",
+    "feedback_thx": "Merci pour ton avis ! ✨",
+},
 
     "uk": {
         "title": "🏠 Головне меню",
@@ -935,6 +1212,61 @@ UPSELL_TEXTS = {
         "feature_reminders":   "Кхечуьна хьажоргаш — {plus}/{pro}.",
         "cta": "Upgrade → /premium",
     },
+    "es": {
+        "title": "Se requiere suscripción",
+        "feature_story_voice": "La narración de cuentos por voz está disponible en {plus} y {pro}. Descubre historias mágicas con voz y fondo 🌙",
+        "feature_eleven":     "Las voces premium de ElevenLabs están disponibles en {plus} y {pro}.",
+        "feature_bgm":        "Los sonidos de fondo sobre la voz están disponibles en {plus}/{pro}.",
+        "feature_sleep_long": "Duración del modo sueño superior a {min} min — en {plus}/{pro}.",
+        "feature_story_long": "Cuentos medianos y largos — en {plus}/{pro}.",
+        "feature_quota_msg":  "Se alcanzó el límite diario de mensajes ({n}). Más — en {plus}/{pro}.",
+        "feature_goals":      "Más objetivos — en {plus}/{pro}.",
+        "feature_habits":     "Más hábitos — en {plus}/{pro}.",
+        "feature_reminders":  "Más recordatorios — en {plus}/{pro}.",
+        "cta": "Suscribirse → /premium",
+    },
+
+    "de": {
+        "title": "Abonnement erforderlich",
+        "feature_story_voice": "Märchen-Vertonung mit Stimme ist in {plus} und {pro} verfügbar. Entdecke zauberhafte Geschichten mit Stimme und Hintergrund 🌙",
+        "feature_eleven":     "Premium-Stimmen von ElevenLabs sind in {plus} und {pro} verfügbar.",
+        "feature_bgm":        "Hintergrundklänge über der Stimme sind in {plus}/{pro} verfügbar.",
+        "feature_sleep_long": "Schlafmodus-Dauer über {min} Min — in {plus}/{pro}.",
+        "feature_story_long": "Mittlere und lange Märchen — in {plus}/{pro}.",
+        "feature_quota_msg":  "Tageslimit für Nachrichten erreicht ({n}). Mehr — in {plus}/{pro}.",
+        "feature_goals":      "Mehr Ziele — in {plus}/{pro}.",
+        "feature_habits":     "Mehr Gewohnheiten — in {plus}/{pro}.",
+        "feature_reminders":  "Mehr Erinnerungen — in {plus}/{pro}.",
+        "cta": "Abonnieren → /premium",
+    },
+
+"pl": {
+        "title": "Wymagana subskrypcja",
+        "feature_story_voice": "Odtwarzanie bajek głosem dostępne w {plus} i {pro}. Odkryj magiczne historie z głosem i tłem 🌙",
+        "feature_eleven":     "Głosy premium ElevenLabs dostępne w {plus} i {pro}.",
+        "feature_bgm":        "Dźwięki tła nałożone na głos dostępne w {plus}/{pro}.",
+        "feature_sleep_long": "Czas trybu snu powyżej {min} min — w {plus}/{pro}.",
+        "feature_story_long": "Średnie i długie bajki — w {plus}/{pro}.",
+        "feature_quota_msg":  "Osiągnięto dzienny limit wiadomości ({n}). Więcej — w {plus}/{pro}.",
+        "feature_goals":      "Więcej celów — w {plus}/{pro}.",
+        "feature_habits":     "Więcej nawyków — w {plus}/{pro}.",
+        "feature_reminders":  "Więcej przypomnień — w {plus}/{pro}.",
+        "cta": "Subskrybuj → /premium",
+    },
+
+    "fr": {
+        "title": "Abonnement requis",
+        "feature_story_voice": "La narration des contes est disponible dans {plus} et {pro}. Découvre des histoires magiques avec voix et fond sonore 🌙",
+        "feature_eleven":     "Les voix premium d’ElevenLabs sont disponibles dans {plus} et {pro}.",
+        "feature_bgm":        "Les sons d’arrière-plan par-dessus la voix sont disponibles dans {plus}/{pro}.",
+        "feature_sleep_long": "Durée du mode sommeil au-delà de {min} min — dans {plus}/{pro}.",
+        "feature_story_long": "Contes moyens et longs — dans {plus}/{pro}.",
+        "feature_quota_msg":  "Limite quotidienne de messages atteinte ({n}). Plus — dans {plus}/{pro}.",
+        "feature_goals":      "Plus d’objectifs — dans {plus}/{pro}.",
+        "feature_habits":     "Plus d’habitudes — dans {plus}/{pro}.",
+        "feature_reminders":  "Plus de rappels — dans {plus}/{pro}.",
+        "cta": "S’abonner → /premium",
+    },
 }
 
 PLAN_LABELS = {
@@ -948,6 +1280,12 @@ PLAN_LABELS = {
     "ka": {PLAN_FREE:"უფასო",          PLAN_PLUS:"Mindra+", PLAN_PRO:"Mindra Pro"},
     "ce": {PLAN_FREE:"Биллийнан",      PLAN_PLUS:"Mindra+", PLAN_PRO:"Mindra Pro"},
     "en": {PLAN_FREE:"Free",           PLAN_PLUS:"Mindra+", PLAN_PRO:"Mindra Pro"},
+
+    # New
+    "es": {PLAN_FREE:"Gratis",         PLAN_PLUS:"Mindra+", PLAN_PRO:"Mindra Pro"},
+    "de": {PLAN_FREE:"Kostenlos",      PLAN_PLUS:"Mindra+", PLAN_PRO:"Mindra Pro"},
+    "pl": {PLAN_FREE:"Darmowy",        PLAN_PLUS:"Mindra+", PLAN_PRO:"Mindra Pro"},
+    "fr": {PLAN_FREE:"Gratuit",        PLAN_PLUS:"Mindra+", PLAN_PRO:"Mindra Pro"},
 }
 
 # ==== FEATURE MATRIX (булевы фичи) ====
@@ -1029,6 +1367,66 @@ QUOTAS = {
 }
 
 SLEEP_UI_TEXTS = {
+    "es": {
+        "title": "😴 Sonidos para dormir",
+        "sound": "Sonido: *{sound}*",
+        "duration": "Duración: *{min} min*",
+        "gain": "Volumen: *{db} dB*",
+        "pick_sound": "Sonido",
+        "pick_duration": "Tiempo",
+        "pick_gain": "Volumen",
+        "start": "▶️ Iniciar",
+        "stop": "⏹ Detener",
+        "started": "Reproduzco el sonido *{sound}* durante *{min} min*… Que descanses 🌙",
+        "stopped": "Listo, detenido.",
+        "err_ffmpeg": "No se encontró ffmpeg — no puedo preparar el audio.",
+        "err_missing": "Archivo de sonido no encontrado. Revisa la ruta en BGM_PRESETS.",
+    },
+    "de": {
+        "title": "😴 Einschlafklänge",
+        "sound": "Klang: *{sound}*",
+        "duration": "Dauer: *{min} Min*",
+        "gain": "Lautstärke: *{db} dB*",
+        "pick_sound": "Klang",
+        "pick_duration": "Zeit",
+        "pick_gain": "Lautstärke",
+        "start": "▶️ Starten",
+        "stop": "⏹ Stopp",
+        "started": "Starte *{sound}* für *{min} Min*… Schlaf gut 🌙",
+        "stopped": "Okay, gestoppt.",
+        "err_ffmpeg": "ffmpeg nicht gefunden — Audio kann nicht vorbereitet werden.",
+        "err_missing": "Audiodatei nicht gefunden. Prüfe den Pfad in BGM_PRESETS.",
+    },
+    "pl": {
+        "title": "😴 Dźwięki do snu",
+        "sound": "Dźwięk: *{sound}*",
+        "duration": "Czas: *{min} min*",
+        "gain": "Głośność: *{db} dB*",
+        "pick_sound": "Dźwięk",
+        "pick_duration": "Czas",
+        "pick_gain": "Głośność",
+        "start": "▶️ Start",
+        "stop": "⏹ Stop",
+        "started": "Uruchamiam *{sound}* na *{min} min*… Miłego odpoczynku 🌙",
+        "stopped": "Okej, zatrzymałem.",
+        "err_ffmpeg": "Nie znaleziono ffmpeg — nie mogę przygotować audio.",
+        "err_missing": "Nie znaleziono pliku dźwięku. Sprawdź ścieżkę w BGM_PRESETS.",
+    },
+    "fr": {
+        "title": "😴 Sons pour dormir",
+        "sound": "Son : *{sound}*",
+        "duration": "Durée : *{min} min*",
+        "gain": "Volume : *{db} dB*",
+        "pick_sound": "Son",
+        "pick_duration": "Durée",
+        "pick_gain": "Volume",
+        "start": "▶️ Lancer",
+        "stop": "⏹ Arrêter",
+        "started": "Je lance *{sound}* pendant *{min} min*… Bonne détente 🌙",
+        "stopped": "D’accord, arrêté.",
+        "err_ffmpeg": "ffmpeg introuvable — impossible de préparer l’audio.",
+        "err_missing": "Fichier audio introuvable. Vérifie le chemin dans BGM_PRESETS.",
+    },
     "ru": {
         "title": "😴 Звуки для сна",
         "sound": "Звук: *{sound}*",
@@ -1183,6 +1581,90 @@ SLEEP_UI_TEXTS = {
 
 # === VOICE SETTINGS UI: i18n (10 языков) ===
 VOICE_UI_TEXTS = {
+    "es": {
+        "title": "🎙 Ajustes de voz",
+        "engine": "Motor: *{engine}*",
+        "voice": "Voz: *{voice}*",
+        "speed": "Velocidad: *{speed}x*",
+        "voice_only": "Solo voz: *{v}*",
+        "auto_story": "Narración automática de cuentos: *{v}*",
+        "on": "activado", "off": "desactivado",
+        "mode_on_btn": "🔊 Activar",
+        "mode_off_btn": "🔇 Desactivar",
+        "btn_engine": "⚙️ Motor",
+        "btn_voice": "🗣 Voz",
+        "btn_speed": "⏱ Velocidad",
+        "btn_beh": "🎛 Comportamiento",
+        "btn_bg": "🎧 Fondo",
+        "engine_eleven": "ElevenLabs",
+        "engine_gtts": "gTTS",
+        "pick_voice": "Elige una voz:",
+        "no_eleven_key": "⚠️ Falta la clave de ElevenLabs — solo está disponible gTTS.",
+        "bgm": "Fondo: *{bg}* ({db} dB)",
+    },
+    "de": {
+        "title": "🎙 Stimmeinstellungen",
+        "engine": "Engine: *{engine}*",
+        "voice": "Stimme: *{voice}*",
+        "speed": "Geschwindigkeit: *{speed}x*",
+        "voice_only": "Nur Stimme: *{v}*",
+        "auto_story": "Automatische Märchenvertonung: *{v}*",
+        "on": "an", "off": "aus",
+        "mode_on_btn": "🔊 Aktivieren",
+        "mode_off_btn": "🔇 Deaktivieren",
+        "btn_engine": "⚙️ Engine",
+        "btn_voice": "🗣 Stimme",
+        "btn_speed": "⏱ Geschwindigkeit",
+        "btn_beh": "🎛 Verhalten",
+        "btn_bg": "🎧 Hintergrund",
+        "engine_eleven": "ElevenLabs",
+        "engine_gtts": "gTTS",
+        "pick_voice": "Wähle eine Stimme:",
+        "no_eleven_key": "⚠️ ElevenLabs-Schlüssel nicht gefunden — nur gTTS verfügbar.",
+        "bgm": "Hintergrund: *{bg}* ({db} dB)",
+    },
+    "pl": {
+        "title": "🎙 Ustawienia głosu",
+        "engine": "Silnik: *{engine}*",
+        "voice": "Głos: *{voice}*",
+        "speed": "Prędkość: *{speed}x*",
+        "voice_only": "Tylko głos: *{v}*",
+        "auto_story": "Automatyczne czytanie bajek: *{v}*",
+        "on": "wł.", "off": "wył.",
+        "mode_on_btn": "🔊 Włączyć",
+        "mode_off_btn": "🔇 Wyłączyć",
+        "btn_engine": "⚙️ Silnik",
+        "btn_voice": "🗣 Głos",
+        "btn_speed": "⏱ Prędkość",
+        "btn_beh": "🎛 Zachowanie",
+        "btn_bg": "🎧 Tło",
+        "engine_eleven": "ElevenLabs",
+        "engine_gtts": "gTTS",
+        "pick_voice": "Wybierz głos:",
+        "no_eleven_key": "⚠️ Nie znaleziono klucza ElevenLabs — dostępny jest tylko gTTS.",
+        "bgm": "Tło: *{bg}* ({db} dB)",
+    },
+    "fr": {
+        "title": "🎙 Réglages de la voix",
+        "engine": "Moteur : *{engine}*",
+        "voice": "Voix : *{voice}*",
+        "speed": "Vitesse : *{speed}x*",
+        "voice_only": "Voix seule : *{v}*",
+        "auto_story": "Narration automatique des contes : *{v}*",
+        "on": "activé", "off": "désactivé",
+        "mode_on_btn": "🔊 Activer",
+        "mode_off_btn": "🔇 Désactiver",
+        "btn_engine": "⚙️ Moteur",
+        "btn_voice": "🗣 Voix",
+        "btn_speed": "⏱ Vitesse",
+        "btn_beh": "🎛 Comportement",
+        "btn_bg": "🎧 Fond",
+        "engine_eleven": "ElevenLabs",
+        "engine_gtts": "gTTS",
+        "pick_voice": "Choisis une voix :",
+        "no_eleven_key": "⚠️ Clé ElevenLabs introuvable — seul gTTS est disponible.",
+        "bgm": "Fond : *{bg}* ({db} dB)",
+    },
     "ru": {
         "title": "🎙 Настройки голоса",
         "engine": "Движок: *{engine}*",
@@ -1406,6 +1888,11 @@ ELEVEN_LIMIT_INFO_TEXTS = {
     "hy": "{plus} — ElevenLabs՝ ամսական մինչև 240 րոպե.\n{pro} — ElevenLabs առանց սահմանափակման.",
     "ka": "{plus} — თვეში მაქსიმუმ 240 წუთი ElevenLabs.\n{pro} — ElevenLabs შეზღუდვების გარეშე.",
     "ce": "{plus} — ElevenLabs 240 минут/йиш кхечу.\n{pro} — ElevenLabs без лимита.",
+    # ELEVEN_LIMIT_INFO_TEXTS — новые языки
+    "es": "{plus}: hasta 240 min/mes de ElevenLabs.\n{pro}: ElevenLabs sin límites.",
+    "de": "{plus}: bis zu 240 Min./Monat ElevenLabs.\n{pro}: ElevenLabs ohne Begrenzung.",
+    "pl": "{plus}: do 240 min/mies. ElevenLabs.\n{pro}: ElevenLabs bez limitu.",
+    "fr": "{plus} : jusqu’à 240 min/mois d’ElevenLabs.\n{pro} : ElevenLabs illimité.",
 }
 
 ELEVEN_LIMIT_REACHED_TEXTS = {
@@ -1419,6 +1906,11 @@ ELEVEN_LIMIT_REACHED_TEXTS = {
     "hy": "⚠️ {plus}-ում ElevenLabs-ը սահմանափակվում է ամսական 240 րոպեով, {pro}-ում՝ առանց սահմանափակման.",
     "ka": "⚠️ {plus}-ში ElevenLabs თვეში 240 წუთით არის შეზღუდული. {pro} — შეზღუდვების გარეშე.",
     "ce": "⚠️ {plus}-да ElevenLabs 240 минут йиш хьоца. {pro}-да — без лимита.",
+    # ELEVEN_LIMIT_REACHED_TEXTS — новые языки
+    "es": "⚠️ En {plus}, ElevenLabs está limitado a 240 min/mes. {pro} es ilimitado.",
+    "de": "⚠️ In {plus} ist ElevenLabs auf 240 Min. pro Monat begrenzt. {pro} ist unbegrenzt.",
+    "pl": "⚠️ W {plus} ElevenLabs jest ograniczone do 240 min miesięcznie. {pro} jest nielimitowany.",
+    "fr": "⚠️ Dans {plus}, ElevenLabs est limité à 240 min par mois. {pro} est illimité.",
 }
 
 DEFAULT_ELEVEN_FEMALE = "21m00Tcm4TlvDq8ikWAM"
@@ -1475,6 +1967,26 @@ VOICE_PRESETS = {
         ("👨 Male (Eleven)",       "eleven", DEFAULT_ELEVEN_MALE),
         ("👩 Female (gTTS)",       "gTTS",   ""),
     ],
+    "es": [
+        ("👩 Femenina (Eleven)",  "eleven", DEFAULT_ELEVEN_FEMALE),
+        ("👨 Masculina (Eleven)", "eleven", DEFAULT_ELEVEN_MALE),
+        ("👩 Femenina (gTTS)",    "gTTS",   ""),
+    ],
+    "de": [
+        ("👩 Weiblich (Eleven)",  "eleven", DEFAULT_ELEVEN_FEMALE),
+        ("👨 Männlich (Eleven)",  "eleven", DEFAULT_ELEVEN_MALE),
+        ("👩 Weiblich (gTTS)",    "gTTS",   ""),
+    ],
+    "pl": [
+        ("👩 Żeński (Eleven)",    "eleven", DEFAULT_ELEVEN_FEMALE),
+        ("👨 Męski (Eleven)",     "eleven", DEFAULT_ELEVEN_MALE),
+        ("👩 Żeński (gTTS)",      "gTTS",   ""),
+    ],
+    "fr": [
+        ("👩 Féminin (Eleven)",   "eleven", DEFAULT_ELEVEN_FEMALE),
+        ("👨 Masculin (Eleven)",  "eleven", DEFAULT_ELEVEN_MALE),
+        ("👩 Féminin (gTTS)",     "gTTS",   ""),
+    ],
 }
 
 # --- Фоновые лупы (опционально) ---
@@ -1507,6 +2019,14 @@ STORY_INTENT = {
     "ce": ["хьикьа","истори","хьалхар кхета","хьикьа йоцу"],
     "en": ["story","bedtime story","bedtime","fairy tale","tale","tell me a story",
            "a bedtime tale"],
+    # STORY_INTENT — новые языки
+    "es": ["cuento","historia","historia para dormir","de buenas noches",
+           "cuéntame un cuento","cuento de hadas","relato"],
+    "de": ["geschichte","märchen","gute-nacht-geschichte","schlafenszeit",
+           "erzähl mir eine geschichte","märchen erzählen"],
+    "pl": ["bajka","opowieść","baśń","na dobranoc","opowiedz bajkę","opowiedz historię"],
+    "fr": ["histoire","conte","conte de fées","histoire du soir",
+           "raconte une histoire","histoire pour dormir"],
 }
 # ——— Stories i18n (10 языков) ———
 STORY_TEXTS = {
@@ -1519,6 +2039,55 @@ STORY_TEXTS = {
            "btn_ok": "✅ Да",
            "btn_no": "❌ Нет",
           },
+    # STORY_TEXTS — новые языки
+    "es": {
+        "title": "📖 Cuento de Mindra",
+        "usage": "Uso: `/story tema | nombre=Mila | longitud=corta|media|larga | voz=on`\nEj.: `/story espacio nombre=Mila voz=on`",
+        "making": "✨ Estoy creando una historia…",
+        "ready": "¡Listo! ¿Quieres otra?",
+        "btn_more": "🎲 Otra",
+        "btn_voice": "🔊 Con voz",
+        "btn_close": "✖️ Cerrar",
+        "suggest": "¿Quieres que invente un cuento sobre este tema y te lo cuente?",
+        "btn_ok": "✅ Sí",
+        "btn_no": "❌ No",
+    },
+    "de": {
+        "title": "📖 Geschichte von Mindra",
+        "usage": "Benutzung: `/story thema | name=Mila | länge=kurz|mittel|lang | stimme=on`\nZ. B.: `/story weltraum name=Mila stimme=on`",
+        "making": "✨ Ich erfinde eine Geschichte…",
+        "ready": "Fertig! Möchtest du noch eine?",
+        "btn_more": "🎲 Noch eine",
+        "btn_voice": "🔊 Mit Stimme",
+        "btn_close": "✖️ Schließen",
+        "suggest": "Soll ich zu diesem Thema eine Geschichte erfinden und erzählen?",
+        "btn_ok": "✅ Ja",
+        "btn_no": "❌ Nein",
+    },
+    "pl": {
+        "title": "📖 Bajka od Mindry",
+        "usage": "Użycie: `/story temat | imię=Mila | długość=krótka|średnia|długa | głos=on`\nNp.: `/story kosmos imię=Mila głos=on`",
+        "making": "✨ Wymyślam historię…",
+        "ready": "Gotowe! Chcesz jeszcze jedną?",
+        "btn_more": "🎲 Jeszcze jedną",
+        "btn_voice": "🔊 Głosem",
+        "btn_close": "✖️ Zamknij",
+        "suggest": "Chcesz, żebym wymyślił bajkę na ten temat i ją opowiedział?",
+        "btn_ok": "✅ Tak",
+        "btn_no": "❌ Nie",
+    },
+    "fr": {
+        "title": "📖 Conte de Mindra",
+        "usage": "Utilisation : `/story thème | nom=Mila | longueur=courte|moyenne|longue | voix=on`\nEx. : `/story espace nom=Mila voix=on`",
+        "making": "✨ J’imagine une histoire…",
+        "ready": "C’est prêt ! Tu en veux une autre ?",
+        "btn_more": "🎲 Encore",
+        "btn_voice": "🔊 À voix haute",
+        "btn_close": "✖️ Fermer",
+        "suggest": "Veux-tu que j’invente un conte sur ce thème et te le raconte ?",
+        "btn_ok": "✅ Oui",
+        "btn_no": "❌ Non",
+    },
     "uk": {"title":"📖 Казка від Міндри",
            "usage":"Використання: `/story тема | ім'я=Міла | довжина=коротка|середня|довга | голос=on`",
            "making":"✨ Придумую історію…","ready":"Готово! Ще одну?",
@@ -1634,6 +2203,30 @@ VOICE_MODE_TEXTS = {
           "off":"🔇 Voice mode is OFF.",
           "help":"Usage: /voice_mode on|off",
           "err":"⚠️ Specify on|off. Example: /voice_mode on"},
+    "es": {
+      "on":   "🔊 Modo de voz activado. Enviaré las respuestas con voz.",
+      "off":  "🔇 Modo de voz desactivado.",
+      "help": "Uso: /voice_mode on|off",
+      "err":  "⚠️ Indica on|off. Ejemplo: /voice_mode on",
+    },
+    "de": {
+      "on":   "🔊 Sprachmodus aktiviert. Ich sende Antworten mit Stimme.",
+      "off":  "🔇 Sprachmodus deaktiviert.",
+      "help": "Verwendung: /voice_mode on|off",
+      "err":  "⚠️ Gib on|off an. Beispiel: /voice_mode on",
+    },
+    "pl": {
+      "on":   "🔊 Tryb głosowy włączony. Będę wysyłać odpowiedzi głosem.",
+      "off":  "🔇 Tryb głosowy wyłączony.",
+      "help": "Użycie: /voice_mode on|off",
+      "err":  "⚠️ Podaj on|off. Przykład: /voice_mode on",
+    },
+    "fr": {
+      "on":   "🔊 Mode vocal activé. J’enverrai les réponses en audio.",
+      "off":  "🔇 Mode vocal désactivé.",
+      "help": "Utilisation : /voice_mode on|off",
+      "err":  "⚠️ Indique on|off. Exemple : /voice_mode on",
+    },
 }
 
 CHALLENGE_BANK = {
@@ -1680,6 +2273,102 @@ P_TEXTS = {
         "stats_habit_days": "🌱 Дней с привычками: *{n}*",
         "stats_active_days": "🔥 Активные дни за 30д: *{n}*",
     },
+    "es": {
+    "upsell_title": "💎 Mindra+",
+    "upsell_body":  "Recordatorios ilimitados, informes, desafíos y modo exclusivo.\nActiva Mindra+ y desbloquéalo todo 💜",
+    "btn_get": "Obtener Mindra+",
+    "btn_code": "Introducir código",
+    "days_left": "💎 Tu Mindra+: quedan — *{days}* días",
+    "no_plus": "Aún no tienes Mindra+. Las funciones gratuitas están disponibles 💜",
+    "report_title": "📊 Tu informe de 7 días",
+    "report_goals": "🎯 Metas completadas: *{n}*",
+    "report_habits": "🌱 Hábitos marcados: *{n}*",
+    "report_rems": "🔔 Recordatorios activados: *{n}*",
+    "report_streak": "🔥 Días activos: *{n}*",
+    "challenge_title": "🏆 Desafío semanal",
+    "challenge_cta": "Tu reto para la semana:\n\n“{text}”",
+    "btn_done": "✅ Listo",
+    "btn_new": "🎲 Nuevo desafío",
+    "challenge_done": "👏 ¡Genial! Desafío marcado como completado.",
+    "mode_title": "🦄 Modo exclusivo activado",
+    "mode_set": "Desde ahora responderé como tu coach personal de Mindra+ 💜",
+    "stats_title": "📈 Estadísticas ampliadas",
+    "stats_goals_done": "🎯 Metas completadas en total: *{n}*",
+    "stats_habit_days": "🌱 Días con hábitos: *{n}*",
+    "stats_active_days": "🔥 Días activos en 30d: *{n}*",
+},
+    "de": {
+    "upsell_title": "💎 Mindra+",
+    "upsell_body":  "Unbegrenzte Erinnerungen, Berichte, Challenges und der exklusive Modus.\nHol dir Mindra+ und schalte alles frei 💜",
+    "btn_get": "Mindra+ holen",
+    "btn_code": "Code eingeben",
+    "days_left": "💎 Dein Mindra+: verbleibende Tage — *{days}*",
+    "no_plus": "Du hast noch kein Mindra+. Kostenlose Funktionen sind verfügbar 💜",
+    "report_title": "📊 Dein 7-Tage-Bericht",
+    "report_goals": "🎯 Abgeschlossene Ziele: *{n}*",
+    "report_habits": "🌱 Markierte Gewohnheiten: *{n}*",
+    "report_rems": "🔔 Ausgelöste Erinnerungen: *{n}*",
+    "report_streak": "🔥 Aktive Tage: *{n}*",
+    "challenge_title": "🏆 Wöchentliche Challenge",
+    "challenge_cta": "Deine Challenge für die Woche:\n\n“{text}”",
+    "btn_done": "✅ Erledigt",
+    "btn_new": "🎲 Neue Challenge",
+    "challenge_done": "👏 Stark! Challenge als erledigt markiert.",
+    "mode_title": "🦄 Exklusiver Modus aktiviert",
+    "mode_set": "Ab jetzt antworte ich wie dein persönlicher Mindra+-Coach 💜",
+    "stats_title": "📈 Erweiterte Statistiken",
+    "stats_goals_done": "🎯 Ziele insgesamt abgeschlossen: *{n}*",
+    "stats_habit_days": "🌱 Tage mit Gewohnheiten: *{n}*",
+    "stats_active_days": "🔥 Aktive Tage in 30T: *{n}*",
+},
+    "pl": {
+    "upsell_title": "💎 Mindra+",
+    "upsell_body":  "Nielimitowane przypomnienia, raporty, wyzwania i ekskluzywny tryb.\nWłącz Mindra+ i odblokuj wszystko 💜",
+    "btn_get": "Zdobądź Mindra+",
+    "btn_code": "Wprowadź kod",
+    "days_left": "💎 Twój Mindra+: pozostało dni — *{days}*",
+    "no_plus": "Nie masz jeszcze Mindra+. Dostępne są funkcje darmowe 💜",
+    "report_title": "📊 Twój raport z 7 dni",
+    "report_goals": "🎯 Ukończonych celów: *{n}*",
+    "report_habits": "🌱 Odhaczonych nawyków: *{n}*",
+    "report_rems": "🔔 Zadziałało przypomnień: *{n}*",
+    "report_streak": "🔥 Aktywne dni: *{n}*",
+    "challenge_title": "🏆 Cotygodniowe wyzwanie",
+    "challenge_cta": "Twoje wyzwanie na tydzień:\n\n“{text}”",
+    "btn_done": "✅ Gotowe",
+    "btn_new": "🎲 Nowe wyzwanie",
+    "challenge_done": "👏 Świetnie! Wyzwanie oznaczone jako ukończone.",
+    "mode_title": "🦄 Tryb ekskluzywny aktywowany",
+    "mode_set": "Od teraz będę odpowiadać jak Twój osobisty coach Mindra+ 💜",
+    "stats_title": "📈 Rozszerzone statystyki",
+    "stats_goals_done": "🎯 Celów ukończonych łącznie: *{n}*",
+    "stats_habit_days": "🌱 Dni z nawykami: *{n}*",
+    "stats_active_days": "🔥 Aktywne dni w 30d: *{n}*",
+},
+    "fr": {
+    "upsell_title": "💎 Mindra+",
+    "upsell_body":  "Rappels illimités, rapports, défis et mode exclusif.\nActive Mindra+ et débloque tout 💜",
+    "btn_get": "Obtenir Mindra+",
+    "btn_code": "Saisir le code",
+    "days_left": "💎 Ton Mindra+ : il reste — *{days}* jours",
+    "no_plus": "Tu n’as pas encore Mindra+. Les fonctions gratuites sont disponibles 💜",
+    "report_title": "📊 Ton rapport sur 7 jours",
+    "report_goals": "🎯 Objectifs terminés : *{n}*",
+    "report_habits": "🌱 Habitudes cochées : *{n}*",
+    "report_rems": "🔔 Rappels déclenchés : *{n}*",
+    "report_streak": "🔥 Jours actifs : *{n}*",
+    "challenge_title": "🏆 Défi hebdomadaire",
+    "challenge_cta": "Ton défi pour la semaine :\n\n“{text}”",
+    "btn_done": "✅ Terminé",
+    "btn_new": "🎲 Nouveau défi",
+    "challenge_done": "👏 Super ! Défi marqué comme terminé.",
+    "mode_title": "🦄 Mode exclusif activé",
+    "mode_set": "Désormais, je répondrai comme ton coach personnel Mindra+ 💜",
+    "stats_title": "📈 Statistiques avancées",
+    "stats_goals_done": "🎯 Objectifs terminés au total : *{n}*",
+    "stats_habit_days": "🌱 Jours avec habitudes : *{n}*",
+    "stats_active_days": "🔥 Jours actifs sur 30 j : *{n}*",
+},
     "uk": {
         "upsell_title": "💎 Mindra+",
         "upsell_body":  "Необмежені нагадування, звіти, челенджі та ексклюзивний режим.\nОформи Mindra+ і відкрий усе 💜",
@@ -1913,6 +2602,62 @@ GH_TEXTS = {
         "goal_usage": "Чтобы добавить цель, напиши: `/goal Текст цели`\nНапр.: `/goal Пробежать 5 км`",
         "habit_usage": "Чтобы добавить привычку, напиши: `/habit Название привычки`\nНапр.: `/habit Пить воду`",
     },
+    "es": {
+    "menu_title": "🎯 Metas y 🌱 Hábitos",
+    "btn_add_goal":   "🎯 Fijar meta",
+    "btn_list_goals": "📋 Mis metas",
+    "btn_add_habit":  "🌱 Añadir hábito",
+    "btn_list_habits":"📊 Mis hábitos",
+    "back": "◀️ Menú",
+    "goals_title": "🎯 Tus metas:",
+    "habits_title": "🌱 Tus hábitos:",
+    "goals_empty": "Aún no hay metas. Pulsa «🎯 Fijar meta».",
+    "habits_empty": "Aún no hay hábitos. Pulsa «🌱 Añadir hábito».",
+    "goal_usage": "Para añadir una meta, escribe: `/goal Texto de la meta`\nEj.: `/goal Correr 5 km`",
+    "habit_usage": "Para añadir un hábito, escribe: `/habit Nombre del hábito`\nEj.: `/habit Beber agua`",
+},
+"de": {
+    "menu_title": "🎯 Ziele und 🌱 Gewohnheiten",
+    "btn_add_goal":   "🎯 Ziel setzen",
+    "btn_list_goals": "📋 Meine Ziele",
+    "btn_add_habit":  "🌱 Gewohnheit hinzufügen",
+    "btn_list_habits":"📊 Meine Gewohnheiten",
+    "back": "◀️ Menü",
+    "goals_title": "🎯 Deine Ziele:",
+    "habits_title": "🌱 Deine Gewohnheiten:",
+    "goals_empty": "Noch keine Ziele. Tippe «🎯 Ziel setzen».",
+    "habits_empty": "Noch keine Gewohnheiten. Tippe «🌱 Gewohnheit hinzufügen».",
+    "goal_usage": "Um ein Ziel hinzuzufügen, schreibe: `/goal Zieltext`\nZ. B.: `/goal 5 km laufen`",
+    "habit_usage": "Um eine Gewohnheit hinzuzufügen, schreibe: `/habit Name der Gewohnheit`\nZ. B.: `/habit Wasser trinken`",
+},
+"pl": {
+    "menu_title": "🎯 Cele i 🌱 Nawyki",
+    "btn_add_goal":   "🎯 Ustaw cel",
+    "btn_list_goals": "📋 Moje cele",
+    "btn_add_habit":  "🌱 Dodaj nawyk",
+    "btn_list_habits":"📊 Moje nawyki",
+    "back": "◀️ Menu",
+    "goals_title": "🎯 Twoje cele:",
+    "habits_title": "🌱 Twoje nawyki:",
+    "goals_empty": "Na razie brak celów. Naciśnij „🎯 Ustaw cel”.",
+    "habits_empty": "Na razie brak nawyków. Naciśnij „🌱 Dodaj nawyk”.",
+    "goal_usage": "Aby dodać cel, napisz: `/goal Treść celu`\nNp.: `/goal Przebiec 5 km`",
+    "habit_usage": "Aby dodać nawyk, napisz: `/habit Nazwa nawyku`\nNp.: `/habit Pić wodę`",
+},
+"fr": {
+    "menu_title": "🎯 Objectifs et 🌱 Habitudes",
+    "btn_add_goal":   "🎯 Fixer un objectif",
+    "btn_list_goals": "📋 Mes objectifs",
+    "btn_add_habit":  "🌱 Ajouter une habitude",
+    "btn_list_habits":"📊 Mes habitudes",
+    "back": "◀️ Menu",
+    "goals_title": "🎯 Tes objectifs :",
+    "habits_title": "🌱 Tes habitudes :",
+    "goals_empty": "Pas encore d’objectifs. Appuie sur « 🎯 Fixer un objectif ».",
+    "habits_empty": "Pas encore d’habitudes. Appuie sur « 🌱 Ajouter une habitude ».",
+    "goal_usage": "Pour ajouter un objectif, écris : `/goal Texte de l’objectif`\nEx. : `/goal Courir 5 km`",
+    "habit_usage": "Pour ajouter une habitude, écris : `/habit Nom de l’habitude`\nEx. : `/habit Boire de l’eau`",
+},
     "uk": {
         "menu_title": "🎯 Цілі та 🌱 Звички",
         "btn_add_goal":   "🎯 Додати ціль",
@@ -2048,17 +2793,59 @@ SETTINGS_TEXTS = {
         "choose_tz":   "🌍 Укажи свой часовой пояс (кнопками ниже):",
         "done":        "✅ Готово! Язык: *{lang_name}* · Часовой пояс: *{tz}* · Локальное время: *{local_time}*",
         "lang_name": {
-            "ru":"Русский","uk":"Українська","md":"Română","be":"Беларуская",
-            "kk":"Қазақша","kg":"Кыргызча","hy":"Հայերեն","ka":"ქართული","ce":"Нохчийн мотт","en":"English"
+        "ru":"Русский","uk":"Українська","md":"Română","be":"Беларуская",
+        "kk":"Қазақша","kg":"Кыргызча","hy":"Հայերեն","ka":"ქართული","ce":"Нохчийн мотт",
+        "en":"English","es":"Español","de":"Deutsch","pl":"Polski","fr":"Français"
         },
     },
+    "es": {
+    "choose_lang": "🌐 Elige el idioma de la interfaz:",
+    "choose_tz":   "🌍 Indica tu zona horaria (con los botones abajo):",
+    "done":        "✅ ¡Listo! Idioma: *{lang_name}* · Zona horaria: *{tz}* · Hora local: *{local_time}*",
+    "lang_name": {
+        "ru":"Русский","uk":"Українська","md":"Română","be":"Беларуская",
+        "kk":"Қазақша","kg":"Кыргызча","hy":"Հայերեն","ka":"ქართული","ce":"Нохчийн мотт",
+        "en":"English","es":"Español","de":"Deutsch","pl":"Polski","fr":"Français"
+    },
+},
+"de": {
+    "choose_lang": "🌐 Wähle die Sprache der Oberfläche:",
+    "choose_tz":   "🌍 Gib deine Zeitzone an (mit den Tasten unten):",
+    "done":        "✅ Fertig! Sprache: *{lang_name}* · Zeitzone: *{tz}* · Ortszeit: *{local_time}*",
+    "lang_name": {
+        "ru":"Русский","uk":"Українська","md":"Română","be":"Беларуская",
+        "kk":"Қазақша","kg":"Кыргызча","hy":"Հայերեն","ka":"ქართული","ce":"Нохчийн мотт",
+        "en":"English","es":"Español","de":"Deutsch","pl":"Polski","fr":"Français"
+    },
+},
+"pl": {
+    "choose_lang": "🌐 Wybierz język interfejsu:",
+    "choose_tz":   "🌍 Podaj swoją strefę czasową (przyciskami poniżej):",
+    "done":        "✅ Gotowe! Język: *{lang_name}* · Strefa czasowa: *{tz}* · Czas lokalny: *{local_time}*",
+    "lang_name": {
+        "ru":"Русский","uk":"Українська","md":"Română","be":"Беларуская",
+        "kk":"Қазақша","kg":"Кыргызча","hy":"Հայերեն","ka":"ქართული","ce":"Нохчийн мотт",
+        "en":"English","es":"Español","de":"Deutsch","pl":"Polski","fr":"Français"
+    },
+},
+"fr": {
+    "choose_lang": "🌐 Choisis la langue de l’interface :",
+    "choose_tz":   "🌍 Indique ton fuseau horaire (avec les boutons ci-dessous) :",
+    "done":        "✅ C’est fait ! Langue : *{lang_name}* · Fuseau horaire : *{tz}* · Heure locale : *{local_time}*",
+    "lang_name": {
+        "ru":"Русский","uk":"Українська","md":"Română","be":"Беларуская",
+        "kk":"Қазақша","kg":"Кыргызча","hy":"Հայերեն","ka":"ქართული","ce":"Нохчийн мотт",
+        "en":"English","es":"Español","de":"Deutsch","pl":"Polski","fr":"Français"
+    },
+},
     "uk": {
         "choose_lang": "🌐 Обери мову інтерфейсу:",
         "choose_tz":   "🌍 Вкажи свій часовий пояс (кнопками нижче):",
         "done":        "✅ Готово! Мова: *{lang_name}* · Часовий пояс: *{tz}* · Локальний час: *{local_time}*",
-        "lang_name": {
-            "ru":"Русский","uk":"Українська","md":"Română","be":"Беларуская",
-            "kk":"Қазақша","kg":"Кыргызча","hy":"Հայերեն","ka":"ქართული","ce":"Нохчийн мотт","en":"English"
+             "lang_name": {
+        "ru":"Русский","uk":"Українська","md":"Română","be":"Беларуская",
+        "kk":"Қазақша","kg":"Кыргызча","hy":"Հայերեն","ka":"ქართული","ce":"Нохчийн мотт",
+        "en":"English","es":"Español","de":"Deutsch","pl":"Polski","fr":"Français"
         },
     },
     "md": {
@@ -2066,71 +2853,79 @@ SETTINGS_TEXTS = {
         "choose_tz":   "🌍 Alege fusul orar (folosește butoanele):",
         "done":        "✅ Gata! Limba: *{lang_name}* · Fus orar: *{tz}* · Ora locală: *{local_time}*",
         "lang_name": {
-            "ru":"Русский","uk":"Українська","md":"Română","be":"Беларуская",
-            "kk":"Қазақша","kg":"Кыргызча","hy":"Հայերեն","ka":"ქართული","ce":"Нохчийн мотт","en":"English"
+        "ru":"Русский","uk":"Українська","md":"Română","be":"Беларуская",
+        "kk":"Қазақша","kg":"Кыргызча","hy":"Հայերեն","ka":"ქართული","ce":"Нохчийн мотт",
+        "en":"English","es":"Español","de":"Deutsch","pl":"Polski","fr":"Français"
         },
     },
     "be": {
         "choose_lang": "🌐 Абярыце мову інтэрфейсу:",
         "choose_tz":   "🌍 Пакажыце свой часавы пояс (кнопкамі ніжэй):",
         "done":        "✅ Гатова! Мова: *{lang_name}* · Часавы пояс: *{tz}* · Мясцовы час: *{local_time}*",
-        "lang_name": {
-            "ru":"Русский","uk":"Українська","md":"Română","be":"Беларуская",
-            "kk":"Қазақша","kg":"Кыргызча","hy":"Հայերեն","ka":"ქართული","ce":"Нохчийн мотт","en":"English"
+ "lang_name": {
+        "ru":"Русский","uk":"Українська","md":"Română","be":"Беларуская",
+        "kk":"Қазақша","kg":"Кыргызча","hy":"Հայերեն","ka":"ქართული","ce":"Нохчийн мотт",
+        "en":"English","es":"Español","de":"Deutsch","pl":"Polski","fr":"Français"
         },
     },
     "kk": {
         "choose_lang": "🌐 Интерфейс тілін таңдаңыз:",
         "choose_tz":   "🌍 Уақыт белдеуіңізді таңдаңыз (төмендегі батырмалар):",
         "done":        "✅ Дайын! Тіл: *{lang_name}* · Уақыт белдеуі: *{tz}* · Жергілікті уақыт: *{local_time}*",
-        "lang_name": {
-            "ru":"Русский","uk":"Українська","md":"Română","be":"Беларуская",
-            "kk":"Қазақша","kg":"Кыргызча","hy":"Հայերեն","ka":"ქართული","ce":"Нохчийн мотт","en":"English"
+         "lang_name": {
+        "ru":"Русский","uk":"Українська","md":"Română","be":"Беларуская",
+        "kk":"Қазақша","kg":"Кыргызча","hy":"Հայերեն","ka":"ქართული","ce":"Нохчийн мотт",
+        "en":"English","es":"Español","de":"Deutsch","pl":"Polski","fr":"Français"
         },
     },
     "kg": {
         "choose_lang": "🌐 Интерфейс тилин тандаңыз:",
         "choose_tz":   "🌍 Убакыт алкагыңызды тандаңыз (төмөнкү баскычтар):",
         "done":        "✅ Даяр! Тил: *{lang_name}* · Убакыт алкагы: *{tz}* · Жергиликтүү убакыт: *{local_time}*",
-        "lang_name": {
-            "ru":"Русский","uk":"Українська","md":"Română","be":"Беларуская",
-            "kk":"Қазақша","kg":"Кыргызча","hy":"Հայերեն","ka":"ქართული","ce":"Нохчийн мотт","en":"English"
+         "lang_name": {
+        "ru":"Русский","uk":"Українська","md":"Română","be":"Беларуская",
+        "kk":"Қазақша","kg":"Кыргызча","hy":"Հայերեն","ka":"ქართული","ce":"Нохчийн мотт",
+        "en":"English","es":"Español","de":"Deutsch","pl":"Polski","fr":"Français"
         },
     },
     "hy": {
         "choose_lang": "🌐 Ընտրիր ինտերֆեյսի լեզուն․",
         "choose_tz":   "🌍 Նշիր քո ժամային գոտին (ստորև գտնվող կոճակներով)․",
         "done":        "✅ Պատրաստ է․ Լեզու՝ *{lang_name}* · Ժամային գոտի՝ *{tz}* · Տեղական ժամանակ՝ *{local_time}*",
-        "lang_name": {
-            "ru":"Русский","uk":"Українська","md":"Română","be":"Беларуская",
-            "kk":"Қазақша","kg":"Кыргызча","hy":"Հայերեն","ka":"ქართული","ce":"Нохчийн мотт","en":"English"
+         "lang_name": {
+        "ru":"Русский","uk":"Українська","md":"Română","be":"Беларуская",
+        "kk":"Қазақша","kg":"Кыргызча","hy":"Հայերեն","ka":"ქართული","ce":"Нохчийн мотт",
+        "en":"English","es":"Español","de":"Deutsch","pl":"Polski","fr":"Français"
         },
     },
     "ka": {
         "choose_lang": "🌐 აირჩიე ინტერფეისის ენა:",
         "choose_tz":   "🌍 მიუთითე შენი დროის სარტყელი (ქვემოთ ღილაკებით):",
         "done":        "✅ მზადაა! ენა: *{lang_name}* · დროის სარტყელი: *{tz}* · ადგილობრივი დრო: *{local_time}*",
-        "lang_name": {
-            "ru":"Русский","uk":"Українська","md":"Română","be":"Беларуская",
-            "kk":"Қазақша","kg":"Кыргызча","hy":"Հայերեն","ka":"ქართული","ce":"Нохчийн мотт","en":"English"
+         "lang_name": {
+        "ru":"Русский","uk":"Українська","md":"Română","be":"Беларуская",
+        "kk":"Қазақша","kg":"Кыргызча","hy":"Հայերեն","ka":"ქართული","ce":"Нохчийн мотт",
+        "en":"English","es":"Español","de":"Deutsch","pl":"Polski","fr":"Français"
         },
     },
     "ce": {
         "choose_lang": "🌐 Интерфейсийн мотт юкъахь талла:",
         "choose_tz":   "🌍 Тайм-зона юкъахь талла (кнопкаш тӀехь):",
         "done":        "✅ ДӀаяр! Мотт: *{lang_name}* · Тайм-зона: *{tz}* · Локал хан: *{local_time}*",
-        "lang_name": {
-            "ru":"Русский","uk":"Українська","md":"Română","be":"Беларуская",
-            "kk":"Қазақша","kg":"Кыргызча","hy":"Հայերեն","ka":"ქართული","ce":"Нохчийн мотт","en":"English"
+         "lang_name": {
+        "ru":"Русский","uk":"Українська","md":"Română","be":"Беларуская",
+        "kk":"Қазақша","kg":"Кыргызча","hy":"Հայերեն","ka":"ქართული","ce":"Нохчийн мотт",
+        "en":"English","es":"Español","de":"Deutsch","pl":"Polski","fr":"Français"
         },
     },
     "en": {
         "choose_lang": "🌐 Pick your interface language:",
         "choose_tz":   "🌍 Set your time zone (use the buttons):",
         "done":        "✅ Done! Language: *{lang_name}* · Time zone: *{tz}* · Local time: *{local_time}*",
-        "lang_name": {
-            "ru":"Русский","uk":"Українська","md":"Română","be":"Беларуская",
-            "kk":"Қазақша","kg":"Кыргызча","hy":"Հայերեն","ka":"ქართული","ce":"Нохчийн мотт","en":"English"
+         "lang_name": {
+        "ru":"Русский","uk":"Українська","md":"Română","be":"Беларуская",
+        "kk":"Қазақша","kg":"Кыргызча","hy":"Հայերեն","ka":"ქართული","ce":"Нохчийн мотт",
+        "en":"English","es":"Español","de":"Deutsch","pl":"Polski","fr":"Français"
         },
     },
 }
