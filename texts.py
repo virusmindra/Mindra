@@ -1,5 +1,12 @@
 import os
 import copy
+import json
+import logging
+import re
+import threading
+from pathlib import Path
+
+from config import DATA_DIR, client
 
 # 🔤 Сообщения для ответа пользователю при распознавании голоса
 VOICE_TEXTS_BY_LANG = {
@@ -39,6 +46,10 @@ REMIND_SUGGEST_TEXTS = {
     "ka": {"ask": "შევქმნა შეხსენება ამაზე?", "yes": "დიახ", "no": "არა"},
     "ce": {"ask": "ДӀасалаш дӀаяздой? (напоминание)", "yes": "ХӀа", "no": "Ца"},
     "en": {"ask": "Set a reminder for this?", "yes": "Yes", "no": "No"},
+    "fr": {"ask": "Créer un rappel pour ça ?", "yes": "Oui", "no": "Non"},
+    "de": {"ask": "Eine Erinnerung dafür erstellen?", "yes": "Ja", "no": "Nein"},
+    "es": {"ask": "¿Crear un recordatorio para esto?", "yes": "Sí", "no": "No"},
+    "pl": {"ask": "Utworzyć przypomnienie o tym?", "yes": "Tak", "no": "Nie"},
 }
 
 REMIND_KEYWORDS = {
@@ -52,6 +63,10 @@ REMIND_KEYWORDS = {
     "ka": [r"\bშემახსენე\b", r"\bშეხსენება\b"],
     "ce": [r"\bдӀасалаш\b", r"\bхьо йоьха кхет\b"],  # приблизительно
     "en": [r"\bremind\s+me\b", r"\breminder\b", r"\bdon’t forget\b"],
+    "fr": [r"\brappelle[-\s]?moi\b", r"\brappel\b", r"\bn[’']oublie pas\b"],
+    "de": [r"\berinnere\s+mich\b", r"\berinnerung\b", r"\bvergiss\s+nicht\b"],
+    "es": [r"\brecu[eé]rdame\b", r"\brecordatorio\b", r"\bno te olvides\b"],
+    "pl": [r"\bprzypomnij\s+mi\b", r"\bprzypomnienie\b", r"\bnie zapomnij\b"],
 }
 
 LANG_TO_TTS = {
@@ -5669,6 +5684,22 @@ LANG_PATTERNS = {
     "en": {
         "deadline": r"by (\d{4}-\d{2}-\d{2})",
         "remind": "remind"
+    },
+    "fr": {
+        "deadline": r"avant le (\d{4}-\d{2}-\d{2})",
+        "remind": "rappelle"
+    },
+    "de": {
+        "deadline": r"bis (\d{4}-\d{2}-\d{2})",
+        "remind": "erinnere"
+    },
+    "es": {
+        "deadline": r"hasta (\d{4}-\d{2}-\d{2})",
+        "remind": "recuerda"
+    },
+    "pl": {
+        "deadline": r"do (\d{4}-\d{2}-\d{2})",
+        "remind": "przypomnij"
     }
 }
 
@@ -8730,6 +8761,173 @@ POINTS_ADDED_GOAL = {
 
 
 # --- Language helpers -----------------------------------------------------
+LANG_NATIVE_NAMES = {
+    "fr": "French",
+    "de": "German",
+    "es": "Spanish",
+    "pl": "Polish",
+}
+
+TRANSLATION_CACHE_DIR = Path(DATA_DIR) / "translations"
+TRANSLATION_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+_translation_cache: dict[tuple[str, str], object] = {}
+_translation_lock = threading.Lock()
+
+
+def _serialize_structure(value):
+    if isinstance(value, dict):
+        return {key: _serialize_structure(val) for key, val in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_serialize_structure(val) for val in value]
+    return value
+
+
+def _restore_structure(base, translated):
+    if isinstance(base, dict) and isinstance(translated, dict):
+        restored = {}
+        for key, base_val in base.items():
+            restored[key] = _restore_structure(base_val, translated.get(key, base_val))
+        return restored
+    if isinstance(base, list):
+        result = []
+        if isinstance(translated, list):
+            for idx, base_val in enumerate(base):
+                translated_val = translated[idx] if idx < len(translated) else base_val
+                result.append(_restore_structure(base_val, translated_val))
+        else:
+            for base_val in base:
+                result.append(_restore_structure(base_val, base_val))
+        return result
+    if isinstance(base, tuple):
+        if isinstance(translated, (list, tuple)):
+            items = []
+            for idx, base_val in enumerate(base):
+                translated_val = translated[idx] if idx < len(translated) else base_val
+                items.append(_restore_structure(base_val, translated_val))
+            return tuple(items)
+        return base
+    return translated
+
+
+def _load_translation_from_disk(name: str, lang: str):
+    path = TRANSLATION_CACHE_DIR / f"{name}_{lang}.json"
+    if not path.exists():
+        return None
+    try:
+        with path.open("r", encoding="utf-8") as fh:
+            return json.load(fh)
+    except Exception:
+        logging.exception("Failed to load translation cache for %s/%s", name, lang)
+        return None
+
+
+def _save_translation_to_disk(name: str, lang: str, data) -> None:
+    path = TRANSLATION_CACHE_DIR / f"{name}_{lang}.json"
+    try:
+        with path.open("w", encoding="utf-8") as fh:
+            json.dump(data, fh, ensure_ascii=False, indent=2)
+    except Exception:
+        logging.exception("Failed to save translation cache for %s/%s", name, lang)
+
+
+def _parse_json_payload(text: str):
+    text = text.strip()
+    if text.startswith("```"):
+        parts = text.split("```", 2)
+        if len(parts) >= 2:
+            content = parts[1]
+            if content.startswith("json"):
+                text = content[len("json"):].strip()
+            else:
+                text = content.strip()
+    try:
+        return json.loads(text)
+    except Exception:
+        match = re.search(r"\{.*\}", text, re.S)
+        if match:
+            try:
+                return json.loads(match.group(0))
+            except Exception:
+                return None
+    return None
+
+
+def _request_translation(name: str, serialized, lang: str):
+    language_name = LANG_NATIVE_NAMES.get(lang)
+    if not language_name or client is None or not getattr(client, "chat", None):
+        return None
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You translate JSON values from English into {language_name}. "
+                        "Keep the JSON structure identical and return only valid JSON. "
+                        "Do not translate keys. Preserve markdown, emoji, punctuation, and placeholders "
+                        "like {{goal}} or {{name}}. If a value looks like a regular expression or contains "
+                        "escape sequences such as \\b, \\d, ^, $, leave it unchanged."
+                    ).format(language_name=language_name),
+                },
+                {
+                    "role": "user",
+                    "content": json.dumps(serialized, ensure_ascii=False),
+                },
+            ],
+            temperature=0.2,
+        )
+    except Exception as exc:
+        logging.warning("Translation request failed for %s/%s: %s", name, lang, exc)
+        return None
+
+    try:
+        choice = response.choices[0]
+        content = choice.message["content"] if isinstance(choice.message, dict) else choice.message.content
+    except Exception:
+        logging.warning("Unexpected translation response format for %s/%s", name, lang)
+        return None
+
+    parsed = _parse_json_payload(content)
+    if parsed is None:
+        logging.warning("Could not parse translation JSON for %s/%s", name, lang)
+    return parsed
+
+
+def _translate_value(name: str, base_value, lang: str):
+    if base_value is None:
+        return None
+
+    cache_key = (name, lang)
+    with _translation_lock:
+        if cache_key in _translation_cache:
+            return copy.deepcopy(_translation_cache[cache_key])
+
+    cached_serialized = _load_translation_from_disk(name, lang)
+    if cached_serialized is not None:
+        restored = _restore_structure(base_value, cached_serialized)
+        with _translation_lock:
+            _translation_cache[cache_key] = restored
+        return copy.deepcopy(restored)
+
+    serialized = _serialize_structure(base_value)
+    translated_serialized = _request_translation(name, serialized, lang)
+    if translated_serialized is None:
+        return copy.deepcopy(base_value)
+
+    _save_translation_to_disk(name, lang, translated_serialized)
+    restored = _restore_structure(base_value, translated_serialized)
+    with _translation_lock:
+        _translation_cache[cache_key] = restored
+    return copy.deepcopy(restored)
+
+
+_LANG_TRANSLATION_SKIP = {
+    "REMIND_KEYWORDS",
+    "LANG_PATTERNS",
+    "goal_keywords_by_lang",
+}
 NEW_LANG_ALIASES = {
     "fr": "en",
     "de": "en",
@@ -8744,7 +8942,10 @@ for _alias, _base in NEW_LANG_ALIASES.items():
         if _name in _LANG_COPY_SKIP or _name.startswith("__"):
             continue
         if isinstance(_data, dict) and _base in _data and _alias not in _data:
-            _data[_alias] = copy.deepcopy(_data[_base])
+            if _name in _LANG_TRANSLATION_SKIP:
+                _data[_alias] = copy.deepcopy(_data[_base])
+            else:
+                _data[_alias] = _translate_value(_name, _data[_base], _alias)
 
 LANG_SELECTION_NAMES = {
     "ru": "Русский",
