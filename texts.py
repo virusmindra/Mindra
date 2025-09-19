@@ -20,6 +20,10 @@ VOICE_TEXTS_BY_LANG = {
     "md": {"you_said": "📝 Ai spus:", "error": "❌ Eroare la recunoașterea vocii, încearcă mai târziu."},
     "ka": {"you_said": "📝 შენ თქვი:", "error": "❌ ხმის ამოცნობის შეცდომა, სცადე მოგვიანებით."},
     "en": {"you_said": "📝 You said:", "error": "❌ Error recognizing voice, please try again later."},
+        "es": {"you_said": "📝 Dijiste:", "error": "❌ Error al reconocer la voz, inténtalo más tarde."},
+    "de": {"you_said": "📝 Du hast gesagt:", "error": "❌ Fehler bei der Spracherkennung, bitte versuche es später erneut."},
+    "pl": {"you_said": "📝 Powiedziałeś/łaś:", "error": "❌ Błąd rozpoznawania mowy, spróbuj później."},
+    "fr": {"you_said": "📝 Tu as dit :", "error": "❌ Erreur de reconnaissance vocale, réessaie plus tard."},
 }
 
 PCH_DONE_TOAST_TEXTS = {
