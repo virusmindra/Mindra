@@ -57,6 +57,26 @@ goal_keywords_by_lang = {
         "will do", "try to", "need", "time to", "starting", "going to",
         "decided", "habit", "add"
     ],
+    "fr": [
+        "je veux", "je prévois", "rêve", "objectif", "commencer", "m'inscrire", "débuter",
+        "je vais", "j'essaie", "besoin", "il est temps", "je commence", "je compte",
+        "j'ai décidé", "habitude", "ajouter"
+    ],
+    "de": [
+        "ich will", "ich plane", "träume", "ziel", "anfangen", "mich anmelden", "starten",
+        "werde", "versuche", "muss", "es ist zeit", "ich beginne", "ich habe vor",
+        "ich habe entschieden", "gewohnheit", "hinzufügen"
+    ],
+    "es": [
+        "quiero", "planeo", "sueño", "meta", "empezar", "inscribirme", "comenzar",
+        "voy a", "intentaré", "necesito", "es hora", "estoy empezando", "pienso",
+        "he decidido", "hábito", "añadir"
+    ],
+    "pl": [
+        "chcę", "planuję", "marzę", "cel", "zacznę", "zapiszę się", "zacząć",
+        "będę", "spróbuję", "muszę", "czas", "zaczynam", "zamierzam",
+        "zdecydowałem", "nawyk", "dodać"
+    ],
 }
 
 def is_goal_like(text: str, lang: str = "ru") -> bool:
