@@ -97,6 +97,54 @@ REACTIONS_GOAL_DONE = {
         "🦋 Ты сам(а) — источник перемен.",
         "🎉 Цель достигнута, это круто!",
     ],
+    "es": [
+    "🌟 ¡Estoy orgulloso/a de ti! Un paso más adelante.",
+    "🥳 ¡Gran trabajo! Eres increíble.",
+    "💪 ¡Esa es la actitud! Sigue así.",
+    "🔥 ¡Lo hiciste! Mis respetos 💜",
+    "👏 Pequeños pasos llevan a grandes victorias.",
+    "💜 Estoy orgulloso/a de tu constancia.",
+    "✨ Sigue así, ¡todo saldrá bien!",
+    "🚀 ¡Adelante hacia nuevas metas!",
+    "🦋 Tú eres la fuente del cambio.",
+    "🎉 ¡Objetivo alcanzado, qué genial!",
+],
+"de": [
+    "🌟 Ich bin stolz auf dich! Wieder ein Schritt nach vorn.",
+    "🥳 Tolle Arbeit! Du bist spitze.",
+    "💪 Genau diese Einstellung! Weiter so.",
+    "🔥 Du hast es geschafft! Respekt 💜",
+    "👏 Kleine Schritte führen zu großen Siegen.",
+    "💜 Ich bin stolz auf deine Ausdauer.",
+    "✨ Mach weiter so – das wird klappen!",
+    "🚀 Auf zu neuen Zielen!",
+    "🦋 Du bist selbst die Quelle der Veränderung.",
+    "🎉 Ziel erreicht, wie cool!",
+],
+"pl": [
+    "🌟 Jestem z ciebie dumny/dumna! Kolejny krok naprzód.",
+    "🥳 Świetna robota! Brawo ty.",
+    "💪 To jest właśnie nastawienie! Tak trzymaj.",
+    "🔥 Udało ci się! Szacunek 💜",
+    "👏 Małe kroki prowadzą do wielkich zwycięstw.",
+    "💜 Jestem dumny/dumna z twojej wytrwałości.",
+    "✨ Tak trzymaj — wszystko się uda!",
+    "🚀 Naprzód, ku nowym celom!",
+    "🦋 Jesteś źródłem zmian.",
+    "🎉 Cel osiągnięty — super!",
+],
+"fr": [
+    "🌟 Je suis fier/fière de toi ! Encore un pas en avant.",
+    "🥳 Excellent travail ! Tu gères.",
+    "💪 Voilà le bon état d’esprit ! Continue.",
+    "🔥 Tu l’as fait ! Respect 💜",
+    "👏 De petits pas mènent à de grandes victoires.",
+    "💜 Je suis fier/fière de ta persévérance.",
+    "✨ Continue comme ça, tout va fonctionner !",
+    "🚀 En avant vers de nouveaux objectifs !",
+    "🦋 Tu es toi-même la source du changement.",
+    "🎉 Objectif atteint, trop bien !",
+],
     "uk": [
         "🌟 Пишаюся тобою! Ще один крок вперед.",
         "🥳 Чудова робота! Ти молодець.",
@@ -258,6 +306,26 @@ DELETE_MESSAGES = {
         "deleted": "🗑️ Goal deleted.",
         "not_found": "⚠️ Can't find such a goal."
     },
+    "es": {
+    "usage": "❌ Para borrar un objetivo, escribe:\n`/delete 1`",
+    "deleted": "🗑️ Objetivo eliminado.",
+    "not_found": "⚠️ No se encuentra ese objetivo."
+},
+"de": {
+    "usage": "❌ Um ein Ziel zu löschen, tippe:\n`/delete 1`",
+    "deleted": "🗑️ Ziel gelöscht.",
+    "not_found": "⚠️ Dieses Ziel wurde nicht gefunden."
+},
+"pl": {
+    "usage": "❌ Aby usunąć cel, wpisz:\n`/delete 1`",
+    "deleted": "🗑️ Cel usunięty.",
+    "not_found": "⚠️ Nie znaleziono takiego celu."
+},
+"fr": {
+    "usage": "❌ Pour supprimer un objectif, tape :\n`/delete 1`",
+    "deleted": "🗑️ Objectif supprimé.",
+    "not_found": "⚠️ Impossible de trouver cet objectif."
+},
 }
 
 NEW_LANG_ALIASES = {
