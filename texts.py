@@ -2973,7 +2973,7 @@ TZ_KEYBOARD_ROWS = [
     [("🇺🇸 Denver", "America/Denver"), ("🇺🇸 Los Angeles", "America/Los_Angeles")],
     [("🇺🇸 Phoenix", "America/Phoenix"), ("🇺🇸 Miami", "America/New_York")],
     [("🇬🇪 Tbilisi", "Asia/Tbilisi"), ("🇦🇲 Yerevan", "Asia/Yerevan")],
-    [("🇰🇿 Almaty", "Asia/Almaty"),
+    [("🇰🇿 Almaty", "Asia/Almaty")],
     [("🌐 UTC", "UTC")],
 ]
 
