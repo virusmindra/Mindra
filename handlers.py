@@ -6801,13 +6801,26 @@ async def send_random_support(context: ContextTypes.DEFAULT_TYPE):
                 tz = ZoneInfo("UTC")
             return datetime.now(tz)
 
+    def _get_and_migrate(store: dict, key: str):
+        if key in store:
+            return store[key]
+        try:
+            alt_key = int(key)
+        except (TypeError, ValueError):
+            return None
+        if alt_key in store:
+            value = store.pop(alt_key)
+            store[key] = value
+            return value
+        return None
+        
     now_utc = _now_utc()
 
-    candidate_user_ids = list(user_last_seen.keys())
+    candidate_user_ids = {str(uid) for uid in user_last_seen.keys()}
 
     for user_id in candidate_user_ids:
         # 0) не трогаем, если был активен последние N часов
-        last_seen = user_last_seen.get(user_id)
+        last_seen = _get_and_migrate(user_last_seen, user_id)
         try:
             hours_inactive = _hours_since(last_seen, now_utc)
         except Exception:
@@ -6822,16 +6835,17 @@ async def send_random_support(context: ContextTypes.DEFAULT_TYPE):
 
         # 2) дневной лимит по ЛОКАЛЬНОЙ дате пользователя
         local_date_str = local_now.date().isoformat()
-        if user_support_daily_date.get(user_id) != local_date_str:
+        if _get_and_migrate(user_support_daily_date, user_id) != local_date_str:
             user_support_daily_date[user_id] = local_date_str
             user_support_daily_count[user_id] = 0
 
-        daily_cnt = int(user_support_daily_count.get(user_id, 0))
+        daily_cnt_raw = _get_and_migrate(user_support_daily_count, user_id)
+        daily_cnt = int(daily_cnt_raw or 0)
         if daily_cnt >= max_per_day:
             continue
 
         # 3) пауза между сообщениями
-        last_support = user_last_support.get(user_id)
+        last_support = _get_and_migrate(user_last_support, user_id)
         if last_support:
             try:
                 if _hours_since(last_support, now_utc) < min_between_h:
@@ -6845,12 +6859,24 @@ async def send_random_support(context: ContextTypes.DEFAULT_TYPE):
 
         # 5) отправка
         try:
-            lang = user_languages.get(user_id, "ru")
+            lang = user_languages.get(user_id)
+            if lang is None:
+                try:
+                    lang = user_languages.get(int(user_id))
+                except (TypeError, ValueError):
+                    lang = None
+            if not lang:
+                lang = "ru"
             pool = SUPPORT_MESSAGES_BY_LANG.get(lang, SUPPORT_MESSAGES_BY_LANG["ru"])
             if not pool:
                 continue
             msg = random.choice(pool)
-            await context.bot.send_message(chat_id=int(user_id), text=msg)
+            try:
+                chat_id = int(user_id)
+            except (TypeError, ValueError):
+                logging.warning(f"⚠️ Неверный user_id для отправки support: {user_id}")
+                continue
+            await context.bot.send_message(chat_id=chat_id, text=msg)
 
             user_last_support[user_id] = now_utc
             user_support_daily_count[user_id] = daily_cnt + 1
