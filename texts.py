@@ -2939,12 +2939,10 @@ TIMEZONE_ALIASES = {
     # UA/RU/СНГ
     "kiev": "Europe/Kyiv", "kyiv": "Europe/Kyiv", "киев": "Europe/Kyiv", "київ": "Europe/Kyiv",
     "moscow": "Europe/Moscow", "москва": "Europe/Moscow", "msk": "Europe/Moscow",
-    "minsk": "Europe/Minsk",
     "chisinau": "Europe/Chisinau", "kishinev": "Europe/Chisinau", "кишинев": "Europe/Chisinau",
     "tbilisi": "Asia/Tbilisi", "tbilisi": "Asia/Tbilisi",
     "yerevan": "Asia/Yerevan", "erevan": "Asia/Yerevan",
     "almaty": "Asia/Almaty", "алматы": "Asia/Almaty",
-    "bishkek": "Asia/Bishkek", "бишкек": "Asia/Bishkek",
     "astana": "Asia/Almaty",  # упростим для Казахстана
 
     # USA
@@ -2957,22 +2955,25 @@ TIMEZONE_ALIASES = {
     "seattle": "America/Los_Angeles", "sf": "America/Los_Angeles", "sanfrancisco": "America/Los_Angeles",
 
     # EU misc
-    "warsaw": "Europe/Warsaw", "vilnius": "Europe/Vilnius", "riga": "Europe/Riga", "tallinn": "Europe/Tallinn",
+    "warsaw": "Europe/Warsaw", "riga": "Europe/Riga", "tallinn": "Europe/Tallinn",
     "berlin": "Europe/Berlin", "paris": "Europe/Paris", "london": "Europe/London",
-
+    "madrid": "Europe/Madrid", "barcelona": "Europe/Madrid",
+    "germany": "Europe/Berlin", "france": "Europe/Paris", "spain": "Europe/Madrid",
+    
     # generic
     "utc": "UTC",
 }
 
 # Предустановленные кнопки (частые варианты)
 TZ_KEYBOARD_ROWS = [
-    [("🇺🇦 Kyiv", "Europe/Kyiv"), ("🇷🇺 Moscow", "Europe/Moscow"), ("🇧🇾 Minsk", "Europe/Minsk")],
+    [("🇺🇦 Kyiv", "Europe/Kyiv"), ("🇷🇺 Moscow", "Europe/Moscow")],
+    [("🇫🇷 Paris", "Europe/Paris"), ("🇩🇪 Berlin", "Europe/Berlin")],
+    [("🇪🇸 Madrid", "Europe/Madrid"), ("🇵🇱 Warsaw", "Europe/Warsaw")],
     [("🇺🇸 New York", "America/New_York"), ("🇺🇸 Chicago", "America/Chicago")],
     [("🇺🇸 Denver", "America/Denver"), ("🇺🇸 Los Angeles", "America/Los_Angeles")],
     [("🇺🇸 Phoenix", "America/Phoenix"), ("🇺🇸 Miami", "America/New_York")],
-    [("🇵🇱 Warsaw", "Europe/Warsaw"), ("🇱🇹 Vilnius", "Europe/Vilnius")],
     [("🇬🇪 Tbilisi", "Asia/Tbilisi"), ("🇦🇲 Yerevan", "Asia/Yerevan")],
-    [("🇰🇿 Almaty", "Asia/Almaty"), ("🇰🇬 Bishkek", "Asia/Bishkek")],
+    [("🇰🇿 Almaty", "Asia/Almaty"),
     [("🌐 UTC", "UTC")],
 ]
 
