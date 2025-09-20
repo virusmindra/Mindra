@@ -2270,14 +2270,6 @@ def _voice_kb(uid: str, tab: str = "engine", back_to: str = "plus") -> InlineKey
             row.append(InlineKeyboardButton(_check(sel) + label, callback_data=f"v:speed:{s:.1f}"))
         rows.append(row)
 
-    elif tab == "beh":
-        rows += [
-            [InlineKeyboardButton((_check(p.get("voice_only", False)) + t.get("label_voice_only","Voice only")),
-                                  callback_data="v:beh:voiceonly")],
-            [InlineKeyboardButton((_check(p.get("auto_story_voice", True)) + t.get("label_auto_story","Auto story voice")),
-                                  callback_data="v:beh:autostory")],
-        ]
-
     elif tab == "bg":
         kinds_order = ["off", "rain", "fire", "ocean", "lofi"]
         present = [k for k in kinds_order if k in BGM_PRESETS] or list(BGM_PRESETS.keys())
@@ -2302,7 +2294,6 @@ def _voice_kb(uid: str, tab: str = "engine", back_to: str = "plus") -> InlineKey
         InlineKeyboardButton(t["btn_engine"], callback_data="v:tab:engine"),
         InlineKeyboardButton(t["btn_voice"],  callback_data="v:tab:voice"),
         InlineKeyboardButton(t["btn_speed"],  callback_data="v:tab:speed"),
-        InlineKeyboardButton(t["btn_beh"],    callback_data="v:tab:beh"),
         InlineKeyboardButton(t["btn_bg"],     callback_data="v:tab:bg"),
     ])
 
@@ -2654,15 +2645,7 @@ async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception:
             pass
         current_tab = "speed"
-
-    elif kind == "beh":
-        sub = parts[2] if len(parts) > 2 else ""
-        if sub == "voiceonly":
-            p["voice_only"] = not p.get("voice_only", False)
-        elif sub == "autostory":
-            p["auto_story_voice"] = not p.get("auto_story_voice", True)
-        current_tab = "beh"
-
+        
     elif kind == "bg":
         sub = parts[2] if len(parts) > 2 else ""
         if sub == "set" and len(parts) > 3:
