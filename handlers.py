@@ -5326,7 +5326,7 @@ async def set_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def mark_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     lang = user_languages.get(user_id, "ru")
-    texts = HABIT_BUTTON_TEXTS.get(lang, HABIT_BUTTON_TEXTS["ru"])
+    texts = HABIT_BUTTON_TEXTS.get(lang, HABIT_BUTTON_TEXTS["en"])
 
     goals = get_goals_for_user(user_id)
     if not goals:
@@ -6096,67 +6096,45 @@ async def delete_habit_choose_handler(update: Update, context: ContextTypes.DEFA
     user_id = str(query.from_user.id)
     lang = user_languages.get(user_id, "ru")
     habits = get_habits(user_id)
-    choose_texts = {
-        "ru": "🗑️ Выбери привычку для удаления:",
-        "uk": "🗑️ Обери звичку для видалення:",
-        "be": "🗑️ Абяры звычку для выдалення:",
-        "kk": "🗑️ Өшіру үшін әдетті таңда:",
-        "kg": "🗑️ Өчүрүү үчүн көнүмүштү танда:",
-        "hy": "🗑️ Ընտրիր սովորությունը ջնջելու համար:",
-        "ce": "🗑️ Привычка дӀелла хетам:",
-        "md": "🗑️ Alege obiceiul pentru ștergere:",
-        "ka": "🗑️ აირჩიე ჩვევა წაშლისთვის:",
-        "en": "🗑️ Choose a habit to delete:"
-    }
-    t = choose_texts.get(lang, choose_texts["ru"])
+    texts = HABIT_BUTTON_TEXTS.get(lang, HABIT_BUTTON_TEXTS["en"])
+    choose_text = texts.get("choose_delete", HABIT_BUTTON_TEXTS["en"]["choose_delete"])
+    empty_text = texts.get("no_habits_to_delete", HABIT_BUTTON_TEXTS["en"]["no_habits_to_delete"])
     if not habits:
-        await query.edit_message_text(t + "\n\n❌ Нет привычек для удаления.")
+        await query.edit_message_text(f"{choose_text}\n\n{empty_text}")
         return
     buttons = [
         [InlineKeyboardButton(f"{i+1}. {h.get('text','')[:40]}", callback_data=f"delete_habit_{i}")]
         for i, h in enumerate(habits)
     ]
     reply_markup = InlineKeyboardMarkup(buttons)
-    await query.edit_message_text(t, reply_markup=reply_markup)
+    await query.edit_message_text(choose_text, reply_markup=reply_markup)
 
 # ——— Handler: Удаляет привычку по индексу ———
 async def delete_habit_confirm_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = str(query.from_user.id)
     lang = user_languages.get(user_id, "ru")
+    texts = HABIT_BUTTON_TEXTS.get(lang, HABIT_BUTTON_TEXTS["en"])
     data = query.data
     try:
         index = int(data.split("_")[-1])
     except Exception:
-        await query.answer("Ошибка выбора привычки.", show_alert=True)
+        await query.answer(texts.get("choice_error", HABIT_BUTTON_TEXTS["en"]["choice_error"]), show_alert=True)
         return
     habits = get_habits(user_id)
     if not habits or index < 0 or index >= len(habits):
-        await query.edit_message_text("❌ Привычка не найдена.")
+        await query.edit_message_text(texts.get("not_found", HABIT_BUTTON_TEXTS["en"]["not_found"]))
         return
-    delete_texts = {
-        "ru": "🗑️ Привычка удалена.",
-        "uk": "🗑️ Звичка видалена.",
-        "be": "🗑️ Звычка выдалена.",
-        "kk": "🗑️ Әдет жойылды.",
-        "kg": "🗑️ Көнүмүш өчүрүлдү.",
-        "hy": "🗑️ Սովորությունը ջնջված է։",
-        "ce": "🗑️ Привычка дӀелла.",
-        "md": "🗑️ Obiceiul a fost șters.",
-        "ka": "🗑️ ჩვევა წაიშალა.",
-        "en": "🗑️ Habit deleted.",
-    }
-    # Удаляем
     if delete_habit(user_id, index):
-        await query.edit_message_text(delete_texts.get(lang, delete_texts["ru"]))
+        await query.edit_message_text(texts.get("habit_deleted", HABIT_BUTTON_TEXTS["en"]["habit_deleted"]))
     else:
-        await query.edit_message_text(HABIT_BUTTON_TEXTS.get(lang, HABIT_BUTTON_TEXTS["ru"])["delete_error"])
+        await query.edit_message_text(texts.get("delete_error", HABIT_BUTTON_TEXTS["en"]["delete_error"]))
         
 async def handle_habit_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = str(query.from_user.id)
     lang = user_languages.get(user_id, "ru")
-    texts = HABIT_BUTTON_TEXTS.get(lang, HABIT_BUTTON_TEXTS["ru"])
+    texts = HABIT_BUTTON_TEXTS.get(lang, HABIT_BUTTON_TEXTS["en"])
     await query.answer()
 
     if query.data.startswith("done_habit_"):
