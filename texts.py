@@ -8649,47 +8649,65 @@ HABIT_BUTTON_TEXTS = {
         "habit_deleted": "🗑️ Привычка удалена.",
         "delete_error": "Не удалось удалить привычку.",
         "no_goals": "У тебя пока нет целей, которые можно отметить выполненными 😔",
-        "choose_goal": "Выбери цель, которую ты выполнил(а):"
+        "choose_goal": "Выбери цель, которую ты выполнил(а):",
+        "choose_delete": "🗑️ Выбери привычку для удаления:",
+        "no_habits_to_delete": "❌ Нет привычек для удаления.",
+        "choice_error": "Ошибка выбора привычки.",
     },
     "es": {
-    "habit_done": "🎉 ¡Hábito marcado como completado!",
-    "not_found": "No se pudo encontrar el hábito.",
-    "habit_deleted": "🗑️ Hábito eliminado.",
-    "delete_error": "No se pudo eliminar el hábito.",
-    "no_goals": "Aún no tienes objetivos que se puedan marcar como completados 😔",
-    "choose_goal": "Elige el objetivo que has completado:"
-},
-"de": {
-    "habit_done": "🎉 Gewohnheit als erledigt markiert!",
-    "not_found": "Gewohnheit konnte nicht gefunden werden.",
-    "habit_deleted": "🗑️ Gewohnheit gelöscht.",
-    "delete_error": "Gewohnheit konnte nicht gelöscht werden.",
-    "no_goals": "Du hast noch keine Ziele, die als erledigt markiert werden können 😔",
-    "choose_goal": "Wähle das Ziel, das du erledigt hast:"
-},
-"pl": {
-    "habit_done": "🎉 Nawyk oznaczony jako wykonany!",
-    "not_found": "Nie udało się znaleźć nawyku.",
-    "habit_deleted": "🗑️ Nawyk usunięty.",
-    "delete_error": "Nie udało się usunąć nawyku.",
-    "no_goals": "Nie masz jeszcze celów, które można oznaczyć jako wykonane 😔",
-    "choose_goal": "Wybierz cel, który wykonałeś/wykonałaś:"
-},
-"fr": {
-    "habit_done": "🎉 Habitude marquée comme effectuée !",
-    "not_found": "Impossible de trouver l’habitude.",
-    "habit_deleted": "🗑️ Habitude supprimée.",
-    "delete_error": "Impossible de supprimer l’habitude.",
-    "no_goals": "Tu n’as pas encore d’objectifs à marquer comme effectués 😔",
-    "choose_goal": "Choisis l’objectif que tu as accompli :"
-},
+        "habit_done": "🎉 ¡Hábito marcado como completado!",
+        "not_found": "No se pudo encontrar el hábito.",
+        "habit_deleted": "🗑️ Hábito eliminado.",
+        "delete_error": "No se pudo eliminar el hábito.",
+        "no_goals": "Aún no tienes objetivos que se puedan marcar como completados 😔",
+        "choose_goal": "Elige el objetivo que has completado:",
+        "choose_delete": "🗑️ Elige el hábito para eliminar:",
+        "no_habits_to_delete": "❌ No hay hábitos para eliminar.",
+        "choice_error": "Error al seleccionar el hábito.",
+    },
+    "de": {
+        "habit_done": "🎉 Gewohnheit als erledigt markiert!",
+        "not_found": "Gewohnheit konnte nicht gefunden werden.",
+        "habit_deleted": "🗑️ Gewohnheit gelöscht.",
+        "delete_error": "Gewohnheit konnte nicht gelöscht werden.",
+        "no_goals": "Du hast noch keine Ziele, die als erledigt markiert werden können 😔",
+        "choose_goal": "Wähle das Ziel, das du erledigt hast:",
+        "choose_delete": "🗑️ Wähle eine Gewohnheit zum Löschen:",
+        "no_habits_to_delete": "❌ Keine Gewohnheiten zum Löschen.",
+        "choice_error": "Fehler bei der Auswahl der Gewohnheit.",
+    },
+    "pl": {
+        "habit_done": "🎉 Nawyk oznaczony jako wykonany!",
+        "not_found": "Nie udało się znaleźć nawyku.",
+        "habit_deleted": "🗑️ Nawyk usunięty.",
+        "delete_error": "Nie udało się usunąć nawyku.",
+        "no_goals": "Nie masz jeszcze celów, które można oznaczyć jako wykonane 😔",
+        "choose_goal": "Wybierz cel, który wykonałeś/wykonałaś:",
+        "choose_delete": "🗑️ Wybierz nawyk do usunięcia:",
+        "no_habits_to_delete": "❌ Brak nawyków do usunięcia.",
+        "choice_error": "Błąd wyboru nawyku.",
+    },
+    "fr": {
+        "habit_done": "🎉 Habitude marquée comme effectuée !",
+        "not_found": "Impossible de trouver l’habitude.",
+        "habit_deleted": "🗑️ Habitude supprimée.",
+        "delete_error": "Impossible de supprimer l’habitude.",
+        "no_goals": "Tu n’as pas encore d’objectifs à marquer comme effectués 😔",
+        "choose_goal": "Choisis l’objectif que tu as accompli :",
+        "choose_delete": "🗑️ Choisis une habitude à supprimer :",
+        "no_habits_to_delete": "❌ Aucune habitude à supprimer.",
+        "choice_error": "Erreur de sélection de l’habitude.",
+    },    
     "uk": {
         "habit_done": "🎉 Звичка позначена як виконана!",
         "not_found": "Не вдалося знайти звичку.",
         "habit_deleted": "🗑️ Звичка видалена.",
         "delete_error": "Не вдалося видалити звичку.",
         "no_goals": "У тебе поки немає цілей, які можна відмітити виконаними 😔",
-        "choose_goal": "Обери ціль, яку ти виконав(ла):"
+        "choose_goal": "Обери ціль, яку ти виконав(ла):",
+        "choose_delete": "🗑️ Обери звичку для видалення:",
+        "no_habits_to_delete": "❌ Немає звичок для видалення.",
+        "choice_error": "Помилка вибору звички.",
     },
     "be": {
         "habit_done": "🎉 Звычка адзначана як выкананая!",
@@ -8697,7 +8715,10 @@ HABIT_BUTTON_TEXTS = {
         "habit_deleted": "🗑️ Звычка выдалена.",
         "delete_error": "Не атрымалася выдаліць звычку.",
         "no_goals": "У цябе пакуль няма мэт, якія можна адзначыць выкананымі 😔",
-        "choose_goal": "Абяры мэту, якую ты выканаў(ла):"
+        "choose_goal": "Абяры мэту, якую ты выканаў(ла):",
+        "choose_delete": "🗑️ Абяры звычку для выдалення:",
+        "no_habits_to_delete": "❌ Няма звычак для выдалення.",
+        "choice_error": "Памылка выбару звычкі.",
     },
     "kk": {
         "habit_done": "🎉 Әдет орындалған деп белгіленді!",
@@ -8705,7 +8726,10 @@ HABIT_BUTTON_TEXTS = {
         "habit_deleted": "🗑️ Әдет жойылды.",
         "delete_error": "Әдетті жою мүмкін болмады.",
         "no_goals": "Орындаған мақсаттарың әлі жоқ 😔",
-        "choose_goal": "Орындаған мақсатыңды таңда:"
+        "choose_goal": "Орындаған мақсатыңды таңда:",
+        "choose_delete": "🗑️ Өшіру үшін әдетті таңда:",
+        "no_habits_to_delete": "❌ Өшіруге әдет жоқ.",
+        "choice_error": "Әдетті таңдауда қате.",
     },
     "kg": {
         "habit_done": "🎉 Көнүмүш аткарылды деп белгиленди!",
@@ -8713,7 +8737,10 @@ HABIT_BUTTON_TEXTS = {
         "habit_deleted": "🗑️ Көнүмүш өчүрүлдү.",
         "delete_error": "Көнүмүштү өчүрүү мүмкүн болгон жок.",
         "no_goals": "Аткарган максаттар жок 😔",
-        "choose_goal": "Аткарган максатыңды танда:"
+        "choose_goal": "Аткарган максатыңды танда:",
+        "choose_delete": "🗑️ Өчүрүү үчүн көнүмүштү танда:",
+        "no_habits_to_delete": "❌ Өчүрө турган көнүмүштөр жок.",
+        "choice_error": "Көнүмүш тандоодо ката.",
     },
     "hy": {
         "habit_done": "🎉 Սովորությունը նշված է որպես կատարված!",
@@ -8721,7 +8748,10 @@ HABIT_BUTTON_TEXTS = {
         "habit_deleted": "🗑️ Սովորությունը ջնջված է։",
         "delete_error": "Չհաջողվեց ջնջել սովորությունը։",
         "no_goals": "Դեռ չունես նպատակներ, որոնք կարելի է նշել կատարված 😔",
-        "choose_goal": "Ընտրիր նպատակը, որը կատարել ես։"
+        "choose_goal": "Ընտրիր նպատակը, որը կատարել ես։",
+        "choose_delete": "🗑️ Ընտրիր սովորությունը ջնջելու համար:",
+        "no_habits_to_delete": "❌ Ջնջելու համար սովորություններ չկան.",
+        "choice_error": "Սովորության ընտրության սխալ։",
     },
     "ce": {
         "habit_done": "🎉 Привычка отмечена как выполненная!",
@@ -8729,7 +8759,10 @@ HABIT_BUTTON_TEXTS = {
         "habit_deleted": "🗑️ Привычка удалена.",
         "delete_error": "Привычку не удалось удалить.",
         "no_goals": "У тебя пока нет целей для выполнения 😔",
-        "choose_goal": "Выбери цель, которую ты выполнил(а):"
+        "choose_goal": "Выбери цель, которую ты выполнил(а):",
+        "choose_delete": "🗑️ Привычка дӀелла хетам:",
+        "no_habits_to_delete": "❌ ДӀеллархьа привычка цуьнан.",
+        "choice_error": "Привычка харжа хила тӀеьйна.",
     },
     "md": {
         "habit_done": "🎉 Obiceiul a fost marcat ca realizat!",
@@ -8737,7 +8770,10 @@ HABIT_BUTTON_TEXTS = {
         "habit_deleted": "🗑️ Obiceiul a fost șters.",
         "delete_error": "Nu am putut șterge obiceiul.",
         "no_goals": "Nu ai încă scopuri de bifat 😔",
-        "choose_goal": "Alege scopul pe care l-ai realizat:"
+        "choose_goal": "Alege scopul pe care l-ai realizat:",
+        "choose_delete": "🗑️ Alege obiceiul pentru ștergere:",
+        "no_habits_to_delete": "❌ Nu sunt obiceiuri de șters.",
+        "choice_error": "Eroare la selectarea obiceiului.",
     },
     "ka": {
         "habit_done": "🎉 ჩვევა შესრულებულად მოინიშნა!",
@@ -8745,7 +8781,10 @@ HABIT_BUTTON_TEXTS = {
         "habit_deleted": "🗑️ ჩვევა წაიშალა.",
         "delete_error": "ჩვევის წაშლა ვერ მოხერხდა.",
         "no_goals": "ჯერ არ გაქვს მიზნები, რომლებსაც შეასრულებდი 😔",
-        "choose_goal": "აირჩიე მიზანი, რომელიც შეასრულე:"
+        "choose_goal": "აირჩიე მიზანი, რომელიც შეასრულე:",
+        "choose_delete": "🗑️ აირჩიე ჩვევა წაშლისთვის:",
+        "no_habits_to_delete": "❌ წასაშლელად ჩვევები არ არის.",
+        "choice_error": "ჩვევის არჩევის შეცდომა.",
     },
     "en": {
         "habit_done": "🎉 Habit marked as completed!",
@@ -8753,8 +8792,11 @@ HABIT_BUTTON_TEXTS = {
         "habit_deleted": "🗑️ Habit deleted.",
         "delete_error": "Could not delete the habit.",
         "no_goals": "You don't have any goals to mark as completed yet 😔",
-        "choose_goal": "Select the goal you’ve completed:"
-    }
+        "choose_goal": "Select the goal you’ve completed:",
+        "choose_delete": "🗑️ Choose a habit to delete:",
+        "no_habits_to_delete": "❌ No habits to delete.",
+        "choice_error": "Could not select the habit.",
+    },
 }
 
 HABITS_TEXTS = {
