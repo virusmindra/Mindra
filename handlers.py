@@ -7029,6 +7029,34 @@ MOODS_BY_LANG = {
         "😊 Ты излучаешь доброту. Спасибо, что ты есть.",
         "✨ Сегодня хороший день для чего-то нового."
     ],
+    "es": [
+    "💜 ¡Hoy eres como un rayo de sol! ¡Sigue así!",
+    "🌿 Parece que tienes un día tranquilo. Disfrútalo.",
+    "🔥 ¡Tienes tanta energía! Úsala con provecho.",
+    "😊 Irradias bondad. Gracias por existir.",
+    "✨ Hoy es un buen día para algo nuevo."
+],
+"de": [
+    "💜 Du bist heute wie ein Sonnenstrahl! Mach weiter so!",
+    "🌿 Es wirkt, als hättest du einen ruhigen Tag. Genieß ihn.",
+    "🔥 Du hast so viel Energie! Nutze sie sinnvoll.",
+    "😊 Du strahlst Güte aus. Danke, dass es dich gibt.",
+    "✨ Heute ist ein guter Tag für etwas Neues."
+],
+"pl": [
+    "💜 Dziś jesteś jak promyk słońca! Tak trzymaj!",
+    "🌿 Wygląda na spokojny dzień. Ciesz się nim.",
+    "🔥 Masz w sobie tyle energii! Wykorzystaj ją dobrze.",
+    "😊 Promieniujesz dobrocią. Dziękuję, że jesteś.",
+    "✨ Dziś jest dobry dzień na coś nowego."
+],
+"fr": [
+    "💜 Tu es comme un rayon de soleil aujourd’hui ! Continue comme ça !",
+    "🌿 On dirait que ta journée est paisible. Profites-en.",
+    "🔥 Tu as tellement d’énergie ! Utilise-la à bon escient.",
+    "😊 Tu rayonnes de gentillesse. Merci d’être là.",
+    "✨ Aujourd’hui est un bon jour pour tenter quelque chose de nouveau."
+],
     "uk": [
         "💜 Ти сьогодні як промінчик сонця! Так тримати!",
         "🌿 Здається, у тебе спокійний день. Насолоджуйся.",
@@ -7185,6 +7213,30 @@ async def invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "{link}\n\n"
             "2️⃣ Как только он запустит бота по этой ссылке, вам обоим автоматически начислится +7 дней Mindra+! 🟣"
         ),
+        "es": (
+    "🎁 Invita a un amigo y ambos recibirán +7 días de Mindra+!\n\n"
+    "1️⃣ Envía este enlace a tu amigo en Telegram:\n"
+    "{link}\n\n"
+    "2️⃣ En cuanto abra el bot con ese enlace, a ambos se os añadirán automáticamente +7 días de Mindra+! 🟣"
+),
+"de": (
+    "🎁 Lade eine*n Freund*in ein und ihr erhaltet beide +7 Tage Mindra+!\n\n"
+    "1️⃣ Sende diesen Link an deine*n Freund*in auf Telegram:\n"
+    "{link}\n\n"
+    "2️⃣ Sobald er/sie den Bot über diesen Link startet, werden euch beiden automatisch +7 Tage Mindra+ gutgeschrieben! 🟣"
+),
+"pl": (
+    "🎁 Zaproś znajomego i oboje otrzymacie +7 dni Mindra+!\n\n"
+    "1️⃣ Wyślij ten link znajomemu na Telegramie:\n"
+    "{link}\n\n"
+    "2️⃣ Gdy tylko uruchomi bota z tego linku, wam obojgu automatycznie doliczy się +7 dni Mindra+! 🟣"
+),
+"fr": (
+    "🎁 Invite un ami et vous recevrez tous les deux +7 jours de Mindra+ !\n\n"
+    "1️⃣ Envoie ce lien à ton ami sur Telegram :\n"
+    "{link}\n\n"
+    "2️⃣ Dès qu’il/elle lancera le bot via ce lien, +7 jours de Mindra+ seront ajoutés automatiquement pour vous deux ! 🟣"
+),
         "uk": (
             "🎁 Запроси друга — і ви обидва отримаєте +7 днів Mindra+!\n\n"
             "1️⃣ Надішли це посилання другові в Telegram:\n"
@@ -7260,6 +7312,22 @@ PREMIUM_STATUS_TEXTS = {
         "no": "У тебя сейчас нет премиума.",
         "active": "Подписка: {plan}\nАктивна до: {until}\nОсталось дней: {days}",
     },
+    "es": {
+    "no": "Ahora no tienes premium.",
+    "active": "Suscripción: {plan}\nActiva hasta: {until}\nDías restantes: {days}",
+},
+"de": {
+    "no": "Du hast derzeit kein Premium.",
+    "active": "Abo: {plan}\nAktiv bis: {until}\nVerbleibende Tage: {days}",
+},
+"pl": {
+    "no": "Nie masz teraz premium.",
+    "active": "Subskrypcja: {plan}\nAktywna do: {until}\nPozostało dni: {days}",
+},
+"fr": {
+    "no": "Tu n’as pas d’abonnement premium pour le moment.",
+    "active": "Abonnement : {plan}\nActif jusqu’au : {until}\nJours restants : {days}",
+},
     "uk": {
         "no": "У тебе зараз немає преміуму.",
         "active": "Підписка: {plan}\nАктивна до: {until}\nЗалишилось днів: {days}",
