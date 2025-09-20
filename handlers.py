@@ -5696,6 +5696,13 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await update.message.reply_text(reply, reply_markup=buttons)
 
+    # 🔊 авто-озвучка (если включена)
+        if user_voice_mode.get(user_id, False) and has_feature(user_id, "voice_tts"):
+            try:
+                await send_voice_response(context, int(user_id), reply, lang)
+            except Exception:
+                logging.exception("Auto TTS failed in handle_voice")
+            
     except Exception as e:
         logging.error(f"❌ Ошибка при обработке голосового: {e}")
         await update.message.reply_text(texts['error'])
