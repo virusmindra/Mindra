@@ -5692,7 +5692,7 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # 📌 Генерируем кнопки
         goal_text = user_input if is_goal_like(user_input, lang) else None
-        buttons = generate_post_response_buttons(goal_text=goal_text)
+        buttons = generate_post_response_buttons(user_id=uid, goal_text=goal_text)
 
         await update.message.reply_text(reply, reply_markup=buttons)
 
@@ -6623,7 +6623,7 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # 📝 ответ текстом
         await update.message.reply_text(
             final_text,
-            reply_markup=generate_post_response_buttons()
+            reply_markup=generate_post_response_buttons(user_id=uid)
         )
 
         # 🔊 авто-озвучка (если включена)
