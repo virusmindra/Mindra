@@ -6937,6 +6937,10 @@ async def mypoints_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "ce":  "🌟 *Хьо статистика:*\n\n✨ Баллар: {p}\n🎯 Хийцар мацахь: {c}",
         "md":  "🌟 *Statistica ta:*\n\n✨ Puncte: {p}\n🎯 Obiective realizate: {c}",
         "ka":  "🌟 *შენი სტატისტიკა:*\n\n✨ ქულები: {p}\n🎯 შესრულებული მიზნები: {c}",
+        "es": "🌟 *Tus estadísticas:*\n\n✨ Puntos: {p}\n🎯 Objetivos completados: {c}",
+        "de": "🌟 *Deine Statistik:*\n\n✨ Punkte: {p}\n🎯 Abgeschlossene Ziele: {c}",
+        "pl": "🌟 *Twoje statystyki:*\n\n✨ Punkty: {p}\n🎯 Zrealizowane cele: {c}",
+        "fr": "🌟 *Tes statistiques :*\n\n✨ Points : {p}\n🎯 Objectifs accomplis : {c}",
     }
     text = TEXTS.get(lang, TEXTS["ru"]).format(p=points, c=completed)
     await ui_show_from_command(update, context, text, reply_markup=_kb_back_home(uid), parse_mode="Markdown")
@@ -6993,6 +6997,22 @@ async def send_weekly_report(context: ContextTypes.DEFAULT_TYPE):
                        "✅ Obiective îndeplinite: *{goals}*\n"
                        "🌱 Obiceiuri marcate: *{habits}*\n\n"
                        "✨ Ține-o tot așa! Sunt mândru de tine 💪💜"),
+                "es": ("📊 *Tu informe semanal de Mindra+* 💜\n\n"
+                       "✅ Objetivos completados: *{goals}*\n"
+                       "🌱 Hábitos registrados: *{habits}*\n\n"
+                       "✨ ¡Sigue así! Estoy orgullosa de ti 💪💜"),
+                "de": ("📊 *Dein wöchentlicher Mindra+-Bericht* 💜\n\n"
+                       "✅ Erreichte Ziele: *{goals}*\n"
+                       "🌱 Verfolgte Gewohnheiten: *{habits}*\n\n"
+                       "✨ Mach weiter so! Ich bin stolz auf dich 💪💜"),
+                "pl": ("📊 *Twój tygodniowy raport Mindra+* 💜\n\n"
+                       "✅ Zrealizowane cele: *{goals}*\n"
+                       "🌱 Śledzone nawyki: *{habits}*\n\n"
+                       "✨ Tak trzymaj! Jestem z ciebie dumna 💪💜"),
+                "fr": ("📊 *Ton rapport hebdomadaire Mindra+* 💜\n\n"
+                       "✅ Objectifs accomplis : *{goals}*\n"
+                       "🌱 Habitudes suivies : *{habits}*\n\n"
+                       "✨ Continue comme ça ! Je suis fière de toi 💪💜"),
                 "ka": ("📊 *შენი Mindra+ ყოველკვირეული ანგარიში* 💜\n\n"
                        "✅ შესრულებული მიზნები: *{goals}*\n"
                        "🌱 მონიშნული ჩვევები: *{habits}*\n\n"
