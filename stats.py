@@ -718,7 +718,6 @@ TITLES = {
         (500, "💎 Mentor"),
         (float('inf'), "🌟 Légende"),
     ],
-}),
 }
 
 def get_user_points(user_id: str) -> int:
