@@ -6549,7 +6549,17 @@ async def handle_reaction_button(update: Update, context: ContextTypes.DEFAULT_T
 # Обработчик текстовых сообщений
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global user_last_seen, user_message_count
-    uid_int = update.effective_user.id
+    user = update.effective_user
+    if user is None:
+        logging.warning("❗️ Получено обновление без пользователя в chat: %s", update)
+        return
+
+    message = update.message
+    if message is None:
+        logging.warning("❗️ Получено обновление без message в chat: %s", update)
+        return
+
+    uid_int = user.id
     uid = str(uid_int)
 
     # 🕒 активность
@@ -6557,7 +6567,7 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logging.info(f"✅ user_last_seen обновлён в chat для {uid_int}")
 
     # 📌 текст пользователя
-    user_input = (update.message.text or "").strip()
+    user_input = (message.text or "").strip()
     if not user_input:
         return
 
