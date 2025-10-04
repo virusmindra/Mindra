@@ -5020,6 +5020,16 @@ def _parse_referrer_id(ref_code: str | None) -> str | None:
     digits = "".join(ch for ch in ref_code if ch.isdigit())
     return digits or None
 
+def channel_link(lang: str) -> str:
+    return MOTIVATION_CHANNELS.get(lang, MOTIVATION_CHANNELS[DEFAULT_LANG])
+
+def tr_invite(lang: str, link: str) -> str:
+    tmpl = CHANNEL_INVITE_TEXT.get(lang) or CHANNEL_INVITE_TEXT[DEFAULT_LANG]
+    return tmpl.format(link=link)
+
+def tr_btn(lang: str) -> str:
+    return CHANNEL_BUTTON_TEXT.get(lang, CHANNEL_BUTTON_TEXT[DEFAULT_LANG])
+
 async def tz_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     if not q or not q.data:
@@ -5104,6 +5114,23 @@ async def tz_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     first_name = q.from_user.first_name or {"ru":"друг","uk":"друже","en":"friend"}.get(lang, "друг")
     welcome_text = WELCOME_TEXTS.get(lang, WELCOME_TEXTS["ru"]).format(first_name=first_name)
     await context.bot.send_message(chat_id=int(uid), text=welcome_text, parse_mode="Markdown", reply_markup=main_reply_kb(uid))
+
+    # ✅ приглашение в мотивационный канал для выбранного языка
+    try:
+        link = channel_link(lang)
+        invite_text = tr_invite(lang, link)
+        kb = InlineKeyboardMarkup([[
+            InlineKeyboardButton(tr_btn(lang), url=link)
+        ]])
+        await context.bot.send_message(
+            chat_id=int(uid),
+            text=invite_text,
+            reply_markup=kb,
+            disable_web_page_preview=True
+        )
+    except Exception as e:
+        # не падаем из-за опечатки в ссылках и т.п.
+        logging.warning("channel invite failed: %s", e)
 
 async def show_timezone_menu(msg, origin: str = "settings"):
     uid = str(msg.chat.id)
