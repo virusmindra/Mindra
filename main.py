@@ -8,7 +8,6 @@ from telegram.ext import (
     ApplicationBuilder,
     MessageHandler,
     ContextTypes,
-    ChannelPostHandler,
     filters
 )
 from telegram.request import HTTPXRequest
@@ -225,7 +224,7 @@ async def main():
     for h in handlers:
         app.add_handler(h)
     app.add_error_handler(error_handler)
-    app.add_handler(ChannelPostHandler(handle_editor_post))
+    app.add_handler(MessageHandler(filters.UpdateType.CHANNEL_POST, handle_editor_post))
 
     # === РУЧНОЙ жизненный цикл (без run_polling — чтобы не было "event loop is already running")
     await app.initialize()
