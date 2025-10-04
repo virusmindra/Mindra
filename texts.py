@@ -22,33 +22,33 @@ MOTIVATION_CHANNELS = {
     "fr": "https://t.me/mindra_motivation_fr",
     "pl": "https://t.me/mindra_motivation_pl",
 }
- I18N = {
-    "welcome": {
-        "en": "Welcome to Mindra! I’ll support you with goals, habits and motivation.",
-        "ru": "Добро пожаловать в Mindra! Помогу с целями, привычками и мотивацией.",
-        "uk": "Ласкаво просимо до Mindra! Допомагатиму з цілями, звичками та мотивацією.",
-        "ka": "Mindra-ში კეთილი იყოს თქვენი მობრძანება! დაგეხმარები მიზნებში და ჩვევებში.",
-        "kk": "Mindra-ға қош келдіңіз! Мақсаттар мен әдеттерге көмектесемін.",
-        "ro": "Bine ai venit la Mindra! Te ajut cu obiective, obiceiuri și motivație.",
-        "hy": "Բարի գալուստ Mindra․ Կօգնեմ նպատակների, սովորությունների և մոտիվացիայի հարցերում։",
-        "es": "¡Bienvenido/a a Mindra! Te ayudaré con metas, hábitos y motivación.",
-        "de": "Willkommen bei Mindra! Ich helfe dir bei Zielen, Gewohnheiten und Motivation.",
-        "fr": "Bienvenue sur Mindra ! Je t’aide avec objectifs, habitudes et motivation.",
-        "pl": "Witamy w Mindrze! Pomogę z celami, nawykami i motywacją.",
-    },
-    "channel_invite": {
-        "en": "Join your motivation channel: {link}",
-        "ru": "Присоединяйся к нашему каналу: {link}",
-        "uk": "Долучайся до нашого каналу: {link}",
-        "ka": "შემოუერთდი ჩვენს არხს: {link}",
-        "kk": "Біздің арнаға қосылыңыз: {link}",
-        "ro": "Alătură-te canalului nostru: {link}",
-        "hy": "Միացիր մեր ալիքին՝ {link}",
-        "es": "Únete a nuestro canal: {link}",
-        "de": "Tritt unserem Kanal bei: {link}",
-        "fr": "Rejoins notre canal : {link}",
-        "pl": "Dołącz do naszego kanału: {link}",
-    },
+
+CHANNEL_INVITE_TEXT = {
+    "en": "Join your daily motivation channel: {link}",
+    "ru": "Присоединяйся к ежедневному каналу мотивации: {link}",
+    "uk": "Долучайся до щоденного каналу мотивації: {link}",
+    "ka": "შემოუერთდი ყოველდღიურ მოტივაციის არხს: {link}",
+    "kk": "Күнделікті мотивация арнасына қосылыңыз: {link}",
+    "ro": "Alătură-te canalului zilnic de motivație: {link}",
+    "hy": "Միացիր մեր առօրյա մոտիվացիայի ալիքին՝ {link}",
+    "es": "Únete a nuestro canal diario de motivación: {link}",
+    "de": "Tritt unserem täglichen Motivationskanal bei: {link}",
+    "fr": "Rejoins notre canal quotidien de motivation : {link}",
+    "pl": "Dołącz do codziennego kanału motywacji: {link}",
+}
+
+CHANNEL_BUTTON_TEXT = {
+    "en": "Open channel",
+    "ru": "Открыть канал",
+    "uk": "Відкрити канал",
+    "ka": "არხის გახსნა",
+    "kk": "Арнаны ашу",
+    "ro": "Deschide canalul",
+    "hy": "Բացել ալիքը",
+    "es": "Abrir canal",
+    "de": "Kanal öffnen",
+    "fr": "Ouvrir le canal",
+    "pl": "Otwórz kanał",
 }
 
 # 🔤 Сообщения для ответа пользователю при распознавании голоса
