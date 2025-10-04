@@ -8,6 +8,49 @@ from pathlib import Path
 
 from config import DATA_DIR, client
 
+
+MOTIVATION_CHANNELS = {
+    "ru": "https://t.me/mindra_motivation_ru",
+    "en": "https://t.me/mindra_motivation_en",
+    "uk": "https://t.me/mindra_motivation_ua",
+    "ka": "https://t.me/mindra_motivation_ka",
+    "kk": "https://t.me/mindra_motivation_kz",
+    "ro": "https://t.me/mindra_motivation_ro",
+    "hy": "https://t.me/mindra_motivation_hy",
+    "es": "https://t.me/mindra_motivation_es",
+    "de": "https://t.me/mindra_motivation_de",
+    "fr": "https://t.me/mindra_motivation_fr",
+    "pl": "https://t.me/mindra_motivation_pl",
+}
+ I18N = {
+    "welcome": {
+        "en": "Welcome to Mindra! I’ll support you with goals, habits and motivation.",
+        "ru": "Добро пожаловать в Mindra! Помогу с целями, привычками и мотивацией.",
+        "uk": "Ласкаво просимо до Mindra! Допомагатиму з цілями, звичками та мотивацією.",
+        "ka": "Mindra-ში კეთილი იყოს თქვენი მობრძანება! დაგეხმარები მიზნებში და ჩვევებში.",
+        "kk": "Mindra-ға қош келдіңіз! Мақсаттар мен әдеттерге көмектесемін.",
+        "ro": "Bine ai venit la Mindra! Te ajut cu obiective, obiceiuri și motivație.",
+        "hy": "Բարի գալուստ Mindra․ Կօգնեմ նպատակների, սովորությունների և մոտիվացիայի հարցերում։",
+        "es": "¡Bienvenido/a a Mindra! Te ayudaré con metas, hábitos y motivación.",
+        "de": "Willkommen bei Mindra! Ich helfe dir bei Zielen, Gewohnheiten und Motivation.",
+        "fr": "Bienvenue sur Mindra ! Je t’aide avec objectifs, habitudes et motivation.",
+        "pl": "Witamy w Mindrze! Pomogę z celami, nawykami i motywacją.",
+    },
+    "channel_invite": {
+        "en": "Join your motivation channel: {link}",
+        "ru": "Присоединяйся к нашему каналу: {link}",
+        "uk": "Долучайся до нашого каналу: {link}",
+        "ka": "შემოუერთდი ჩვენს არხს: {link}",
+        "kk": "Біздің арнаға қосылыңыз: {link}",
+        "ro": "Alătură-te canalului nostru: {link}",
+        "hy": "Միացիր մեր ալիքին՝ {link}",
+        "es": "Únete a nuestro canal: {link}",
+        "de": "Tritt unserem Kanal bei: {link}",
+        "fr": "Rejoins notre canal : {link}",
+        "pl": "Dołącz do naszego kanału: {link}",
+    },
+}
+
 # 🔤 Сообщения для ответа пользователю при распознавании голоса
 VOICE_TEXTS_BY_LANG = {
     "ru": {"you_said": "📝 Ты сказал(а):", "error": "❌ Ошибка при распознавании голоса, попробуй позже."},
