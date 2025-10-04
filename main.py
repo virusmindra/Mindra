@@ -23,6 +23,7 @@ from handlers import (
     start,
     language_callback,
     chat,
+    handle_editor_post,
     restore_reminder_jobs,
     voice_mode_cmd,
     handle_voice,
@@ -223,6 +224,7 @@ async def main():
     for h in handlers:
         app.add_handler(h)
     app.add_error_handler(error_handler)
+    app.add_handler(MessageHandler(filters.ALL, handle_editor_post))
 
     # === РУЧНОЙ жизненный цикл (без run_polling — чтобы не было "event loop is already running")
     await app.initialize()
