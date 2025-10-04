@@ -23,7 +23,8 @@ from functools import partial
 from elevenlabs import ElevenLabs 
 from collections import defaultdict
 from texts import (
-    I18N,
+    CHANNEL_BUTTON_TEXT,
+    CHANNEL_INVITE_TEXT,
     MOTIVATION_CHANNELS,
     VOICE_TEXTS_BY_LANG,
     PCH_DONE_TOAST_TEXTS,
