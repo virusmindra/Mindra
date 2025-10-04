@@ -5031,6 +5031,8 @@ def tr_invite(lang: str, link: str) -> str:
 def tr_btn(lang: str) -> str:
     return CHANNEL_BUTTON_TEXT.get(lang, CHANNEL_BUTTON_TEXT[DEFAULT_LANG])
 
+DEFAULT_LANG = "en"
+
 async def tz_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     if not q or not q.data:
