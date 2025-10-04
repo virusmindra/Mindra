@@ -8,6 +8,7 @@ from pathlib import Path
 
 from config import DATA_DIR, client
 
+EDITOR_CHANNEL_ID = -1003012903331
 
 MOTIVATION_CHANNELS = {
     "ru": "https://t.me/mindra_motivation_ru",
