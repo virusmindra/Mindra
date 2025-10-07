@@ -223,10 +223,11 @@ async def main():
     # 1) Сначала — канал редактора, ограниченный по ID
     app.add_handler(
         MessageHandler(
-            filters.UpdateType.CHANNEL_POST & filters.Chat(EDITOR_CHANNEL_ID),
-            handle_editor_post
+            filters.ChatType.CHANNEL & filters.Chat(EDITOR_CHANNEL_ID),
+            handle_editor_post,
         )
     )
+
 
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
     app.add_handler(MessageHandler(filters.VOICE, handle_voice))
@@ -237,12 +238,6 @@ async def main():
     # === РУЧНОЙ жизненный цикл (без run_polling — чтобы не было "event loop is already running")
     await app.initialize()
     await app.start()
-    
-    channel_filters = (
-        filters.ChatType.CHANNEL
-        & (filters.TEXT | filters.CAPTION)
-    )
-    app.add_handler(MessageHandler(channel_filters, handle_editor_post))
 
     # Планировщики/джобы (после start):
     # Если твои schedule_* ожидают (job_queue, app) — передаём оба.
