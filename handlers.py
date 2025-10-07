@@ -294,6 +294,7 @@ CHALLENGE_POINTS = int(os.getenv("CHALLENGE_POINTS", 25))
 stripe.api_key = STRIPE_SECRET_KEY or os.getenv("STRIPE_SECRET_KEY", "")
 
 
+# handlers.py
 async def handle_editor_post(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.channel_post:
         return
@@ -306,7 +307,7 @@ async def handle_editor_post(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if not text:
         return
 
-    # Язык можно задавать тегом, например: [en] или [ru] в начале поста
+    # Язык по тегу в начале: [en] ... / [ru] ... / ...
     lang = "ru"
     if text.startswith("[") and "]" in text:
         tag = text[1:text.index("]")]
@@ -316,11 +317,8 @@ async def handle_editor_post(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     target = MOTIVATION_CHANNELS.get(lang)
     if target:
-        try:
-            await context.bot.send_message(chat_id=target, text=text, parse_mode="Markdown")
-            print(f"✅ Опубликовано в {lang}: {target}")
-        except Exception as e:
-            print(f"⚠️ Ошибка публикации в {lang}: {e}")
+        await context.bot.send_message(chat_id=target, text=text, parse_mode="Markdown")
+
             
 def _load_price_ids() -> dict:
     """Читает JSON из env PRICE_IDS и возвращает dict {'plus': {...}, 'pro': {...}}."""
