@@ -237,7 +237,12 @@ async def main():
     # === РУЧНОЙ жизненный цикл (без run_polling — чтобы не было "event loop is already running")
     await app.initialize()
     await app.start()
-    await app.updater.start_polling(drop_pending_updates=True)
+    
+    channel_filters = (
+        filters.ChatType.CHANNEL
+        & (filters.TEXT | filters.CAPTION)
+    )
+    app.add_handler(MessageHandler(channel_filters, handle_editor_post))
 
     # Планировщики/джобы (после start):
     # Если твои schedule_* ожидают (job_queue, app) — передаём оба.
@@ -253,14 +258,18 @@ async def main():
     # Восстановление задач напоминаний из БД
     await restore_reminder_jobs(app.job_queue)
 
-    # Запускаем long-polling
-    await app.updater.start_polling(drop_pending_updates=True)
-    logging.info("🤖 Бот запущен!")
-
-    await app.updater.start_polling(
-        drop_pending_updates=True,
-        allowed_updates=["message", "callback_query", "channel_post"]
-    )
+    # Запускаем long-polling (один раз!)
+await app.updater.start_polling(
+    drop_pending_updates=True,
+    allowed_updates=[
+        "message",
+        "edited_message",
+        "channel_post",
+        "edited_channel_post",
+        "callback_query",
+    ],
+)
+logging.info("🤖 Бот запущен!")
 
 
     # Держим процесс живым, пока нас не остановят
