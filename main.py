@@ -83,6 +83,7 @@ from handlers import (
     restore_reminder_jobs
 )
 from config import TELEGRAM_BOT_TOKEN
+from texts import EDITOR_CHANNEL_ID
 
 CUSTOM_JOB_NAME = "custom_rem_check"
 
