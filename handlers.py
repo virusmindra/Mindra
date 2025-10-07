@@ -306,57 +306,70 @@ def _normalize_chat_id(s: str) -> str:
         return username
     return s  # уже @username или -100...
 
+LANG_ALIASES = {"ua":"uk","kz":"kk","ge":"ka","md":"ro"}
+TAG_RE = re.compile(r"^\s*\[([A-Za-z\-_]{2,5})\]\s*")
+
+def _normalize_lang_tag(tag: str) -> str:
+    tag = (tag or "").strip().lower()
+    for sep in ("-","_"):
+        if sep in tag:
+            tag = tag.split(sep,1)[0]
+    return LANG_ALIASES.get(tag, tag)
+    
 async def handle_editor_post(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    post = update.channel_post
-    if not post:
+    if not update.channel_post:
         return
+    post = update.channel_post
     if post.chat.id != EDITOR_CHANNEL_ID:
         return
 
-    text = (post.text or post.caption or "").strip()
-    if not text:
+    # берём текст/подпись; допускаем пустую подпись у медиа
+    raw = post.text or post.caption or ""
+
+    m = TAG_RE.match(raw)
+    if not m:
+        await post.reply_text("⚠️ Добавь язык в начале, напр.: [ru], [en], [uk].")
         return
 
-    # Язык по тегу в начале: [en] ... / [ru] ...
-    lang = "ru"
-    if text.startswith("[") and "]" in text:
-        tag = text[1:text.index("]")]
-        if tag in MOTIVATION_CHANNELS:
-            lang = tag
-            text = text[text.index("]") + 1:].strip()
-
-    target_raw = MOTIVATION_CHANNELS.get(lang)
-    target = _normalize_chat_id(target_raw)
-
-    # маленькое эхо в Editor, чтобы видеть, что бот «увидел» пост
-    try:
-        await context.bot.send_message(
-            chat_id=post.chat.id,
-            reply_to_message_id=post.message_id,
-            text=f"👀 Принял пост для [{lang}] → {target or '—'}"
-        )
-    except Exception:
-        pass
-
+    raw_tag = m.group(1)
+    lang = _normalize_lang_tag(raw_tag)
+    target = MOTIVATION_CHANNELS.get(lang)
     if not target:
-        logging.error(f"No target for lang={lang}")
+        await post.reply_text(
+            f"⚠️ Канал для [{raw_tag}]→«{lang}» не настроен. "
+            f"Доступные: {', '.join(sorted(MOTIVATION_CHANNELS.keys()))}"
+        )
         return
 
-    try:
-        await context.bot.send_message(chat_id=target, text=text, parse_mode="Markdown")
-        logging.info(f"✅ Published to {lang} -> {target}")
-    except Exception as e:
-        logging.error(f"⚠️ Publish error to {lang} ({target}): {e}")
-        # подсказка в Editor, если что-то не так
-        try:
-            await context.bot.send_message(
-                chat_id=post.chat.id,
-                reply_to_message_id=post.message_id,
-                text=f"⚠️ Ошибка публикации в [{lang}] → {target}: {e}"
-            )
-        except Exception:
-            pass
+    # подпись без тега; если получится пусто — пусть будет None
+    caption = raw[m.end():].strip() or None
 
+    try:
+        # медиакейсы
+        if post.photo:
+            # берём самую большую версию
+            file_id = post.photo[-1].file_id
+            await context.bot.send_photo(chat_id=target, photo=file_id, caption=caption, parse_mode="Markdown")
+
+        elif post.video:
+            await context.bot.send_video(chat_id=target, video=post.video.file_id, caption=caption, parse_mode="Markdown")
+
+        elif getattr(post, "animation", None):  # GIF
+            await context.bot.send_animation(chat_id=target, animation=post.animation.file_id, caption=caption, parse_mode="Markdown")
+
+        elif post.document:
+            await context.bot.send_document(chat_id=target, document=post.document.file_id, caption=caption, parse_mode="Markdown")
+
+        else:
+            # обычный текстовый пост
+            await context.bot.send_message(chat_id=target, text=(caption or "…"), parse_mode="Markdown")
+
+        await post.reply_text(f"👀 Принял пост для [{lang}] → {target}")
+        logging.info("Published editor post: tag=%s lang=%s target=%s (media=%s)",
+                     raw_tag, lang, target, bool(post.photo or post.video or getattr(post,'animation',None) or post.document))
+    except Exception as e:
+        logging.exception("Publish failed for lang=%s target=%s", lang, target)
+        await post.reply_text(f"❌ Не смог отправить в [{lang}] → {target}\n{e}")
             
 def _load_price_ids() -> dict:
     """Читает JSON из env PRICE_IDS и возвращает dict {'plus': {...}, 'pro': {...}}."""
