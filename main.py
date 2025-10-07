@@ -259,17 +259,17 @@ async def main():
     await restore_reminder_jobs(app.job_queue)
 
     # Запускаем long-polling (один раз!)
-await app.updater.start_polling(
-    drop_pending_updates=True,
-    allowed_updates=[
-        "message",
-        "edited_message",
-        "channel_post",
-        "edited_channel_post",
-        "callback_query",
-    ],
-)
-logging.info("🤖 Бот запущен!")
+    await app.updater.start_polling(
+        drop_pending_updates=True,
+        allowed_updates=[
+            "message",
+            "edited_message",
+            "channel_post",
+            "edited_channel_post",
+            "callback_query",
+        ],
+    )
+    logging.info("🤖 Бот запущен!")
 
 
     # Держим процесс живым, пока нас не остановят
