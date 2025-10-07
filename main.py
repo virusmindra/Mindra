@@ -222,9 +222,9 @@ async def main():
     # === Регистрация хендлеров
     # 1) Сначала — канал редактора, ограниченный по ID
     app.add_handler(
-        ChannelPostHandler(
-            handle_editor_post,
-            filters.Chat(EDITOR_CHANNEL_ID)
+        MessageHandler(
+            filters.UpdateType.CHANNEL_POST & filters.Chat(EDITOR_CHANNEL_ID),
+            handle_editor_post
         )
     )
 
