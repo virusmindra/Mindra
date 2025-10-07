@@ -6,7 +6,6 @@ from datetime import datetime, timezone, timedelta, time
 from telegram.error import NetworkError, TimedOut
 from telegram.ext import (
     ApplicationBuilder,
-    ChannelPostHandler,
     MessageHandler,
     ContextTypes,
     filters
