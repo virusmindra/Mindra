@@ -294,18 +294,8 @@ CHALLENGE_POINTS = int(os.getenv("CHALLENGE_POINTS", 25))
 stripe.api_key = STRIPE_SECRET_KEY or os.getenv("STRIPE_SECRET_KEY", "")
 
 
-def _normalize_chat_id(s: str) -> str:
-    s = (s or "").strip()
-    if not s:
-        return s
-    # если полный URL — вытащим username
-    if s.startswith("https://t.me/") or s.startswith("http://t.me/"):
-        username = s.rsplit("/", 1)[-1].split("?")[0]
-        if not username.startswith("@"):
-            username = f"@{username}"
-        return username
-    return s  # уже @username или -100...
 
+# если где-то уже есть – оставь одну версию
 LANG_ALIASES = {"ua":"uk","kz":"kk","ge":"ka","md":"ro"}
 TAG_RE = re.compile(r"^\s*\[([A-Za-z\-_]{2,5})\]\s*")
 
@@ -313,64 +303,123 @@ def _normalize_lang_tag(tag: str) -> str:
     tag = (tag or "").strip().lower()
     for sep in ("-","_"):
         if sep in tag:
-            tag = tag.split(sep,1)[0]
+            tag = tag.split(sep, 1)[0]
     return LANG_ALIASES.get(tag, tag)
-    
+
+def _normalize_chat_id(s: str) -> str:
+    s = (s or "").strip()
+    if not s:
+        return s
+    if s.startswith("https://t.me/") or s.startswith("http://t.me/"):
+        username = s.rsplit("/", 1)[-1].split("?")[0]
+        if not username.startswith("@"):
+            username = f"@{username}"
+        return username
+    return s  # уже @username или -100...
+
+async def _send_md_safe(send_func, **kwargs):
+    """Пробуем с Markdown, если падает — без него."""
+    try:
+        return await send_func(**kwargs, parse_mode="Markdown")
+    except BadRequest as e:
+        if "parse entities" in str(e).lower():
+            kwargs.pop("parse_mode", None)
+            return await send_func(**kwargs)
+        raise
+
 async def handle_editor_post(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.channel_post:
         return
+
     post = update.channel_post
     if post.chat.id != EDITOR_CHANNEL_ID:
         return
 
-    # берём текст/подпись; допускаем пустую подпись у медиа
+    # текст/подпись; для медиа можно оставить пусто
     raw = post.text or post.caption or ""
 
+    # ждём тег в начале: [ru] / [en] / ...
     m = TAG_RE.match(raw)
     if not m:
-        await post.reply_text("⚠️ Добавь язык в начале, напр.: [ru], [en], [uk].")
+        # пишем в сам редактор, не reply (бывает право «ответить» выключено)
+        await context.bot.send_message(
+            chat_id=EDITOR_CHANNEL_ID,
+            text="⚠️ Добавь язык в начале поста: [ru] / [en] / [uk] …"
+        )
         return
 
     raw_tag = m.group(1)
     lang = _normalize_lang_tag(raw_tag)
+
+    # Нормализуем карту каналов (URL -> @username)
     target = MOTIVATION_CHANNELS.get(lang)
     if not target:
-        await post.reply_text(
-            f"⚠️ Канал для [{raw_tag}]→«{lang}» не настроен. "
-            f"Доступные: {', '.join(sorted(MOTIVATION_CHANNELS.keys()))}"
+        await context.bot.send_message(
+            chat_id=EDITOR_CHANNEL_ID,
+            text=f"⚠️ Канал для [{raw_tag}]→«{lang}» не настроен. "
+                 f"Доступные: {', '.join(sorted(MOTIVATION_CHANNELS.keys()))}"
         )
         return
+    target = _normalize_chat_id(target)
 
-    # подпись без тега; если получится пусто — пусть будет None
-    caption = raw[m.end():].strip() or None
+    # подпись без тега; если пусто — None
+    caption = (raw[m.end():].strip() or None)
 
     try:
-        # медиакейсы
         if post.photo:
-            # берём самую большую версию
-            file_id = post.photo[-1].file_id
-            await context.bot.send_photo(chat_id=target, photo=file_id, caption=caption, parse_mode="Markdown")
+            await _send_md_safe(
+                context.bot.send_photo,
+                chat_id=target,
+                photo=post.photo[-1].file_id,
+                caption=caption
+            )
 
         elif post.video:
-            await context.bot.send_video(chat_id=target, video=post.video.file_id, caption=caption, parse_mode="Markdown")
+            await _send_md_safe(
+                context.bot.send_video,
+                chat_id=target,
+                video=post.video.file_id,
+                caption=caption
+            )
 
-        elif getattr(post, "animation", None):  # GIF
-            await context.bot.send_animation(chat_id=target, animation=post.animation.file_id, caption=caption, parse_mode="Markdown")
+        elif getattr(post, "animation", None):
+            await _send_md_safe(
+                context.bot.send_animation,
+                chat_id=target,
+                animation=post.animation.file_id,
+                caption=caption
+            )
 
         elif post.document:
-            await context.bot.send_document(chat_id=target, document=post.document.file_id, caption=caption, parse_mode="Markdown")
+            await _send_md_safe(
+                context.bot.send_document,
+                chat_id=target,
+                document=post.document.file_id,
+                caption=caption
+            )
 
         else:
-            # обычный текстовый пост
-            await context.bot.send_message(chat_id=target, text=(caption or "…"), parse_mode="Markdown")
+            # обычный текст
+            await _send_md_safe(
+                context.bot.send_message,
+                chat_id=target,
+                text=(caption or "…")
+            )
 
-        await post.reply_text(f"👀 Принял пост для [{lang}] → {target}")
-        logging.info("Published editor post: tag=%s lang=%s target=%s (media=%s)",
+        await context.bot.send_message(
+            chat_id=EDITOR_CHANNEL_ID,
+            text=f"👀 Принял пост для [{lang}] → {target}"
+        )
+        logging.info("Published editor post: tag=%s lang=%s target=%s media=%s",
                      raw_tag, lang, target, bool(post.photo or post.video or getattr(post,'animation',None) or post.document))
+
     except Exception as e:
-        logging.exception("Publish failed for lang=%s target=%s", lang, target)
-        await post.reply_text(f"❌ Не смог отправить в [{lang}] → {target}\n{e}")
-            
+        logging.exception("Publish failed: lang=%s target=%s", lang, target)
+        await context.bot.send_message(
+            chat_id=EDITOR_CHANNEL_ID,
+            text=f"❌ Не смог отправить в [{lang}] → {target}\n{e}"
+        )
+        
 def _load_price_ids() -> dict:
     """Читает JSON из env PRICE_IDS и возвращает dict {'plus': {...}, 'pro': {...}}."""
     raw = os.getenv("PRICE_IDS", "").strip()
