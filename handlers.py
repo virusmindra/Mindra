@@ -6546,6 +6546,10 @@ async def handle_reaction_button(update: Update, context: ContextTypes.DEFAULT_T
 
 # Обработчик текстовых сообщений
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # ⛔️ игнорируем не-приватные апдейты (каналы/группы/форумы)
+    if (update.effective_chat is None) or (update.effective_chat.type != "private"):
+        return
+
     global user_last_seen, user_message_count
     user = update.effective_user
     if user is None:
