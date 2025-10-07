@@ -294,20 +294,30 @@ CHALLENGE_POINTS = int(os.getenv("CHALLENGE_POINTS", 25))
 stripe.api_key = STRIPE_SECRET_KEY or os.getenv("STRIPE_SECRET_KEY", "")
 
 
-# handlers.py
-async def handle_editor_post(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not update.channel_post:
-        return
+def _normalize_chat_id(s: str) -> str:
+    s = (s or "").strip()
+    if not s:
+        return s
+    # если полный URL — вытащим username
+    if s.startswith("https://t.me/") or s.startswith("http://t.me/"):
+        username = s.rsplit("/", 1)[-1].split("?")[0]
+        if not username.startswith("@"):
+            username = f"@{username}"
+        return username
+    return s  # уже @username или -100...
 
+async def handle_editor_post(update: Update, context: ContextTypes.DEFAULT_TYPE):
     post = update.channel_post
+    if not post:
+        return
     if post.chat.id != EDITOR_CHANNEL_ID:
         return
 
-    text = post.text or post.caption
+    text = (post.text or post.caption or "").strip()
     if not text:
         return
 
-    # Язык по тегу в начале: [en] ... / [ru] ... / ...
+    # Язык по тегу в начале: [en] ... / [ru] ...
     lang = "ru"
     if text.startswith("[") and "]" in text:
         tag = text[1:text.index("]")]
@@ -315,9 +325,37 @@ async def handle_editor_post(update: Update, context: ContextTypes.DEFAULT_TYPE)
             lang = tag
             text = text[text.index("]") + 1:].strip()
 
-    target = MOTIVATION_CHANNELS.get(lang)
-    if target:
+    target_raw = MOTIVATION_CHANNELS.get(lang)
+    target = _normalize_chat_id(target_raw)
+
+    # маленькое эхо в Editor, чтобы видеть, что бот «увидел» пост
+    try:
+        await context.bot.send_message(
+            chat_id=post.chat.id,
+            reply_to_message_id=post.message_id,
+            text=f"👀 Принял пост для [{lang}] → {target or '—'}"
+        )
+    except Exception:
+        pass
+
+    if not target:
+        logging.error(f"No target for lang={lang}")
+        return
+
+    try:
         await context.bot.send_message(chat_id=target, text=text, parse_mode="Markdown")
+        logging.info(f"✅ Published to {lang} -> {target}")
+    except Exception as e:
+        logging.error(f"⚠️ Publish error to {lang} ({target}): {e}")
+        # подсказка в Editor, если что-то не так
+        try:
+            await context.bot.send_message(
+                chat_id=post.chat.id,
+                reply_to_message_id=post.message_id,
+                text=f"⚠️ Ошибка публикации в [{lang}] → {target}: {e}"
+            )
+        except Exception:
+            pass
 
             
 def _load_price_ids() -> dict:
