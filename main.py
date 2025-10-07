@@ -6,6 +6,7 @@ from datetime import datetime, timezone, timedelta, time
 from telegram.error import NetworkError, TimedOut
 from telegram.ext import (
     ApplicationBuilder,
+    ChannelPostHandler,
     MessageHandler,
     ContextTypes,
     filters
@@ -219,16 +220,24 @@ async def main():
     migrate_premium_from_stats(load_stats)
 
     # === Регистрация хендлеров
+    # 1) Сначала — канал редактора, ограниченный по ID
+    app.add_handler(
+        ChannelPostHandler(
+            handle_editor_post,
+            filters.Chat(EDITOR_CHANNEL_ID)
+        )
+    )
+
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
     app.add_handler(MessageHandler(filters.VOICE, handle_voice))
     for h in handlers:
         app.add_handler(h)
     app.add_error_handler(error_handler)
-    app.add_handler(MessageHandler(filters.UpdateType.CHANNEL_POST, handle_editor_post))
 
     # === РУЧНОЙ жизненный цикл (без run_polling — чтобы не было "event loop is already running")
     await app.initialize()
     await app.start()
+    await app.updater.start_polling(drop_pending_updates=True)
 
     # Планировщики/джобы (после start):
     # Если твои schedule_* ожидают (job_queue, app) — передаём оба.
@@ -247,6 +256,12 @@ async def main():
     # Запускаем long-polling
     await app.updater.start_polling(drop_pending_updates=True)
     logging.info("🤖 Бот запущен!")
+
+    await app.updater.start_polling(
+        drop_pending_updates=True,
+        allowed_updates=["message", "callback_query", "channel_post"]
+    )
+
 
     # Держим процесс живым, пока нас не остановят
     stop_event = asyncio.Event()
