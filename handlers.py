@@ -295,15 +295,37 @@ stripe.api_key = STRIPE_SECRET_KEY or os.getenv("STRIPE_SECRET_KEY", "")
 
 
 
-# если где-то уже есть – оставь одну версию
+# язык → таймзона (проверь что тебя устраивает)
+LANG_TZ = {
+    "ru": "Europe/Moscow",
+    "uk": "Europe/Kiev",
+    "ka": "Asia/Tbilisi",
+    "kk": "Asia/Almaty",
+    "ro": "Europe/Bucharest",
+    "hy": "Asia/Yerevan",
+    "es": "Europe/Madrid",
+    "de": "Europe/Berlin",
+    "fr": "Europe/Paris",
+    "pl": "Europe/Warsaw",
+    "en": "Europe/London",
+}
+
 LANG_ALIASES = {"ua":"uk","kz":"kk","ge":"ka","md":"ro"}
-TAG_RE = re.compile(r"^\s*\[([A-Za-z\-_]{2,5})\]\s*")
+
+# Разбираем: [lang] | [lang HH:MM] | [lang HH:MM YYYY-MM-DD[,YYYY-MM-DD ...]]
+#   1: lang
+#   2: HH
+#   3: MM
+#   4: даты (вся строка дат, напр. "2025-10-10, 2025-10-20")
+TAG_RE = re.compile(
+    r"^\s*\[([A-Za-z\-_]{2,5})(?:\s+(\d{1,2}):(\d{2})(?:\s+([0-9,\-\s]+))?)?\]\s*"
+)
 
 def _normalize_lang_tag(tag: str) -> str:
     tag = (tag or "").strip().lower()
     for sep in ("-","_"):
         if sep in tag:
-            tag = tag.split(sep, 1)[0]
+            tag = tag.split(sep,1)[0]
     return LANG_ALIASES.get(tag, tag)
 
 def _normalize_chat_id(s: str) -> str:
@@ -315,111 +337,160 @@ def _normalize_chat_id(s: str) -> str:
         if not username.startswith("@"):
             username = f"@{username}"
         return username
-    return s  # уже @username или -100...
+    return s
 
-async def _send_md_safe(send_func, **kwargs):
-    """Пробуем с Markdown, если падает — без него."""
-    try:
-        return await send_func(**kwargs, parse_mode="Markdown")
-    except BadRequest as e:
-        if "parse entities" in str(e).lower():
-            kwargs.pop("parse_mode", None)
-            return await send_func(**kwargs)
-        raise
+def _parse_date_list(raw: str) -> list[date]:
+    """Парсим 'YYYY-MM-DD, YYYY-MM-DD,...' в список date; игнорируем мусор/повторы."""
+    out = []
+    if not raw:
+        return out
+    for part in raw.split(","):
+        p = part.strip()
+        if not p:
+            continue
+        try:
+            y, m, d = map(int, p.split("-", 2))
+            out.append(date(y, m, d))
+        except Exception:
+            # игнорируем неверные токены
+            pass
+    # удалим дубли, сохраним порядок
+    seen = set()
+    uniq = []
+    for d in out:
+        if d not in seen:
+            uniq.append(d)
+            seen.add(d)
+    return uniq
+
+async def _publish_to_channel(bot, target: str, payload: dict):
+    caption = payload.get("caption")
+    parse_mode = payload.get("parse_mode", "Markdown")
+
+    if payload.get("photo_id"):
+        await bot.send_photo(chat_id=target, photo=payload["photo_id"], caption=caption, parse_mode=parse_mode)
+    elif payload.get("video_id"):
+        await bot.send_video(chat_id=target, video=payload["video_id"], caption=caption, parse_mode=parse_mode)
+    elif payload.get("animation_id"):
+        await bot.send_animation(chat_id=target, animation=payload["animation_id"], caption=caption, parse_mode=parse_mode)
+    elif payload.get("document_id"):
+        await bot.send_document(chat_id=target, document=payload["document_id"], caption=caption, parse_mode=parse_mode)
+    else:
+        await bot.send_message(chat_id=target, text=(caption or "…"), parse_mode=parse_mode)
+
+def _next_run_at_local_today_or_tomorrow(tz_name: str, hh: int, mm: int) -> datetime:
+    """Если времени без даты — ставим сегодня или завтра по локали, вернём UTC."""
+    tz = ZoneInfo(tz_name)
+    now_local = datetime.now(tz)
+    run_local = now_local.replace(hour=hh, minute=mm, second=0, microsecond=0)
+    if run_local <= now_local:
+        run_local += timedelta(days=1)
+    return run_local.astimezone(timezone.utc)
+
+def _to_utc_at_local_date_time(tz_name: str, d: date, hh: int, mm: int) -> datetime:
+    """Сформировать UTC datetime из локальной даты+времени."""
+    tz = ZoneInfo(tz_name)
+    local_dt = datetime(d.year, d.month, d.day, hh, mm, 0, 0, tzinfo=tz)
+    return local_dt.astimezone(timezone.utc)
 
 async def handle_editor_post(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.channel_post:
         return
-
     post = update.channel_post
     if post.chat.id != EDITOR_CHANNEL_ID:
         return
 
-    # текст/подпись; для медиа можно оставить пусто
     raw = post.text or post.caption or ""
 
-    # ждём тег в начале: [ru] / [en] / ...
     m = TAG_RE.match(raw)
     if not m:
-        # пишем в сам редактор, не reply (бывает право «ответить» выключено)
-        await context.bot.send_message(
-            chat_id=EDITOR_CHANNEL_ID,
-            text="⚠️ Добавь язык в начале поста: [ru] / [en] / [uk] …"
-        )
+        await post.reply_text("⚠️ Добавь тег в начале: [ru], [de 09:00], [uk 07:30 2025-10-10], или несколько дат через запятую.")
         return
 
-    raw_tag = m.group(1)
+    raw_tag, hh_str, mm_str, raw_dates = m.group(1), m.group(2), m.group(3), m.group(4)
     lang = _normalize_lang_tag(raw_tag)
-
-    # Нормализуем карту каналов (URL -> @username)
     target = MOTIVATION_CHANNELS.get(lang)
     if not target:
-        await context.bot.send_message(
-            chat_id=EDITOR_CHANNEL_ID,
-            text=f"⚠️ Канал для [{raw_tag}]→«{lang}» не настроен. "
-                 f"Доступные: {', '.join(sorted(MOTIVATION_CHANNELS.keys()))}"
+        await post.reply_text(
+            f"⚠️ Канал для [{raw_tag}]→«{lang}» не настроен. "
+            f"Доступные: {', '.join(sorted(MOTIVATION_CHANNELS.keys()))}"
         )
         return
     target = _normalize_chat_id(target)
+    tz_name = LANG_TZ.get(lang)
+    if not tz_name:
+        await post.reply_text(f"⚠️ Для языка [{lang}] не задана таймзона в LANG_TZ.")
+        return
 
-    # подпись без тега; если пусто — None
-    caption = (raw[m.end():].strip() or None)
+    # подпись/текст без тега
+    caption = raw[m.end():].strip() or None
 
-    try:
-        if post.photo:
-            await _send_md_safe(
-                context.bot.send_photo,
-                chat_id=target,
-                photo=post.photo[-1].file_id,
-                caption=caption
+    # payload (медиа/текст)
+    payload = {"caption": caption, "parse_mode": "Markdown"}
+    if post.photo:
+        payload["photo_id"] = post.photo[-1].file_id
+    elif getattr(post, "animation", None):
+        payload["animation_id"] = post.animation.file_id
+    elif post.video:
+        payload["video_id"] = post.video.file_id
+    elif post.document:
+        payload["document_id"] = post.document.file_id
+
+    # === Режимы: сразу / сегодня-завтра / конкретные даты ===
+    if hh_str is None or mm_str is None:
+        # нет времени → отправляем сразу
+        await _publish_to_channel(context.bot, target, payload)
+        await post.reply_text(f"👀 Отправлено сразу в [{lang}] → {target}")
+        return
+
+    # есть время (и, возможно, даты)
+    hh = int(hh_str); mm = int(mm_str)
+
+    if raw_dates:
+        # Планируем серию на перечисленные даты
+        dates = _parse_date_list(raw_dates)
+        if not dates:
+            await post.reply_text("⚠️ Некорректный список дат. Используй формат YYYY-MM-DD, разделяя запятой.")
+            return
+
+        now_utc = datetime.now(timezone.utc)
+        scheduled = []
+        skipped = []
+
+        for d in dates:
+            run_at_utc = _to_utc_at_local_date_time(tz_name, d, hh, mm)
+            if run_at_utc <= now_utc:
+                skipped.append(d.isoformat())
+                continue
+
+            context.application.job_queue.run_once(
+                lambda job_ctx, tgt=target, pl=payload: asyncio.create_task(
+                    _publish_to_channel(context.bot, tgt, pl)
+                ),
+                when=run_at_utc,
+                name=f"mot_{lang}_{d.isoformat()}_{hh:02d}{mm:02d}",
             )
+            scheduled.append(f"{d.isoformat()} {hh:02d}:{mm:02d} ({tz_name})")
 
-        elif post.video:
-            await _send_md_safe(
-                context.bot.send_video,
-                chat_id=target,
-                video=post.video.file_id,
-                caption=caption
-            )
-
-        elif getattr(post, "animation", None):
-            await _send_md_safe(
-                context.bot.send_animation,
-                chat_id=target,
-                animation=post.animation.file_id,
-                caption=caption
-            )
-
-        elif post.document:
-            await _send_md_safe(
-                context.bot.send_document,
-                chat_id=target,
-                document=post.document.file_id,
-                caption=caption
-            )
-
+        if scheduled:
+            msg = "⏰ Запланировано:\n• " + "\n• ".join(scheduled) + f"\nКанал: {target}"
+            if skipped:
+                msg += "\n\n⚠️ Пропущены (в прошлом): " + ", ".join(skipped)
+            await post.reply_text(msg)
         else:
-            # обычный текст
-            await _send_md_safe(
-                context.bot.send_message,
-                chat_id=target,
-                text=(caption or "…")
-            )
-
-        await context.bot.send_message(
-            chat_id=EDITOR_CHANNEL_ID,
-            text=f"👀 Принял пост для [{lang}] → {target}"
+            await post.reply_text("⚠️ Все указанные даты/время оказались в прошлом — ничего не запланировано.")
+    else:
+        # Только время — ставим на сегодня (или завтра, если уже прошло)
+        run_at_utc = _next_run_at_local_today_or_tomorrow(tz_name, hh, mm)
+        context.application.job_queue.run_once(
+            lambda job_ctx: asyncio.create_task(
+                _publish_to_channel(context.bot, target, payload)
+            ),
+            when=run_at_utc,
+            name=f"mot_{lang}_{int(run_at_utc.timestamp())}",
         )
-        logging.info("Published editor post: tag=%s lang=%s target=%s media=%s",
-                     raw_tag, lang, target, bool(post.photo or post.video or getattr(post,'animation',None) or post.document))
+        await post.reply_text(f"⏰ Запланировано на {hh:02d}:{mm:02d} ({tz_name}). Канал: {target}")
 
-    except Exception as e:
-        logging.exception("Publish failed: lang=%s target=%s", lang, target)
-        await context.bot.send_message(
-            chat_id=EDITOR_CHANNEL_ID,
-            text=f"❌ Не смог отправить в [{lang}] → {target}\n{e}"
-        )
-        
 def _load_price_ids() -> dict:
     """Читает JSON из env PRICE_IDS и возвращает dict {'plus': {...}, 'pro': {...}}."""
     raw = os.getenv("PRICE_IDS", "").strip()
