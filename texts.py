@@ -14,9 +14,12 @@ MOTIVATION_CHANNELS = {
     "ru": "https://t.me/mindra_motivation_ru",
     "en": "https://t.me/mindra_motivation_en",
     "uk": "https://t.me/mindra_motivation_ua",
+    "ua": "https://t.me/mindra_motivation_ua",
     "ka": "https://t.me/mindra_motivation_ka",
     "kk": "https://t.me/mindra_motivation_kz",
+    "kz": "https://t.me/mindra_motivation_kz",
     "md": "https://t.me/mindra_motivation_ro",
+    "ro": "https://t.me/mindra_motivation_ro",
     "hy": "https://t.me/mindra_motivation_hy",
     "es": "https://t.me/mindra_motivation_es",
     "de": "https://t.me/mindra_motivation_de",
@@ -528,7 +531,8 @@ MENU_TEXTS = {
         "prem_title": "💎 Премиум",
         "premium_days": "Сколько осталось?",
         "invite": "Пригласить друга (+7 дней)",
-        "premium_buy": "Купить Mindra+",
+        "premium_site": "🌐 Сайт Mindra",
+        "premium_motivation": "📣 Канал мотивации",
 
         # Настройки
         "set_title": "⚙️ Настройки",
@@ -574,7 +578,8 @@ MENU_TEXTS = {
     "prem_title": "💎 Premium",
     "premium_days": "¿Cuánto queda?",
     "invite": "Invitar a un amigo (+7 días)",
-    "premium_buy": "Comprar Mindra+",
+    "premium_site": "🌐 Sitio de Mindra",
+    "premium_motivation": "📣 Canal de motivación",
 
     "set_title": "⚙️ Ajustes",
     "set_body": "¿Qué configurar?",
@@ -618,7 +623,8 @@ MENU_TEXTS = {
     "prem_title": "💎 Premium",
     "premium_days": "Wie viel bleibt noch?",
     "invite": "Freund einladen (+7 Tage)",
-    "premium_buy": "Mindra+ kaufen",
+    "premium_site": "🌐 Mindra-Website",
+    "premium_motivation": "📣 Motivationskanal",
 
     "set_title": "⚙️ Einstellungen",
     "set_body": "Was möchtest du einstellen?",
@@ -662,7 +668,8 @@ MENU_TEXTS = {
     "prem_title": "💎 Premium",
     "premium_days": "Ile pozostało?",
     "invite": "Zaproś znajomego (+7 dni)",
-    "premium_buy": "Kup Mindra+",
+    "premium_site": "🌐 Strona Mindra",
+    "premium_motivation": "📣 Kanał motywacji",
 
     "set_title": "⚙️ Ustawienia",
     "set_body": "Co chcesz ustawić?",
@@ -706,7 +713,8 @@ MENU_TEXTS = {
     "prem_title": "💎 Premium",
     "premium_days": "Combien reste-t-il ?",
     "invite": "Inviter un ami (+7 jours)",
-    "premium_buy": "Acheter Mindra+",
+    "premium_site": "🌐 Site Mindra",
+    "premium_motivation": "📣 Canal de motivation",
 
     "set_title": "⚙️ Paramètres",
     "set_body": "Que veux-tu configurer ?",
@@ -750,7 +758,8 @@ MENU_TEXTS = {
         "prem_title": "💎 Преміум",
         "premium_days": "Скільки залишилось?",
         "invite": "Запросити друга (+7 днів)",
-        "premium_buy": "Купити Mindra+",
+        "premium_site": "🌐 Сайт Mindra",
+        "premium_motivation": "📣 Канал мотивації",
 
         "set_title": "⚙️ Налаштування",
         "set_body": "Що налаштувати?",
@@ -794,7 +803,8 @@ MENU_TEXTS = {
         "prem_title": "💎 Premium",
         "premium_days": "How many days left?",
         "invite": "Invite a friend (+7 days)",
-        "premium_buy": "Buy Mindra+",
+        "premium_site": "🌐 Mindra website",
+        "premium_motivation": "📣 Motivation channel",
 
         "set_title": "⚙️ Settings",
         "set_body": "What to configure?",
@@ -838,7 +848,8 @@ MENU_TEXTS = {
         "prem_title": "💎 Premium",
         "premium_days": "Câte zile au rămas?",
         "invite": "Invită un prieten (+7 zile)",
-        "premium_buy": "Cumpără Mindra+",
+        "premium_site": "🌐 Site-ul Mindra",
+        "premium_motivation": "📣 Canal de motivație",
 
         "set_title": "⚙️ Setări",
         "set_body": "Ce dorești să configurezi?",
@@ -882,7 +893,8 @@ MENU_TEXTS = {
         "prem_title": "💎 Прэміум",
         "premium_days": "Колькі засталося?",
         "invite": "Запрасіць сябра (+7 дзён)",
-        "premium_buy": "Набыць Mindra+",
+        "premium_site": "🌐 Сайт Mindra",
+        "premium_motivation": "📣 Канал матывацыі",
 
         "set_title": "⚙️ Налады",
         "set_body": "Што наладзіць?",
@@ -926,7 +938,8 @@ MENU_TEXTS = {
         "prem_title": "💎 Премиум",
         "premium_days": "Қанша күн қалды?",
         "invite": "Досты шақыру (+7 күн)",
-        "premium_buy": "Mindra+ сатып алу",
+        "premium_site": "🌐 Mindra сайты",
+        "premium_motivation": "📣 Мотивация арнасы",
 
         "set_title": "⚙️ Баптаулар",
         "set_body": "Нені баптаймыз?",
@@ -970,7 +983,8 @@ MENU_TEXTS = {
         "prem_title": "💎 Премиум",
         "premium_days": "Канча күн калды?",
         "invite": "Досуңду чакыр (+7 күн)",
-        "premium_buy": "Mindra+ сатып алуу",
+        "premium_site": "🌐 Mindra сайты",
+        "premium_motivation": "📣 Мотивация каналы",
 
         "set_title": "⚙️ Жөндөөлөр",
         "set_body": "Эмне жөндөйбүз?",
@@ -1014,7 +1028,8 @@ MENU_TEXTS = {
         "prem_title": "💎 Պրեմիում",
         "premium_days": "Քանի՞ օր է մնացել",
         "invite": "Հրավիրել ընկերոջ (+7 օր)",
-        "premium_buy": "Գնել Mindra+",
+        "premium_site": "🌐 Mindra կայք",
+        "premium_motivation": "📣 Մոտիվացիայի ալիք",
 
         "set_title": "⚙️ Կարգավորումներ",
         "set_body": "Ի՞նչ կարգավորել։",
@@ -1058,7 +1073,8 @@ MENU_TEXTS = {
         "prem_title": "💎 პრემიუმი",
         "premium_days": "რამდენი დღე დარჩა?",
         "invite": "მოიწვიე მეგობარი (+7 დღე)",
-        "premium_buy": "შეიძინე Mindra+",
+        "premium_site": "🌐 Mindra საიტი",
+        "premium_motivation": "📣 მოტივაციის არხი",
 
         "set_title": "⚙️ პარამეტრები",
         "set_body": "რას ვანstellოთ?",
@@ -1102,7 +1118,8 @@ MENU_TEXTS = {
         "prem_title": "💎 Премиум",
         "premium_days": "Кхин деранца?",
         "invite": "Ду тӀео доттагӀа (+7 де)",
-        "premium_buy": "Mindra+ юкъара",
+        "premium_site": "🌐 Mindra сайт",
+        "premium_motivation": "📣 Мотивацин канал",
 
         "set_title": "⚙️ Настройка",
         "set_body": "Ма туйлина?",
