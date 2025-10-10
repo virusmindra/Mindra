@@ -270,8 +270,8 @@ REMIND_DB_PATH  = os.getenv("REMIND_DB_PATH",  os.path.join(DATA_DIR, "reminders
 
 UI_MSG_KEY = "ui_msg_id"
 
-# URL страницы оплаты — замени на свою
-PREMIUM_URL = "https://example.com/pay"
+# Официальный сайт Mindra
+MINDRA_SITE_URL = "https://mindra.group"
 
 FREE_TRACKER_LIMIT  = {"goal": 3, "habit": 3}  # Free
 PLUS_TRACKER_LIMIT  = {"goal": 10, "habit": 10}  # Mindra+
@@ -1584,6 +1584,19 @@ def _menu_label(uid: str, key: str) -> str:
     base = MENU_LABELS.get("ru", {})
     return MENU_LABELS.get(lang, base).get(key, base.get(key, key))
 
+def _motivation_channel_link(uid: str) -> str | None:
+    lang = user_languages.get(uid, "ru")
+    link = MOTIVATION_CHANNELS.get(lang)
+    if not link:
+        alias = LANG_ALIASES.get(lang)
+        if alias:
+            link = MOTIVATION_CHANNELS.get(alias)
+    if not link and "-" in lang:
+        link = MOTIVATION_CHANNELS.get(lang.split("-", 1)[0])
+    if not link:
+        link = MOTIVATION_CHANNELS.get("ru")
+    return link
+
 def _menu_kb_premium(uid: str) -> InlineKeyboardMarkup:
     t = _menu_i18n(uid)
     rows = [
@@ -1598,9 +1611,11 @@ def _menu_kb_premium(uid: str) -> InlineKeyboardMarkup:
     except Exception:
         rows.append([InlineKeyboardButton(_menu_label(uid, "upgrade"), callback_data="up:menu")])
 
-    # (опционально) оставить внешнюю оплату как запасной вариант
-    # заменишь url на свой лендинг оплаты
-    rows.append([InlineKeyboardButton(t["premium_buy"], url="https://example.com/pay")])
+    rows.append([InlineKeyboardButton(t["premium_site"], url=MINDRA_SITE_URL)])
+
+    channel_link = _motivation_channel_link(uid)
+    if channel_link:
+        rows.append([InlineKeyboardButton(t["premium_motivation"], url=channel_link)])
 
     rows.append([InlineKeyboardButton(t["back"], callback_data="m:nav:home")])
     return InlineKeyboardMarkup(rows)
@@ -3872,9 +3887,12 @@ def _premium_kb(uid: str) -> InlineKeyboardMarkup:
     rows = [
         [InlineKeyboardButton(t["premium_days"], callback_data="m:premium:days")],
         [InlineKeyboardButton(t["invite"],       callback_data="m:premium:invite")],
-        [InlineKeyboardButton(t["premium_buy"],  url=PREMIUM_URL)],
-        [InlineKeyboardButton(t["back"],         callback_data="m:nav:home")],
+        [InlineKeyboardButton(t["premium_site"], url=MINDRA_SITE_URL)],
     ]
+    channel_link = _motivation_channel_link(uid)
+    if channel_link:
+        rows.append([InlineKeyboardButton(t["premium_motivation"], url=channel_link)])
+    rows.append([InlineKeyboardButton(t["back"],         callback_data="m:nav:home")])
     return InlineKeyboardMarkup(rows)
     
 def _gh_menu_keyboard(t: dict) -> InlineKeyboardMarkup:
