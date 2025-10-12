@@ -543,6 +543,12 @@ def _resolve_pending_checkout(uid: str, token: str) -> str | None:
 def _clear_pending_checkout(token: str) -> None:
     _pending_checkouts.pop(token, None)
 
+def _clear_pending_checkout_by_session(session_id: str) -> None:
+    if not session_id:
+        return
+    tokens = [tok for tok, data in _pending_checkouts.items() if data.get("session_id") == session_id]
+    for tok in tokens:
+        _pending_checkouts.pop(tok, None)
 
 async def _create_stripe_checkout_session(uid: str, tier: str) -> str:
     stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
@@ -6613,7 +6619,38 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if len(parts) == 2 and parts[0] == "/start":
             payload = parts[1].strip() or None
 
-    if payload:
+    chat_id = update.effective_chat.id if update.effective_chat else int(uid)
+    payload_handled = False
+
+    if payload and payload.startswith("paid_"):
+        payload_handled = True
+        session_id = payload[len("paid_"):].strip()
+        ok = False
+        message = None
+        if session_id:
+            try:
+                ok, message = await _check_and_activate(uid, session_id)
+            except Exception as e:
+                logging.exception("Failed to activate subscription from /start payload: %s", e)
+        t = _up_i18n(uid)
+        text = message or t.get("active_now") or "Готово! ✨"
+        if ok:
+            try:
+                await context.bot.send_message(chat_id=chat_id, text=text, reply_markup=_menu_kb_premium(uid))
+            except Exception as e:
+                logging.warning("Failed to send subscription confirmation: %s", e)
+            _clear_pending_checkout_by_session(session_id)
+        else:
+            fallback = t.get("no_active") or t.get("pending")
+            if fallback:
+                try:
+                    await context.bot.send_message(chat_id=chat_id, text=fallback)
+                except Exception as e:
+                    logging.warning("Failed to send subscription fallback message: %s", e)
+
+    if payload_handled:
+        user_ref_args.pop(uid, None)         # чистим старые хвосты
+    elif payload:
         user_ref_args[uid] = payload         # используем позже в онбординге
     else:
         user_ref_args.pop(uid, None)         # чистим старые хвосты
