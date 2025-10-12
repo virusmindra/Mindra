@@ -27,6 +27,7 @@ from texts import (
     CHANNEL_INVITE_TEXT,
     EDITOR_CHANNEL_ID,
     MOTIVATION_CHANNELS,
+    SUBSCRIPTION_CONFIRM_TEXTS,
     VOICE_TEXTS_BY_LANG,
     PCH_DONE_TOAST_TEXTS,
     REMIND_KEYWORDS,
@@ -611,6 +612,28 @@ def _upgrade_durations_kb(uid: str, tier: str) -> InlineKeyboardMarkup:
     ]
     return InlineKeyboardMarkup(rows)
 
+def _subscription_thank_you(uid: str, tier: str, term: str) -> str:
+    lang = user_languages.get(uid, "ru")
+    template_info = SUBSCRIPTION_CONFIRM_TEXTS.get(lang) or SUBSCRIPTION_CONFIRM_TEXTS.get("ru")
+    template = template_info.get("template", SUBSCRIPTION_CONFIRM_TEXTS["ru"]["template"])
+    durations = template_info.get("durations", {})
+
+    plan_key = tier if tier in ("plus", "pro") else "plus"
+    plan_name = _plan_name(uid, plan_key)
+
+    duration = durations.get(term)
+    if not duration:
+        period_map = (UPGRADE_TEXTS.get(lang) or UPGRADE_TEXTS.get("ru", {})).get("period", {})
+        duration = period_map.get(term, term)
+
+    try:
+        return template.format(plan=plan_name, duration=duration)
+    except Exception:
+        fallback_template = SUBSCRIPTION_CONFIRM_TEXTS["ru"]["template"]
+        fallback_duration = SUBSCRIPTION_CONFIRM_TEXTS["ru"].get("durations", {}).get(term, term)
+        return fallback_template.format(plan=_plan_name(uid, plan_key), duration=fallback_duration)
+
+
 async def _send_upgrade_menu(qmsg, uid: str):
     t = _up_i18n(uid)
     text = f"*{t['title']}*\n\n{t['choose']}"
@@ -658,11 +681,11 @@ async def _create_checkout_session(uid: str, tier: str, term: str):
     )
     return session
 
-async def _check_and_activate(uid: str, session_id: str) -> bool:
+async def _check_and_activate(uid: str, session_id: str):
     import stripe
     sess = stripe.checkout.Session.retrieve(session_id, expand=["subscription","payment_intent"])
     if (sess.get("status") != "complete") or (sess.get("payment_status") != "paid"):
-        return False
+        return False, None
 
     tier  = (sess.get("metadata") or {}).get("tier","plus")
     term  = (sess.get("metadata") or {}).get("term","1m")
@@ -677,16 +700,16 @@ async def _check_and_activate(uid: str, session_id: str) -> bool:
         period_end = int(sub["current_period_end"])
         dt = datetime.fromtimestamp(period_end, tz=timezone.utc)
         set_premium_until(uid, dt, tier=("pro" if tier=="pro" else "plus"))
-        return True
+        return True, _subscription_thank_you(uid, tier, term)
 
     # lifetime — one-time
     if sess.get("mode") == "payment":
         # выдаём «пожизненно»: просто на очень большой срок (например, 60 лет)
         days = 365 * 60
         extend_premium_days(uid, days, tier=("pro" if tier=="pro" else "plus"))
-        return True
+        return True, _subscription_thank_you(uid, tier, term)
 
-    return False
+    return False, None
 
 # ——— Callbacks ———
 async def upgrade_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -740,13 +763,15 @@ async def upgrade_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await q.answer(t["no_active"], show_alert=True)
             return
         ok = False
+        message = None
         try:
-            ok = await _check_and_activate(uid, session_id)
+            ok, message = await _check_and_activate(uid, session_id)
         except Exception as e:
             logging.exception(f"stripe check failed: {e}")
         if ok:
             _clear_pending_checkout(token)
-            await q.message.edit_text(t["active_now"], reply_markup=_menu_kb_premium(uid))
+            text = message or t["active_now"]
+            await q.message.edit_text(text, reply_markup=_menu_kb_premium(uid))
         else:
             await q.answer(t["no_active"], show_alert=True)
         return
