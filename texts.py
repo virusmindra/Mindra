@@ -477,6 +477,149 @@ UPGRADE_TEXTS = {
   },
 }
 
+SUBSCRIPTION_CONFIRM_TEXTS = {
+    "ru": {
+        "template": "Благодарим за покупку подписки {plan} на {duration}! ✨ Подписка активна.",
+        "durations": {
+            "1m": "1 месяц",
+            "3m": "3 месяца",
+            "6m": "6 месяцев",
+            "12m": "12 месяцев",
+            "life": "всю жизнь",
+        },
+    },
+    "uk": {
+        "template": "Дякуємо за покупку підписки {plan} на {duration}! ✨ Підписку активовано.",
+        "durations": {
+            "1m": "1 місяць",
+            "3m": "3 місяці",
+            "6m": "6 місяців",
+            "12m": "12 місяців",
+            "life": "все життя",
+        },
+    },
+    "en": {
+        "template": "Thank you for purchasing the {plan} subscription for {duration}! ✨ It's now active.",
+        "durations": {
+            "1m": "1 month",
+            "3m": "3 months",
+            "6m": "6 months",
+            "12m": "12 months",
+            "life": "a lifetime",
+        },
+    },
+    "es": {
+        "template": "¡Gracias por comprar la suscripción {plan} por {duration}! ✨ Ya está activa.",
+        "durations": {
+            "1m": "1 mes",
+            "3m": "3 meses",
+            "6m": "6 meses",
+            "12m": "12 meses",
+            "life": "toda la vida",
+        },
+    },
+    "de": {
+        "template": "Danke für den Kauf des {plan}-Abos für {duration}! ✨ Es ist jetzt aktiv.",
+        "durations": {
+            "1m": "1 Monat",
+            "3m": "3 Monate",
+            "6m": "6 Monate",
+            "12m": "12 Monate",
+            "life": "die ganze Lebenszeit",
+        },
+    },
+    "pl": {
+        "template": "Dziękujemy za zakup subskrypcji {plan} na {duration}! ✨ Subskrypcja jest już aktywna.",
+        "durations": {
+            "1m": "1 miesiąc",
+            "3m": "3 miesiące",
+            "6m": "6 miesięcy",
+            "12m": "12 miesięcy",
+            "life": "całe życie",
+        },
+    },
+    "fr": {
+        "template": "Merci d’avoir acheté l’abonnement {plan} pour {duration} ! ✨ Il est désormais actif.",
+        "durations": {
+            "1m": "1 mois",
+            "3m": "3 mois",
+            "6m": "6 mois",
+            "12m": "12 mois",
+            "life": "toute la vie",
+        },
+    },
+    "md": {
+        "template": "Mulțumim pentru achiziția abonamentului {plan} pentru {duration}! ✨ Este acum activ.",
+        "durations": {
+            "1m": "1 lună",
+            "3m": "3 luni",
+            "6m": "6 luni",
+            "12m": "12 luni",
+            "life": "toată viața",
+        },
+    },
+    "be": {
+        "template": "Дзякуй за пакупку падпіскі {plan} на {duration}! ✨ Падпіска актыўная.",
+        "durations": {
+            "1m": "1 месяц",
+            "3m": "3 месяцы",
+            "6m": "6 месяцаў",
+            "12m": "12 месяцаў",
+            "life": "усё жыццё",
+        },
+    },
+    "kk": {
+        "template": "Жазылым {plan}-ды {duration} сатып алғаныңыз үшін рақмет! ✨ Жазылым қосылды.",
+        "durations": {
+            "1m": "1 айға",
+            "3m": "3 айға",
+            "6m": "6 айға",
+            "12m": "12 айға",
+            "life": "өмір бойы",
+        },
+    },
+    "kg": {
+        "template": "{plan} жазылуусун {duration} сатып алганыңыз үчүн рахмат! ✨ Жазылуу активдүү.",
+        "durations": {
+            "1m": "1 айга",
+            "3m": "3 айга",
+            "6m": "6 айга",
+            "12m": "12 айга",
+            "life": "өмүр бою",
+        },
+    },
+    "hy": {
+        "template": "Շնորհակալ ենք {plan} բաժանորդագրությունը {duration} գնելու համար։ ✨ Այն ակտիվ է։",
+        "durations": {
+            "1m": "1 ամսով",
+            "3m": "3 ամսով",
+            "6m": "6 ամսով",
+            "12m": "12 ամսով",
+            "life": "ցմահ",
+        },
+    },
+    "ka": {
+        "template": "გმადლობთ {plan} გამოწერის შეძენისთვის {duration}! ✨ გამოწერა უკვე აქტიურია.",
+        "durations": {
+            "1m": "1 თვიანი ვადით",
+            "3m": "3 თვიანი ვადით",
+            "6m": "6 თვიანი ვადით",
+            "12m": "12 თვიანი ვადით",
+            "life": "სამუდამო წვდომით",
+        },
+    },
+    "ce": {
+        "template": "Баркалла хьуна, що купил(а) подписку {plan} на {duration}! ✨ Подписка активна.",
+        "durations": {
+            "1m": "1 месяц",
+            "3m": "3 месяца",
+            "6m": "6 месяцев",
+            "12m": "12 месяцев",
+            "life": "пожизненно",
+        },
+    },
+}
+
 MENU_LABELS = {
     "ru": {"upgrade": "⭐ Обновить"},
     "uk": {"upgrade": "⭐ Оновити"},
