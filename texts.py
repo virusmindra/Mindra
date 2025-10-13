@@ -657,6 +657,7 @@ MENU_TEXTS = {
         "feat_points": "⭐️ Очки/Титул",
         "feat_mood": "🧪 Тест настроения",
         "features_mode": "🎛 Режим общения (/mode)",
+        "feat_daily_task": "📅 Задание дня",
 
         # Премиум-функции
         "plus_title": "💠 Премиум-функции",
@@ -706,6 +707,7 @@ MENU_TEXTS = {
     "feat_points": "⭐️ Puntos/Título",
     "feat_mood": "🧪 Test de ánimo",
     "features_mode": "🎛 Modo de conversación (/mode)",
+    "feat_daily_task": "📅 Tarea del día",
 
     "plus_title": "💠 Funciones premium",
     "plus_body": "Disponible en Mindra+:",
@@ -751,6 +753,7 @@ MENU_TEXTS = {
     "feat_points": "⭐️ Punkte/Titel",
     "feat_mood": "🧪 Stimmungstest",
     "features_mode": "🎛 Dialogmodus (/mode)",
+    "feat_daily_task": "📅 Tagesaufgabe",
 
     "plus_title": "💠 Premium-Funktionen",
     "plus_body": "Verfügbar in Mindra+:",
@@ -796,6 +799,7 @@ MENU_TEXTS = {
     "feat_points": "⭐️ Punkty/Tytuł",
     "feat_mood": "🧪 Test nastroju",
     "features_mode": "🎛 Tryb rozmowy (/mode)",
+    "feat_daily_task": "📅 Zadanie dnia",
 
     "plus_title": "💠 Funkcje premium",
     "plus_body": "Dostępne w Mindra+:",
@@ -841,6 +845,7 @@ MENU_TEXTS = {
     "feat_points": "⭐️ Points/Titre",
     "feat_mood": "🧪 Test d’humeur",
     "features_mode": "🎛 Mode de conversation (/mode)",
+    "feat_daily_task": "📅 Tâche du jour",
 
     "plus_title": "💠 Fonctionnalités Premium",
     "plus_body": "Disponible dans Mindra+ :",
@@ -886,6 +891,7 @@ MENU_TEXTS = {
         "feat_points": "⭐️ Бали/Титул",
         "feat_mood": "🧪 Тест настрою",
         "features_mode": "🎛 Режим спілкування (/mode)",
+        "feat_daily_task": "📅 Завдання дня",
 
         "plus_title": "💠 Преміум-функції",
         "plus_body": "Доступно в Mindra+:",
@@ -931,6 +937,7 @@ MENU_TEXTS = {
         "feat_points": "⭐️ Points/Title",
         "feat_mood": "🧪 Mood test",
         "features_mode": "🎛 Chat mode (/mode)",
+        "feat_daily_task": "📅 Daily task",
 
         "plus_title": "💠 Premium features",
         "plus_body": "Included in Mindra+:",
@@ -976,6 +983,7 @@ MENU_TEXTS = {
         "feat_points": "⭐️ Puncte/Titlu",
         "feat_mood": "🧪 Test stare de spirit",
         "features_mode": "🎛 Modul chat (/mode)",
+        "feat_daily_task": "📅 Sarcina zilei",
 
         "plus_title": "💠 Funcții Premium",
         "plus_body": "Incluse în Mindra+:",
@@ -1021,6 +1029,7 @@ MENU_TEXTS = {
         "feat_points": "⭐️ Балы/Тытул",
         "feat_mood": "🧪 Тэст настрою",
         "features_mode": "🎛 Рэжым зносін (/mode)",
+        "feat_daily_task": "📅 Күннің тапсырмасы",
 
         "plus_title": "💠 Прэміум-функцыі",
         "plus_body": "Даступна ў Mindra+:",
@@ -1066,6 +1075,7 @@ MENU_TEXTS = {
         "feat_points": "⭐️ Ұпай/Титул",
         "feat_mood": "🧪 Көңіл-күй тесті",
         "features_mode": "🎛 Чат режимі (/mode)",
+        "feat_daily_task": "📅 Күннің тапсырмасы",
 
         "plus_title": "💠 Премиум-функциялар",
         "plus_body": "Mindra+ құрамында:",
@@ -1156,6 +1166,7 @@ MENU_TEXTS = {
         "feat_points": "⭐️ Միավորներ/Կոչում",
         "feat_mood": "🧪 Տրամադրության թեստ",
         "features_mode": "🎛 Շփման ռեժիմ (/mode)",
+        "feat_daily_task": "📅 Օրվա հանձնարարությունը",
 
         "plus_title": "💠 Պրեմիում ֆունկցիաներ",
         "plus_body": "Mindra+ փաթեթում՝",
@@ -1201,6 +1212,7 @@ MENU_TEXTS = {
         "feat_points": "⭐️ ქულები/ტიტული",
         "feat_mood": "🧪 განწყობის ტესტი",
         "features_mode": "🎛 ჩატის რეჟიმი (/mode)",
+        "feat_daily_task": "📅 დღის დავალება",
 
         "plus_title": "💠 პრემიუმ-ფუნქციები",
         "plus_body": "Mindra+-ში შედის:",
