@@ -1664,12 +1664,13 @@ def _menu_kb_settings(uid: str) -> InlineKeyboardMarkup:
 def _menu_kb_features(uid: str) -> InlineKeyboardMarkup:
     t = _menu_i18n(uid)
     rows = [
-        [InlineKeyboardButton(t["feat_tracker"],   callback_data="m:feat:tracker")],
-        [InlineKeyboardButton(t["features_mode"],  callback_data="m:feat:mode")],
-        [InlineKeyboardButton(t["feat_reminders"], callback_data="m:feat:reminders")],
-        [InlineKeyboardButton(t["feat_points"],    callback_data="m:feat:points")],
-        [InlineKeyboardButton(t["feat_mood"],      callback_data="m:feat:mood")],
-        [InlineKeyboardButton(t["back"],           callback_data="m:nav:home")],
+        [InlineKeyboardButton(t["feat_tracker"],     callback_data="m:feat:tracker")],
+        [InlineKeyboardButton(t["features_mode"],    callback_data="m:feat:mode")],
+        [InlineKeyboardButton(t["feat_reminders"],   callback_data="m:feat:reminders")],
+        [InlineKeyboardButton(t["feat_points"],      callback_data="m:feat:points")],
+        [InlineKeyboardButton(t["feat_mood"],        callback_data="m:feat:mood")],
+        [InlineKeyboardButton(t["feat_daily_task"],  callback_data="m:feat:daily")],
+        [InlineKeyboardButton(t["back"],             callback_data="m:nav:home")],
     ]
     return InlineKeyboardMarkup(rows)
 
@@ -4480,6 +4481,23 @@ async def feat_router(update, context):
     elif action == "mood":
         kb_back = InlineKeyboardMarkup([[InlineKeyboardButton(_menu_i18n(uid)["back"], callback_data="m:nav:home")]])
         return await msg.edit_text("🧪 Тест настроения (скоро)", reply_markup=kb_back)
+
+    elif action == "daily":
+        lang = user_languages.get(uid, "ru")
+        tasks = DAILY_TASKS_BY_LANG.get(lang) or DAILY_TASKS_BY_LANG.get("ru", [])
+        if not tasks:
+            return
+        task = random.choice(tasks)
+        template = _menu_i18n(uid).get("feat_daily_task_msg")
+        if template:
+            try:
+                text = template.format(task=task)
+            except Exception:
+                text = f"{template}\n{task}"
+        else:
+            text = task
+        await context.bot.send_message(chat_id=msg.chat.id, text=text)
+        return
 
 def parse_natural_time(text: str, lang: str, user_tz: ZoneInfo) -> datetime | None:
     """
