@@ -2593,12 +2593,24 @@ def _voice_kb(uid: str, tab: str = "engine", back_to: str = "plus") -> InlineKey
                                      callback_data=f"v:bg:gain:{g}") for g in chunk
             ])
 
+    elif tab == "beh":
+        mode_state = user_voice_mode.get(uid, False)
+        on_lbl = t.get("mode_on_btn", "🔊 Включить")
+        off_lbl = t.get("mode_off_btn", "🔇 Выключить")
+        rows.append([
+            InlineKeyboardButton(("✅ " if mode_state else "") + on_lbl, callback_data="v:mode:on"),
+            InlineKeyboardButton(("✅ " if not mode_state else "") + off_lbl, callback_data="v:mode:off"),
+        ])
+
     # Навигация по вкладкам
     rows.append([
         InlineKeyboardButton(t["btn_engine"], callback_data="v:tab:engine"),
         InlineKeyboardButton(t["btn_voice"],  callback_data="v:tab:voice"),
         InlineKeyboardButton(t["btn_speed"],  callback_data="v:tab:speed"),
-        InlineKeyboardButton(t["btn_bg"],     callback_data="v:tab:bg"),
+    ])
+    rows.append([
+        InlineKeyboardButton(t.get("btn_beh", "🎛 Поведение"), callback_data="v:tab:beh"),
+        InlineKeyboardButton(t["btn_bg"], callback_data="v:tab:bg"),
     ])
 
     # ⬅️ Назад
@@ -2852,15 +2864,16 @@ async def voice_settings_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await _safe_answer(q)
             return
 
-        user_voice_mode[uid] = (desired == "on")
-        t_mode = _v_i18n(uid)
-        toast = t_mode.get("on") if user_voice_mode[uid] else t_mode.get("off")
-        try:
-            await q.answer(f"✅ {toast}" if toast else "✅", show_alert=False)
-            answered = True
-        except Exception:
-            pass
-        current_tab = "engine"
+        if desired in ("on", "off"):
+            user_voice_mode[uid] = (desired == "on")
+            t_mode = _v_i18n(uid)
+            toast = t_mode.get("on") if user_voice_mode[uid] else t_mode.get("off")
+            try:
+                await q.answer(f"✅ {toast}" if toast else "✅", show_alert=False)
+                answered = True
+            except Exception:
+                pass
+        current_tab = "beh"
 
     elif kind == "engine":
         new_engine = parts[2] if len(parts) > 2 else ""
