@@ -25,6 +25,7 @@ from collections import defaultdict
 from texts import (
     CHANNEL_BUTTON_TEXT,
     CHANNEL_INVITE_TEXT,
+    MESSAGE_SETTINGS_TEXTS,
     EDITOR_CHANNEL_ID,
     MOTIVATION_CHANNELS,
     SUBSCRIPTION_CONFIRM_TEXTS,
@@ -204,6 +205,8 @@ user_voice_prefs = {}
 user_eleven_daily_usage: dict[str, dict[str, float]] = {}
 # uid -> {challenge_id: {"chat_id": int, "message_id": int}}
 user_pinned_challenges: dict[str, dict[str, dict]] = defaultdict(dict)
+# Настройки авто-сообщений (idle/утренние/вечерние/опросы)
+user_auto_messages_enabled: dict[str, bool] = {}
 
 class ElevenQuotaExceeded(Exception):
     """Raised when ElevenLabs daily quota is exhausted."""
@@ -1489,6 +1492,31 @@ def _menu_i18n(uid: str) -> dict:
     lang = user_languages.get(uid, "ru")
     return MENU_TEXTS.get(lang, MENU_TEXTS["ru"])
 
+def _auto_messages_enabled(uid: str) -> bool:
+    return user_auto_messages_enabled.get(uid, True)
+
+def _auto_messages_set(uid: str, enabled: bool) -> None:
+    user_auto_messages_enabled[uid] = enabled
+
+def _messages_i18n(uid: str) -> dict:
+    lang = user_languages.get(uid, "ru")
+    return MESSAGE_SETTINGS_TEXTS.get(lang, MESSAGE_SETTINGS_TEXTS["ru"])
+
+def _messages_settings_view(uid: str) -> tuple[str, InlineKeyboardMarkup]:
+    texts = _messages_i18n(uid)
+    enabled = _auto_messages_enabled(uid)
+    body = texts["body_on"] if enabled else texts["body_off"]
+
+    rows: list[list[InlineKeyboardButton]] = []
+    if enabled:
+        rows.append([InlineKeyboardButton(texts["disable"], callback_data="m:set:messages:off")])
+    else:
+        rows.append([InlineKeyboardButton(texts["enable"], callback_data="m:set:messages:on")])
+    rows.append([InlineKeyboardButton(_menu_i18n(uid)["back"], callback_data="m:nav:settings")])
+
+    title = texts.get("title", "💌 Сообщения")
+    return f"*{title}*\n{body}", InlineKeyboardMarkup(rows)
+
 def _menu_header_text(uid: str) -> str:
     t = _menu_i18n(uid)
 
@@ -1657,9 +1685,11 @@ def _menu_kb_premium(uid: str) -> InlineKeyboardMarkup:
 
 def _menu_kb_settings(uid: str) -> InlineKeyboardMarkup:
     t = _menu_i18n(uid)
+    msg_label = t.get("set_messages", MENU_TEXTS["ru"].get("set_messages", "💌 Сообщения"))
     rows = [
         [InlineKeyboardButton(t["set_lang"],     callback_data="m:set:lang")],
         [InlineKeyboardButton(t["set_tz"],       callback_data="m:set:tz")],
+        [InlineKeyboardButton(msg_label,         callback_data="m:set:messages")],
         [InlineKeyboardButton(t["set_feedback"], callback_data="m:set:feedback")],
         [InlineKeyboardButton(t["back"],         callback_data="m:nav:home")],
     ]
@@ -1799,25 +1829,46 @@ async def settings_router(update, context):
     q = update.callback_query
     if not q or not q.data.startswith("m:set:"):
         return
-    await q.answer()
-    context.user_data[UI_MSG_KEY] = q.message.message_id
 
     uid = str(q.from_user.id)
     msg = q.message
-    act = q.data.split(":", 2)[2]  # lang | tz | feedback
+    context.user_data[UI_MSG_KEY] = msg.message_id
+
+    parts = q.data.split(":")
+    act = parts[2] if len(parts) >= 3 else ""
+    subact = parts[3] if len(parts) >= 4 else ""
 
     if act == "lang":
+        await q.answer()
         return await show_language_menu(msg)
 
     if act == "tz":
+        await q.answer()
         # сюда — ТОЛЬКО таймзона, отдельный экран
         return await show_timezone_menu(msg)
 
     if act == "feedback":
+        await q.answer()
         t = _menu_i18n(uid)
         kb = InlineKeyboardMarkup([[InlineKeyboardButton(t["back"], callback_data="m:nav:settings")]])
         return await msg.edit_text(t.get("feedback_ask","💌 Напишите отзыв"), reply_markup=kb, parse_mode="Markdown")
 
+    if act == "messages":
+        if subact:
+            enabled = (subact == "on")
+            _auto_messages_set(uid, enabled)
+            toast_key = "toast_on" if enabled else "toast_off"
+            toast = _messages_i18n(uid).get(toast_key, "")
+            if toast:
+                await q.answer(toast, show_alert=False)
+            else:
+                await q.answer()
+        else:
+            await q.answer()
+        text, markup = _messages_settings_view(uid)
+        return await msg.edit_text(text, reply_markup=markup, parse_mode="Markdown")
+
+    await q.answer()
 
 def _has_remind_intent(text: str, lang: str) -> bool:
     if not text: return False
@@ -5898,6 +5949,9 @@ async def send_idle_reminders_compatible(app):
         uid = str(user_id)
         local_now = _local_now_for(uid)
 
+        if not _auto_messages_enabled(uid):
+            continue
+
         # 1) Интервал между idle‑напоминаниями
         last_prompted_any = user_last_prompted.get(uid)
         if _hours_since(last_prompted_any, now_utc) < MIN_IDLE_HOURS:
@@ -6119,6 +6173,9 @@ async def send_daily_reminder(context: ContextTypes.DEFAULT_TYPE):
     for user_id in list(user_last_seen.keys()):
         uid = str(user_id)
         local_now = _local_now_for(uid)
+
+        if not _auto_messages_enabled(uid):
+            continue
 
         # Утреннее окно
         if not (DAILY_MIN_HOUR <= local_now.hour < DAILY_MAX_HOUR):
@@ -7090,6 +7147,9 @@ async def send_evening_checkin(context: ContextTypes.DEFAULT_TYPE):
         uid = str(user_id)
         local_now = _local_now_for(uid)
 
+        if not _auto_messages_enabled(uid):
+            continue
+
         # Окно «вечер»: например, 18–22 по локальному (можешь вынести в константы)
         if not (18 <= local_now.hour < 22):
             continue
@@ -7173,6 +7233,9 @@ async def send_random_support(context: ContextTypes.DEFAULT_TYPE):
     candidate_user_ids = {str(uid) for uid in user_last_seen.keys()}
 
     for user_id in candidate_user_ids:
+        if not _auto_messages_enabled(user_id):
+            continue
+
         # 0) не трогаем, если был активен последние N часов
         last_seen = _get_and_migrate(user_last_seen, user_id)
         try:
@@ -7244,6 +7307,8 @@ async def send_random_poll(context: ContextTypes.DEFAULT_TYPE):
 
     for user_id in list(user_last_seen.keys()):
         uid = str(user_id)
+        if not _auto_messages_enabled(uid):
+            continue
 
         # Не спамим часто
         if _hours_since(user_last_polled.get(uid), now_utc) < MIN_HOURS_SINCE_LAST_POLL:
@@ -7272,6 +7337,9 @@ async def send_daily_task(context: ContextTypes.DEFAULT_TYPE):
     for user_id in list(user_last_seen.keys()):
         uid = str(user_id)
         local_now = _local_now_for(uid)
+
+        if not _auto_messages_enabled(uid):
+            continue
 
         # окно утром (используем существующие DAILY_MIN_HOUR/DAILY_MAX_HOUR)
         if not (DAILY_MIN_HOUR <= local_now.hour < DAILY_MAX_HOUR):
