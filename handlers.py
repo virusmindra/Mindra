@@ -1441,6 +1441,23 @@ async def menu_cb(update, context):
         waiting_feedback.add(uid)
         return
 
+    elif q.data.startswith("m:set:messages"):
+        parts = q.data.split(":")
+        subact = parts[3] if len(parts) >= 4 else ""
+
+        if subact:
+            enabled = (subact == "on")
+            _auto_messages_set(uid, enabled)
+
+        text, markup = _messages_settings_view(uid)
+        try:
+            await q.edit_message_text(text, parse_mode="Markdown", reply_markup=markup)
+        except BadRequest as e:
+            if "Message is not modified" not in str(e):
+                raise
+        return
+
+    
     # ---------- общий результат ----------
     if ok is False:
         await context.bot.send_message(q.message.chat.id, "Команда недоступна.")
