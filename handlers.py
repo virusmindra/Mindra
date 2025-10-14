@@ -1339,6 +1339,10 @@ async def menu_cb(update, context):
     elif q.data == "m:feat:mood":
         ok = await _try_call(["test_mood", "test_mood_cmd"], u, context)
 
+    elif q.data == "m:feat:daily":
+        ok = await _try_call(["task"], u, context)
+
+
     # ---------- Премиум-функции ----------
     elif q.data == "m:plus:voicemode":
         await voice_mode_menu(update, context)
