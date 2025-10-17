@@ -214,42 +214,173 @@ user_last_report_sent = {}  # user_id: date (ISO)
 user_last_daily_sent = {}  # user_id: date (iso)
 
 _MEMORY_PROMPT_TEMPLATES = {
+    "en": (
+        "Use your long-term memory about the user. Here are the important facts you know:\n{facts}\n"
+        "Check in on them with care when it feels natural."
+    ),
     "ru": (
-        "Учитывай долговременную память о пользователе. Вот важные факты, "
-        "которые ты уже знаешь:\n{facts}\nДеликатно возвращайся к ним, "
-        "чтобы проявить участие и спросить о прогрессе, когда это уместно."
+        "Учитывай долговременную память о пользователе. Вот важные факты, которые ты уже знаешь:\n{facts}\n"
+        "Деликатно возвращайся к ним, чтобы проявить участие и спросить о прогрессе, когда это уместно."
     ),
     "uk": (
         "Пам'ятай про довгострокову пам'ять користувача. Ось важливі факти:\n{facts}\n"
         "Коли доречно, дбайливо уточнюй, як справи з цими темами."
     ),
-    "en": (
-        "Use your long-term memory about the user. Here are the important facts you know:\n{facts}\n"
-        "Check in on them with care when it feels natural."
+    "ka": (
+        "გამოიყენე მომხმარებელზე შენი გრძელვადიანი მეხსიერება. აი მნიშვნელოვანი ფაქტები, რაც უკვე იცი:\n{facts}\n"
+        "საჭიროებისამებრ ნაზად დაუბრუნდი და ჰკითხე პროგრესზე."
+    ),
+    "kk": (
+        "Пайдаланушы туралы ұзақ мерзімді жадыңды пайдалан. Міне, сен білетін маңызды фактілер:\n{facts}\n"
+        "Орайы келгенде, олар жайлы нәзік түрде сұрап, прогресті тексеріп тұр."
+    ),
+    "md": (  # Romanian (Moldova)
+        "Folosește memoria ta pe termen lung despre utilizator. Iată faptele importante pe care le știi:\n{facts}\n"
+        "Revino la ele cu delicatețe și întreabă de progres când este natural."
+    ),
+    "hy": (
+        "Օգտագործիր օգտատիրոջ մասին քո երկարաժամկետ հիշողությունը։ Ահա կարևոր փաստերը, որոնք արդեն գիտես․\n{facts}\n"
+        "Հարմար պահին նրբորեն վերադարձիր դրանց ու հետաքրքրվիր առաջընթացով։"
+    ),
+    "es": (
+        "Usa tu memoria a largo plazo sobre el usuario. Estos son los hechos importantes que ya conoces:\n{facts}\n"
+        "Vuelve a ellos con delicadeza y pregunta por el progreso cuando sea adecuado."
+    ),
+    "de": (
+        "Nutze dein Langzeitgedächtnis über den Nutzer. Hier sind die wichtigen Fakten, die du bereits kennst:\n{facts}\n"
+        "Komme behutsam darauf zurück und erkundige dich nach dem Fortschritt, wenn es passend ist."
+    ),
+    "fr": (
+        "Utilise ta mémoire à long terme sur l’utilisateur. Voici les faits importants que tu connais déjà :\n{facts}\n"
+        "Reviens-y avec délicatesse et prends des nouvelles des progrès lorsque c’est approprié."
+    ),
+    "pl": (
+        "Korzystaj ze swojej długoterminowej pamięci o użytkowniku. Oto ważne fakty, które już znasz:\n{facts}\n"
+        "Wracaj do nich delikatnie i pytaj o postępy, gdy to stosowne."
     ),
 }
+
 
 _MEMORY_EMPTY_TEMPLATES = {
+    "en": (
+        "You do not have any long-term facts yet. When the user shares something important, "
+        "store it as a concise memory."
+    ),
     "ru": (
-        "Пока долговременная память о пользователе пуста. Если услышишь что-то важное и "
-        "долгосрочное (отношения, цели, состояния), запомни это кратко."
+        "Пока долговременная память о пользователе пуста. Если услышишь что-то важное и долгосрочное "
+        "(отношения, цели, состояния), запомни это кратко."
     ),
     "uk": (
-        "Поки що довготривала пам'ять порожня. Якщо користувач ділиться важливими фактами,"
-        " збережи їх короткими нотатками."
+        "Поки що довготривала пам'ять порожня. Якщо користувач ділиться важливими фактами, "
+        "збережи їх короткими нотатками."
     ),
-    "en": (
-        "You do not have any long-term facts yet. When the user shares something important,"
-        " store it as a concise memory."
+    "ka": (
+        "ჯერჯერობით გრძელვადიანი მეხსიერება ცარიელია. როცა მომხმარებელი ერთადერთად მნიშვნელოვანს გაუზიარებს, "
+        "შეინახე ეს მოკლე ჩანაწერად."
+    ),
+    "kk": (
+        "Әзірге пайдаланушы туралы ұзақ мерзімді деректер жоқ. Пайдаланушы маңызды нәрсе айтса, "
+        "оны қысқа естелік ретінде сақта."
+    ),
+    "md": (  # Romanian (Moldova)
+        "Deocamdată nu ai fapte pe termen lung. Când utilizatorul împărtășește ceva important, "
+        "păstrează-l ca o memorie concisă."
+    ),
+    "hy": (
+        "Առայժմ երկարաժամկետ փաստեր չկան։ Երբ օգտատերը կիսվում է կարևոր բանով, "
+        "պահպանիր այն որպես կարճ գրառում։"
+    ),
+    "es": (
+        "Aún no tienes hechos a largo plazo. Cuando el usuario comparta algo importante, "
+        "guárdalo como una memoria concisa."
+    ),
+    "de": (
+        "Es gibt noch keine langfristigen Fakten. Wenn der Nutzer etwas Wichtiges teilt, "
+        "speichere es als knappes Merkblatt."
+    ),
+    "fr": (
+        "Pour l’instant, aucune donnée à long terme. Lorsque l’utilisateur partage quelque chose d’important, "
+        "enregistre-le sous forme de note concise."
+    ),
+    "pl": (
+        "Na razie brak długoterminowych faktów. Gdy użytkownik przekaże coś ważnego, "
+        "zapisz to jako zwięzłą notatkę."
     ),
 }
 
-_MEMORY_UPDATE_SYSTEM_PROMPT = (
-    "You update the long-term memory of an empathetic wellbeing coach. "
-    "Focus only on enduring user facts: relationships, goals, recurring challenges, "
-    "health topics, preferences or commitments. Ignore fleeting details. Return the "
-    "*full* updated memory as a JSON array of short strings in the conversation language."
-)
+
+_MEMORY_UPDATE_SYSTEM_PROMPT = {
+    "en": (
+        "You update the long-term memory of an empathetic wellbeing coach. "
+        "Focus only on enduring user facts: relationships, goals, recurring challenges, "
+        "health topics, preferences or commitments. Ignore fleeting details. Return the "
+        "*full* updated memory as a JSON array of short strings in the conversation language."
+    ),
+    "ru": (
+        "Ты обновляешь долговременную память эмпатичного коуча благополучия. "
+        "Фокусируйся только на устойчивых фактах о пользователе: отношения, цели, "
+        "повторяющиеся трудности, темы здоровья, предпочтения или обязательства. "
+        "Игнорируй мимолётные детали. Верни *полностью* обновлённую память в виде JSON-массива "
+        "кратких строк на языке разговора."
+    ),
+    "uk": (
+        "Ти оновлюєш довгострокову пам’ять емпатійного коуча благополуччя. "
+        "Зосереджуйся лише на стійких фактах про користувача: стосунки, цілі, "
+        "повторювані виклики, теми здоров’я, вподобання чи зобов’язання. "
+        "Ігноруй миттєві деталі. Поверни *повністю* оновлену пам’ять як масив JSON "
+        "коротких фраз мовою розмови."
+    ),
+    "ka": (
+        "შენ ანახლებ ემპათიური კეთილდღეობის ქოუჩის გრძელვადიან მეხსიერებას. "
+        "ფოკუსირდი მხოლოდ მდგრად ფაქტებზე: ურთიერთობები, მიზნები, განმეორებადი სირთულეები, "
+        "ჯანმრთელობის თემები, პრეფერენციები ან ვალდებულებები. იგნორირე მსუბუქი/გასავლელი დეტალები. "
+        "დააბრუნე *სრულად* განახლებული მეხსიერება JSON მასივად, მოკლე ფრაზებით საუბრির ენაზე."
+    ),
+    "kk": (
+        "Сен жанашыр әл-ауқат коучының ұзақ мерзімді жадын жаңартасың. "
+        "Тек тұрақты фактілерге назар аудар: қатынастар, мақсаттар, қайталанатын қиындықтар, "
+        "денсаулық тақырыптары, қалаулар немесе міндеттемелер. Өтпелі ұсақ мәліметтерді елеме. "
+        "Жаңартылған жадты әңгіменің тіліндегі қысқа жолдардан тұратын JSON массиві ретінде *толық* қайтар."
+    ),
+    "md": (  # Romanian (Moldova)
+        "Actualizezi memoria pe termen lung a unui coach empatic de wellbeing. "
+        "Concentrează-te doar pe fapte durabile despre utilizator: relații, obiective, provocări recurente, "
+        "subiecte de sănătate, preferințe sau angajamente. Ignoră detaliile trecătoare. Returnează "
+        "memoria *complet* actualizată ca un array JSON de propoziții scurte în limba conversației."
+    ),
+    "hy": (
+        "Դու թարմացնում ես կարեկից բարեկեցության մարզչի երկարաժամկետ հիշողությունը։ "
+        "Կենտրոնացիր միայն կայուն փաստերի վրա՝ հարաբերություններ, նպատակներ, կրկնվող դժվարություններ, "
+        "առողջապահական թեմաներ, նախասիրություններ կամ պարտավորություններ։ Անտեսիր անցողիկ մանրուքները։ "
+        "Վերադարձրու *լրիվ* թարմացված հիշողությունը JSON զանգվածով՝ կարճ տողերով, զրույցի լեզվով։"
+    ),
+    "es": (
+        "Actualizas la memoria a largo plazo de un coach empático de bienestar. "
+        "Concéntrate solo en hechos duraderos del usuario: relaciones, metas, desafíos recurrentes, "
+        "temas de salud, preferencias o compromisos. Ignora los detalles pasajeros. Devuelve la "
+        "*memoria completa* actualizada como un arreglo JSON de frases cortas en el idioma de la conversación."
+    ),
+    "de": (
+        "Du aktualisierst das Langzeitgedächtnis eines einfühlsamen Wellbeing-Coaches. "
+        "Konzentriere dich nur auf dauerhafte Nutzerdaten: Beziehungen, Ziele, wiederkehrende Herausforderungen, "
+        "Gesundheitsthemen, Vorlieben oder Verpflichtungen. Ignoriere flüchtige Details. Gib die "
+        "*vollständig* aktualisierte Erinnerung als JSON-Array kurzer Sätze in der Gesprächssprache zurück."
+    ),
+    "fr": (
+        "Tu mets à jour la mémoire à long terme d’un coach bien-être empathique. "
+        "Concentre-toi uniquement sur des faits durables concernant l’utilisateur : relations, objectifs, "
+        "défis récurrents, sujets de santé, préférences ou engagements. Ignore les détails éphémères. "
+        "Rends la mémoire *entièrement* mise à jour sous forme de tableau JSON de courtes phrases "
+        "dans la langue de la conversation."
+    ),
+    "pl": (
+        "Aktualizujesz długoterminową pamięć empatycznego coacha dobrostanu. "
+        "Skup się wyłącznie na trwałych faktach o użytkowniku: relacje, cele, powtarzające się wyzwania, "
+        "tematy zdrowotne, preferencje lub zobowiązania. Ignoruj ulotne szczegóły. Zwróć "
+        "*w pełni* zaktualizowaną pamięć jako tablicę JSON krótkich zdań w języku rozmowy."
+    ),
+}
+
 
 
 def _memory_prompt_for_user(user_id: str, lang_code: str) -> str:
