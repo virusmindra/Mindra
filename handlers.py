@@ -1934,12 +1934,6 @@ def _menu_kb_plus(uid: str) -> InlineKeyboardMarkup:
         [InlineKeyboardButton(t["plus_preport"],    callback_data="m:plus:preport")],
         [InlineKeyboardButton(t["plus_pchallenge"], callback_data="m:plus:pchallenge")],
     ]
-    try:
-        if plan_of(uid) != PLAN_PRO:
-            rows.append([InlineKeyboardButton(_menu_label(uid, "upgrade"), callback_data="up:menu")])
-    except Exception:
-        rows.append([InlineKeyboardButton(_menu_label(uid, "upgrade"), callback_data="up:menu")])
-
     rows.append([InlineKeyboardButton(t["back"],            callback_data="m:nav:home")])
     return InlineKeyboardMarkup(rows)
 
