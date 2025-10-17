@@ -138,6 +138,12 @@ from telegram.error import BadRequest
 from config import client, TELEGRAM_BOT_TOKEN, ELEVEN_API_KEY, BASE_DIR, DATA_DIR, PREMIUM_DB_PATH, REMIND_DB_PATH, STRIPE_SECRET_KEY
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "")
 from history import load_history, save_history, trim_history
+from memory import (
+    load_memories,
+    save_memories,
+    get_user_memories,
+    set_user_memories,
+)
 # === Exports expected by main.py ===
 try:
     conversation_history = load_history()
@@ -145,6 +151,14 @@ try:
         conversation_history = {}
 except Exception:
     conversation_history = {}
+
+# долговременная память
+try:
+    user_memories = load_memories()
+    if not isinstance(user_memories, dict):
+        user_memories = {}
+except Exception:
+    user_memories = {}
 
 # если main.py тоже импортирует user_modes — инициализируем
 try:
@@ -198,6 +212,98 @@ user_ref_args: dict[str, str] = {}
 user_last_polled = {}
 user_last_report_sent = {}  # user_id: date (ISO)
 user_last_daily_sent = {}  # user_id: date (iso)
+
+_MEMORY_PROMPT_TEMPLATES = {
+    "ru": (
+        "Учитывай долговременную память о пользователе. Вот важные факты, "
+        "которые ты уже знаешь:\n{facts}\nДеликатно возвращайся к ним, "
+        "чтобы проявить участие и спросить о прогрессе, когда это уместно."
+    ),
+    "uk": (
+        "Пам'ятай про довгострокову пам'ять користувача. Ось важливі факти:\n{facts}\n"
+        "Коли доречно, дбайливо уточнюй, як справи з цими темами."
+    ),
+    "en": (
+        "Use your long-term memory about the user. Here are the important facts you know:\n{facts}\n"
+        "Check in on them with care when it feels natural."
+    ),
+}
+
+_MEMORY_EMPTY_TEMPLATES = {
+    "ru": (
+        "Пока долговременная память о пользователе пуста. Если услышишь что-то важное и "
+        "долгосрочное (отношения, цели, состояния), запомни это кратко."
+    ),
+    "uk": (
+        "Поки що довготривала пам'ять порожня. Якщо користувач ділиться важливими фактами,"
+        " збережи їх короткими нотатками."
+    ),
+    "en": (
+        "You do not have any long-term facts yet. When the user shares something important,"
+        " store it as a concise memory."
+    ),
+}
+
+_MEMORY_UPDATE_SYSTEM_PROMPT = (
+    "You update the long-term memory of an empathetic wellbeing coach. "
+    "Focus only on enduring user facts: relationships, goals, recurring challenges, "
+    "health topics, preferences or commitments. Ignore fleeting details. Return the "
+    "*full* updated memory as a JSON array of short strings in the conversation language."
+)
+
+
+def _memory_prompt_for_user(user_id: str, lang_code: str) -> str:
+    memories = get_user_memories(user_memories, user_id)
+    if not memories:
+        return _MEMORY_EMPTY_TEMPLATES.get(lang_code, _MEMORY_EMPTY_TEMPLATES["en"])
+
+    formatted = "\n".join(f"- {m}" for m in memories[-5:])
+    template = _MEMORY_PROMPT_TEMPLATES.get(lang_code, _MEMORY_PROMPT_TEMPLATES["en"])
+    return template.format(facts=formatted)
+
+
+def _extract_json_array(text: str):
+    if not text:
+        return None
+    start = text.find("[")
+    end = text.rfind("]")
+    if start == -1 or end == -1 or end <= start:
+        return None
+    try:
+        return json.loads(text[start : end + 1])
+    except json.JSONDecodeError:
+        return None
+
+
+def _maybe_update_long_term_memory(user_id: str, lang_code: str, user_input: str, assistant_reply: str):
+    try:
+        existing = get_user_memories(user_memories, user_id)
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            temperature=0.2,
+            messages=[
+                {"role": "system", "content": _MEMORY_UPDATE_SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": (
+                        f"Language: {lang_code or 'ru'}\n"
+                        f"Existing memories: {json.dumps(existing, ensure_ascii=False)}\n"
+                        f"User message: {user_input}\n"
+                        f"Assistant reply: {assistant_reply}"
+                    ),
+                },
+            ],
+        )
+        content = (response.choices[0].message.content or "").strip()
+        parsed = _extract_json_array(content)
+        if isinstance(parsed, list):
+            cleaned = [str(item).strip() for item in parsed if str(item).strip()]
+            if cleaned != existing:
+                set_user_memories(user_memories, user_id, cleaned)
+                save_memories(user_memories)
+    except Exception as e:
+        logging.debug(f"Memory update failed for {user_id}: {e}")
+
 user_last_evening: dict[str, datetime] = {}
 user_timezones = {}
 user_voice_mode = {}  # {user_id: bool}
@@ -7057,7 +7163,8 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "uk": "Якщо користувач просить казку — не пиши сам текст у цьому режимі. Коротко відповідай і запропонуй кнопку «Казка».",
         "en": "If the user asks for a bedtime story, do not write the full story here. Reply briefly and suggest the Story button."
     }.get(lang_code, "Если пользователь просит сказку — не пиши её здесь; предложи кнопки «Сказка».")
-    system_prompt = f"{lang_prompt}\n\n{mode_prompt}\n\n{guard}"
+    memory_prompt = _memory_prompt_for_user(uid, lang_code)
+    system_prompt = f"{lang_prompt}\n\n{mode_prompt}\n\n{guard}\n\n{memory_prompt}"
 
     # 💾 история
     if uid not in conversation_history:
@@ -7095,6 +7202,8 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
             final_text,
             reply_markup=generate_post_response_buttons(user_id=uid)
         )
+
+        _maybe_update_long_term_memory(uid, lang_code, user_input, final_text)
 
         # 🔊 авто-озвучка (если включена)
         if user_voice_mode.get(uid, False) and has_feature(uid, "voice_tts"):
