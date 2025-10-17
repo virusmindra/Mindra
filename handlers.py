@@ -2783,26 +2783,13 @@ def require_premium(func):
 
 async def _premium_challenge_unavailable(update, context) -> None:
     """Показать сообщение об отсутствии доступа к премиум-челленджам."""
-
-    text = "К сожалению это недоступно, нужно приобрести подписку"
-
-    q = getattr(update, "callback_query", None)
-    if q:
-        try:
-            await q.answer(text=text, show_alert=True)
-        except Exception:
-            pass
-        return
-
-    message = getattr(update, "message", None)
-    if message:
-        await message.reply_text(text)
-        return
-
+    uid = None
     try:
-        await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+        uid = str(update.effective_user.id)
     except Exception:
         pass
+
+    return await require_premium_message(update, context, uid)
 
 
 @require_premium
