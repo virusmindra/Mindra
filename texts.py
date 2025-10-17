@@ -3471,7 +3471,7 @@ CHALLENGE_BANK = {
 
 P_TEXTS = {
     "ru": {
-        "upsell_title": "💎 Mindra+",
+        "upsell_title": "💎 Mindra+/Pro",
         "upsell_body":  "Безлимитные напоминания, отчёты, челленджи и эксклюзивный режим.\nОформи Mindra+ и разблокируй всё 💜",
         "btn_get": "Получить Mindra+",
         "btn_code": "Ввести код",
@@ -3495,7 +3495,7 @@ P_TEXTS = {
         "stats_active_days": "🔥 Активные дни за 30д: *{n}*",
     },
     "es": {
-    "upsell_title": "💎 Mindra+",
+    "upsell_title": "💎 Mindra+/Pro",
     "upsell_body":  "Recordatorios ilimitados, informes, desafíos y modo exclusivo.\nActiva Mindra+ y desbloquéalo todo 💜",
     "btn_get": "Obtener Mindra+",
     "btn_code": "Introducir código",
@@ -3519,7 +3519,7 @@ P_TEXTS = {
     "stats_active_days": "🔥 Días activos en 30d: *{n}*",
 },
     "de": {
-    "upsell_title": "💎 Mindra+",
+    "upsell_title": "💎 Mindra+/Pro",
     "upsell_body":  "Unbegrenzte Erinnerungen, Berichte, Challenges und der exklusive Modus.\nHol dir Mindra+ und schalte alles frei 💜",
     "btn_get": "Mindra+ holen",
     "btn_code": "Code eingeben",
@@ -3543,7 +3543,7 @@ P_TEXTS = {
     "stats_active_days": "🔥 Aktive Tage in 30T: *{n}*",
 },
     "pl": {
-    "upsell_title": "💎 Mindra+",
+    "upsell_title": "💎 Mindra+/Pro",
     "upsell_body":  "Nielimitowane przypomnienia, raporty, wyzwania i ekskluzywny tryb.\nWłącz Mindra+ i odblokuj wszystko 💜",
     "btn_get": "Zdobądź Mindra+",
     "btn_code": "Wprowadź kod",
@@ -3567,7 +3567,7 @@ P_TEXTS = {
     "stats_active_days": "🔥 Aktywne dni w 30d: *{n}*",
 },
     "fr": {
-    "upsell_title": "💎 Mindra+",
+    "upsell_title": "💎 Mindra+/Pro",
     "upsell_body":  "Rappels illimités, rapports, défis et mode exclusif.\nActive Mindra+ et débloque tout 💜",
     "btn_get": "Obtenir Mindra+",
     "btn_code": "Saisir le code",
@@ -3591,7 +3591,7 @@ P_TEXTS = {
     "stats_active_days": "🔥 Jours actifs sur 30 j : *{n}*",
 },
     "uk": {
-        "upsell_title": "💎 Mindra+",
+        "upsell_title": "💎 Mindra+/Pro",
         "upsell_body":  "Необмежені нагадування, звіти, челенджі та ексклюзивний режим.\nОформи Mindra+ і відкрий усе 💜",
         "btn_get": "Отримати Mindra+",
         "btn_code": "Ввести код",
@@ -3615,7 +3615,7 @@ P_TEXTS = {
         "stats_active_days": "🔥 Активні дні за 30д: *{n}*",
     },
     "md": {  # ro
-        "upsell_title": "💎 Mindra+",
+        "upsell_title": "💎 Mindra+/Pro",
         "upsell_body":  "Mementouri nelimitate, rapoarte, provocări și mod exclusiv.\nActivează Mindra+ 💜",
         "btn_get": "Obține Mindra+",
         "btn_code": "Introduce cod",
@@ -3639,7 +3639,7 @@ P_TEXTS = {
         "stats_active_days": "🔥 Zile active (30z): *{n}*",
     },
     "be": {
-        "upsell_title": "💎 Mindra+",
+        "upsell_title": "💎 Mindra+/Pro",
         "upsell_body":  "Неабмежаваныя напаміны, справаздачы, чэленджы і эксклюзіўны рэжым.\nАформі Mindra+ 💜",
         "btn_get": "Атрымаць Mindra+",
         "btn_code": "Увесці код",
@@ -3663,7 +3663,7 @@ P_TEXTS = {
         "stats_active_days": "🔥 Актыўныя дні за 30д: *{n}*",
     },
     "kk": {
-        "upsell_title": "💎 Mindra+",
+        "upsell_title": "💎 Mindra+/Pro",
         "upsell_body":  "Шексіз еске салулар, есептер, челленджтер және эксклюзивті режим.\nMindra+ қосыңыз 💜",
         "btn_get": "Mindra+ алу",
         "btn_code": "Код енгізу",
@@ -3687,7 +3687,7 @@ P_TEXTS = {
         "stats_active_days": "🔥 Соңғы 30 күн белсенді: *{n}*",
     },
     "kg": {
-        "upsell_title": "💎 Mindra+",
+        "upsell_title": "💎 Mindra+/Pro",
         "upsell_body":  "Чексиз эскертмелер, отчеттор, челендждер жана эксклюзив режим.\nMindra+ кошуңуз 💜",
         "btn_get": "Mindra+ алуу",
         "btn_code": "Код киргизүү",
@@ -3711,7 +3711,7 @@ P_TEXTS = {
         "stats_active_days": "🔥 Акыркы 30 күн активдүү: *{n}*",
     },
     "hy": {
-        "upsell_title": "💎 Mindra+",
+        "upsell_title": "💎 Mindra+/Pro",
         "upsell_body":  "Անսահման հիշեցումներ, հաշվետվություններ, չելենջներ և բացառիկ ռեժիմ։\nՄիացրու Mindra+ 💜",
         "btn_get": "Ստանալ Mindra+",
         "btn_code": "Մուտքագրել կոդ",
@@ -3735,7 +3735,7 @@ P_TEXTS = {
         "stats_active_days": "🔥 Վերջին 30 օրում ակտիվ՝ *{n}*",
     },
     "ka": {
-        "upsell_title": "💎 Mindra+",
+        "upsell_title": "💎 Mindra+/Pro",
         "upsell_body":  "ულიმიტო შეხსენებები, ანგარიშები, ჩელენჯები და ექსკლუზიური რეჟიმი.\nგააქტიურე Mindra+ 💜",
         "btn_get": "Mindra+ შეძენა",
         "btn_code": "კოდის შეყვანა",
@@ -3759,7 +3759,7 @@ P_TEXTS = {
         "stats_active_days": "🔥 ბოლო 30 დღეში აქტიური: *{n}*",
     },
     "ce": {
-        "upsell_title": "💎 Mindra+",
+        "upsell_title": "💎 Mindra+/Pro",
         "upsell_body":  "Неькъ да цӀе напоминани, отчет, челендж да эксклюзив режим.\nMindra+ хийцар 💜",
         "btn_get": "Mindra+ хийца",
         "btn_code": "Код хьажа",
@@ -3783,7 +3783,7 @@ P_TEXTS = {
         "stats_active_days": "🔥 30 кӀирна активан дийн: *{n}*",
     },
     "en": {
-        "upsell_title": "💎 Mindra+",
+        "upsell_title": "💎 Mindra+/Pro",
         "upsell_body":  "Unlimited reminders, reports, challenges and an exclusive mode.\nGet Mindra+ and unlock everything 💜",
         "btn_get": "Get Mindra+",
         "btn_code": "Enter code",
