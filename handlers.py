@@ -2781,6 +2781,28 @@ def require_premium(func):
 
     return wrapper
 
+async def _premium_challenge_unavailable(update, context) -> None:
+    """Показать сообщение об отсутствии доступа к премиум-челленджам."""
+
+    text = "К сожалению это недоступно, нужно приобрести подписку"
+
+    q = getattr(update, "callback_query", None)
+    if q:
+        try:
+            await q.answer(text=text, show_alert=True)
+        except Exception:
+            pass
+        return
+
+    message = getattr(update, "message", None)
+    if message:
+        await message.reply_text(text)
+        return
+
+    try:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+    except Exception:
+        pass
 
 
 @require_premium
@@ -3634,14 +3656,24 @@ async def premium_challenge_callback(update: Update, context: ContextTypes.DEFAU
     q = update.callback_query
     if not q or not q.data or not q.data.startswith("pch:"):
         return
+        
+    uid = str(q.from_user.id)
+
+    try:
+        has_access = is_premium(uid)
+    except Exception:
+        has_access = False
+
+    if not has_access:
+        await _premium_challenge_unavailable(update, context)
+        return
+
 
     # быстрый ack (иначе "query is too old")
     try:
         await q.answer()
     except Exception:
         pass
-
-    uid = str(q.from_user.id)
 
     # антидубль
     try:
@@ -4130,6 +4162,16 @@ async def _unpin_challenge_card(context, uid: str, challenge_id: str):
         
 async def premium_challenge_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
+
+    try:
+        has_access = is_premium(uid)
+    except Exception:
+        has_access = False
+
+    if not has_access:
+        await _premium_challenge_unavailable(update, context)
+        return
+
     if _debounce(uid, "pch_cmd"):  # антидубль
         return
 
