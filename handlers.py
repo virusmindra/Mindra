@@ -4767,9 +4767,126 @@ def _fmt_local(dt_local: datetime, lang: str) -> str:
     return dt_local.strftime("%H:%M, %Y-%m-%d")
 
 # ========== Natural language parsing (ru/uk/en) ==========
-WEEKDAYS_RU = {"пн":0,"пон":0,"понедельник":0,"вт":1,"ср":2,"чт":3,"чтврг":3,"пт":4,"птн":4,"пятница":4,"сб":5,"суббота":5,"вс":6,"вск":6}
-WEEKDAYS_UK = {"пн":0,"вт":1,"ср":2,"чт":3,"пт":4,"сб":5,"нд":6,"нед":6}
-WEEKDAYS_EN = {"mon":0,"monday":0,"tue":1,"tues":1,"tuesday":1,"wed":2,"wednesday":2,"thu":3,"thurs":3,"fr":4,"fri":4,"friday":4,"sat":5,"saturday":5,"sun":6,"sunday":6}
+# Russian
+WEEKDAYS_RU = {
+    "пн": 0, "пон": 0, "понедельник": 0,
+    "вт": 1, "вторник": 1,
+    "ср": 2, "среда": 2,
+    "чт": 3, "чтв": 3, "четв": 3, "четверг": 3,
+    "пт": 4, "птн": 4, "пятн": 4, "пятница": 4,
+    "сб": 5, "суб": 5, "суббота": 5,
+    "вс": 6, "вск": 6, "воскр": 6, "воскресенье": 6
+}
+
+# Ukrainian
+WEEKDAYS_UK = {
+    "пн": 0, "пон": 0, "понеділок": 0,
+    "вт": 1, "вівт": 1, "вівторок": 1,
+    "ср": 2, "середа": 2,
+    "чт": 3, "чтв": 3, "четвер": 3,
+    "пт": 4, "пʼт": 4, "п’ятн": 4, "п’ятниця": 4, "пятниця": 4,  # обе версии апострофа
+    "сб": 5, "суб": 5, "субота": 5,
+    "нд": 6, "нед": 6, "неділя": 6
+}
+
+# English
+WEEKDAYS_EN = {
+    "mon": 0, "monday": 0,
+    "tue": 1, "tues": 1, "tuesday": 1,
+    "wed": 2, "wednesday": 2,
+    "thu": 3, "thurs": 3, "thursday": 3,
+    "fri": 4, "fr": 4, "friday": 4,
+    "sat": 5, "saturday": 5,
+    "sun": 6, "sunday": 6
+}
+
+# Georgian (Ka)
+WEEKDAYS_KA = {
+    "ორშ": 0, "ორშაბათი": 0, "orshabati": 0, "or": 0,
+    "სამშ": 1, "სამშაბათი": 1, "samshabati": 1, "samsh": 1,
+    "ოთხშ": 2, "ოთხშაბათი": 2, "otkhshabati": 2, "otkhsh": 2,
+    "ხუთშ": 3, "ხუთშაბათი": 3, "khutshabati": 3, "khutsh": 3,
+    "პარ": 4, "პარასკევი": 4, "paraskevi": 4, "par": 4,
+    "შაბ": 5, "შაბათი": 5, "shabati": 5, "shab": 5,
+    "კვ": 6, "კვირა": 6, "kvira": 6, "kvir": 6
+}
+
+# Kazakh (Kk)
+WEEKDAYS_KK = {
+    "дс": 0, "дүйсенбі": 0, "duisenbi": 0,
+    "сс": 1, "сейсенбі": 1, "seisenbi": 1,
+    "ср": 2, "сәрсенбі": 2, "sarsenbi": 2,
+    "бс": 3, "бейсенбі": 3, "beisenbi": 3,
+    "жм": 4, "жұма": 4, "zhuma": 4,
+    "сн": 5, "сенбі": 5, "senbi": 5,
+    "жк": 6, "жексенбі": 6, "zheksenbi": 6
+}
+
+# Romanian (Moldova) — md
+WEEKDAYS_MD = {
+    "lu": 0, "lun": 0, "luni": 0,
+    "ma": 1, "mar": 1, "marți": 1, "marti": 1,
+    "mi": 2, "mie": 2, "miercuri": 2,
+    "jo": 3, "joi": 3,
+    "vi": 4, "vin": 4, "vineri": 4,
+    "sa": 5, "sâmbătă": 5, "sambata": 5,
+    "du": 6, "dum": 6, "duminică": 6, "duminica": 6
+}
+
+# Armenian (Hy)
+WEEKDAYS_HY = {
+    "երկ": 0, "երկուշաբթի": 0, "erkushabti": 0,
+    "երք": 1, "երեքշաբթի": 1, "ereqshabti": 1,
+    "չրք": 2, "չորեքշաբթի": 2, "choreqshabti": 2,
+    "հնգ": 3, "հինգշաբթի": 3, "hinghabti": 3, "hing": 3,
+    "ուրբ": 4, "ուրբաթ": 4, "urbat": 4,
+    "շբթ": 5, "շաբաթ": 5, "shabat": 5,
+    "կիր": 6, "կիրակի": 6, "kiraki": 6
+}
+
+# Spanish (Es)
+WEEKDAYS_ES = {
+    "lun": 0, "lunes": 0,
+    "mar": 1, "martes": 1,
+    "mié": 2, "mie": 2, "miércoles": 2, "miercoles": 2,
+    "jue": 3, "jueves": 3,
+    "vie": 4, "viernes": 4,
+    "sáb": 5, "sab": 5, "sábado": 5, "sabado": 5,
+    "dom": 6, "domingo": 6
+}
+
+# German (De)
+WEEKDAYS_DE = {
+    "mo": 0, "montag": 0,
+    "di": 1, "dienstag": 1,
+    "mi": 2, "mittwoch": 2,
+    "do": 3, "donnerstag": 3,
+    "fr": 4, "freitag": 4,
+    "sa": 5, "samstag": 5, "sonnabend": 5,
+    "so": 6, "sonntag": 6
+}
+
+# French (Fr)
+WEEKDAYS_FR = {
+    "lun": 0, "lundi": 0,
+    "mar": 1, "mardi": 1,
+    "mer": 2, "mercredi": 2,
+    "jeu": 3, "jeudi": 3,
+    "ven": 4, "vendredi": 4,
+    "sam": 5, "samedi": 5,
+    "dim": 6, "dimanche": 6
+}
+
+# Polish (Pl)
+WEEKDAYS_PL = {
+    "pn": 0, "pon": 0, "poniedziałek": 0, "poniedzialek": 0,
+    "wt": 1, "wtorek": 1,
+    "śr": 2, "sr": 2, "środa": 2, "sroda": 2,
+    "czw": 3, "czwartek": 3,
+    "pt": 4, "piątek": 4, "piatek": 4,
+    "sb": 5, "sob": 5, "sobota": 5,
+    "nd": 6, "niedz": 6, "niedziela": 6
+}
 
 def _next_weekday(base_local: datetime, target_wd: int) -> datetime:
     delta = (target_wd - base_local.weekday()) % 7
