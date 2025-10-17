@@ -185,6 +185,7 @@ from stats import (
     get_premium_until, set_premium_until, set_premium_until_dt, extend_premium_days,
     is_premium, is_premium_db, plan_of, has_plus, has_pro, has_feature, quota,
     grant_plus_days, grant_pro_days, reminders_active_limit,
+    mark_payment_active_by_session,
 
     # --- trials & referrals (новые) ---
     trial_was_given, mark_trial_given, grant_trial_if_eligible, process_referral,
@@ -528,6 +529,10 @@ _REL_EN    = re.compile(r"\bin\s+\d+\s*(min|mins|minute|minutes|hour|hours|day|d
 
 # ==== Sleep (ambient only) ====
 _sleep_prefs: dict[str, dict] = {}
+
+# Доступные по умолчанию пресеты звуков сна для бесплатного плана
+FREE_SLEEP_PRESETS = ("rain", "fire")
+
 CB = "ui:"
 CHALLENGE_POINTS = int(os.getenv("CHALLENGE_POINTS", 25)) 
 
@@ -946,6 +951,13 @@ async def _check_and_activate(uid: str, session_id: str):
         period_end = int(sub["current_period_end"])
         dt = datetime.fromtimestamp(period_end, tz=timezone.utc)
         set_premium_until(uid, dt, tier=("pro" if tier=="pro" else "plus"))
+        try:
+            sub_id = getattr(sub, "id", None)
+            if not sub_id and isinstance(sub, dict):
+                sub_id = sub.get("id")
+            mark_payment_active_by_session(session_id, sub_id)
+        except Exception as e:
+            logging.warning("Failed to mark subscription %s active: %s", session_id, e)
         return True, _subscription_thank_you(uid, tier, term)
 
     # lifetime — one-time
@@ -953,6 +965,13 @@ async def _check_and_activate(uid: str, session_id: str):
         # выдаём «пожизненно»: просто на очень большой срок (например, 60 лет)
         days = 365 * 60
         extend_premium_days(uid, days, tier=("pro" if tier=="pro" else "plus"))
+        try:
+            payment_ref = sess.get("payment_intent")
+            if isinstance(payment_ref, dict):
+                payment_ref = payment_ref.get("id")
+            mark_payment_active_by_session(session_id, payment_ref)
+        except Exception as e:
+            logging.warning("Failed to mark one-time payment %s active: %s", session_id, e)
         return True, _subscription_thank_you(uid, tier, term)
 
     return False, None
@@ -1835,6 +1854,28 @@ def _sleep_limit_minutes(uid: str) -> int:
         return SLEEP_ABS_MAX_MINUTES
     return max(1, min(limit, SLEEP_ABS_MAX_MINUTES))
 
+def _sleep_allowed_kinds(uid: str) -> set[str]:
+    """Возвращает набор разрешённых звуков сна для пользователя."""
+    if has_feature(uid, "sleep_all_sounds"):
+        return {k for k in BGM_PRESETS.keys() if k != "off"}
+    allowed = {k for k in FREE_SLEEP_PRESETS if k in BGM_PRESETS}
+    if not allowed:
+        allowed = {"rain"} & set(BGM_PRESETS.keys())
+    if not allowed:
+        allowed = {next(iter(BGM_PRESETS.keys()), "rain")}
+    return allowed
+
+
+def _sleep_kind_allowed(uid: str, kind: str) -> bool:
+    if kind == "off":
+        return True
+    return kind in _sleep_allowed_kinds(uid)
+
+
+def _locked_text(uid: str) -> str:
+    lang = user_languages.get(uid, "ru")
+    return LOCKED_MSGS.get(lang, LOCKED_MSGS.get("ru", ""))
+
 def _sleep_summary(uid: str) -> tuple[str, int, int]:
     try:
         p = _sleep_p(uid)  # твоя новая prefs-функция
@@ -1988,7 +2029,11 @@ def _sleep_p(uid: str) -> dict:
     p = _sleep_prefs.get(uid)
     if not p:
         limit = _sleep_limit_minutes(uid)
-        p = {"kind": "rain", "duration_min": min(20, limit), "gain_db": -20}
+        default_kind = "rain"
+        if not _sleep_kind_allowed(uid, default_kind):
+            allowed = _sleep_allowed_kinds(uid)
+            default_kind = next(iter(allowed), "rain")
+        p = {"kind": default_kind, "duration_min": min(20, limit), "gain_db": -20}
         _sleep_prefs[uid] = p
     else:
         limit = _sleep_limit_minutes(uid)
@@ -1996,7 +2041,10 @@ def _sleep_p(uid: str) -> dict:
             current = int(p.get("duration_min", limit))
         except Exception:
             current = limit
-        p["duration_min"] = max(1, min(current, limit))    
+        p["duration_min"] = max(1, min(current, limit))
+        if not _sleep_kind_allowed(uid, p.get("kind", "rain")):
+            allowed = _sleep_allowed_kinds(uid)
+            p["kind"] = next(iter(allowed), "rain")   
     return p
 
 def _sleep_i18n(uid: str) -> dict:
@@ -2487,11 +2535,17 @@ def _sleep_kb(uid: str, tab: str = "kind", back_to: str = "plus") -> InlineKeybo
 
     rows: list[list[InlineKeyboardButton]] = []
     if tab == "kind":
+        allowed = _sleep_allowed_kinds(uid)
         for key, meta in BGM_PRESETS.items():
             if key == "off":
                 continue
-            mark = "✅ " if p["kind"] == key else ""
-            rows.append([InlineKeyboardButton(f"{mark}{meta['label']}", callback_data=f"sleep:kind:{key}")])
+            locked = key not in allowed
+            if locked:
+                label = f"🔒 {meta['label']}"
+            else:
+                mark = "✅ " if p["kind"] == key else ""
+                label = f"{mark}{meta['label']}"
+            rows.append([InlineKeyboardButton(label, callback_data=f"sleep:kind:{key}")])
 
     elif tab == "dur":
         limit = _sleep_limit_minutes(uid)
@@ -2549,6 +2603,30 @@ async def show_sleep_menu(msg):
         reply_markup=_sleep_kb(uid, "kind"),
     )
 
+
+async def show_voice_menu(msg, _context: ContextTypes.DEFAULT_TYPE | None = None):
+    uid = str(msg.chat.id)
+    if not has_feature(uid, "voice_tts"):
+        t = _p_i18n(uid)
+        text = f"*{t['upsell_title']}*\n\n{t['upsell_body']}"
+        try:
+            await msg.edit_text(text, parse_mode="Markdown", reply_markup=_premium_kb(uid))
+        except BadRequest as e:
+            if "message is not modified" not in str(e).lower():
+                raise
+        return
+
+    try:
+        await msg.edit_text(
+            _voice_menu_text(uid),
+            parse_mode="Markdown",
+            reply_markup=_voice_kb(uid, "engine", back_to="plus"),
+        )
+    except BadRequest as e:
+        if "message is not modified" not in str(e).lower():
+            raise
+
+
 # Колбэк "sl:*"
 
 async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -2572,20 +2650,39 @@ async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
         elif kind == "kind":
             new_kind = parts[2]
             if new_kind in BGM_PRESETS:
-                p["kind"] = new_kind
+                if _sleep_kind_allowed(uid, new_kind):
+                    p["kind"] = new_kind
+                else:
+                    try:
+                        await q.answer(_locked_text(uid), show_alert=True)
+                    except Exception:
+                        pass
+                    current_tab = "kind"
+                    await _sleep_refresh(q, uid, current_tab)
+                    return
             current_tab = "kind"
 
         elif kind == "dur":
-            p["duration_min"] = max(1, min(int(parts[2]), 240))
-            current_tab = "dur"
-
-        elif kind == "gain":
             limit = _sleep_limit_minutes(uid)
             try:
                 requested = int(parts[2])
             except Exception:
                 requested = limit
+            if requested > limit:
+                try:
+                    await q.answer(_locked_text(uid), show_alert=True)
+                except Exception:
+                    pass
             p["duration_min"] = max(1, min(requested, limit))
+            current_tab = "dur"
+
+        elif kind == "gain":
+            try:
+                requested_gain = int(parts[2])
+            except Exception:
+                requested_gain = p.get("gain_db", -20)
+            requested_gain = max(-60, min(requested_gain, 10))
+            p["gain_db"] = requested_gain
             current_tab = "gain"
 
         elif kind == "act":
@@ -2595,6 +2692,9 @@ async def sleep_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 limit = _sleep_limit_minutes(uid)
                 if p["duration_min"] > limit:
                     p["duration_min"] = limit
+                if not _sleep_kind_allowed(uid, p.get("kind", "rain")):
+                    allowed = _sleep_allowed_kinds(uid)
+                    p["kind"] = next(iter(allowed), "rain")
                 try:
                     ogg_path = _render_sleep_ogg(p["kind"], p["duration_min"], p["gain_db"])
                 except FileNotFoundError:
@@ -3029,7 +3129,6 @@ async def _premium_challenge_unavailable(update, context) -> None:
     return await require_premium_message(update, context, uid)
 
 
-@require_premium
 async def voice_mode_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
     if not has_feature(uid, "voice_tts"):
