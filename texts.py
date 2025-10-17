@@ -2563,7 +2563,7 @@ VOICE_MODE_TEXTS = {
     },
 }
 
-  "CHALLENGE_BANK": {
+CHALLENGE_BANK = {
     "en": [
       "Workout 4/7",
       "Workout 5/7",
