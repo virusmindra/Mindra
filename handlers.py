@@ -981,19 +981,20 @@ async def upgrade_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     if not q or not q.data.startswith("up:"):
         return
-    await q.answer()
     uid = str(q.from_user.id)
     t = _up_i18n(uid)
 
     parts = q.data.split(":")
     # up:menu
     if q.data == "up:menu":
+        await q.answer()
         return await _send_upgrade_menu(q.message, uid)
 
     # up:tier:<plus|pro>
     if len(parts) == 3 and parts[1] == "tier":
         tier = parts[2]
         title = t["plus_title"] if tier=="plus" else t["pro_title"]
+        await q.answer()
         await q.message.edit_text(
             f"*{title}*\n\n{t['choose']}",
             parse_mode="Markdown",
@@ -1008,6 +1009,7 @@ async def upgrade_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             sess = await _create_checkout_session(uid, tier, term)
         except Exception as e:
             logging.exception(f"stripe session failed: {e}")
+            await q.answer()
             return await q.message.edit_text("⚠️ Ошибка создания оплаты. Попробуй ещё раз позже.")
 
         # экран ожидания
@@ -1017,6 +1019,7 @@ async def upgrade_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton(t["check_payment"], callback_data=f"up:chk:{token}")],
             [InlineKeyboardButton(t["back"], callback_data="up:menu")],
         ])
+        await q.answer()
         await q.message.edit_text(t["pending"], reply_markup=kb)
         return
 
@@ -1036,10 +1039,13 @@ async def upgrade_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if ok:
             _clear_pending_checkout(token)
             text = message or t["active_now"]
+            await q.answer()
             await q.message.edit_text(text, reply_markup=_menu_kb_premium(uid))
         else:
             await q.answer(t["no_active"], show_alert=True)
         return
+
+await q.answer()
         
 HOUSE = "🏠"
 
