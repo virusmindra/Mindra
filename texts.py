@@ -2563,7 +2563,6 @@ VOICE_MODE_TEXTS = {
     },
 }
 
-{
   "CHALLENGE_BANK": {
     "en": [
       "Workout 4/7",
@@ -3468,7 +3467,7 @@ VOICE_MODE_TEXTS = {
       "Czytanie 40 min ×3"
     ]
   }
-}
+
 
 P_TEXTS = {
     "ru": {
