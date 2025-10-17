@@ -1933,6 +1933,7 @@ def _menu_kb_plus(uid: str) -> InlineKeyboardMarkup:
         [InlineKeyboardButton(t["plus_pstats"],     callback_data="m:plus:pstats")],
         [InlineKeyboardButton(t["plus_preport"],    callback_data="m:plus:preport")],
         [InlineKeyboardButton(t["plus_pchallenge"], callback_data="m:plus:pchallenge")],
+    ]
     try:
         if plan_of(uid) != PLAN_PRO:
             rows.append([InlineKeyboardButton(_menu_label(uid, "upgrade"), callback_data="up:menu")])
@@ -1940,7 +1941,6 @@ def _menu_kb_plus(uid: str) -> InlineKeyboardMarkup:
         rows.append([InlineKeyboardButton(_menu_label(uid, "upgrade"), callback_data="up:menu")])
 
     rows.append([InlineKeyboardButton(t["back"],            callback_data="m:nav:home")])
-    ]
     return InlineKeyboardMarkup(rows)
 
 def _menu_label(uid: str, key: str) -> str:
@@ -4365,6 +4365,7 @@ def _premium_kb(uid: str) -> InlineKeyboardMarkup:
     rows = [
         [InlineKeyboardButton(t["premium_days"], callback_data="m:premium:days")],
         [InlineKeyboardButton(t["invite"],       callback_data="m:premium:invite")],
+    ]
     try:
         if plan_of(uid) != PLAN_PRO:
             rows.append([InlineKeyboardButton(_menu_label(uid, "upgrade"), callback_data="up:menu")])
@@ -4372,7 +4373,6 @@ def _premium_kb(uid: str) -> InlineKeyboardMarkup:
         rows.append([InlineKeyboardButton(_menu_label(uid, "upgrade"), callback_data="up:menu")])
 
     rows.append([InlineKeyboardButton(t["premium_site"], url=MINDRA_SITE_URL)])
-    ]
     channel_link = _motivation_channel_link(uid)
     if channel_link:
         rows.append([InlineKeyboardButton(t["premium_motivation"], url=channel_link)])
