@@ -1044,8 +1044,6 @@ async def upgrade_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await q.answer(t["no_active"], show_alert=True)
         return
-
-await q.answer()
         
 HOUSE = "🏠"
 
