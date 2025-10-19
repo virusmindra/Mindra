@@ -1,7 +1,7 @@
 # web_api/app.py
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
-from web_api.core import generate_reply  # <- твоя реальная логика
+from core import generate_reply  # <- твоя реальная логика
 
 app = FastAPI(title="Mindra Web API", version="1.0.0")
 
