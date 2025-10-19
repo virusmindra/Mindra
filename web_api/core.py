@@ -1,96 +1,97 @@
 # web_api/core.py
-from datetime import date
-from typing import List, Dict, Any
+import os
+from collections import defaultdict, deque
+from typing import Deque, Dict, List
+from openai import OpenAI
 
-# Импортируй то, что у тебя уже есть в боте:
-# - client (OpenAI)
-# - conversation_history, trim_history, save_history
-# - detect_emotion_reaction, detect_topic_and_react
-# - LANG_PROMPTS, MODES, user_modes, user_languages
-# - is_premium / quota / has_feature (если надо) — можно убрать для первой версии
+# -------- OpenAI клиент ----------
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# from your_bot_module import (
-#     client, conversation_history, trim_history, save_history,
-#     detect_emotion_reaction, detect_topic_and_react,
-#     LANG_PROMPTS, MODES, user_modes, user_languages
-# )
+# -------- Память диалогов (in-memory) ----------
+# Ключ = "{user_id}:{session_id}", значения — deque сообщений (role/content)
+_history: Dict[str, Deque[dict]] = defaultdict(lambda: deque(maxlen=20))
 
-# На первое время добавим простые дефолты, чтобы не падать, если чего-то нет:
-try:
-    from your_bot_module import client
-except Exception:
-    client = None  # замените на ваш клиент
+# -------- Мини i18n/режимы (можешь заменить своими) ----------
+LANG_PROMPTS = {
+    "ru": "Ты Mindra — тёплый поддерживающий ассистент. Пиши кратко, дружелюбно и по делу.",
+    "en": "You are Mindra — a warm, supportive assistant. Be concise, friendly, and helpful.",
+}
 
-LANG_PROMPTS = globals().get("LANG_PROMPTS", {"ru": "Ты заботливый ассистент.", "en": "You are a caring assistant."})
-MODES = globals().get("MODES", {"support": {"ru": "Режим поддержки.", "en": "Support mode."}})
-user_modes = globals().get("user_modes", {})
-user_languages = globals().get("user_languages", {})
+MODES = {
+    "support": {
+        "ru": "Режим поддержки: отвечай бережно, помогающе и структурно.",
+        "en": "Support mode: be caring, helpful, and structured.",
+    }
+}
 
-conversation_history: Dict[str, List[Dict[str, Any]]] = globals().get("conversation_history", {})
+# Временные карты предпочтений; при желании можешь подменить своими
+user_modes: Dict[str, str] = {}
+user_languages: Dict[str, str] = {}
 
-def trim_history(messages: List[Dict[str, Any]], max_tokens: int = 4000) -> List[Dict[str, Any]]:
-    # заглушка: если у тебя уже есть своя – импортни её и убери эту
-    return messages[-20:]
+GUARD = {
+    "ru": "Если пользователь просит сказку — не пиши её тут; предложи отдельный режим «Сказка».",
+    "en": "If the user asks for a bedtime story, do not write it here; suggest a separate Story mode.",
+}
 
-def save_history(_): 
-    pass
+def _guess_lang(text: str) -> str:
+    # грубая авто-эвристика: если есть кириллица — ru, иначе en
+    for ch in text:
+        if "а" <= ch.lower() <= "я" or ch.lower() == "ё":
+            return "ru"
+    return "en"
 
-def detect_emotion_reaction(text: str, lang: str) -> str:
+def _system_prompt(lang: str, mode: str) -> str:
+    lp = LANG_PROMPTS.get(lang, LANG_PROMPTS["en"])
+    mp = MODES.get(mode, MODES["support"]).get(lang, MODES["support"]["en"])
+    gd = GUARD.get(lang, GUARD["en"])
+    return f"{lp}\n\n{mp}\n\n{gd}"
+
+# ---- Можно подключить детект эмоций/тем и т.п. (заглушки оставлены) ----
+def detect_emotion_reaction(_text: str, _lang: str) -> str:  # noqa: N802
     return ""
 
-def detect_topic_and_react(text: str, lang: str) -> str:
+def detect_topic_and_react(_text: str, _lang: str) -> str:  # noqa: N802
     return ""
 
+# -------- Основная функция ответа ----------
 async def generate_reply(user_id: str, session_id: str, text: str) -> str:
     """
-    Минимальный «ядро»-ответ без Telegram-обвязки: 
-    строим system prompt, ведём историю, зовём LLM, возвращаем строку.
+    Централизованный «мозг» для веб-чата.
+    Держит короткую историю, собирает system prompt и обращается к OpenAI.
     """
-    uid = user_id
-    lang_code = user_languages.get(uid, "ru")
+    key = f"{user_id}:{session_id}"
 
-    lang_prompt = LANG_PROMPTS.get(lang_code, LANG_PROMPTS["ru"])
-    mode = user_modes.get(uid, "support")
-    mode_prompt = MODES.get(mode, MODES["support"]).get(lang_code, MODES["support"]["ru"])
+    # язык и режим (можешь подменить/заполнять извне)
+    lang = user_languages.get(user_id) or _guess_lang(text)
+    mode = user_modes.get(user_id, "support")
 
-    guard_map = {
-        "ru": "Если пользователь просит сказку — не пиши её здесь; предложи отдельный режим «Сказка».",
-        "uk": "Якщо користувач просить казку — не пиши її тут; запропонуй режим «Казка».",
-        "en": "If the user asks for a bedtime story, do not write it here; suggest a separate Story mode.",
-    }
-    guard = guard_map.get(lang_code, guard_map["ru"])
+    sys_prompt = _system_prompt(lang, mode)
 
-    system_prompt = f"{lang_prompt}\n\n{mode_prompt}\n\n{guard}"
+    # соберём список сообщений для модели
+    h = _history[key]
+    messages: List[dict] = [{"role": "system", "content": sys_prompt}]
+    messages += list(h)
+    messages.append({"role": "user", "content": text})
 
-    # инициализируем историю для пользователя
-    if uid not in conversation_history:
-        conversation_history[uid] = [{"role": "system", "content": system_prompt}]
-    else:
-        # обновим system в начале
-        conversation_history[uid][0] = {"role": "system", "content": system_prompt}
-
-    conversation_history[uid].append({"role": "user", "content": text})
-    messages = trim_history(conversation_history[uid])
-
-    # Вызов LLM (замени на свой клиент)
-    if client is None:
-        # заглушка, пока нет клиента
-        reply = f"Эхо: {text}"
-    else:
-        resp = await client.chat.completions.create(
-            model="gpt-4o",
-            messages=messages
+    try:
+        # Вызов OpenAI. (SDK синхронный; в рамках FastAPI/Render — норм для старта)
+        resp = client.chat.completions.create(
+            model="gpt-4o-mini",   # при желании поменяй модель
+            messages=messages,
+            temperature=0.7,
         )
         reply = (resp.choices[0].message.content or "").strip() or "…"
+    except Exception as e:
+        # Лог ошибки и запасной ответ, чтобы фронт не ломался
+        print("openai error:", repr(e))
+        reply = "Извини, сейчас не получается ответить. Попробуй ещё раз."
 
-    reaction = detect_emotion_reaction(text, lang_code) + detect_topic_and_react(text, lang_code)
+    # лёгкая «эмпатическая» подсказка (если захочешь — развивай)
+    reaction = detect_emotion_reaction(text, lang) + detect_topic_and_react(text, lang)
     final_text = (reaction + reply).strip()
 
-    # сохранить в историю
-    conversation_history[uid].append({"role": "assistant", "content": final_text})
-    try:
-        save_history(conversation_history)
-    except Exception:
-        pass
+    # Обновим историю
+    h.append({"role": "user", "content": text})
+    h.append({"role": "assistant", "content": final_text})
 
     return final_text
