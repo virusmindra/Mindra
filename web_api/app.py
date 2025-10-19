@@ -2,6 +2,19 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+# web_api/app.py  (добавь сверху после app = FastAPI(...))
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://mindra.group",              # твой домен
+        "https://mindra-site.vercel.app",    # превью/верцел
+        "http://localhost:3000",             # локалка
+    ],
+    allow_methods=["POST","GET","OPTIONS"],
+    allow_headers=["*"],
+)
+
 
 app = FastAPI(title="Mindra Web API", version="1.0.0")
 
