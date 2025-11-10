@@ -6,11 +6,14 @@ from pydantic import BaseModel
 
 # ЗАМЕНИ ИМПОРТЫ НИЖЕ НА СВОИ
 # откуда ты сейчас берёшь эти функции в боте
-from some_module import (
+from handlers import (
     add_habit,
     get_habits,
     mark_habit_done,
     delete_habit,
+)
+
+from stats import (
     add_points,
     tracker_can_add,
 )
