@@ -4,11 +4,13 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 import asyncio
 
-# если core рядом с app.py
 from core import generate_reply, generate_reply_stream
+from goals_api import router as goals_router   # <--- НОВОЕ
 
 app = FastAPI(title="Mindra Web API", version="1.0.0")
 
+# зарегистрировать роутер целей
+app.include_router(goals_router)
 
 class ChatIn(BaseModel):
     userId: str | None = None
