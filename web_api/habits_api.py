@@ -4,9 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 
-# ЗАМЕНИ ИМПОРТЫ НИЖЕ НА СВОИ
-# откуда ты сейчас берёшь эти функции в боте
-from habits import add_habit, get_habits, mark_habit_done, delete_habit
+from handlers import add_habit, get_habits, mark_habit_done, delete_habit
 from stats import add_points, tracker_can_add
 
 router = APIRouter(prefix="/api/habits", tags=["habits"])
