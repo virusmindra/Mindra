@@ -5,17 +5,9 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 
 # ЗАМЕНИ этот импорт на твой реальный модуль
-from handlers import (
-    add_goal,
-    get_goals,
-    mark_goal_done,
-    delete_goal,
-)
-
-from stats import (
-    add_points,
-    tracker_can_add,
-)
+# стало — лёгкие прямые импорты
+from goals import add_goal, get_goals, mark_goal_done, delete_goal
+from stats import add_points, tracker_can_add
 
 router = APIRouter(prefix="/api/goals", tags=["goals"])
 
