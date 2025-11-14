@@ -4,9 +4,9 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 import asyncio
 
-from core import generate_reply, generate_reply_stream
-from goals_api import router as goals_router   # <--- НОВОЕ
-from habits_api import router as habits_router 
+from web_api.core import generate_reply, generate_reply_stream
+from web_api.goals_api import router as goals_router
+from web_api.habits_api import router as habits_router
 
 app = FastAPI(title="Mindra Web API", version="1.0.0")
 
