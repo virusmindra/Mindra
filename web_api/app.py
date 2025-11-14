@@ -18,9 +18,15 @@ class ChatIn(BaseModel):
     userId: str | None = None
     sessionId: str | None = None
     input: str
-    feature: str | None = None   # 'goals', 'habits', ...
-    source: str | None = None    # 'web', 'telegram', ...
+    feature: str | None = "default"   # 👈
 
+@app.post("/api/web-chat", response_model=ChatOut)
+async def web_chat(payload: ChatIn, request: Request):
+    ...
+    feature = (payload.feature or "default").strip()
+    ...
+    reply = await generate_reply(user_id, session_id, text, feature=feature)  # 👈
+    return {"reply": reply}
 
 class ChatOut(BaseModel):
     reply: str
