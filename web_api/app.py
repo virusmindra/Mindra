@@ -10,42 +10,32 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 import asyncio
 
-from web_api.core import generate_reply, generate_reply_stream
+# локальные импорты из пакета web_api
 from web_api.goals_api import router as goals_router
 from web_api.habits_api import router as habits_router
+from web_api.core import generate_reply, generate_reply_stream  # сигнатура с feature/source поддерживается
 
-app = FastAPI(title="Mindra Web API", version="1.0.0")
-
-# зарегистрировать роутер целей
-app.include_router(goals_router)
-app.include_router(habits_router)
-
+# ---------- Pydantic-схемы (объявляем ДО использования) ----------
 class ChatIn(BaseModel):
     userId: str | None = None
     sessionId: str | None = None
     input: str
-    feature: str | None = "default"   # 👈
-
-@app.post("/api/web-chat", response_model=ChatOut)
-async def web_chat(payload: ChatIn, request: Request):
-    ...
-    feature = (payload.feature or "default").strip()
-    ...
-    reply = await generate_reply(user_id, session_id, text, feature=feature)  # 👈
-    return {"reply": reply}
+    feature: str | None = None
+    source: str | None = None
 
 class ChatOut(BaseModel):
     reply: str
 
+# ---------- Приложение ----------
+app = FastAPI(title="Mindra Web API", version="1.0.0")
 
 @app.get("/")
 async def health():
     return {"ok": True, "service": "mindra-web-api"}
 
-
-# обычный нестриминговый эндпоинт (как был)
+# Нестримо­вый чат
 @app.post("/api/web-chat", response_model=ChatOut)
-async def web_chat(payload: ChatIn, request: Request):
+async def web_chat(payload: ChatIn, req: Request):
     try:
         user_id = payload.userId or "web"
         session_id = payload.sessionId or "default"
@@ -56,21 +46,13 @@ async def web_chat(payload: ChatIn, request: Request):
         if not text:
             return {"reply": "Пустое сообщение."}
 
-        reply = await generate_reply(
-            user_id=user_id,
-            session_id=session_id,
-            text=text,
-            feature=feature,
-            source=source,
-        )
+        reply = await generate_reply(user_id, session_id, text, feature=feature, source=source)
         return {"reply": reply}
     except Exception as e:
-        print("web_chat error:", repr(e))
-        # 200, чтобы фронт получал текст, а не падал по CORS
+        # Отдаём 200 с сообщением, чтобы фронт не падал
         return JSONResponse({"reply": "Извини, сервер сейчас недоступен."}, status_code=200)
 
-
-# НОВОЕ: SSE-стрим
+# SSE-стрим
 @app.post("/api/web-chat-stream")
 async def web_chat_stream(payload: ChatIn):
     user_id = payload.userId or "web"
@@ -81,21 +63,16 @@ async def web_chat_stream(payload: ChatIn):
 
     async def token_generator():
         try:
-            async for chunk in generate_reply_stream(
-                user_id=user_id,
-                session_id=session_id,
-                text=text,
-                feature=feature,
-                source=source,
-            ):
-                # SSE кадры
+            async for chunk in generate_reply_stream(user_id, session_id, text, feature=feature, source=source):
                 yield f"data:{chunk}\n\n"
                 await asyncio.sleep(0)
             yield "event:end\ndata:[DONE]\n\n"
         except Exception as e:
-            # отправим ошибку как SSE, чтобы клиент корректно завершился
             yield f"event:error\ndata:{repr(e)}\n\n"
             yield "event:end\ndata:[DONE]\n\n"
 
     return StreamingResponse(token_generator(), media_type="text/event-stream")
 
+# Подключаем роутеры целей и привычек
+app.include_router(goals_router)
+app.include_router(habits_router)
