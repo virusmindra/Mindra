@@ -9,3 +9,4 @@ ffmpeg-python==0.2.0
 python-dotenv>=1.0.0
 pytz>=2023.3
 stripe>=10.0.0
+elevenlabs>=1.1.0
