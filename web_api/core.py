@@ -96,6 +96,59 @@ def _pack_messages(
     messages.append({"role": "user", "content": user_text})
     return messages, h
 
+# --- добавь рядом с SYSTEM_PROMPT ---
+
+FEATURE_HINTS: dict[str, str] = {
+    "default": "",
+    "goals": (
+        "User is in the Goals panel. Help define/refine goals and propose 1–3 "
+        "concrete next steps. If relevant, suggest a clear deadline in YYYY-MM-DD "
+        "format and whether a reminder would help. Be concise and motivating."
+    ),
+    "habits": (
+        "User is in the Habits panel. Suggest small atomic daily/weekly habits, "
+        "a simple cadence (e.g., daily/every other day), and short check-ins. "
+        "Keep answers compact; prefer bullet points."
+    ),
+    "reminders": (
+        "User is in the Reminders section. Talk about when and how to be reminded; "
+        "propose practical schedules (morning/evening, weekdays) and short wording."
+    ),
+    "challenges": (
+        "User is in Premium Challenges. Encourage participation, give clear rules, "
+        "and propose a tiny step to start today."
+    ),
+    "sleep_sounds": (
+        "User is in Sleep Sounds. Answer briefly with calm tone; any playback "
+        "controls are handled by UI."
+    ),
+    "bedtime_stories": (
+        "User is in Bedtime Stories. Tell short, cozy bedtime stories in 3–6 "
+        "sentences unless asked for longer. Gentle, warm tone."
+    ),
+    "daily_tasks": (
+        "User is in Daily Tasks. Suggest exactly one small actionable task for today."
+    ),
+    "modes": (
+        "User is choosing conversation modes. Explain options briefly and help pick "
+        "one based on their goal."
+    ),
+    "points": (
+        "User is in Points/Titles. Celebrate progress, be encouraging; don't reveal "
+        "internal scoring rules."
+    ),
+}
+
+def _apply_feature_hint(messages: list[dict], feature: str | None, source: str | None) -> None:
+    """Мягко модифицируем system-подсказку под выбранную фичу и источник."""
+    base = SYSTEM_PROMPT
+    if source:
+        base += f" The request comes from the '{source}' client."
+    hint = FEATURE_HINTS.get((feature or "default"), "")
+    messages[0]["content"] = base + (" " + hint if hint else "")
+
+
+# --- обновленные функции ---
 
 async def generate_reply(
     user_id: str,
@@ -104,9 +157,12 @@ async def generate_reply(
     feature: str | None = None,
     source: str | None = None,
 ) -> str:
-    """Нестримо­вый ответ (для старого эндпоинта)."""
+    """Нестримовый ответ."""
     key = f"{user_id}:{session_id}"
     messages, h = _pack_messages(key, text, feature=feature, source=source)
+
+    # Подмешаем подсказку под режим
+    _apply_feature_hint(messages, feature, source)
 
     resp = await client.chat.completions.create(
         model=OPENAI_MODEL,
@@ -128,12 +184,12 @@ async def generate_reply_stream(
     feature: str | None = None,
     source: str | None = None,
 ) -> AsyncGenerator[str, None]:
-    """
-    Стрим по токенам: выдаёт маленькие кусочки текста (строки).
-    Готов к прокидке через SSE.
-    """
+    """Стрим по токенам (SSE-совместимый)."""
     key = f"{user_id}:{session_id}"
     messages, h = _pack_messages(key, text, feature=feature, source=source)
+
+    # Подмешаем подсказку под режим
+    _apply_feature_hint(messages, feature, source)
 
     stream = await client.chat.completions.create(
         model=OPENAI_MODEL,
@@ -142,15 +198,15 @@ async def generate_reply_stream(
         stream=True,
     )
 
-    full: List[str] = []
+    full: list[str] = []
     async for event in stream:
         for choice in event.choices:
             delta = getattr(choice, "delta", None)
-            if delta and delta.content:
-                full.append(delta.content)
-                yield delta.content
+            if delta and getattr(delta, "content", None):
+                chunk = delta.content
+                full.append(chunk)
+                yield chunk
 
-    # сохраним историю по завершении
     final_text = "".join(full).strip() or "…"
     h.append({"role": "user", "content": text})
     h.append({"role": "assistant", "content": final_text})
