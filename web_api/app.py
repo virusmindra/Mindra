@@ -1,4 +1,10 @@
-# web_api/app.py
+# web_api/app.py (самые первые строки)
+import os, sys
+ROOT = os.path.dirname(os.path.abspath(__file__))      # /.../src/web_api
+PARENT = os.path.dirname(ROOT)                          # /.../src
+if PARENT not in sys.path:
+    sys.path.insert(0, PARENT)
+
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
