@@ -7,6 +7,7 @@ if PARENT not in sys.path:
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import asyncio
 
@@ -76,3 +77,11 @@ async def web_chat_stream(payload: ChatIn):
 # Подключаем роутеры целей и привычек
 app.include_router(goals_router)
 app.include_router(habits_router)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # или конкретный домен Vercel
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
