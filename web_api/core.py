@@ -21,7 +21,7 @@ SYSTEM_PROMPT = """
 
 
 def build_system_prompt(feature: str | None, source: str | None) -> str:
-    prompt = SYSTEM_PROMPT_BASE
+    prompt = SYSTEM_PROMPT
 
     # источник: сайт vs Telegram
     if source == "web":
