@@ -49,10 +49,14 @@ async def web_chat(payload: ChatIn, req: Request):
 
         reply = await generate_reply(user_id, session_id, text, feature=feature, source=source)
         return {"reply": reply}
-    except Exception as e:
-        # Отдаём 200 с сообщением, чтобы фронт не падал
-        return JSONResponse({"reply": "Извини, сервер сейчас недоступен."}, status_code=200)
 
+    except Exception as e:
+        # 👇 ВРЕМЕННЫЙ дебаг
+        print("WEB_CHAT ERROR:", repr(e))
+        return JSONResponse(
+            {"reply": f"Ошибка сервера: {e!r}"},
+            status_code=200,
+        )
 # SSE-стрим
 @app.post("/api/web-chat-stream")
 async def web_chat_stream(payload: ChatIn):
