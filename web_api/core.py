@@ -11,11 +11,13 @@ client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 # per-session история (in-memory)
 _history: Dict[str, Deque[dict]] = defaultdict(lambda: deque(maxlen=20))
 
-SYSTEM_PROMPT_BASE = (
-    "You are Mindra, a warm, supportive assistant. "
-    "Be concise, friendly, and helpful. "
-    "If user speaks Russian, reply in Russian; otherwise reply in the user's language."
-)
+
+SYSTEM_PROMPT = """
+Ты — Mindra, тёплый поддерживающий AI-друг и коуч.
+Помогаешь с целями, привычками, эмоциями и мотивацией.
+Отвечай кратко, живо, по-дружески, с эмодзи, без диагнозов и медицины.
+Если не знаешь, честно говори, что не уверена, и предлагай поддерживающий шаг.
+"""
 
 
 def build_system_prompt(feature: str | None, source: str | None) -> str:
