@@ -143,11 +143,18 @@ FEATURE_HINTS: dict[str, str] = {
 
 def _apply_feature_hint(messages: list[dict], feature: str | None, source: str | None) -> None:
     """Мягко модифицируем system-подсказку под выбранную фичу и источник."""
-    base = SYSTEM_PROMPT
+    # Берём уже построенный промпт (из build_system_prompt)
+    base = messages[0].get("content") or SYSTEM_PROMPT
+
+    # Дополнительно уточняем источник (если хочешь оставить это тут)
     if source:
         base += f" The request comes from the '{source}' client."
-    hint = FEATURE_HINTS.get((feature or "default"), "")
-    messages[0]["content"] = base + (" " + hint if hint else "")
+
+    hint = FEATURE_HINTS.get(feature or "default", "")
+    if hint:
+        messages[0]["content"] = base.rstrip() + "\n\n" + hint
+    else:
+        messages[0]["content"] = base
 
 
 # --- обновленные функции ---
