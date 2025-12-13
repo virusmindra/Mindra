@@ -4,7 +4,7 @@ from pydantic import BaseModel
 import os
 
 # Бизнес-функции живут в handlers.py
-from handlers import add_goal, get_goals, mark_goal_done, delete_goal
+from goals_store import add_goal, get_goals, mark_goal_done, delete_goal
 from stats import add_points  # tracker_can_add — УБРАНО
 
 router = APIRouter(prefix="/api/goals", tags=["goals"])
