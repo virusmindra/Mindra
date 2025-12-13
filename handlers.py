@@ -22,6 +22,7 @@ import shutil
 from functools import partial
 from elevenlabs import ElevenLabs 
 from collections import defaultdict
+from goals_store import add_goal, get_goals, mark_goal_done, delete_goal
 from texts import (
     CHANNEL_BUTTON_TEXT,
     CHANNEL_INVITE_TEXT,
