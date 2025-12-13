@@ -25,14 +25,16 @@ class GoalOut(BaseModel):
     deadline: str | None = None
     remind: bool | None = None
 
-def _normalize_goal(idx: int, g: dict) -> GoalOut:
-    return GoalOut(
-        index=idx,
-        text=g.get("text") or g.get("name") or g.get("title") or "Без названия",
-        done=bool(g.get("done")),
-        deadline=g.get("deadline"),
-        remind=g.get("remind"),
-    )
+def _normalize_goal(idx: int, g: dict):
+    return {
+        "index": idx,
+        "id": g.get("id"),
+        "text": g.get("text") or g.get("name") or g.get("title") or "Без названия",
+        "done": bool(g.get("done")),
+        "deadline": g.get("deadline"),
+        "remind": g.get("remind"),
+    }
+
 
 @router.get("")
 def list_goals():
@@ -43,23 +45,28 @@ def list_goals():
 @router.post("")
 def create_goal(payload: GoalCreate):
     uid = "web"
-    if not payload.text.strip():
+    text = (payload.text or "").strip()
+    if not text:
         raise HTTPException(status_code=400, detail="Пустой текст цели.")
 
-    # Простой лимит (если включили через ENV)
     if GOALS_LIMIT > 0:
         current = get_goals(uid) or []
         if len(current) >= GOALS_LIMIT:
             raise HTTPException(status_code=403, detail="Достигнут лимит целей для текущего плана.")
 
-    add_goal(uid, payload.text.strip(), deadline=payload.deadline, remind=bool(payload.remind))
+    goal_id = add_goal(uid, text, deadline=payload.deadline, remind=bool(payload.remind))
+
     try:
         add_points(uid, 1)
     except Exception:
         pass
 
     items = get_goals(uid) or []
-    return {"ok": True, "goals": [_normalize_goal(i, g) for i, g in enumerate(items)]}
+    return {
+        "ok": True,
+        "id": goal_id,
+        "goals": [_normalize_goal(i, g) for i, g in enumerate(items)],
+    }
 
 @router.post("/{index}/done")
 def mark_done(index: int):
