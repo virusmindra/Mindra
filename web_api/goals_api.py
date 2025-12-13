@@ -1,98 +1,61 @@
 # web_api/goals_api.py
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-import os
+from typing import Optional
 
-# Бизнес-функции живут в handlers.py
 from goals_store import add_goal, get_goals, mark_goal_done, delete_goal
-from stats import add_points  # tracker_can_add — УБРАНО
+from plans import can_add
+from points_store import add_points, get_points
 
 router = APIRouter(prefix="/api/goals", tags=["goals"])
 
-# Опциональный простой лимит из ENV (если не задан — без лимита)
-GOALS_LIMIT = int(os.getenv("GOALS_LIMIT", "0"))  # 0 = без лимита
-
 class GoalCreate(BaseModel):
     text: str
-    deadline: str | None = None
-    remind: bool | None = False
-    user_id: str | None = None  # на будущее; пока можем игнорить
+    deadline: Optional[str] = None
+    remind: Optional[bool] = False
+    user_id: Optional[str] = None
 
-class GoalOut(BaseModel):
-    index: int
-    text: str
-    done: bool
-    deadline: str | None = None
-    remind: bool | None = None
-
-def _normalize_goal(idx: int, g: dict):
-    return {
-        "index": idx,
-        "id": g.get("id"),
-        "text": g.get("text") or g.get("name") or g.get("title") or "Без названия",
-        "done": bool(g.get("done")),
-        "deadline": g.get("deadline"),
-        "remind": g.get("remind"),
-    }
-
+def _uid(payload_user_id: Optional[str]) -> str:
+    return (payload_user_id or "web").strip() or "web"
 
 @router.get("")
-def list_goals():
-    uid = "web"  # если надо — подставим реального пользователя позже
-    items = get_goals(uid) or []
-    return {"goals": [_normalize_goal(i, g) for i, g in enumerate(items)]}
+def list_goals(user_id: str = "web"):
+    items = get_goals(user_id) or []
+    return {"ok": True, "goals": items, "points": get_points(user_id)}
 
 @router.post("")
 def create_goal(payload: GoalCreate):
-    uid = "web"
+    uid = _uid(payload.user_id)
     text = (payload.text or "").strip()
     if not text:
         raise HTTPException(status_code=400, detail="Пустой текст цели.")
 
-    if GOALS_LIMIT > 0:
-        current = get_goals(uid) or []
-        if len(current) >= GOALS_LIMIT:
-            raise HTTPException(status_code=403, detail="Достигнут лимит целей для текущего плана.")
+    current = get_goals(uid) or []
+    ok, limit = can_add(uid, "goal", len(current))
+    if not ok:
+        raise HTTPException(status_code=403, detail=f"Лимит целей для плана. Лимит: {limit}")
 
     goal_id = add_goal(uid, text, deadline=payload.deadline, remind=bool(payload.remind))
+    pts = add_points(uid, 1)  # +1 за создание цели
 
-    try:
-        add_points(uid, 1)
-    except Exception:
-        pass
+    return {"ok": True, "id": goal_id, "goals": get_goals(uid), "points": pts}
 
-    items = get_goals(uid) or []
-    return {
-        "ok": True,
-        "id": goal_id,
-        "goals": [_normalize_goal(i, g) for i, g in enumerate(items)],
-    }
-
-@router.post("/{index}/done")
-def mark_done(index: int):
-    uid = "web"
-    if index < 0:
-        raise HTTPException(status_code=400, detail="Некорректный индекс.")
-
-    if not mark_goal_done(uid, index):
+@router.post("/{goal_id}/done")
+def done(goal_id: str, user_id: str = "web"):
+    uid = (user_id or "web").strip() or "web"
+    if not mark_goal_done(uid, goal_id):
         raise HTTPException(status_code=404, detail="Цель не найдена.")
 
-    try:
-        add_points(uid, 5)
-    except Exception:
-        pass
+    pts = add_points(uid, 5)  # +5 за выполнение
+    return {"ok": True, "goals": get_goals(uid), "points": pts}
 
-    items = get_goals(uid) or []
-    return {"ok": True, "goals": [_normalize_goal(i, g) for i, g in enumerate(items)]}
-
-@router.delete("/{index}")
-def delete(index: int):
-    uid = "web"
-    if index < 0:
-        raise HTTPException(status_code=400, detail="Некорректный индекс.")
-
-    if not delete_goal(uid, index):
+@router.delete("/{goal_id}")
+def remove(goal_id: str, user_id: str = "web"):
+    uid = (user_id or "web").strip() or "web"
+    if not delete_goal(uid, goal_id):
         raise HTTPException(status_code=404, detail="Цель не найдена.")
+
+    return {"ok": True, "goals": get_goals(uid), "points": get_points(uid)}
 
     items = get_goals(uid) or []
     return {"ok": True, "goals": [_normalize_goal(i, g) for i, g in enumerate(items)]}
