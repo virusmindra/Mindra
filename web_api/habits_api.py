@@ -51,7 +51,9 @@ def done_habit(habit_id: str, user_id: str = "web"):
 def remove_habit(habit_id: str, user_id: str = "web"):
     if not delete_habit(user_id, habit_id):
         raise HTTPException(status_code=404, detail="Привычка не найдена.")
-    return {"ok": True, "habits": get_habits(user_id), "points": get_points(user_id)}
 
-    items = get_habits(uid) or []
-    return {"ok": True, "habits": [_normalize_habit(i, h) for i, h in enumerate(items)]}
+    return {
+        "ok": True,
+        "habits": get_habits(user_id),
+        "points": get_points(user_id),
+    }
