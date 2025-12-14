@@ -1,82 +1,57 @@
 # web_api/habits_api.py
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-import os
+from typing import Optional
 
-from handlers import add_habit, get_habits, mark_habit_done, delete_habit
-from stats import add_points  # tracker_can_add — УБРАНО
+from habits_store import add_habit, get_habits, mark_habit_done, delete_habit
+from plans import can_add
+from points_store import add_points, get_points
 
 router = APIRouter(prefix="/api/habits", tags=["habits"])
 
-HABITS_LIMIT = int(os.getenv("HABITS_LIMIT", "0"))  # 0 = без лимита
-
 class HabitCreate(BaseModel):
     text: str
-    user_id: str | None = None
+    user_id: Optional[str] = None
 
-class HabitOut(BaseModel):
-    index: int
-    text: str
-    done: bool
-
-def _normalize_habit(idx: int, h: dict) -> HabitOut:
-    return HabitOut(
-        index=idx,
-        text=h.get("text") or h.get("name") or "Без названия",
-        done=bool(h.get("done")),
-    )
+def _uid(payload_user_id: Optional[str]) -> str:
+    return (payload_user_id or "web").strip() or "web"
 
 @router.get("")
-def list_habits():
-    uid = "web"
-    items = get_habits(uid) or []
-    return {"habits": [_normalize_habit(i, h) for i, h in enumerate(items)]}
+def list_habits(user_id: str = "web"):
+    items = get_habits(user_id) or []
+    return {"habits": items, "points": get_points(user_id)}
 
 @router.post("")
 def create_habit(payload: HabitCreate):
-    uid = "web"
-    if not payload.text.strip():
+    uid = _uid(payload.user_id)
+
+    text = (payload.text or "").strip()
+    if not text:
         raise HTTPException(status_code=400, detail="Пустой текст привычки.")
 
-    if HABITS_LIMIT > 0:
-        current = get_habits(uid) or []
-        if len(current) >= HABITS_LIMIT:
-            raise HTTPException(status_code=403, detail="Достигнут лимит привычек для текущего плана.")
+    current = get_habits(uid) or []
+    ok, limit = can_add(uid, "habit", len(current))
+    if not ok:
+        raise HTTPException(status_code=403, detail=f"Лимит привычек для плана. Лимит: {limit}")
 
-    add_habit(uid, payload.text.strip())
-    try:
-        add_points(uid, 1)
-    except Exception:
-        pass
+    habit_id = add_habit(uid, text)
+    pts = add_points(uid, 1)  # +1 за создание привычки
 
-    items = get_habits(uid) or []
-    return {"ok": True, "habits": [_normalize_habit(i, h) for i, h in enumerate(items)]}
+    return {"ok": True, "id": habit_id, "habits": get_habits(uid), "points": pts}
 
-@router.post("/{index}/done")
-def mark_done(index: int):
-    uid = "web"
-    if index < 0:
-        raise HTTPException(status_code=400, detail="Некорректный индекс.")
-
-    if not mark_habit_done(uid, index):
+@router.post("/{habit_id}/done")
+def done_habit(habit_id: str, user_id: str = "web"):
+    if not mark_habit_done(user_id, habit_id):
         raise HTTPException(status_code=404, detail="Привычка не найдена.")
 
-    try:
-        add_points(uid, 5)
-    except Exception:
-        pass
+    pts = add_points(user_id, 2)  # 🔁 привычка = +2
+    return {"ok": True, "habits": get_habits(user_id), "points": pts}
 
-    items = get_habits(uid) or []
-    return {"ok": True, "habits": [_normalize_habit(i, h) for i, h in enumerate(items)]}
-
-@router.delete("/{index}")
-def delete(index: int):
-    uid = "web"
-    if index < 0:
-        raise HTTPException(status_code=400, detail="Некорректный индекс.")
-
-    if not delete_habit(uid, index):
+@router.delete("/{habit_id}")
+def remove_habit(habit_id: str, user_id: str = "web"):
+    if not delete_habit(user_id, habit_id):
         raise HTTPException(status_code=404, detail="Привычка не найдена.")
+    return {"ok": True, "habits": get_habits(user_id), "points": get_points(user_id)}
 
     items = get_habits(uid) or []
     return {"ok": True, "habits": [_normalize_habit(i, h) for i, h in enumerate(items)]}
