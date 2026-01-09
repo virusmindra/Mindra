@@ -170,18 +170,46 @@ async def web_chat(payload: ChatIn, req: Request):
             return {"reply": "Пустое сообщение.", "goal_suggestion": None}
 
         reply = await generate_reply(
-            user_id,
-            session_id,
-            text,
-            feature=feature,
-            source=source,
-        )
+        user_id,
+        session_id,
+        text,
+        feature=feature,
+        source=source,
+        lang=payload.lang or "en",
+    )
 
         goal_suggestion = None
         if feature == "goals":
             goal_suggestion = extract_goal_suggestion(reply)
 
-        return {"reply": reply, "goal_suggestion": goal_suggestion}
+        tts_block = None
+want_voice = bool(payload.wantVoice)
+
+if want_voice:
+    try:
+        tts_res = eleven_tts_to_mp3(reply)
+        if tts_res:
+            path, seconds = tts_res
+            key = _audio_put(path, seconds, ttl_sec=3600)
+
+            # audio url для сайта
+            base = str(req.base_url).rstrip("/")  # например https://xxx.onrender.com
+            audio_url = f"{base}/api/audio/{key}"
+
+            tts_block = {
+                "provider": "elevenlabs",
+                "seconds": int(seconds),
+                "audioUrl": audio_url,
+            }
+    except Exception as e:
+        print("ELEVEN TTS ERROR:", repr(e))
+        tts_block = None
+
+        return {
+        "reply": reply,
+        "goal_suggestion": goal_suggestion,
+        "tts": tts_block,  # ✅ вот это увидит Next.js и спишет секунды
+    }
 
     except Exception as e:
         print("WEB_CHAT ERROR:", repr(e))
