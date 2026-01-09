@@ -15,8 +15,10 @@ from typing import Optional
 from web_api.goals_api import router as goals_router
 from web_api.habits_api import router as habits_router
 from web_api.core import generate_reply, generate_reply_stream  # сигнатура с feature/source поддерживается
+from elevenlabs.client import ElevenLabs
 
 router = APIRouter()
+
 
 # ---------- Pydantic-схемы (объявляем ДО использования) ----------
 class ChatIn(BaseModel):
@@ -25,6 +27,10 @@ class ChatIn(BaseModel):
     input: str
     feature: str | None = None
     source: str | None = None
+
+    # ✅ новые поля для web
+    lang: str | None = "en"          # "en" | "es"
+    wantVoice: bool | None = False   # premium voice (ElevenLabs)
 
 class ChatOut(BaseModel):
     reply: str
@@ -71,9 +77,80 @@ def extract_goal_suggestion(reply: str) -> dict | None:
         return {"text": first_line}
 
     return None
-    
+
+ELEVEN_API_KEY = os.getenv("ELEVEN_API_KEY", "")
+ELEVEN_VOICE_ID = os.getenv("ELEVEN_VOICE_ID", "")  # поставь свою дефолтную voice id
+ELEVEN_MODEL_ID = os.getenv("ELEVEN_MODEL_ID", "eleven_multilingual_v2")
+
+_eleven_client = ElevenLabs(api_key=ELEVEN_API_KEY) if ELEVEN_API_KEY else None
+
+def estimate_seconds(text: str) -> int:
+    # MVP оценка: 14 chars/sec
+    t = (text or "").strip()
+    return max(1, round(len(t) / 14)) if t else 1
+
+def eleven_tts_to_mp3(text: str) -> tuple[str, int] | None:
+    """
+    Возвращает (path_to_mp3, seconds)
+    """
+    if not _eleven_client or not ELEVEN_VOICE_ID:
+        return None
+
+    seconds = estimate_seconds(text)
+
+    out_path = f"/tmp/mindra_{uuid.uuid4().hex}.mp3"
+
+    audio = _eleven_client.text_to_speech.convert(
+        voice_id=ELEVEN_VOICE_ID,
+        model_id=ELEVEN_MODEL_ID,
+        text=text,
+        output_format="mp3_44100_128",
+    )
+
+    with open(out_path, "wb") as f:
+        # audio может быть генератором чанков
+        if isinstance(audio, (bytes, bytearray)):
+            f.write(audio)
+        else:
+            for chunk in audio:
+                if chunk:
+                    f.write(chunk)
+
+    return out_path, seconds
+
 # ---------- Приложение ----------
 app = FastAPI(title="Mindra Web API", version="1.0.0")
+
+import time
+import uuid
+from fastapi.responses import FileResponse
+
+_AUDIO_STORE: dict[str, dict] = {}  # key -> {"path": str, "expires": float, "seconds": int}
+
+def _audio_put(path: str, seconds: int, ttl_sec: int = 3600) -> str:
+    key = uuid.uuid4().hex
+    _AUDIO_STORE[key] = {"path": path, "expires": time.time() + ttl_sec, "seconds": int(seconds)}
+    return key
+
+def _audio_get(key: str):
+    rec = _AUDIO_STORE.get(key)
+    if not rec:
+        return None
+    if rec["expires"] < time.time():
+        try:
+            os.remove(rec["path"])
+        except Exception:
+            pass
+        _AUDIO_STORE.pop(key, None)
+        return None
+    return rec
+
+@app.get("/api/audio/{key}")
+async def get_audio(key: str):
+    rec = _audio_get(key)
+    if not rec:
+        return JSONResponse({"error": "not_found"}, status_code=404)
+    return FileResponse(rec["path"], media_type="audio/mpeg")
 
 @app.get("/")
 async def health():
