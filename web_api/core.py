@@ -126,6 +126,7 @@ def _pack_messages(
     user_text: str,
     feature: str | None = None,
     source: str | None = None,
+    lang: str | None = "en",
 ):
     h = _history[key]
     system_prompt = build_system_prompt(feature, source)
@@ -208,10 +209,11 @@ async def generate_reply(
     text: str,
     feature: str | None = None,
     source: str | None = None,
+    lang: str | None = "en",
 ) -> str:
     """Нестримовый ответ."""
     key = f"{user_id}:{session_id}"
-    messages, h = _pack_messages(key, text, feature=feature, source=source)
+    messages, h = _pack_messages(key, text, feature=feature, source=source, lang=lang)
 
     # Подмешаем подсказку под режим
     _apply_feature_hint(messages, feature, source)
