@@ -1,6 +1,5 @@
 import os, uuid, shutil, subprocess
 from typing import Tuple, Optional
-from gtts import gTTS
 
 # если уже есть _expressive — используем его
 # def _expressive(text: str, lang: str) -> str: ...
@@ -37,12 +36,11 @@ def _to_mp3_with_speed(src_mp3: str, speed: float = 1.0) -> str:
 
 
 def _tts_gtts_to_mp3(text: str, lang: str, tld: str = "com") -> str:
+    from gtts import gTTS  # 👈 ленивый импорт
     mp3_path = f"/tmp/{uuid.uuid4().hex}.mp3"
-    # gTTS реально поддерживает ограниченный набор кодов
     safe_lang = lang if lang in ("en", "es", "ru", "uk") else "en"
     gTTS(text=text, lang=safe_lang, tld=tld).save(mp3_path)
     return mp3_path
-
 
 def _tts_elevenlabs_to_mp3(text: str, voice_id: str) -> str:
     """
