@@ -26,20 +26,19 @@ router = APIRouter()
 # ---------- Pydantic-схемы (объявляем ДО использования) ----------
 class ChatIn(BaseModel):
     # фронт может прислать и так и так
-    userId: str | None = None
-    user_id: str | None = None
+    userId: Optional[str] = None
+    user_id: Optional[str] = None
 
-    sessionId: str | None = None
-    session_id: str | None = None
+    sessionId: Optional[str] = None
+    session_id: Optional[str] = None
 
     input: str
-    feature: str | None = None
-    source: str | None = None
+    feature: Optional[str] = None
+    source: Optional[str] = None
 
-    # новые поля для web
-    lang: str | None = "en"          # "en" | "es"
-    wantVoice: bool | None = False   # premium voice (ElevenLabs)
-
+    lang: Optional[str] = "en"
+    wantVoice: Optional[bool] = False
+    
 class ChatOut(BaseModel):
     reply: str
 
@@ -197,19 +196,19 @@ async def web_chat(payload: ChatIn, req: Request):
 
         goal_suggestion = extract_goal_suggestion(reply) if feature == "goals" else None
 
-        # 2) голос — опционально, статусы — отдельными полями
+        # 2) голос — опционально
         tts_block = None
         voice_blocked = False
         voice_reason = None
 
         if want_voice:
-            # если пользователь не залогинен (у тебя "web" = гость)
+            # если нет нормального user_id -> блокируем голос, НО текст оставляем
             if (not user_id) or (user_id == "web"):
                 voice_blocked = True
                 voice_reason = "login_required"
             else:
                 try:
-                    # ограничим длину для TTS
+                    # чтобы не озвучивать огромные простыни
                     tts_text = (reply.split("\n\n", 1)[0] or reply).strip()
                     tts_text = tts_text[:600]
 
@@ -227,14 +226,15 @@ async def web_chat(payload: ChatIn, req: Request):
                             "audioUrl": audio_url,
                         }
                     else:
-                        # клиент включил, но сервер не смог сделать TTS (нет ключа/voiceId)
                         voice_blocked = True
                         voice_reason = "temporarily_unavailable"
                 except Exception as e:
                     print("ELEVEN TTS ERROR:", repr(e))
                     voice_blocked = True
                     voice_reason = "temporarily_unavailable"
+                    tts_block = None
 
+        # ✅ ВАЖНО: return ВСЕГДА в конце (не внутри if want_voice)
         return {
             "reply": reply,
             "goal_suggestion": goal_suggestion,
@@ -255,7 +255,6 @@ async def web_chat(payload: ChatIn, req: Request):
             },
             status_code=200,
         )
-
         
 # SSE-стрим
 @app.post("/api/web-chat-stream")
