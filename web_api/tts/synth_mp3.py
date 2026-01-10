@@ -35,6 +35,27 @@ def _to_mp3_with_speed(src_mp3: str, speed: float = 1.0) -> str:
     return out_path
 
 
+def _trim_silence(src_mp3: str) -> str:
+    if not shutil.which("ffmpeg"):
+        return src_mp3
+
+    out_path = f"/tmp/{uuid.uuid4().hex}.mp3"
+    cmd = [
+        "ffmpeg", "-y",
+        "-i", src_mp3,
+        "-af", "silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.2",
+        "-c:a", "libmp3lame",
+        "-b:a", "128k",
+        out_path
+    ]
+    subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        os.remove(src_mp3)
+    except Exception:
+        pass
+    return out_path
+
+
 def _tts_gtts_to_mp3(text: str, lang: str, tld: str = "com") -> str:
     from gtts import gTTS  # 👈 ленивый импорт
     mp3_path = f"/tmp/{uuid.uuid4().hex}.mp3"
@@ -94,6 +115,10 @@ def synthesize_to_mp3(text: str, lang: str, uid: str) -> str:
         p = {}
 
     engine = str(p.get("engine", "eleven")).lower()
+    mp3_path = _trim_silence(mp3_path)
+    mp3_path = _to_mp3_with_speed(mp3_path, speed=speed)
+    return mp3_path
+
     speed = float(p.get("speed", 1.0) or 1.0)
     accent = p.get("accent", "com")
     voice_id = p.get("voice_id", "") or os.getenv("ELEVEN_VOICE_ID") or "21m00Tcm4TlvDq8ikWAM"
