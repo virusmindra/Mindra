@@ -8,6 +8,8 @@ if PARENT not in sys.path:
 import uuid
 import time
 
+from .tts import synthesize_to_mp3
+from .speech.stt import transcribe_audio_to_text
 from fastapi import FastAPI, Request, APIRouter, UploadFile, File, Form
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -164,78 +166,94 @@ async def health():
     return {"ok": True, "service": "mindra-web-api"}
 
 
-@app.post("/api/call-turn")
+@app.post("/api/call/turn")
 async def call_turn(
     req: Request,
     audio: UploadFile = File(...),
     user_id: str = Form("web"),
-    session_id: str = Form("default"),
+    sessionId: str = Form("call"),
+    feature: str = Form("call"),
     lang: str = Form("en"),
+    wantVoice: str = Form("1"),
 ):
-    # 1) блок по логину (если хочешь)
-    if not user_id or user_id == "web":
-        return JSONResponse(
-            {"ok": False, "reason": "login_required"},
-            status_code=200,
-        )
-
-    tmp_path = None
     try:
-        # 2) сохранить аудио во временный файл
-        suffix = os.path.splitext(audio.filename or "")[-1] or ".webm"
-        fd, tmp_path = tempfile.mkstemp(suffix=suffix)
-        os.close(fd)
+        want_voice = wantVoice in ("1", "true", "True", "yes", "on")
 
-        with open(tmp_path, "wb") as f:
+        # 1) save incoming audio
+        suffix = os.path.splitext(audio.filename or "")[1] or ".webm"
+        in_path = os.path.join(tempfile.gettempdir(), f"call_{uuid.uuid4().hex}{suffix}")
+        with open(in_path, "wb") as f:
             f.write(await audio.read())
 
-        # 3) STT (тут подключишь свою функцию распознавания)
-        #    сделай helper: transcribe_audio(path, lang)->text
-        text = await transcribe_audio(tmp_path, lang=lang)  # <- реализуем след. шагом
-        text = (text or "").strip()
+        # 2) STT
+        transcript = await transcribe_audio_to_text(in_path, lang=lang)
+        transcript = (transcript or "").strip()
+        if not transcript:
+            try:
+                os.remove(in_path)
+            except Exception:
+                pass
+            return {"ok": True, "transcript": "", "reply": "I didn't catch that 🙈 Try again.", "tts": None}
 
-        if not text:
-            return {"ok": True, "heard": "", "reply": "I didn’t catch that 😅 Try again?", "tts": None}
-
-        # 4) ответ модели
+        # 3) LLM reply (твой generate_reply уже есть)
         reply = await generate_reply(
             user_id,
-            session_id,
-            text,
-            feature="call",
-            source="call",
+            sessionId,
+            transcript,
+            feature=feature,
+            source="web_call",
             lang=lang,
         )
 
-        # 5) TTS (коротко)
+        # 4) optional TTS
+        voice_blocked = False
+        voice_reason = None
         tts_block = None
-        try:
-            tts_text = (reply.split("\n\n", 1)[0] or reply).strip()[:600]
-            tts_res = eleven_tts_to_mp3(tts_text)
-            if tts_res:
-                path, seconds = tts_res
-                key = _audio_put(path, seconds, ttl_sec=3600)
-                base = str(req.base_url).rstrip("/")
-                tts_block = {
-                    "provider": "elevenlabs",
-                    "seconds": int(seconds),
-                    "audioUrl": f"{base}/api/audio/{key}",
-                }
-        except Exception as e:
-            print("CALL TTS ERROR:", repr(e))
 
-        return {"ok": True, "heard": text, "reply": reply, "tts": tts_block}
+        if want_voice:
+            if not user_id or user_id == "web":
+                voice_blocked = True
+                voice_reason = "login_required"
+            else:
+                try:
+                    tts_text = (reply.split("\n\n", 1)[0] or reply).strip()[:600]
+                    mp3_path = synthesize_to_mp3(tts_text, lang=lang, uid=user_id)
+                    seconds = 0  # MVP: можно потом посчитать
+
+                    key = _audio_put(mp3_path, seconds, ttl_sec=3600)
+                    base = str(req.base_url).rstrip("/")
+                    audio_url = f"{base}/api/audio/{key}"
+
+                    tts_block = {
+                        "provider": "mp3",
+                        "seconds": seconds,
+                        "audioUrl": audio_url,
+                    }
+                except Exception as e:
+                    print("CALL TTS ERROR:", repr(e))
+                    voice_blocked = True
+                    voice_reason = "temporarily_unavailable"
+                    tts_block = None
+
+        # cleanup input
+        try:
+            os.remove(in_path)
+        except Exception:
+            pass
+
+        return {
+            "ok": True,
+            "transcript": transcript,
+            "reply": reply,
+            "tts": tts_block,
+            "voiceBlocked": voice_blocked,
+            "voiceReason": voice_reason,
+        }
 
     except Exception as e:
         print("CALL TURN ERROR:", repr(e))
-        return JSONResponse({"ok": False, "error": "server_error"}, status_code=200)
+        return JSONResponse({"ok": False, "error": "Server error 😕"}, status_code=200)
 
-    finally:
-        if tmp_path:
-            try:
-                os.remove(tmp_path)
-            except Exception:
-                pass
                 
 @app.post("/api/web-chat")
 async def web_chat(payload: ChatIn, req: Request):
