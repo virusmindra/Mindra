@@ -25,13 +25,18 @@ router = APIRouter()
 
 # ---------- Pydantic-схемы (объявляем ДО использования) ----------
 class ChatIn(BaseModel):
+    # фронт может прислать и так и так
     userId: str | None = None
+    user_id: str | None = None
+
     sessionId: str | None = None
+    session_id: str | None = None
+
     input: str
     feature: str | None = None
     source: str | None = None
 
-    # ✅ новые поля для web
+    # новые поля для web
     lang: str | None = "en"          # "en" | "es"
     wantVoice: bool | None = False   # premium voice (ElevenLabs)
 
@@ -159,24 +164,22 @@ async def get_audio(key: str):
 async def health():
     return {"ok": True, "service": "mindra-web-api"}
 
-# Нестримо­вый чат
 @app.post("/api/web-chat")
 async def web_chat(payload: ChatIn, req: Request):
     try:
-        user_id = payload.userId or "web"
-        session_id = payload.sessionId or "default"
+        user_id = payload.userId or payload.user_id or "web"
+        session_id = payload.sessionId or payload.session_id or "default"
         text = (payload.input or "").strip()
         feature = payload.feature or "default"
         source = payload.source or "web"
         lang = payload.lang or "en"
 
-        # ✅ безопасно читаем wantVoice даже если поля нет
         want_voice = bool(getattr(payload, "wantVoice", False))
 
         if not text:
             return {"reply": "Пустое сообщение.", "goal_suggestion": None, "tts": None}
 
-        # ✅ основной ответ модели
+        # 1) всегда генерим текст
         reply = await generate_reply(
             user_id,
             session_id,
@@ -186,21 +189,22 @@ async def web_chat(payload: ChatIn, req: Request):
             lang=lang,
         )
 
-        # ✅ suggestion для кнопки "Сохранить как цель"
-        goal_suggestion = None
-        if feature == "goals":
-            goal_suggestion = extract_goal_suggestion(reply)
+        goal_suggestion = extract_goal_suggestion(reply) if feature == "goals" else None
 
-        # ✅ ElevenLabs TTS (если включен premium voice)
+        # 2) голос — опционально (никогда не ломает reply)
         tts_block = None
         if want_voice:
             try:
-                tts_res = eleven_tts_to_mp3(reply)
+                # для TTS берём первую “короткую” часть, чтобы не грузить ElevenLabs
+                tts_text = (reply.split("\n\n", 1)[0] or reply).strip()
+                tts_text = tts_text[:600]
+
+                tts_res = eleven_tts_to_mp3(tts_text)
                 if tts_res:
                     path, seconds = tts_res
                     key = _audio_put(path, seconds, ttl_sec=3600)
 
-                    base = str(req.base_url).rstrip("/")  # например https://xxx.onrender.com
+                    base = str(req.base_url).rstrip("/")
                     audio_url = f"{base}/api/audio/{key}"
 
                     tts_block = {
@@ -212,18 +216,15 @@ async def web_chat(payload: ChatIn, req: Request):
                 print("ELEVEN TTS ERROR:", repr(e))
                 tts_block = None
 
-        return {
-            "reply": reply,
-            "goal_suggestion": goal_suggestion,
-            "tts": tts_block,
-        }
+        return {"reply": reply, "goal_suggestion": goal_suggestion, "tts": tts_block}
 
     except Exception as e:
         print("WEB_CHAT ERROR:", repr(e))
         return JSONResponse(
-            {"reply": f"Ошибка сервера: {e!r}", "goal_suggestion": None, "tts": None},
+            {"reply": "Ошибка сервера 😕 Попробуй ещё раз.", "goal_suggestion": None, "tts": None},
             status_code=200,
         )
+
         
 # SSE-стрим
 @app.post("/api/web-chat-stream")
