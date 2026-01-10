@@ -73,7 +73,6 @@ def _tts_elevenlabs_to_mp3(text: str, voice_id: str) -> str:
                 f.write(chunk)
     return mp3_path
 
-
 def synthesize_to_mp3(text: str, lang: str, uid: str) -> str:
     """
     Web-TTS (MP3). Похож на synthesize_to_ogg, только для браузера.
@@ -97,22 +96,11 @@ def synthesize_to_mp3(text: str, lang: str, uid: str) -> str:
     engine = str(p.get("engine", "eleven")).lower()
     speed = float(p.get("speed", 1.0) or 1.0)
     accent = p.get("accent", "com")
-    voice_id = p.get("voice_id", "")
+    voice_id = p.get("voice_id", "") or os.getenv("ELEVEN_VOICE_ID") or "21m00Tcm4TlvDq8ikWAM"
 
     # ⚡️Fast MVP: если есть eleven ключ — используем его, иначе gTTS
-    use_eleven = False
-    try:
-        use_eleven = (
-            engine == "eleven"
-            and bool(os.getenv("ELEVEN_API_KEY"))
-            and bool(voice_id)
-            and has_feature(uid, "eleven_tts")  # если хочешь премиум-гейт
-        )
-    except Exception:
-        # если has_feature/_vp нет в web-контексте — просто ориентируемся на ключ
-        use_eleven = bool(os.getenv("ELEVEN_API_KEY"))
+    use_eleven = bool(os.getenv("ELEVEN_API_KEY"))
 
-    mp3_path = None
     if use_eleven:
         mp3_path = _tts_elevenlabs_to_mp3(text[:600], voice_id)
     else:
@@ -120,4 +108,5 @@ def synthesize_to_mp3(text: str, lang: str, uid: str) -> str:
 
     mp3_path = _to_mp3_with_speed(mp3_path, speed=speed)
     return mp3_path
+
 
