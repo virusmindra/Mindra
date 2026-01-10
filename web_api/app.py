@@ -1,5 +1,5 @@
 # web_api/app.py (самые первые строки)
-import os, sys, re
+import os, sys, re, tempfile
 ROOT = os.path.dirname(os.path.abspath(__file__))      # /.../src/web_api
 PARENT = os.path.dirname(ROOT)                          # /.../src
 if PARENT not in sys.path:
@@ -8,7 +8,7 @@ if PARENT not in sys.path:
 import uuid
 import time
 
-from fastapi import FastAPI, Request, APIRouter
+from fastapi import FastAPI, Request, APIRouter, UploadFile, File, Form
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -163,6 +163,80 @@ async def get_audio(key: str):
 async def health():
     return {"ok": True, "service": "mindra-web-api"}
 
+
+@app.post("/api/call-turn")
+async def call_turn(
+    req: Request,
+    audio: UploadFile = File(...),
+    user_id: str = Form("web"),
+    session_id: str = Form("default"),
+    lang: str = Form("en"),
+):
+    # 1) блок по логину (если хочешь)
+    if not user_id or user_id == "web":
+        return JSONResponse(
+            {"ok": False, "reason": "login_required"},
+            status_code=200,
+        )
+
+    tmp_path = None
+    try:
+        # 2) сохранить аудио во временный файл
+        suffix = os.path.splitext(audio.filename or "")[-1] or ".webm"
+        fd, tmp_path = tempfile.mkstemp(suffix=suffix)
+        os.close(fd)
+
+        with open(tmp_path, "wb") as f:
+            f.write(await audio.read())
+
+        # 3) STT (тут подключишь свою функцию распознавания)
+        #    сделай helper: transcribe_audio(path, lang)->text
+        text = await transcribe_audio(tmp_path, lang=lang)  # <- реализуем след. шагом
+        text = (text or "").strip()
+
+        if not text:
+            return {"ok": True, "heard": "", "reply": "I didn’t catch that 😅 Try again?", "tts": None}
+
+        # 4) ответ модели
+        reply = await generate_reply(
+            user_id,
+            session_id,
+            text,
+            feature="call",
+            source="call",
+            lang=lang,
+        )
+
+        # 5) TTS (коротко)
+        tts_block = None
+        try:
+            tts_text = (reply.split("\n\n", 1)[0] or reply).strip()[:600]
+            tts_res = eleven_tts_to_mp3(tts_text)
+            if tts_res:
+                path, seconds = tts_res
+                key = _audio_put(path, seconds, ttl_sec=3600)
+                base = str(req.base_url).rstrip("/")
+                tts_block = {
+                    "provider": "elevenlabs",
+                    "seconds": int(seconds),
+                    "audioUrl": f"{base}/api/audio/{key}",
+                }
+        except Exception as e:
+            print("CALL TTS ERROR:", repr(e))
+
+        return {"ok": True, "heard": text, "reply": reply, "tts": tts_block}
+
+    except Exception as e:
+        print("CALL TURN ERROR:", repr(e))
+        return JSONResponse({"ok": False, "error": "server_error"}, status_code=200)
+
+    finally:
+        if tmp_path:
+            try:
+                os.remove(tmp_path)
+            except Exception:
+                pass
+                
 @app.post("/api/web-chat")
 async def web_chat(payload: ChatIn, req: Request):
     try:
