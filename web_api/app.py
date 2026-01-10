@@ -177,7 +177,13 @@ async def web_chat(payload: ChatIn, req: Request):
         want_voice = bool(getattr(payload, "wantVoice", False))
 
         if not text:
-            return {"reply": "Пустое сообщение.", "goal_suggestion": None, "tts": None}
+            return {
+                "reply": "Пустое сообщение.",
+                "goal_suggestion": None,
+                "tts": None,
+                "voiceBlocked": False,
+                "voiceReason": None,
+            }
 
         # 1) всегда генерим текст
         reply = await generate_reply(
@@ -191,37 +197,62 @@ async def web_chat(payload: ChatIn, req: Request):
 
         goal_suggestion = extract_goal_suggestion(reply) if feature == "goals" else None
 
-        # 2) голос — опционально (никогда не ломает reply)
+        # 2) голос — опционально, статусы — отдельными полями
         tts_block = None
+        voice_blocked = False
+        voice_reason = None
+
         if want_voice:
-            try:
-                # для TTS берём первую “короткую” часть, чтобы не грузить ElevenLabs
-                tts_text = (reply.split("\n\n", 1)[0] or reply).strip()
-                tts_text = tts_text[:600]
+            # если пользователь не залогинен (у тебя "web" = гость)
+            if (not user_id) or (user_id == "web"):
+                voice_blocked = True
+                voice_reason = "login_required"
+            else:
+                try:
+                    # ограничим длину для TTS
+                    tts_text = (reply.split("\n\n", 1)[0] or reply).strip()
+                    tts_text = tts_text[:600]
 
-                tts_res = eleven_tts_to_mp3(tts_text)
-                if tts_res:
-                    path, seconds = tts_res
-                    key = _audio_put(path, seconds, ttl_sec=3600)
+                    tts_res = eleven_tts_to_mp3(tts_text)
+                    if tts_res:
+                        path, seconds = tts_res
+                        key = _audio_put(path, seconds, ttl_sec=3600)
 
-                    base = str(req.base_url).rstrip("/")
-                    audio_url = f"{base}/api/audio/{key}"
+                        base = str(req.base_url).rstrip("/")
+                        audio_url = f"{base}/api/audio/{key}"
 
-                    tts_block = {
-                        "provider": "elevenlabs",
-                        "seconds": int(seconds),
-                        "audioUrl": audio_url,
-                    }
-            except Exception as e:
-                print("ELEVEN TTS ERROR:", repr(e))
-                tts_block = None
+                        tts_block = {
+                            "provider": "elevenlabs",
+                            "seconds": int(seconds),
+                            "audioUrl": audio_url,
+                        }
+                    else:
+                        # клиент включил, но сервер не смог сделать TTS (нет ключа/voiceId)
+                        voice_blocked = True
+                        voice_reason = "temporarily_unavailable"
+                except Exception as e:
+                    print("ELEVEN TTS ERROR:", repr(e))
+                    voice_blocked = True
+                    voice_reason = "temporarily_unavailable"
 
-        return {"reply": reply, "goal_suggestion": goal_suggestion, "tts": tts_block}
+        return {
+            "reply": reply,
+            "goal_suggestion": goal_suggestion,
+            "tts": tts_block,
+            "voiceBlocked": voice_blocked,
+            "voiceReason": voice_reason,
+        }
 
     except Exception as e:
         print("WEB_CHAT ERROR:", repr(e))
         return JSONResponse(
-            {"reply": "Ошибка сервера 😕 Попробуй ещё раз.", "goal_suggestion": None, "tts": None},
+            {
+                "reply": "Ошибка сервера 😕 Попробуй ещё раз.",
+                "goal_suggestion": None,
+                "tts": None,
+                "voiceBlocked": False,
+                "voiceReason": None,
+            },
             status_code=200,
         )
 
