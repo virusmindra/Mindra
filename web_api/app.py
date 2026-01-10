@@ -165,7 +165,6 @@ async def get_audio(key: str):
 async def health():
     return {"ok": True, "service": "mindra-web-api"}
 
-
 @app.post("/api/call/turn")
 async def call_turn(
     req: Request,
@@ -177,25 +176,51 @@ async def call_turn(
     wantVoice: str = Form("1"),
 ):
     try:
+        print("=== CALL TURN START ===")
+        print("user_id:", user_id, "lang:", lang, "wantVoice:", wantVoice)
+
         want_voice = wantVoice in ("1", "true", "True", "yes", "on")
 
         # 1) save incoming audio
         suffix = os.path.splitext(audio.filename or "")[1] or ".webm"
-        in_path = os.path.join(tempfile.gettempdir(), f"call_{uuid.uuid4().hex}{suffix}")
+        in_path = os.path.join(
+            tempfile.gettempdir(),
+            f"call_{uuid.uuid4().hex}{suffix}"
+        )
+
+        audio_bytes = await audio.read()
+        print("audio filename:", audio.filename)
+        print("audio bytes:", len(audio_bytes))
+
         with open(in_path, "wb") as f:
-            f.write(await audio.read())
+            f.write(audio_bytes)
+
+        print("audio saved to:", in_path)
+        print("file size on disk:", os.path.getsize(in_path))
 
         # 2) STT
+        print(">>> BEFORE STT")
         transcript = await transcribe_audio_to_text(in_path, lang=lang)
+        print("<<< AFTER STT")
+        print("transcript raw:", repr(transcript))
+
         transcript = (transcript or "").strip()
         if not transcript:
+            print("EMPTY TRANSCRIPT → early return")
             try:
                 os.remove(in_path)
             except Exception:
                 pass
-            return {"ok": True, "transcript": "", "reply": "I didn't catch that 🙈 Try again.", "tts": None}
 
-        # 3) LLM reply (твой generate_reply уже есть)
+            return {
+                "ok": True,
+                "transcript": "",
+                "reply": "I didn't catch that 🙈 Try again.",
+                "tts": None,
+            }
+
+        # 3) LLM reply
+        print(">>> BEFORE LLM")
         reply = await generate_reply(
             user_id,
             sessionId,
@@ -204,6 +229,8 @@ async def call_turn(
             source="web_call",
             lang=lang,
         )
+        print("<<< AFTER LLM")
+        print("reply len:", len(reply or ""))
 
         # 4) optional TTS
         voice_blocked = False
@@ -211,15 +238,19 @@ async def call_turn(
         tts_block = None
 
         if want_voice:
+            print(">>> TTS requested")
             if not user_id or user_id == "web":
+                print("TTS BLOCKED: login_required")
                 voice_blocked = True
                 voice_reason = "login_required"
             else:
                 try:
+                    print(">>> BEFORE TTS synth")
                     tts_text = (reply.split("\n\n", 1)[0] or reply).strip()[:600]
                     mp3_path = synthesize_to_mp3(tts_text, lang=lang, uid=user_id)
-                    seconds = 0  # MVP: можно потом посчитать
+                    print("<<< AFTER TTS synth:", mp3_path)
 
+                    seconds = 0
                     key = _audio_put(mp3_path, seconds, ttl_sec=3600)
                     base = str(req.base_url).rstrip("/")
                     audio_url = f"{base}/api/audio/{key}"
@@ -235,11 +266,14 @@ async def call_turn(
                     voice_reason = "temporarily_unavailable"
                     tts_block = None
 
-        # cleanup input
+        # cleanup
         try:
             os.remove(in_path)
-        except Exception:
-            pass
+            print("temp file removed")
+        except Exception as e:
+            print("cleanup error:", repr(e))
+
+        print("=== CALL TURN DONE ===")
 
         return {
             "ok": True,
@@ -251,8 +285,11 @@ async def call_turn(
         }
 
     except Exception as e:
-        print("CALL TURN ERROR:", repr(e))
-        return JSONResponse({"ok": False, "error": "Server error 😕"}, status_code=200)
+        print("!!! CALL TURN ERROR !!!", repr(e))
+        return JSONResponse(
+            {"ok": False, "error": "Server error 😕"},
+            status_code=200,
+        )
 
                 
 @app.post("/api/web-chat")
