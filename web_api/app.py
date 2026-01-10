@@ -166,6 +166,9 @@ async def web_chat(payload: ChatIn, req: Request):
         feature = payload.feature or "default"
         source = payload.source or "web"
 
+        # ✅ безопасно читаем wantVoice даже если поля нет
+        want_voice = bool(getattr(payload, "wantVoice", False))
+
         if not text:
             return {"reply": "Пустое сообщение.", "goal_suggestion": None}
 
