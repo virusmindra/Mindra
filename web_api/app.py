@@ -5,6 +5,9 @@ PARENT = os.path.dirname(ROOT)                          # /.../src
 if PARENT not in sys.path:
     sys.path.insert(0, PARENT)
 
+import uuid
+import time
+
 from fastapi import FastAPI, Request, APIRouter
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -165,59 +168,60 @@ async def web_chat(payload: ChatIn, req: Request):
         text = (payload.input or "").strip()
         feature = payload.feature or "default"
         source = payload.source or "web"
+        lang = payload.lang or "en"
 
         # ✅ безопасно читаем wantVoice даже если поля нет
         want_voice = bool(getattr(payload, "wantVoice", False))
 
         if not text:
-            return {"reply": "Пустое сообщение.", "goal_suggestion": None}
+            return {"reply": "Пустое сообщение.", "goal_suggestion": None, "tts": None}
 
+        # ✅ основной ответ модели
         reply = await generate_reply(
-        user_id,
-        session_id,
-        text,
-        feature=feature,
-        source=source,
-        lang=payload.lang or "en",
-    )
+            user_id,
+            session_id,
+            text,
+            feature=feature,
+            source=source,
+            lang=lang,
+        )
 
+        # ✅ suggestion для кнопки "Сохранить как цель"
         goal_suggestion = None
         if feature == "goals":
             goal_suggestion = extract_goal_suggestion(reply)
 
+        # ✅ ElevenLabs TTS (если включен premium voice)
         tts_block = None
-want_voice = bool(payload.wantVoice)
+        if want_voice:
+            try:
+                tts_res = eleven_tts_to_mp3(reply)
+                if tts_res:
+                    path, seconds = tts_res
+                    key = _audio_put(path, seconds, ttl_sec=3600)
 
-if want_voice:
-    try:
-        tts_res = eleven_tts_to_mp3(reply)
-        if tts_res:
-            path, seconds = tts_res
-            key = _audio_put(path, seconds, ttl_sec=3600)
+                    base = str(req.base_url).rstrip("/")  # например https://xxx.onrender.com
+                    audio_url = f"{base}/api/audio/{key}"
 
-            # audio url для сайта
-            base = str(req.base_url).rstrip("/")  # например https://xxx.onrender.com
-            audio_url = f"{base}/api/audio/{key}"
-
-            tts_block = {
-                "provider": "elevenlabs",
-                "seconds": int(seconds),
-                "audioUrl": audio_url,
-            }
-    except Exception as e:
-        print("ELEVEN TTS ERROR:", repr(e))
-        tts_block = None
+                    tts_block = {
+                        "provider": "elevenlabs",
+                        "seconds": int(seconds),
+                        "audioUrl": audio_url,
+                    }
+            except Exception as e:
+                print("ELEVEN TTS ERROR:", repr(e))
+                tts_block = None
 
         return {
-        "reply": reply,
-        "goal_suggestion": goal_suggestion,
-        "tts": tts_block,  # ✅ вот это увидит Next.js и спишет секунды
-    }
+            "reply": reply,
+            "goal_suggestion": goal_suggestion,
+            "tts": tts_block,
+        }
 
     except Exception as e:
         print("WEB_CHAT ERROR:", repr(e))
         return JSONResponse(
-            {"reply": f"Ошибка сервера: {e!r}", "goal_suggestion": None},
+            {"reply": f"Ошибка сервера: {e!r}", "goal_suggestion": None, "tts": None},
             status_code=200,
         )
         
