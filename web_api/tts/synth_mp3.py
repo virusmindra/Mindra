@@ -97,41 +97,58 @@ def _tts_elevenlabs_to_mp3(text: str, voice_id: str) -> str:
 def synthesize_to_mp3(text: str, lang: str, uid: str) -> str:
     """
     Web-TTS (MP3). Похож на synthesize_to_ogg, только для браузера.
+    Всегда возвращает путь к mp3 или кидает исключение.
     """
     text = (text or "").strip()
     if not text:
         raise ValueError("empty text")
 
-    # эмоции/паузы (если хочешь)
+    # эмоции/паузы (optional)
     try:
         text = _expressive(text, lang)
     except Exception:
         pass
 
-    # твой профиль (если хочешь reuse из telegram)
+    # профиль (optional)
     try:
         p = _vp(uid)  # если есть
     except Exception:
         p = {}
 
     engine = str(p.get("engine", "eleven")).lower()
-    mp3_path = _trim_silence(mp3_path)
-    mp3_path = _to_mp3_with_speed(mp3_path, speed=speed)
-    return mp3_path
-
     speed = float(p.get("speed", 1.0) or 1.0)
     accent = p.get("accent", "com")
-    voice_id = p.get("voice_id", "") or os.getenv("ELEVEN_VOICE_ID") or "21m00Tcm4TlvDq8ikWAM"
+    voice_id = (
+        (p.get("voice_id") or "").strip()
+        or os.getenv("ELEVEN_VOICE_ID", "").strip()
+        or "21m00Tcm4TlvDq8ikWAM"
+    )
 
-    # ⚡️Fast MVP: если есть eleven ключ — используем его, иначе gTTS
-    use_eleven = bool(os.getenv("ELEVEN_API_KEY"))
+    mp3_path = None  # ✅ важно
 
+    # 1) Пытаемся ElevenLabs если ключ есть и engine=eleven
+    use_eleven = bool(os.getenv("ELEVEN_API_KEY")) and engine == "eleven"
     if use_eleven:
-        mp3_path = _tts_elevenlabs_to_mp3(text[:600], voice_id)
-    else:
+        try:
+            mp3_path = _tts_elevenlabs_to_mp3(text[:600], voice_id)
+        except Exception as e:
+            print("TTS Eleven failed, fallback to gTTS:", repr(e))
+            mp3_path = None
+
+    # 2) Fallback на gTTS (если eleven не использовали или упал)
+    if not mp3_path:
         mp3_path = _tts_gtts_to_mp3(text[:600], lang=lang, tld=accent)
 
-    mp3_path = _to_mp3_with_speed(mp3_path, speed=speed)
-    return mp3_path
+    # 3) Пост-обработка
+    try:
+        mp3_path = _trim_silence(mp3_path)
+    except Exception as e:
+        print("TTS trim failed:", repr(e))
 
+    try:
+        mp3_path = _to_mp3_with_speed(mp3_path, speed=speed)
+    except Exception as e:
+        print("TTS speed failed:", repr(e))
+
+    return mp3_path
 
