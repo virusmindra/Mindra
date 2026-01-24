@@ -45,6 +45,45 @@ GOALS/HABITS:
 - Keep goals realistic, focus on small next steps.
 """
 
+async def extract_memory_updates(client, lang: str, user_text: str, assistant_text: str):
+    system = (
+        "You are a memory extractor for a coaching companion app.\n"
+        "Return STRICT JSON only.\n"
+        "Goal: extract small stable facts worth remembering.\n"
+        "Do NOT include sensitive medical/legal diagnoses.\n"
+        "If nothing worth saving, return {\"profile\": null, \"memories\": []}.\n"
+        "JSON schema:\n"
+        "{\n"
+        "  \"profile\": {\"name\": string|null, \"about\": string|null, \"style\": string|null} | null,\n"
+        "  \"memories\": [\n"
+        "     {\"kind\": \"goal\"|\"pref\"|\"bio\"|\"relationship\"|\"work\"|\"routine\"|\"note\", \"content\": string, \"salience\": 1|2|3}\n"
+        "  ]\n"
+        "}\n"
+    )
+
+    prompt = (
+        f"LANG={lang}\n"
+        f"USER:\n{user_text}\n\n"
+        f"ASSISTANT:\n{assistant_text}\n\n"
+        "Extract memory updates."
+    )
+
+    r = await client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": prompt},
+        ],
+        temperature=0,
+    )
+
+    raw = r.choices[0].message.content or ""
+    try:
+        return json.loads(raw)
+    except:
+        return {"profile": None, "memories": []}
+
+
 def build_system_prompt(feature: str | None, source: str | None, lang: str | None = "en") -> str:
     # Force language to only en/es
     lang = (lang or "en").lower().strip()
