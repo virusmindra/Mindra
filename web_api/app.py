@@ -315,16 +315,20 @@ async def web_chat(payload: ChatIn, req: Request):
 
         # 1) всегда генерим текст
         reply = await generate_reply(
-            user_id,
-            session_id,
-            text,
-            feature=feature,
-            source=source,
-            lang=lang,
-        )
+    user_id,
+    session_id,
+    text,
+    feature=feature,
+    source=source,
+    lang=lang,
+)
 
-        memory_updates = await extract_memory_updates(lang=lang, user_text=text, assistant_text=reply)
-
+memory_updates = await extract_memory_updates(
+    client,
+    lang,
+    user_text=text,
+    assistant_text=reply,
+)
         goal_suggestion = extract_goal_suggestion(reply) if feature == "goals" else None
 
         # 2) голос — опционально
@@ -366,14 +370,15 @@ async def web_chat(payload: ChatIn, req: Request):
                     tts_block = None
 
         # ✅ ВАЖНО: return ВСЕГДА в конце (не внутри if want_voice)
-        return {
-            "reply": reply,
-            "goal_suggestion": goal_suggestion,
-            "tts": tts_block,
-            "voiceBlocked": voice_blocked,
-            "voiceReason": voice_reason,
-            "memoryUpdates": memory_updates,
-        }
+return {
+    "ok": True,
+    "reply": reply,
+    "goal_suggestion": goal_suggestion,
+    "tts": tts_block,
+    "voiceBlocked": voice_blocked,
+    "voiceReason": voice_reason,
+    "memoryUpdates": memory_updates,   # 🔥 ВАЖНО
+}
 
     except Exception as e:
         print("WEB_CHAT ERROR:", repr(e))
