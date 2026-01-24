@@ -168,7 +168,7 @@ def _pack_messages(
     lang: str | None = "en",
 ):
     h = _history[key]
-    system_prompt = build_system_prompt(feature, source)
+    system_prompt = build_system_prompt(feature, source, lang)
     messages: List[dict] = [{"role": "system", "content": system_prompt}]
     messages += list(h)
     messages.append({"role": "user", "content": user_text})
@@ -227,7 +227,7 @@ FEATURE_HINTS: dict[str, str] = {
 def _apply_feature_hint(messages: list[dict], feature: str | None, source: str | None) -> None:
     """Мягко модифицируем system-подсказку под выбранную фичу и источник."""
     # Берём уже построенный промпт (из build_system_prompt)
-    base = messages[0].get("content") or SYSTEM_PROMPT
+    base = messages[0].get("content") or ""
 
     # Дополнительно уточняем источник (если хочешь оставить это тут)
     if source:
