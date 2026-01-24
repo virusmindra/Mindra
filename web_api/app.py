@@ -323,6 +323,8 @@ async def web_chat(payload: ChatIn, req: Request):
             lang=lang,
         )
 
+        memory_updates = await extract_memory_updates(lang=lang, user_text=text, assistant_text=reply)
+
         goal_suggestion = extract_goal_suggestion(reply) if feature == "goals" else None
 
         # 2) голос — опционально
