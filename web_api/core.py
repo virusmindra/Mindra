@@ -1,5 +1,6 @@
 # web_api/core.py
 import os
+import json
 from collections import defaultdict, deque
 from typing import Deque, Dict, List, AsyncGenerator
 
@@ -45,7 +46,7 @@ GOALS/HABITS:
 - Keep goals realistic, focus on small next steps.
 """
 
-async def extract_memory_updates(client, lang: str, user_text: str, assistant_text: str):
+async def extract_memory_updates(lang: str, user_text: str, assistant_text: str):
     system = (
         "You are a memory extractor for a coaching companion app.\n"
         "Return STRICT JSON only.\n"
@@ -69,7 +70,7 @@ async def extract_memory_updates(client, lang: str, user_text: str, assistant_te
     )
 
     r = await client.chat.completions.create(
-        model="gpt-4o-mini",
+        model=OPENAI_MODEL,
         messages=[
             {"role": "system", "content": system},
             {"role": "user", "content": prompt},
@@ -77,12 +78,11 @@ async def extract_memory_updates(client, lang: str, user_text: str, assistant_te
         temperature=0,
     )
 
-    raw = r.choices[0].message.content or ""
+    raw = (r.choices[0].message.content or "").strip()
     try:
         return json.loads(raw)
-    except:
+    except Exception:
         return {"profile": None, "memories": []}
-
 
 def build_system_prompt(feature: str | None, source: str | None, lang: str | None = "en") -> str:
     # Force language to only en/es
