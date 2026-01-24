@@ -19,7 +19,7 @@ from typing import Optional
 # локальные импорты из пакета web_api
 from web_api.goals_api import router as goals_router
 from web_api.habits_api import router as habits_router
-from web_api.core import generate_reply, generate_reply_stream  # сигнатура с feature/source поддерживается
+from web_api.core import generate_reply, generate_reply_stream, extract_memory_updates  # сигнатура с feature/source поддерживается
 from elevenlabs.client import ElevenLabs
 
 router = APIRouter()
@@ -372,6 +372,7 @@ async def web_chat(payload: ChatIn, req: Request):
             "tts": tts_block,
             "voiceBlocked": voice_blocked,
             "voiceReason": voice_reason,
+            "memoryUpdates": memory_updates,
         }
 
     except Exception as e:
