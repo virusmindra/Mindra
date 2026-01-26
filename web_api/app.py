@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import asyncio
-from typing import Optional
+from typing import Any, Dict, Optional
 # локальные импорты из пакета web_api
 from web_api.goals_api import router as goals_router
 from web_api.habits_api import router as habits_router
@@ -40,6 +40,7 @@ class ChatIn(BaseModel):
 
     lang: Optional[str] = "en"
     wantVoice: Optional[bool] = False
+    memoryContext: Optional[Dict[str, Any]] = None
     
 class ChatOut(BaseModel):
     reply: str
@@ -301,6 +302,7 @@ async def web_chat(payload: ChatIn, req: Request):
         feature = payload.feature or "default"
         source = payload.source or "web"
         lang = payload.lang or "en"
+        memory_context = getattr(payload, "memoryContext", None) or None
 
         want_voice = bool(getattr(payload, "wantVoice", False))
 
@@ -321,6 +323,7 @@ async def web_chat(payload: ChatIn, req: Request):
     feature=feature,
     source=source,
     lang=lang,
+    memory_context=memory_context,
 )
 
 memory_updates = await extract_memory_updates(
