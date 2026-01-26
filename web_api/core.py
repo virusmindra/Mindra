@@ -242,6 +242,41 @@ def _apply_feature_hint(messages: list[dict], feature: str | None, source: str |
 
 # --- обновленные функции ---
 
+def _apply_memory_context(messages: list[dict], memory_context: dict | None, lang: str | None):
+    if not memory_context:
+        return
+
+    prof = (memory_context.get("profile") or {})
+    mems = memory_context.get("memories") or []
+
+    # берём 1–2 самых полезных (можно 3, но не надо жирно)
+    picked = []
+    for m in mems[:6]:
+        c = str(m.get("content") or "").strip()
+        if c:
+            picked.append(c)
+        if len(picked) >= 2:
+            break
+
+    if not (prof or picked):
+        return
+
+    # лёгкий “creepy recall” будет только иногда
+    # (сделаем мягко через инструкцию, а не обязательное действие)
+    extra = "\n\nMEMORY (use subtly, do not list):\n"
+    if prof.get("name"):
+        extra += f"- Name: {prof.get('name')}\n"
+    if prof.get("about"):
+        extra += f"- About: {prof.get('about')}\n"
+    if prof.get("style"):
+        extra += f"- Style: {prof.get('style')}\n"
+    for c in picked:
+        extra += f"- {c}\n"
+
+    extra += "\nRULE: Sometimes (not always) naturally reference 1 memory as a human would. Keep it warm, not creepy.\n"
+
+    messages[0]["content"] = (messages[0]["content"] or "").rstrip() + extra
+
 async def generate_reply(
     user_id: str,
     session_id: str,
@@ -256,6 +291,8 @@ async def generate_reply(
 
     # Подмешаем подсказку под режим
     _apply_feature_hint(messages, feature, source)
+
+    _apply_memory_context(messages, memory_context, lang)
 
     resp = await client.chat.completions.create(
         model=OPENAI_MODEL,
