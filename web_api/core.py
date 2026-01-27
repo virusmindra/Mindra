@@ -2,7 +2,7 @@
 import os
 import json
 from collections import defaultdict, deque
-from typing import Deque, Dict, List, AsyncGenerator
+from typing import Deque, Dict, List, AsyncGenerator, Optional, Any
 
 from openai import AsyncOpenAI
 
@@ -11,7 +11,6 @@ client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # per-session история (in-memory)
 _history: Dict[str, Deque[dict]] = defaultdict(lambda: deque(maxlen=20))
-
 
 SYSTEM_PROMPT_BASE = """
 You are Mindra, a warm, supportive AI friend and gentle coach.
@@ -46,7 +45,120 @@ GOALS/HABITS:
 - Keep goals realistic, focus on small next steps.
 """
 
-async def extract_memory_updates(lang: str, user_text: str, assistant_text: str):
+def build_system_prompt(feature: Optional[str], source: Optional[str], lang: Optional[str] = "en") -> str:
+    lang = (lang or "en").lower().strip()
+    if lang.startswith("es"):
+        lang_key = "es"
+        lang_name = "Spanish"
+    else:
+        lang_key = "en"
+        lang_name = "English"
+
+    prompt = SYSTEM_PROMPT_BASE.replace("{LANG_NAME}", lang_name)
+
+    if source == "web":
+        prompt += """
+WEB APP CONTEXT:
+- The user is chatting in the Mindra web app.
+- Do not mention Telegram commands, bots, slash-commands, or Telegram-specific UI.
+- Keep replies optimized for web chat: short paragraphs, clear tone, quick empathy, light emojis.
+"""
+    elif source == "telegram":
+        prompt += """
+TELEGRAM CONTEXT:
+- The user is chatting in Telegram.
+- You may briefly mention buttons or simple commands ONLY if it clearly helps.
+"""
+
+    section_descriptions_en = {
+        "goals": "Focus: goals. Help clarify goals, make them measurable, and suggest one small next step.",
+        "habits": "Focus: habits. Help build routines, reduce friction, and support consistency gently.",
+        "reminders": "Focus: reminders and check-ins. Help the user remember actions and plan follow-ups.",
+        "challenges": "Focus: challenges. Motivate, celebrate progress, suggest one concrete task.",
+        "sleep_sounds": "Focus: sleep and relaxation. Speak softly, suggest calming routines and wind-down ideas.",
+        "bedtime_stories": "Focus: bedtime stories. Tell short cozy stories; avoid anything scary or stressful.",
+        "daily_tasks": "Focus: daily tasks. Help pick 1–3 small realistic tasks for today.",
+        "modes": "Focus: conversation modes. Help choose or adjust the style (flirty/friendly/coach).",
+        "points": "Focus: points and titles. Celebrate achievements, keep it light and motivating.",
+    }
+    section_descriptions_es = {
+        "goals": "Enfoque: metas. Ayuda a aclarar metas, hacerlas medibles y proponer un pequeño siguiente paso.",
+        "habits": "Enfoque: hábitos. Ayuda a crear rutinas, bajar la fricción y apoyar la constancia con cariño.",
+        "reminders": "Enfoque: recordatorios y check-ins. Ayuda a recordar acciones y planear seguimientos.",
+        "challenges": "Enfoque: desafíos. Motiva, celebra el progreso y propone una tarea concreta.",
+        "sleep_sounds": "Enfoque: sueño y relajación. Habla suave y sugiere rutinas calmantes.",
+        "bedtime_stories": "Enfoque: cuentos para dormir. Cuenta historias cortas y acogedoras; nada estresante.",
+        "daily_tasks": "Enfoque: tareas diarias. Ayuda a elegir 1–3 tareas pequeñas y realistas para hoy.",
+        "modes": "Enfoque: modos de conversación. Ayuda a elegir o ajustar el estilo (coqueta/amigable/coach).",
+        "points": "Enfoque: puntos y títulos. Celebra logros con energía suave y sin presión.",
+    }
+
+    if feature and feature != "default":
+        if lang_key == "es":
+            desc = section_descriptions_es.get(feature, "Estás en una sección específica. Adapta la respuesta a ese enfoque.")
+        else:
+            desc = section_descriptions_en.get(feature, "You are in a specific feature section. Tailor your answer to this focus.")
+        prompt += "\n" + desc + "\n"
+
+    # important guard
+    prompt += """
+IMPORTANT:
+- Never say you cannot set reminders. In this web app, you can help the user set a reminder by confirming the text and time.
+- If the user asks for a timer or reminder, respond as if you can help: propose the reminder text + time and ask to confirm.
+"""
+
+    return prompt
+
+
+def _pack_messages(
+    key: str,
+    user_text: str,
+    feature: Optional[str] = None,
+    source: Optional[str] = None,
+    lang: Optional[str] = "en",
+):
+    h = _history[key]
+    system_prompt = build_system_prompt(feature, source, lang=lang)
+    messages: List[dict] = [{"role": "system", "content": system_prompt}]
+    messages += list(h)
+    messages.append({"role": "user", "content": user_text})
+    return messages, h
+
+
+def _apply_memory_context(messages: List[dict], memory_context: Optional[dict], lang: Optional[str]) -> None:
+    if not memory_context:
+        return
+
+    prof = (memory_context.get("profile") or {}) if isinstance(memory_context, dict) else {}
+    mems = memory_context.get("memories") or [] if isinstance(memory_context, dict) else []
+
+    picked: List[str] = []
+    for m in mems[:10]:
+        c = str((m or {}).get("content") or "").strip()
+        if c:
+            picked.append(c)
+        if len(picked) >= 2:
+            break
+
+    if not (prof or picked):
+        return
+
+    extra = "\n\nMEMORY (use subtly, do not list):\n"
+    if prof.get("name"):
+        extra += f"- Name: {prof.get('name')}\n"
+    if prof.get("about"):
+        extra += f"- About: {prof.get('about')}\n"
+    if prof.get("style"):
+        extra += f"- Style: {prof.get('style')}\n"
+    for c in picked:
+        extra += f"- {c}\n"
+
+    extra += "\nRULE: Sometimes (not always) naturally reference 1 memory as a human would. Keep it warm, not creepy.\n"
+
+    messages[0]["content"] = (messages[0].get("content") or "").rstrip() + extra
+
+
+async def extract_memory_updates(lang: str, user_text: str, assistant_text: str) -> dict:
     system = (
         "You are a memory extractor for a coaching companion app.\n"
         "Return STRICT JSON only.\n"
@@ -70,7 +182,7 @@ async def extract_memory_updates(lang: str, user_text: str, assistant_text: str)
     )
 
     r = await client.chat.completions.create(
-        model=OPENAI_MODEL,
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": system},
             {"role": "user", "content": prompt},
@@ -84,213 +196,18 @@ async def extract_memory_updates(lang: str, user_text: str, assistant_text: str)
     except Exception:
         return {"profile": None, "memories": []}
 
-def build_system_prompt(feature: str | None, source: str | None, lang: str | None = "en") -> str:
-    # Force language to only en/es
-    lang = (lang or "en").lower().strip()
-    if lang.startswith("es"):
-        lang_key = "es"
-        lang_name = "Spanish"
-    else:
-        lang_key = "en"
-        lang_name = "English"
-
-    prompt = SYSTEM_PROMPT_BASE.replace("{LANG_NAME}", lang_name)
-
-    # Source: web vs telegram
-    if source == "web":
-        prompt += """
-WEB APP CONTEXT:
-- The user is chatting in the Mindra web app.
-- Do not mention Telegram commands, bots, slash-commands, or Telegram-specific UI.
-- Keep replies optimized for web chat: short paragraphs, clear tone, quick empathy, light emojis.
-"""
-    elif source == "telegram":
-        prompt += """
-TELEGRAM CONTEXT:
-- The user is chatting in Telegram.
-- You may briefly mention buttons or simple commands ONLY if it clearly helps.
-"""
-
-    # Feature focus
-    section_descriptions_en = {
-        "goals": "Focus: goals. Help clarify goals, make them measurable, and suggest one small next step.",
-        "habits": "Focus: habits. Help build routines, reduce friction, and support consistency gently.",
-        "reminders": "Focus: reminders and check-ins. Help the user remember actions and plan follow-ups.",
-        "challenges": "Focus: challenges. Motivate, celebrate progress, suggest one concrete task.",
-        "sleep_sounds": "Focus: sleep and relaxation. Speak softly, suggest calming routines and wind-down ideas.",
-        "bedtime_stories": "Focus: bedtime stories. Tell short cozy stories; avoid anything scary or stressful.",
-        "daily_tasks": "Focus: daily tasks. Help pick 1–3 small realistic tasks for today.",
-        "modes": "Focus: conversation modes. Help choose or adjust the style (flirty/friendly/coach).",
-        "points": "Focus: points and titles. Celebrate achievements, keep it light and motivating.",
-    }
-
-    section_descriptions_es = {
-        "goals": "Enfoque: metas. Ayuda a aclarar metas, hacerlas medibles y proponer un pequeño siguiente paso.",
-        "habits": "Enfoque: hábitos. Ayuda a crear rutinas, bajar la fricción y apoyar la constancia con cariño.",
-        "reminders": "Enfoque: recordatorios y check-ins. Ayuda a recordar acciones y planear seguimientos.",
-        "challenges": "Enfoque: desafíos. Motiva, celebra el progreso y propone una tarea concreta.",
-        "sleep_sounds": "Enfoque: sueño y relajación. Habla suave y sugiere rutinas calmantes.",
-        "bedtime_stories": "Enfoque: cuentos para dormir. Cuenta historias cortas y acogedoras; nada estresante.",
-        "daily_tasks": "Enfoque: tareas diarias. Ayuda a elegir 1–3 tareas pequeñas y realistas para hoy.",
-        "modes": "Enfoque: modos de conversación. Ayuda a elegir o ajustar el estilo (coqueta/amigable/coach).",
-        "points": "Enfoque: puntos y títulos. Celebra logros con energía suave y sin presión.",
-    }
-
-    if feature and feature != "default":
-        if lang_key == "es":
-            desc = section_descriptions_es.get(feature, "Estás en una sección específica. Adapta la respuesta a ese enfoque.")
-        else:
-            desc = section_descriptions_en.get(feature, "You are in a specific feature section. Tailor your answer to this focus.")
-        prompt += "\n" + desc + "\n"
-
-    # Extra hard guard (prevents “I can’t set reminders…” contradictions and keeps behavior consistent)
-    if lang_key == "es":
-        prompt += """
-IMPORTANT:
-- Never say you cannot create reminders. In this web app, you can help the user set a reminder by confirming the text and time.
-- If the user asks for a timer or reminder, respond as if you can help: propose the reminder text + time and ask to confirm.
-"""
-    else:
-        prompt += """
-IMPORTANT:
-- Never say you cannot set reminders. In this web app, you can help the user set a reminder by confirming the text and time.
-- If the user asks for a timer or reminder, respond as if you can help: propose the reminder text + time and ask to confirm.
-"""
-
-    return prompt
-
-
-def _pack_messages(
-    key: str,
-    user_text: str,
-    feature: str | None = None,
-    source: str | None = None,
-    lang: str | None = "en",
-):
-    h = _history[key]
-    system_prompt = build_system_prompt(feature, source, lang)
-    messages: List[dict] = [{"role": "system", "content": system_prompt}]
-    messages += list(h)
-    messages.append({"role": "user", "content": user_text})
-    return messages, h
-
-# --- добавь рядом с SYSTEM_PROMPT ---
-
-FEATURE_HINTS: dict[str, str] = {
-    "default": "",
-    "goals": (
-  "РЕЖИМ: ЦЕЛИ.\n"
-  "Пиши короткими абзацами. Между абзацами ставь пустую строку.\n"
-  "Не используй markdown (# ** - *). Только обычный текст.\n\n"
-  "Структура ответа:\n"
-  "Цель: ...\n\n"
-  "План: ... (2–4 строки, без длинных списков)\n\n"
-  "Питание/сон: ... (2–3 строки)\n\n"
-  "Чек-лист: ... (1 строка)\n\n"
-  "В конце задай один тёплый вопрос для вовлечения.\n"
-  "Пиши дружеским, живым языком, можно с эмодзи."
-),
-    "habits": (
-        "User is in the Habits panel. Suggest small atomic daily/weekly habits, "
-        "a simple cadence (e.g., daily/every other day), and short check-ins. "
-        "Keep answers compact; prefer bullet points."
-    ),
-    "reminders": (
-        "User is in the Reminders section. Talk about when and how to be reminded; "
-        "propose practical schedules (morning/evening, weekdays) and short wording."
-    ),
-    "challenges": (
-        "User is in Premium Challenges. Encourage participation, give clear rules, "
-        "and propose a tiny step to start today."
-    ),
-    "sleep_sounds": (
-        "User is in Sleep Sounds. Answer briefly with calm tone; any playback "
-        "controls are handled by UI."
-    ),
-    "bedtime_stories": (
-        "User is in Bedtime Stories. Tell short, cozy bedtime stories in 3–6 "
-        "sentences unless asked for longer. Gentle, warm tone."
-    ),
-    "daily_tasks": (
-        "User is in Daily Tasks. Suggest exactly one small actionable task for today."
-    ),
-    "modes": (
-        "User is choosing conversation modes. Explain options briefly and help pick "
-        "one based on their goal."
-    ),
-    "points": (
-        "User is in Points/Titles. Celebrate progress, be encouraging; don't reveal "
-        "internal scoring rules."
-    ),
-}
-
-def _apply_feature_hint(messages: list[dict], feature: str | None, source: str | None) -> None:
-    """Мягко модифицируем system-подсказку под выбранную фичу и источник."""
-    # Берём уже построенный промпт (из build_system_prompt)
-    base = messages[0].get("content") or ""
-
-    # Дополнительно уточняем источник (если хочешь оставить это тут)
-    if source:
-        base += f" The request comes from the '{source}' client."
-
-    hint = FEATURE_HINTS.get(feature or "default", "")
-    if hint:
-        messages[0]["content"] = base.rstrip() + "\n\n" + hint
-    else:
-        messages[0]["content"] = base
-
-
-# --- обновленные функции ---
-
-def _apply_memory_context(messages: list[dict], memory_context: dict | None, lang: str | None):
-    if not memory_context:
-        return
-
-    prof = (memory_context.get("profile") or {})
-    mems = memory_context.get("memories") or []
-
-    # берём 1–2 самых полезных (можно 3, но не надо жирно)
-    picked = []
-    for m in mems[:6]:
-        c = str(m.get("content") or "").strip()
-        if c:
-            picked.append(c)
-        if len(picked) >= 2:
-            break
-
-    if not (prof or picked):
-        return
-
-    # лёгкий “creepy recall” будет только иногда
-    # (сделаем мягко через инструкцию, а не обязательное действие)
-    extra = "\n\nMEMORY (use subtly, do not list):\n"
-    if prof.get("name"):
-        extra += f"- Name: {prof.get('name')}\n"
-    if prof.get("about"):
-        extra += f"- About: {prof.get('about')}\n"
-    if prof.get("style"):
-        extra += f"- Style: {prof.get('style')}\n"
-    for c in picked:
-        extra += f"- {c}\n"
-
-    extra += "\nRULE: Sometimes (not always) naturally reference 1 memory as a human would. Keep it warm, not creepy.\n"
-
-    messages[0]["content"] = (messages[0]["content"] or "").rstrip() + extra
 
 async def generate_reply(
     user_id: str,
     session_id: str,
     text: str,
-    feature: str | None = None,
-    source: str | None = None,
-    lang: str | None = "en",
+    feature: Optional[str] = None,
+    source: Optional[str] = None,
+    lang: Optional[str] = "en",
+    memory_context: Optional[dict] = None,
 ) -> str:
-    """Нестримовый ответ."""
     key = f"{user_id}:{session_id}"
     messages, h = _pack_messages(key, text, feature=feature, source=source, lang=lang)
-
-    # Подмешаем подсказку под режим
-    _apply_feature_hint(messages, feature, source)
 
     _apply_memory_context(messages, memory_context, lang)
 
@@ -301,7 +218,6 @@ async def generate_reply(
     )
     reply = (resp.choices[0].message.content or "").strip() or "…"
 
-    # обновим историю
     h.append({"role": "user", "content": text})
     h.append({"role": "assistant", "content": reply})
     return reply
@@ -311,15 +227,15 @@ async def generate_reply_stream(
     user_id: str,
     session_id: str,
     text: str,
-    feature: str | None = None,
-    source: str | None = None,
+    feature: Optional[str] = None,
+    source: Optional[str] = None,
+    lang: Optional[str] = "en",
+    memory_context: Optional[dict] = None,
 ) -> AsyncGenerator[str, None]:
-    """Стрим по токенам (SSE-совместимый)."""
     key = f"{user_id}:{session_id}"
-    messages, h = _pack_messages(key, text, feature=feature, source=source)
+    messages, h = _pack_messages(key, text, feature=feature, source=source, lang=lang)
 
-    # Подмешаем подсказку под режим
-    _apply_feature_hint(messages, feature, source)
+    _apply_memory_context(messages, memory_context, lang)
 
     stream = await client.chat.completions.create(
         model=OPENAI_MODEL,
@@ -328,7 +244,7 @@ async def generate_reply_stream(
         stream=True,
     )
 
-    full: list[str] = []
+    full: List[str] = []
     async for event in stream:
         for choice in event.choices:
             delta = getattr(choice, "delta", None)
@@ -340,3 +256,4 @@ async def generate_reply_stream(
     final_text = "".join(full).strip() or "…"
     h.append({"role": "user", "content": text})
     h.append({"role": "assistant", "content": final_text})
+
