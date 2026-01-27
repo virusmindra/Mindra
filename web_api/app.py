@@ -26,8 +26,8 @@ router = APIRouter()
 
 
 # ---------- Pydantic-схемы (объявляем ДО использования) ----------
+
 class ChatIn(BaseModel):
-    # фронт может прислать и так и так
     userId: Optional[str] = None
     user_id: Optional[str] = None
 
@@ -37,11 +37,11 @@ class ChatIn(BaseModel):
     input: str
     feature: Optional[str] = None
     source: Optional[str] = None
-
     lang: Optional[str] = "en"
     wantVoice: Optional[bool] = False
-    memoryContext: Optional[Dict[str, Any]] = None
-    
+
+    memoryContext: Optional[Dict[str, Any]] = None  # ✅ ДОБАВИЛИ
+
 class ChatOut(BaseModel):
     reply: str
 
@@ -292,7 +292,7 @@ async def call_turn(
             status_code=200,
         )
 
-                
+
 @app.post("/api/web-chat")
 async def web_chat(payload: ChatIn, req: Request):
     try:
@@ -302,59 +302,60 @@ async def web_chat(payload: ChatIn, req: Request):
         feature = payload.feature or "default"
         source = payload.source or "web"
         lang = payload.lang or "en"
-        memory_context = getattr(payload, "memoryContext", None) or None
-
         want_voice = bool(getattr(payload, "wantVoice", False))
+
+        memory_context = payload.memoryContext  # ✅ ДОСТАЛИ
 
         if not text:
             return {
-                "reply": "Пустое сообщение.",
+                "reply": "Empty message.",
                 "goal_suggestion": None,
                 "tts": None,
                 "voiceBlocked": False,
                 "voiceReason": None,
+                "memoryUpdates": {"profile": None, "memories": []},
             }
 
-        # 1) всегда генерим текст
+        # 1) генерим текст (с memory recall)
         reply = await generate_reply(
-    user_id,
-    session_id,
-    text,
-    feature=feature,
-    source=source,
-    lang=lang,
-    memory_context=memory_context,
-)
+            user_id,
+            session_id,
+            text,
+            feature=feature,
+            source=source,
+            lang=lang,
+            memory_context=memory_context,  # ✅ ВАЖНО
+        )
 
-memory_updates = await extract_memory_updates(
-    client,
-    lang,
-    user_text=text,
-    assistant_text=reply,
-)
         goal_suggestion = extract_goal_suggestion(reply) if feature == "goals" else None
 
-        # 2) голос — опционально
+        # 2) memory updates (не ломает чат)
+        try:
+            memory_updates = await extract_memory_updates(
+                lang=lang,
+                user_text=text,
+                assistant_text=reply,
+            )
+        except Exception as e:
+            print("MEMORY EXTRACT ERROR:", repr(e))
+            memory_updates = {"profile": None, "memories": []}
+
+        # 3) голос — опционально
         tts_block = None
         voice_blocked = False
         voice_reason = None
 
         if want_voice:
-            # если нет нормального user_id -> блокируем голос, НО текст оставляем
             if (not user_id) or (user_id == "web"):
                 voice_blocked = True
                 voice_reason = "login_required"
             else:
                 try:
-                    # чтобы не озвучивать огромные простыни
-                    tts_text = (reply.split("\n\n", 1)[0] or reply).strip()
-                    tts_text = tts_text[:600]
-
+                    tts_text = (reply.split("\n\n", 1)[0] or reply).strip()[:600]
                     tts_res = eleven_tts_to_mp3(tts_text)
                     if tts_res:
                         path, seconds = tts_res
                         key = _audio_put(path, seconds, ttl_sec=3600)
-
                         base = str(req.base_url).rstrip("/")
                         audio_url = f"{base}/api/audio/{key}"
 
@@ -372,16 +373,28 @@ memory_updates = await extract_memory_updates(
                     voice_reason = "temporarily_unavailable"
                     tts_block = None
 
-        # ✅ ВАЖНО: return ВСЕГДА в конце (не внутри if want_voice)
-return {
-    "ok": True,
-    "reply": reply,
-    "goal_suggestion": goal_suggestion,
-    "tts": tts_block,
-    "voiceBlocked": voice_blocked,
-    "voiceReason": voice_reason,
-    "memoryUpdates": memory_updates,   # 🔥 ВАЖНО
-}
+        return {
+            "reply": reply,
+            "goal_suggestion": goal_suggestion,
+            "tts": tts_block,
+            "voiceBlocked": voice_blocked,
+            "voiceReason": voice_reason,
+            "memoryUpdates": memory_updates,  # ✅ ВОТ ОНО
+        }
+
+    except Exception as e:
+        print("WEB_CHAT ERROR:", repr(e))
+        return JSONResponse(
+            {
+                "reply": "Server error 😕",
+                "goal_suggestion": None,
+                "tts": None,
+                "voiceBlocked": False,
+                "voiceReason": None,
+                "memoryUpdates": {"profile": None, "memories": []},
+            },
+            status_code=200,
+        )
 
     except Exception as e:
         print("WEB_CHAT ERROR:", repr(e))
